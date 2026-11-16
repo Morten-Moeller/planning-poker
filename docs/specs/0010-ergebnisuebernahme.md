@@ -1,7 +1,7 @@
 ---
 id: "0010"
 title: Ergebnisübernahme (M7)
-status: approved
+status: Review
 risk: medium
 adrs: ["0002"]
 owner: Morten Möller
