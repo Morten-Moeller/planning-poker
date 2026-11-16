@@ -103,6 +103,7 @@ public class SessionSocket {
                 return null;
             });
         } catch (SessionException e) {
+            cancelTimer(connection);
             connections.remove(connection);
             sender.sendAndClose(
                     connection,

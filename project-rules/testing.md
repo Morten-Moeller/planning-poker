@@ -73,7 +73,9 @@ change touches.
   them in their setup. Backend tests of the session area run with the test resource
   `WireMockGitLab` and stub GitLab through `backend/src/test/java/planningpoker/session/GitLabStubs.java`
   (issue 42 of project 1234 by default, searches, failures, delays); every test resets the stubs
-  in its `@BeforeEach`. GitLab data comes from the fixed mappings of the GitLab double
+  in its `@BeforeEach`. Tests of the realtime area use the same test resource with
+  `backend/src/test/java/planningpoker/realtime/RestCalls.java` (REST flow and the stub of issue
+  42) and `SocketClient.java` (WebSocket client with timeouts). GitLab data comes from the fixed mappings of the GitLab double
   (`frontend/e2e/gitlab-double/`, from spec 0011).
 - Environment check: `make e2e` starts everything; for a manual check start backend and frontend
   as in `README.md`.

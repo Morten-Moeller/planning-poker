@@ -18,9 +18,11 @@ public class ConnectionRegistry {
 
     public void register(Entry entry) {
         byConnection.put(entry.connection().id(), entry);
-        bySession
-                .computeIfAbsent(entry.sessionId(), sessionId -> ConcurrentHashMap.newKeySet())
-                .add(entry);
+        bySession.compute(entry.sessionId(), (sessionId, entries) -> {
+            Set<Entry> target = entries == null ? ConcurrentHashMap.newKeySet() : entries;
+            target.add(entry);
+            return target;
+        });
     }
 
     public Optional<Entry> remove(WebSocketConnection connection) {

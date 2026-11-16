@@ -36,8 +36,16 @@ public class SnapshotBroadcaster {
         try {
             registry.read(event.sessionId(), session -> {
                 for (ConnectionRegistry.Entry entry : entries) {
-                    sender.send(
-                            entry.connection(), WsMessage.sessionState(mapper.toView(session, entry.participantId())));
+                    try {
+                        sender.send(
+                                entry.connection(),
+                                WsMessage.sessionState(mapper.toView(session, entry.participantId())));
+                    } catch (RuntimeException e) {
+                        LOG.debugf(
+                                "Snapshot for connection %s failed: %s",
+                                entry.connection().id(), e.getClass().getSimpleName());
+                        sender.close(entry.connection(), MessageSender.SEND_FAILED);
+                    }
                 }
                 return null;
             });
@@ -49,7 +57,14 @@ public class SnapshotBroadcaster {
     void onRoundCompleted(@Observes RoundCompleted event) {
         for (ConnectionRegistry.Entry entry : connections.of(event.sessionId())) {
             if (entry.role() == Role.SCRUM_MASTER) {
-                sender.send(entry.connection(), WsMessage.allVoted(event.roundNumber()));
+                try {
+                    sender.send(entry.connection(), WsMessage.allVoted(event.roundNumber()));
+                } catch (RuntimeException e) {
+                    LOG.debugf(
+                            "round.allVoted for connection %s failed: %s",
+                            entry.connection().id(), e.getClass().getSimpleName());
+                    sender.close(entry.connection(), MessageSender.SEND_FAILED);
+                }
             }
         }
     }
