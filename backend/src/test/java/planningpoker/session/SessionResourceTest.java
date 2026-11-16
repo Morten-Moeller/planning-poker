@@ -78,15 +78,16 @@ class SessionResourceTest {
                 .body("detail", containsString(field));
     }
 
-    @ParameterizedTest(name = "{0}")
+    @ParameterizedTest(name = "{0} {1} {2}")
     @MethodSource("unreadableBodies")
-    void rejectsAMissingOrUnreadableBodyWithValidationError(String name, String body) {
-        RequestSpecification request = given().contentType(ContentType.JSON);
+    void rejectsAMissingOrUnreadableBodyWithValidationError(String method, String path, String name, String body) {
+        RequestSpecification request =
+                given().header("Authorization", "Bearer test-token").contentType(ContentType.JSON);
         if (body != null) {
             request = request.body(body);
         }
         request.when()
-                .post("/api/sessions")
+                .request(method, path)
                 .then()
                 .statusCode(400)
                 .contentType(PROBLEM)
@@ -94,7 +95,15 @@ class SessionResourceTest {
     }
 
     static Stream<Arguments> unreadableBodies() {
-        return Stream.of(Arguments.of("no body", null), Arguments.of("malformed JSON", "{\"name\":"));
+        return Stream.of(
+                        Arguments.of("POST", "/api/sessions"),
+                        Arguments.of("POST", SESSION + "/participants"),
+                        Arguments.of("POST", SESSION + "/active-issue"),
+                        Arguments.of("PUT", SESSION + "/vote"),
+                        Arguments.of("POST", SESSION + "/round/confirm"))
+                .flatMap(endpoint -> Stream.of(
+                        Arguments.of(endpoint.get()[0], endpoint.get()[1], "no body", null),
+                        Arguments.of(endpoint.get()[0], endpoint.get()[1], "malformed JSON", "{\"name\":")));
     }
 
     @Test
@@ -121,7 +130,8 @@ class SessionResourceTest {
                 .statusCode(400)
                 .contentType(PROBLEM)
                 .body("status", equalTo(400))
-                .body("errorCode", equalTo("INVALID_CARD"));
+                .body("errorCode", equalTo("INVALID_CARD"))
+                .body("detail", equalTo("Unknown card."));
     }
 
     static Stream<Arguments> invalidCards() {

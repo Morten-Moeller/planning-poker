@@ -19,7 +19,7 @@ public class ApiExceptionMapper {
             }
         }
         if (exception.getResponse().getStatus() == ErrorCode.VALIDATION_ERROR.status()) {
-            return problemResponse(ErrorCode.VALIDATION_ERROR, "The request body is not readable.");
+            return problemResponse(ErrorCode.VALIDATION_ERROR, "The request is not valid.");
         }
         return exception.getResponse();
     }
