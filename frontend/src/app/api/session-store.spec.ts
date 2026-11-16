@@ -97,6 +97,28 @@ describe('SessionStore', () => {
     expect(store.session()).toEqual(lobbyScrumMaster);
   });
 
+  it('derives the timer, the deadline and the clock offset from every snapshot', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(Date.parse(votingDeveloper.serverTime) + 90_000);
+      enterWith(votingDeveloper);
+
+      expect(store.timerSeconds()).toBe(votingDeveloper.timerSeconds);
+      expect(store.deadline()).toBe(votingDeveloper.round?.deadline);
+      expect(store.clockOffset()).toBe(-90_000);
+      expect(store.serverNow()).toBe(Date.parse(votingDeveloper.serverTime));
+
+      vi.setSystemTime(Date.parse(lobbyDeveloper.serverTime) - 3_000);
+      sockets.last().receive({ type: 'session.state', payload: lobbyDeveloper });
+
+      expect(store.clockOffset()).toBe(3_000);
+      expect(store.timerSeconds()).toBeNull();
+      expect(store.deadline()).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('stays empty without a token for the session', () => {
     store.enter(SESSION_ID);
 

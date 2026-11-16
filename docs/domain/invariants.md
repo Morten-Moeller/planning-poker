@@ -63,6 +63,14 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 | I36 | Eine Sitzung hat höchstens `planningpoker.session.max-participants` Teilnehmer, der Scrum Master zählt mit; die Grenze wird vor der Namensprüfung geprüft, ein abgelehnter Beitritt ändert nichts und löst kein `SessionChanged` aus (I19). | `Session.join` | `LIMIT_REACHED` |
 | I37 | Ist `planningpoker.session.allowed-projects` gesetzt, entsteht eine Sitzung nur für eine Projekt-ID der Liste (exakter Vergleich nach dem Trimmen); die Prüfung läuft vor dem GitLab-Aufruf. Ohne den Schlüssel ist jedes Projekt erlaubt. | `SessionResource.createSession` | `PROJECT_NOT_ALLOWED` |
 
+## Timer und Frist (Spec 0016, ADR 0006)
+
+| Nr | Regel | Durchgesetzt in | Fehlercode |
+|---|---|---|---|
+| I38 | Der Timer ist `null` oder 5 bis 3600 Sekunden; nur der Scrum Master setzt ihn, in jeder Phase. Er wirkt erst ab dem nächsten Rundenstart; eine laufende Runde behält ihre Frist. | `TimerRequest` (`@Min`, `@Max`), `Session.setTimer` | `VALIDATION_ERROR`, `FORBIDDEN_ROLE` |
+| I39 | Freigabe, Issue-Wechsel und Neue Runde setzen die Frist der neuen Runde auf Start plus Timer; ohne Timer hat die Runde keine Frist. | `Session.selectIssue`, `Session.restart` | – |
+| I40 | Eine Sitzung in `VOTING` mit erreichter Frist löst der Server unter der Sperre der Sitzung auf, mit derselben Wirkung wie die manuelle Auflösung (Auswertung, Protokolleintrag, auch ohne Stimmen) und genau einem `SessionChanged`. Eine schon aufgelöste, neu gestartete oder verworfene Runde wird nicht aufgelöst. | `SessionRegistry.revealDue`, `Session.revealIfDue`, Prüfung alle 250 ms in `SessionRegistryProducer` | – |
+
 ## Echtzeit (Spec 0009, ADR 0003, ADR 0004)
 
 | Nr | Regel | Durchgesetzt in | Fehlercode |

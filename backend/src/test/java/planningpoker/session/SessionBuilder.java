@@ -16,6 +16,7 @@ class SessionBuilder {
     private int developers = 2;
     private Phase phase = Phase.LOBBY;
     private boolean confirming;
+    private Integer timerSeconds;
 
     static SessionBuilder session() {
         return new SessionBuilder();
@@ -23,6 +24,11 @@ class SessionBuilder {
 
     SessionBuilder developers(int developers) {
         this.developers = developers;
+        return this;
+    }
+
+    SessionBuilder timer(int seconds) {
+        this.timerSeconds = seconds;
         return this;
     }
 
@@ -53,10 +59,13 @@ class SessionBuilder {
             Participant developer = session.join("Dev" + i + " " + suffix);
             session.connect(developer.id());
         }
+        if (timerSeconds != null) {
+            session.setTimer(master.id(), timerSeconds);
+        }
         if (phase == Phase.LOBBY) {
             return session;
         }
-        session.selectIssue(master.id(), ISSUE);
+        session.selectIssue(master.id(), ISSUE, CREATED_AT);
         if (phase == Phase.VOTING) {
             return session;
         }

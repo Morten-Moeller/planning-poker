@@ -146,11 +146,13 @@ Die Sitzung kennt drei Phasen: `LOBBY` (kein freigegebenes Issue), `VOTING` und 
 | LOBBY | Issue freigeben | Scrum Master | VOTING | Issue wird aus GitLab geladen und aktiv, Runde 1 startet |
 | VOTING | Karte wählen oder ändern | Entwickler | VOTING | `hasVoted` wird wahr; hat der letzte verbundene Entwickler gewählt, geht der Hinweis an den Scrum Master |
 | VOTING | Auflösen | Scrum Master | REVEALED | Auswertung wird berechnet, Protokolleintrag entsteht |
+| VOTING | Frist erreicht | Server | REVEALED | Wie Auflösen, auch ohne Stimmen und ohne verbundenen Scrum Master; Prüfung alle 250 ms (ADR 0006) |
 | VOTING | Issue wechseln | Scrum Master | VOTING | Laufende Runde wird verworfen, Runde 1 für das neue Issue |
 | REVEALED | Neue Runde | Scrum Master | VOTING | Rundennummer plus 1, alle Karten gelöscht |
 | REVEALED | Ergebnis bestätigen | Scrum Master | LOBBY | `confirming` wird gesetzt, dann Schreiben nach GitLab; bei Erfolg `finalCard` im Protokoll und Phase LOBBY. Bei GitLab-Fehler wird `confirming` zurückgesetzt, die Phase bleibt REVEALED, Antwort 502. |
 | REVEALED | Issue wechseln | Scrum Master | VOTING | Runde bleibt ohne Endwert im Protokoll |
 | jede | Beitreten, Verbinden, Trennen | alle | unverändert | Teilnehmerliste und `connected` werden aktualisiert |
+| jede | Timer setzen | Scrum Master | unverändert | `timerSeconds` gilt ab dem nächsten Rundenstart; jede startende Runde bekommt die Frist Start plus Timer, eine laufende Runde behält ihre Frist |
 
 Solange `confirming` gesetzt ist, lehnt der Server jede Steuerungsaktion mit `409 INVALID_STATE` ab. GitLab-Aufrufe laufen nie unter der Sperre der Sitzung: Beim Freigeben und Wechseln wird das Issue vorher geladen und der Zustand danach unter der Sperre erneut geprüft; die Bestätigung schützt sich über `confirming`.
 
@@ -165,6 +167,7 @@ Alle Pfade liegen unter `/api`, das Format ist JSON. Außer beim Erstellen und B
 | `GET /api/sessions/{id}` | beide | keiner | 200 SessionView | 401, 404 |
 | `GET /api/sessions/{id}/issues?search=&page=` | Scrum Master | keiner | 200 `{ items, nextPage }` mit `iid`, `title`, `webUrl` je Eintrag | 403, 502 |
 | `POST /api/sessions/{id}/active-issue` | Scrum Master | `{ issueIid }` | 204 | 403, 404, 409, 502 |
+| `PUT /api/sessions/{id}/timer` | Scrum Master | `{ seconds }` (5 bis 3600 oder `null`) | 204 | 400 `VALIDATION_ERROR`, 401, 403, 404 |
 | `PUT /api/sessions/{id}/vote` | Entwickler | `{ card }` | 204 | 400 `INVALID_CARD`, 403, 409 |
 | `POST /api/sessions/{id}/round/reveal` | Scrum Master | keiner | 204 | 403, 409 |
 | `POST /api/sessions/{id}/round/restart` | Scrum Master | keiner | 204 | 403, 409 |
@@ -209,13 +212,16 @@ Der Snapshot ist je Empfänger gefiltert. Beispiel für einen Entwickler in der 
   "activeIssue": { "iid": 42, "title": "…", "description": "…", "webUrl": "…" },
   "round": {
     "number": 1,
+    "deadline": "2026-11-16T09:15:30Z",
     "myVote": "5",
     "allVoted": false,
     "confirming": false,
     "votes": null,
     "stats": null
   },
-  "history": []
+  "history": [],
+  "timerSeconds": 60,
+  "serverTime": "2026-11-16T09:15:00Z"
 }
 ```
 
@@ -226,6 +232,7 @@ Filterregeln:
 - `preselectedIssueIid` erscheint nur im Snapshot des Scrum Masters.
 - In der Phase `LOBBY` sind `activeIssue` und `round` `null`.
 - `history` enthält die HistoryEntry-Objekte aus 4.2, neueste zuerst.
+- `timerSeconds`, `serverTime` und `round.deadline` sind für beide Rollen gleich; `round.deadline` ist ohne Timer `null` (ADR 0006).
 
 ### 4.7 GitLab-Integration
 
@@ -547,7 +554,7 @@ Ziel: Die drei optionalen Punkte der Challenge, jeweils einzeln lieferbar.
 
 Arbeitspakete:
 
-- O-01 Timer: Der Scrum Master setzt beim Start einer Runde eine Dauer. Die Frist liegt im Snapshot als Zeitstempel (RFC 3339); der Server löst nach Ablauf automatisch auf. Das ändert den Vertrag.
+- O-01 Timer (ADR 0006, Spec 0016): Der Scrum Master stellt den Timer der Sitzung ein (`PUT …/timer`); jede danach startende Runde bekommt eine Frist. Die Frist liegt im Snapshot als Zeitstempel (RFC 3339) neben `serverTime`; der Server löst nach Ablauf automatisch auf. Der Vertrag ändert sich additiv (2.1.0).
 - O-02 Ausreißer: Nach der Auflösung werden niedrigste und höchste Zahlenkarte markiert, wenn sie mehr als zwei Positionen im Kartensatz auseinanderliegen. Das Frontend berechnet die Markierung aus dem Snapshot.
 - O-03 Konsens: Haben alle abgegebenen Karten denselben Wert, zeigt die Oberfläche eine Bestätigung mit Konfetti und schlägt den Wert für die Übernahme vor. Das Frontend berechnet den Konsens aus dem Snapshot; das Konfetti ist eine CSS-Animation ohne zusätzliche Bibliothek.
 

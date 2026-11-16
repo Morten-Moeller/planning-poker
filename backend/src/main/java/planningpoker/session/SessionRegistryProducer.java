@@ -12,6 +12,7 @@ import java.time.Duration;
 public class SessionRegistryProducer {
 
     static final Duration EXPIRY_INTERVAL = Duration.ofMinutes(10);
+    static final Duration DEADLINE_INTERVAL = Duration.ofMillis(250);
 
     @Produces
     @Singleton
@@ -19,6 +20,7 @@ public class SessionRegistryProducer {
         SessionRegistry registry =
                 new SessionRegistry(clock, config.ttl(), config.maxSessions(), config.maxParticipants(), changed::fire);
         vertx.setPeriodic(EXPIRY_INTERVAL.toMillis(), timerId -> registry.expire(clock.instant()));
+        vertx.setPeriodic(DEADLINE_INTERVAL.toMillis(), timerId -> registry.revealDue(clock.instant()));
         return registry;
     }
 }
