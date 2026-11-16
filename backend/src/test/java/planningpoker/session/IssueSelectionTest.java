@@ -32,8 +32,8 @@ class IssueSelectionTest {
 
     private static final String PROBLEM = "application/problem+json";
     private static final String ISSUES = GitLabStubs.issuesPath(GitLabStubs.PROJECT);
-    private static final int DELAY_BELOW_TIMEOUT_MILLIS = 700;
-    private static final int DELAY_ABOVE_TIMEOUT_MILLIS = 2500;
+    private static final int DELAY_BELOW_TIMEOUT_MILLIS = (int) WireMockGitLab.TIMEOUT.toMillis() * 7 / 10;
+    private static final int DELAY_ABOVE_TIMEOUT_MILLIS = (int) WireMockGitLab.TIMEOUT.toMillis() * 2 + 500;
 
     WireMockServer gitlab;
 
@@ -292,6 +292,7 @@ class IssueSelectionTest {
             selectIssue(44, 204);
             return System.nanoTime();
         });
+        awaitGitLabRequest(GitLabStubs.issuePath(GitLabStubs.PROJECT, 44));
         SessionApiTest.join(sessionId, "Cem " + UUID.randomUUID().toString().substring(0, 8));
         long joinFinished = System.nanoTime();
 
@@ -302,6 +303,27 @@ class IssueSelectionTest {
                 .then()
                 .body("activeIssue.iid", equalTo(44))
                 .body("participants", hasSize(3));
+    }
+
+    @Test
+    void encodesAProjectPathInTheGitLabUrl() {
+        GitLabStubs.issue(gitlab, "group%2Fproject", GitLabStubs.ISSUE, "Login page", "");
+
+        given().contentType(ContentType.JSON)
+                .body("{\"name\":\"Anna\",\"gitlabProjectId\":\"group/project\",\"issueIid\":42}")
+                .when()
+                .post("/api/sessions")
+                .then()
+                .statusCode(201);
+        gitlab.verify(getRequestedFor(urlPathEqualTo("/api/v4/projects/group%2Fproject/issues/42")));
+    }
+
+    private void awaitGitLabRequest(String path) {
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+        while (gitlab.findAll(getRequestedFor(urlPathEqualTo(path))).isEmpty()) {
+            assertTrue(System.nanoTime() < deadline, "GitLab did not receive the request for " + path);
+            Thread.onSpinWait();
+        }
     }
 
     private static org.hamcrest.Matcher<String> containsGitLabText() {
