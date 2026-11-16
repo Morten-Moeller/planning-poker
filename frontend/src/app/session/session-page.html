@@ -38,6 +38,7 @@
     </div>
     <div class="main">
       @if (store.isScrumMaster()) {
+        <app-timer-setting [sessionId]="session.sessionId" />
         <app-issue-panel [sessionId]="session.sessionId" />
       } @else if (session.phase === 'LOBBY') {
         <p class="waiting" role="status" data-testid="lobby-waiting" i18n="@@session.waiting">
@@ -48,6 +49,9 @@
         <app-active-issue [issue]="issue" />
       }
       @if (session.phase === 'VOTING') {
+        @if (session.round?.deadline) {
+          <app-round-timer />
+        }
         <app-round-status [sessionId]="session.sessionId" />
         @if (!store.isScrumMaster()) {
           <app-card-deck [sessionId]="session.sessionId" />

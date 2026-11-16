@@ -18,6 +18,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.time.Clock;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -39,6 +40,7 @@ import planningpoker.session.api.JoinSessionRequest;
 import planningpoker.session.api.JoinSessionResponse;
 import planningpoker.session.api.SelectIssueRequest;
 import planningpoker.session.api.SessionView;
+import planningpoker.session.api.TimerRequest;
 import planningpoker.session.api.VoteRequest;
 
 @Path("/api/sessions")
@@ -73,6 +75,9 @@ public class SessionResource {
 
     @Inject
     SessionConfig config;
+
+    @Inject
+    Clock clock;
 
     private record VoteOutcome(boolean completed, int roundNumber) {}
 
@@ -165,7 +170,7 @@ public class SessionResource {
     public Response getSession(
             @PathParam("id") @Parameter(description = SESSION_ID) String id, @Context ContainerRequestContext context) {
         Actor actor = ActorFilter.actorOf(context);
-        SessionView view = registry.read(id, session -> mapper.toView(session, actor.participantId()));
+        SessionView view = registry.read(id, session -> mapper.toView(session, actor.participantId(), clock.instant()));
         return Response.ok(view).build();
     }
 
@@ -246,7 +251,46 @@ public class SessionResource {
         String projectId = registry.read(id, Session::gitlabProjectId);
         Issue issue = gitLabIssues.loadIssue(projectId, request.issueIid());
         registry.update(id, session -> {
-            session.selectIssue(actor.participantId(), issue);
+            session.selectIssue(actor.participantId(), issue, clock.instant());
+            return null;
+        });
+        return Response.noContent().build();
+    }
+
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/{id}/timer")
+    @SecurityRequirement(name = BEARER_TOKEN)
+    @Authenticated
+    @RequiresRole(Role.SCRUM_MASTER)
+    @Operation(
+            operationId = "setTimer",
+            summary =
+                    "Set or switch off the timer for every round that starts from now on; scrum master only. A running round keeps its deadline.")
+    @APIResponse(responseCode = "204", description = "Timer set.")
+    @APIResponse(
+            responseCode = "400",
+            description = "VALIDATION_ERROR",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "401",
+            description = "UNAUTHORIZED",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "403",
+            description = "FORBIDDEN_ROLE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "404",
+            description = "SESSION_NOT_FOUND",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    public Response setTimer(
+            @PathParam("id") @Parameter(description = SESSION_ID) String id,
+            @NotNull @Valid TimerRequest request,
+            @Context ContainerRequestContext context) {
+        Actor actor = ActorFilter.actorOf(context);
+        registry.update(id, session -> {
+            session.setTimer(actor.participantId(), request.seconds());
             return null;
         });
         return Response.noContent().build();
@@ -355,7 +399,7 @@ public class SessionResource {
             @PathParam("id") @Parameter(description = SESSION_ID) String id, @Context ContainerRequestContext context) {
         Actor actor = ActorFilter.actorOf(context);
         registry.update(id, session -> {
-            session.restart(actor.participantId());
+            session.restart(actor.participantId(), clock.instant());
             return null;
         });
         return Response.noContent().build();

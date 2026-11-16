@@ -3,6 +3,8 @@ package planningpoker.realtime;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Set;
 import org.jboss.logging.Logger;
 import planningpoker.session.Role;
@@ -28,6 +30,9 @@ public class SnapshotBroadcaster {
     @Inject
     MessageSender sender;
 
+    @Inject
+    Clock clock;
+
     void onSessionChanged(@Observes SessionChanged event) {
         Set<ConnectionRegistry.Entry> entries = connections.of(event.sessionId());
         if (entries.isEmpty()) {
@@ -35,11 +40,12 @@ public class SnapshotBroadcaster {
         }
         try {
             registry.read(event.sessionId(), session -> {
+                Instant serverTime = clock.instant();
                 for (ConnectionRegistry.Entry entry : entries) {
                     try {
                         sender.send(
                                 entry.connection(),
-                                WsMessage.sessionState(mapper.toView(session, entry.participantId())));
+                                WsMessage.sessionState(mapper.toView(session, entry.participantId(), serverTime)));
                     } catch (RuntimeException e) {
                         LOG.debugf(
                                 "Snapshot for connection %s failed: %s",

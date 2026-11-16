@@ -1,5 +1,6 @@
 package planningpoker.session;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -8,17 +9,23 @@ import java.util.Optional;
 public final class Round {
 
     private final int number;
+    private final Instant deadline;
     private final Map<String, Card> votes = new LinkedHashMap<>();
     private boolean revealed;
     private boolean confirming;
     private RoundStats stats;
 
-    Round(int number) {
+    Round(int number, Instant deadline) {
         this.number = number;
+        this.deadline = deadline;
     }
 
     public int number() {
         return number;
+    }
+
+    public Optional<Instant> deadline() {
+        return Optional.ofNullable(deadline);
     }
 
     public Map<String, Card> votes() {

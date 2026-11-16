@@ -96,6 +96,27 @@ public class SessionRegistry {
         return result;
     }
 
+    public void revealDue(Instant now) {
+        sessions.forEach((sessionId, entry) -> {
+            boolean revealed;
+            entry.lock().lock();
+            try {
+                if (sessions.get(sessionId) != entry || expired(entry, now)) {
+                    return;
+                }
+                revealed = entry.session().revealIfDue(now);
+                if (revealed) {
+                    entry.session().touch(now);
+                }
+            } finally {
+                entry.lock().unlock();
+            }
+            if (revealed) {
+                changed.accept(new SessionChanged(sessionId));
+            }
+        });
+    }
+
     public void expire(Instant now) {
         sessions.forEach((sessionId, entry) -> {
             if (expired(entry, now)) {

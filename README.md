@@ -87,7 +87,7 @@ und `backend/src/main/resources/META-INF/openapi.yaml`); `make contracts` schrei
 TypeScript-Typen `frontend/src/app/api/schema.d.ts`, `make drift` meldet einen veralteten Stand.
 Im Dev-Modus zeigt `http://localhost:8080/q/swagger-ui` den Vertrag. Sechs Beispiel-Snapshots je
 Phase und Rolle liegen unter `contracts/api/examples/`; Backend-Test und Frontend-Typen prüfen sie.
-Version des Vertrags: `2.0.0` (ADR 0005).
+Version des Vertrags: `2.1.0` (ADR 0005, ADR 0006).
 
 ### Ablauf
 
@@ -96,7 +96,27 @@ Nach jeder Änderung sendet der Server jedem verbundenen Teilnehmer per WebSocke
 vollständigen, je Empfänger gefilterten Snapshot `session.state` (`SessionView`): verdeckte
 Karten anderer fehlen bis zur Auflösung, `preselectedIssueIid` sieht nur der Scrum Master, in
 `LOBBY` sind `activeIssue` und `round` `null`. Das Frontend ersetzt seinen Zustand mit jedem
-Snapshot vollständig (ADR 0004).
+Snapshot vollständig (ADR 0004). Jeder Snapshot trägt `timerSeconds` (Timer der Sitzung oder
+`null`), `serverTime` (Serverzeit beim Erzeugen) und in `round` die Frist `deadline` (oder
+`null`); alle Zeiten in RFC 3339 mit Offset.
+
+### Zustandsautomat
+
+| Phase | Ereignis | Auslöser | Neue Phase |
+|---|---|---|---|
+| `LOBBY` | Freigabe | Scrum Master | `VOTING`, Runde 1 |
+| `VOTING`, `REVEALED` | Issue-Wechsel | Scrum Master | `VOTING`, Runde 1 |
+| `VOTING` | Auflösung | Scrum Master | `REVEALED` |
+| `VOTING` | Frist erreicht | Server | `REVEALED` |
+| `REVEALED` | Neue Runde | Scrum Master | `VOTING`, Rundennummer plus 1 |
+| `REVEALED` | Bestätigung | Scrum Master | `LOBBY` |
+
+Timer (ADR 0006): Der Scrum Master setzt mit `PUT …/timer` eine Dauer von 5 bis 3600 Sekunden
+oder schaltet ihn mit `null` ab. Jede danach startende Runde (Freigabe, Issue-Wechsel, Neue
+Runde) bekommt die Frist Start plus Dauer; eine laufende Runde behält ihre Frist. Eine Prüfung
+alle 250 ms löst jede Runde mit erreichter Frist auf, auch ohne Stimmen und ohne verbundenen
+Scrum Master. Das Frontend zeigt die Restzeit aus `deadline` und der Abweichung der eigenen Uhr
+zu `serverTime`.
 
 ### REST-Endpunkte
 
@@ -110,6 +130,7 @@ Außer beim Erstellen und Beitreten trägt jeder Aufruf `Authorization: Bearer <
 | `GET /api/sessions/{id}` | beide | – | 200 `SessionView` | 401, 404 |
 | `GET /api/sessions/{id}/issues?search=&page=` | Scrum Master | – | 200 `{ items, nextPage }` | 403, 502 |
 | `POST /api/sessions/{id}/active-issue` | Scrum Master | `{ issueIid }` | 204 | 400, 403, 404, 409, 502 |
+| `PUT /api/sessions/{id}/timer` | Scrum Master | `{ seconds }` (5 bis 3600 oder `null`) | 204 | 400, 403 |
 | `PUT /api/sessions/{id}/vote` | Entwickler | `{ card }` | 204 | 400 `INVALID_CARD`, 403, 409 |
 | `POST /api/sessions/{id}/round/reveal` | Scrum Master | – | 204 | 403, 409 |
 | `POST /api/sessions/{id}/round/restart` | Scrum Master | – | 204 | 403, 409 |

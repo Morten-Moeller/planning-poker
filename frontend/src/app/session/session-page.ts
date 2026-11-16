@@ -7,8 +7,10 @@ import { IssuePanel } from './issue-panel';
 import { ParticipantList } from './participant-list';
 import { RoundResult } from './round-result';
 import { RoundStatus } from './round-status';
+import { RoundTimer } from './round-timer';
 import { SessionHistory } from './session-history';
 import { ShareSession } from './share-session';
+import { TimerSetting } from './timer-setting';
 
 @Component({
   selector: 'app-session-page',
@@ -16,7 +18,9 @@ import { ShareSession } from './share-session';
     ShareSession,
     ParticipantList,
     IssuePanel,
+    TimerSetting,
     ActiveIssue,
+    RoundTimer,
     RoundStatus,
     CardDeck,
     RoundResult,

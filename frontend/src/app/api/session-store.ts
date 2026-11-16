@@ -10,6 +10,7 @@ export class SessionStore {
   private readonly realtime = inject(RealtimeService);
   private readonly tokens = inject(TokenStore);
   private readonly snapshot = signal<SessionView | null>(null);
+  private readonly offset = signal(0);
   private connection: Subscription | null = null;
 
   readonly session = this.snapshot.asReadonly();
@@ -21,6 +22,9 @@ export class SessionStore {
   readonly activeIssue = computed(() => this.snapshot()?.activeIssue ?? null);
   readonly round = computed(() => this.snapshot()?.round ?? null);
   readonly history = computed(() => this.snapshot()?.history ?? []);
+  readonly timerSeconds = computed(() => this.snapshot()?.timerSeconds ?? null);
+  readonly deadline = computed(() => this.snapshot()?.round?.deadline ?? null);
+  readonly clockOffset = this.offset.asReadonly();
 
   enter(sessionId: string): void {
     this.leave();
@@ -31,14 +35,24 @@ export class SessionStore {
     this.connection = this.api
       .getSession(sessionId)
       .pipe(
-        tap((view) => this.snapshot.set(view)),
+        tap((view) => this.apply(view)),
         switchMap(() => this.realtime.connect(sessionId, identity.token)),
       )
       .subscribe({
-        next: (view) => this.snapshot.set(view),
+        next: (view) => this.apply(view),
         error: () => this.snapshot.set(null),
         complete: () => this.snapshot.set(null),
       });
+  }
+
+  serverNow(): number {
+    return Date.now() + this.offset();
+  }
+
+  private apply(view: SessionView): void {
+    const serverTime = Date.parse(view.serverTime);
+    this.offset.set(Number.isNaN(serverTime) ? 0 : serverTime - Date.now());
+    this.snapshot.set(view);
   }
 
   leave(): void {

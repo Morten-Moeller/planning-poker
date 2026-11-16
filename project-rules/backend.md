@@ -54,7 +54,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   lock, without an event. A command or read on a missing session throws
   `SessionException(SESSION_NOT_FOUND)`. A rejected command leaves `lastActivityAt` unchanged.
 - `Session` is the aggregate; only its methods change the state (A1.4): `join`, `connect`,
-  `disconnect`, `selectIssue`, `vote`, `reveal`, `restart`, `beginConfirm`, `finishConfirm`,
+  `disconnect`, `setTimer`, `selectIssue`, `vote`, `reveal`, `revealIfDue`, `restart`, `beginConfirm`, `finishConfirm`,
   `failConfirm`. Role and phase checks live inside these methods and throw `SessionException`
   with the `ErrorCode` from `platform` (`FORBIDDEN_ROLE`, `INVALID_STATE`, `NAME_TAKEN`,
   `VALIDATION_ERROR`, `UNAUTHORIZED`). The rules are listed in `docs/domain/invariants.md`.
@@ -75,6 +75,13 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   `allowedProjects` (`Optional<List<String>>`; an empty value counts as not set). `find` and `update` remove an expired session on access; a Vert.x timer in
   `SessionRegistryProducer` (every 10 minutes) calls `expire(now)` for the rest. No
   `quarkus-scheduler`.
+- Deadline (ADR 0006): `Session.timerSeconds` (null or 5 to 3600, `Session.setTimer`) sets
+  `Round.deadline` at every round start (`selectIssue` and `restart` take the start time from the
+  `Clock`). A second Vert.x timer in `SessionRegistryProducer` (every 250 ms) calls
+  `SessionRegistry.revealDue(now)`: under the lock of each live session `Session.revealIfDue`
+  reveals a round in `VOTING` whose deadline is reached, the same way as `reveal`; only then
+  `lastActivityAt` is set and `SessionChanged` fires. The mapper takes the snapshot time
+  `serverTime` from the `Clock` as a parameter.
 - Time comes from the `Clock` bean (`platform.ClockProducer`, `Clock.systemUTC()`); tests build
   the registry with a test clock. Ids come from `platform.Ids` (session id, token) and
   `platform.UuidV7` (participant id), ADR 0003.
@@ -122,7 +129,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
 - Authorisation: the role comes from the token (A5.1); `@RequiresRole(Role)` on the method is
   checked by `ActorFilter` and answers 403 `FORBIDDEN_ROLE` before the method runs; the domain
   checks the role again (A1.4). The frontend never sends a role.
-- Snapshots: `SessionViewMapper.toView(session, receiverId)` builds the `SessionView` under the
+- Snapshots: `SessionViewMapper.toView(session, receiverId, serverTime)` builds the `SessionView` under the
   lock of `SessionRegistry.read` with the filter rules of the plan (4.6): no foreign card before
   the reveal, `myVote` only for the receiver, `preselectedIssueIid` only for the scrum master,
   `activeIssue` and `round` `null` in `LOBBY`, history newest first, `revealedAt` in UTC. Tokens
@@ -165,7 +172,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   open); a missing session on close is ignored.
 - `SnapshotBroadcaster` observes `SessionChanged` and `RoundCompleted` synchronously in the
   thread of the command (ADR 0002). It builds each snapshot under `SessionRegistry.read` with
-  `SessionViewMapper.toView(session, participantId)` and sends `session.state` to every
+  `SessionViewMapper.toView(session, participantId, serverTime)` and sends `session.state` to every
   connection of the session; `round.allVoted` goes only to connections with role
   `SCRUM_MASTER`. New commands need no code in `realtime`.
 - `MessageSender` writes the envelope `WsMessage` (`type`, `payload`; no `payload` for `pong`)

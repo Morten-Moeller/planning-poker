@@ -1,0 +1,9 @@
+.round-timer {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+  font-variant-numeric: tabular-nums;
+}
+
+.expired {
+  color: var(--mat-sys-error);
+}

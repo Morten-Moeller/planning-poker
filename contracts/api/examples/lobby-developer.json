@@ -2,7 +2,10 @@
   "sessionId": "K7P2QX9M",
   "gitlabProjectId": "1234",
   "phase": "LOBBY",
-  "me": { "participantId": "01973f5e-2a4c-7d2e-9f30-4b5c6d7e8f90", "role": "DEVELOPER" },
+  "me": {
+    "participantId": "01973f5e-2a4c-7d2e-9f30-4b5c6d7e8f90",
+    "role": "DEVELOPER"
+  },
   "participants": [
     {
       "id": "01973f5e-2a4b-7c1d-8e2f-3a4b5c6d7e8f",
@@ -29,5 +32,7 @@
   "preselectedIssueIid": null,
   "activeIssue": null,
   "round": null,
-  "history": []
+  "history": [],
+  "timerSeconds": null,
+  "serverTime": "2026-11-16T09:14:00Z"
 }

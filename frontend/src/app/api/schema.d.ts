@@ -158,6 +158,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{id}/timer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set or switch off the timer for every round that starts from now on; scrum master only. A running round keeps its deadline. */
+        put: operations["setTimer"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions/{id}/vote": {
         parameters: {
             query?: never;
@@ -484,7 +501,7 @@ export interface components {
             /** @description Most frequent cards; several on a tie. */
             mostFrequent: components["schemas"]["Card"][];
         };
-        /** @description The round of the active issue. myVote is the card of the receiver and null without a vote or for the scrum master; votes and stats are null until the reveal. */
+        /** @description The round of the active issue. myVote is the card of the receiver and null without a vote or for the scrum master; votes and stats are null until the reveal. deadline is the time at which the server reveals the round by itself, RFC 3339 with offset, and null when the round started without a timer. */
         RoundView: {
             /**
              * Format: int32
@@ -492,6 +509,7 @@ export interface components {
              * @example 1
              */
             number: number;
+            deadline: ((string | components["schemas"]["OffsetDateTime"] | null) | null) | components["schemas"]["OffsetDateTime"] | null;
             myVote: components["schemas"]["Card"] | null;
             /** @description Whether every connected developer has voted. */
             allVoted: boolean;
@@ -510,7 +528,7 @@ export interface components {
              */
             issueIid: number;
         };
-        /** @description Snapshot of the session, filtered for the receiver: hidden cards of other participants are missing until the reveal, preselectedIssueIid appears only for the scrum master. In phase LOBBY activeIssue and round are null. */
+        /** @description Snapshot of the session, filtered for the receiver: hidden cards of other participants are missing until the reveal, preselectedIssueIid appears only for the scrum master. In phase LOBBY activeIssue and round are null. timerSeconds, serverTime and round.deadline are the same for both roles. */
         SessionView: {
             /**
              * @description Session id, 8 characters.
@@ -536,6 +554,26 @@ export interface components {
             round: components["schemas"]["RoundView"] | null;
             /** @description Revealed rounds of the session, newest first. */
             history: components["schemas"]["HistoryEntryView"][];
+            /**
+             * Format: int32
+             * @description Timer of the session in seconds for every round that starts from now on; null when the timer is off.
+             * @example 30
+             */
+            timerSeconds: number | null;
+            /**
+             * @description Time of the server when the snapshot was built, RFC 3339 with offset. Clients compute the remaining time of the round from it.
+             * @example 2026-11-16T09:15:00Z
+             */
+            serverTime: components["schemas"]["OffsetDateTime"];
+        };
+        /** @description Sets the timer of the session for every round that starts from now on; null switches it off. A running round keeps its deadline. */
+        TimerRequest: {
+            /**
+             * Format: int32
+             * @description Duration of a round in seconds, 5 to 3600; null switches the timer off.
+             * @example 30
+             */
+            seconds: number | null;
         };
         /** @description Chooses or changes the hidden card of the caller in the running round. */
         VoteRequest: {
@@ -1076,6 +1114,67 @@ export interface operations {
             };
             /** @description INVALID_STATE */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    setTimer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Session id, 8 characters. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimerRequest"];
+            };
+        };
+        responses: {
+            /** @description Timer set. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description UNAUTHORIZED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description FORBIDDEN_ROLE */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description SESSION_NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

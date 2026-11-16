@@ -2,7 +2,10 @@
   "sessionId": "K7P2QX9M",
   "gitlabProjectId": "1234",
   "phase": "VOTING",
-  "me": { "participantId": "01973f5e-2a4b-7c1d-8e2f-3a4b5c6d7e8f", "role": "SCRUM_MASTER" },
+  "me": {
+    "participantId": "01973f5e-2a4b-7c1d-8e2f-3a4b5c6d7e8f",
+    "role": "SCRUM_MASTER"
+  },
   "participants": [
     {
       "id": "01973f5e-2a4b-7c1d-8e2f-3a4b5c6d7e8f",
@@ -35,11 +38,14 @@
   },
   "round": {
     "number": 1,
+    "deadline": "2026-11-16T09:15:30Z",
     "myVote": null,
     "allVoted": false,
     "confirming": false,
     "votes": null,
     "stats": null
   },
-  "history": []
+  "history": [],
+  "timerSeconds": 60,
+  "serverTime": "2026-11-16T09:15:00Z"
 }

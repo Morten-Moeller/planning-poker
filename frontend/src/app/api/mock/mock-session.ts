@@ -28,5 +28,6 @@ export function roleOfToken(token: string | null): Role | null {
 }
 
 export function snapshotFor(role: Role): SessionView {
-  return role === 'SCRUM_MASTER' ? lobbyScrumMaster : lobbyDeveloper;
+  const example = role === 'SCRUM_MASTER' ? lobbyScrumMaster : lobbyDeveloper;
+  return { ...example, serverTime: new Date().toISOString() };
 }
