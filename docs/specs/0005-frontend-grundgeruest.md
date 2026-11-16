@@ -1,7 +1,7 @@
 ---
 id: "0005"
 title: Frontend-Grundgerüst (M8)
-status: approved
+status: Review
 risk: high
 adrs: ["0003", "0004"]
 owner: Morten Möller
@@ -66,7 +66,7 @@ bis das echte Backend die Endpunkte liefert.
 | A5 | Der `SessionStore` übernimmt jeden Snapshot vollständig; `me`, `role`, `isScrumMaster`, `phase` und `round` entsprechen den sechs Beispielen; ein neuer Snapshot ersetzt alle Felder, auch auf `null`. | Test `frontend/src/app/api/session-store.spec.ts` |
 | A6 | Ein Neuladen des Sitzungsraums behält Identität und Rolle: der `TokenStore` liefert Token und Teilnehmer-ID je Sitzungs-ID aus dem `sessionStorage`, der Store lädt `GET /api/sessions/{id}` damit und zeigt die Rolle; zwei Tabs mit verschiedenen Sitzungen stören sich nicht. | Test `frontend/src/app/api/token-store.spec.ts`; Browser (Mock): Raum neu laden |
 | A7 | `pnpm -C frontend start:mock` läuft ohne Backend: Erstellen liefert Session-ID und Token, der Raum zeigt Phase und Rolle aus dem Snapshot, `data-testid` `session-id`, `session-phase`, `session-role`; der normale Build enthält den Mock nicht. | Browser (Mock); Aufruf (`grep` im Build-Output) |
-| A8 | Das Layout hat Toolbar mit Titel, Inhalt und Fehlerbanner; Farben, Abstände und Schrift kommen aus `--mat-sys-*`-Variablen; `make lint` ist grün. | Aufruf, Browser |
+| A8 | Das Layout hat Toolbar mit Titel, Inhalt und Fehlerbanner; Farben und Schrift kommen aus `--mat-sys-*`-Variablen, Abstände aus `--app-space-*` in `styles.scss` (Angular Material liefert keine Abstands-Tokens); `make lint` ist grün. | Aufruf, Browser |
 
 ## Contracts
 
@@ -93,6 +93,7 @@ Entscheidungen:
 - WebSocket über ein `InjectionToken` `WEB_SOCKET_FACTORY` (`(url) => WebSocketSubject<WsMessage>`), damit Tests und Mock die Verbindung ersetzen; die URL ist `ws(s)://<host>/ws/sessions/{id}` aus `location`.
 - Fehlerweg: `apiErrorInterceptor` wandelt jede `HttpErrorResponse` mit Problem Detail in `ApiError`, `ErrorState` (Signal) hält den letzten Fehler für das Banner; Komponenten entscheiden nur anhand von `errorCode`.
 - Platzhalterseiten für Beitreten und Sitzungsraum mit `data-testid`; 0011 und 0012 ersetzen sie.
+- Platzhalter-Knöpfe für den Browser-Nachweis: Startseite „Sitzung erstellen“ (feste Werte Anna / 1234 / 42, `data-testid="create-session"`, legt Token und Teilnehmer-ID im `TokenStore` ab und navigiert in den Raum), Beitreten-Seite „Beitreten“ (fester Name Ben, `data-testid="join-session"`); 0011 ersetzt sie durch die Formulare.
 
 Dateien:
 
@@ -126,6 +127,8 @@ Dateien:
 - `frontend/src/app/join/join-page.html`: neu
 - `frontend/src/app/session/session-page.ts`: neu, Platzhalter aus dem Store
 - `frontend/src/app/session/session-page.html`: neu
+- `frontend/src/app/start/start-page.ts`: ändern, Platzhalter-Knopf „Sitzung erstellen“
+- `frontend/src/app/start/start-page.html`: ändern
 - `frontend/src/app/app.ts`: ändern, Shell einbinden
 - `frontend/src/app/app.html`: ändern
 - `frontend/src/app/app.config.ts`: ändern, `provideBackend()` aus `backend.providers.ts`
@@ -164,7 +167,7 @@ Contracts zu regenerieren: keine.
 
 ## Offene Fragen
 
-- [ ] keine
+- [x] Wie wird „Erstellen über den Mock“ im Browser ausgelöst? → Platzhalter-Knöpfe auf Start- und Beitrittsseite mit festen Werten; 0011 ersetzt sie durch die Formulare. (Morten Möller, 2026-11-16)
 
 ## Verifikationsplan
 

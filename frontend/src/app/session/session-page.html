@@ -1,0 +1,36 @@
+<h1 i18n="@@session.title">Sitzung</h1>
+@if (store.session(); as session) {
+  <dl>
+    <dt i18n="@@session.idLabel">Session-ID</dt>
+    <dd data-testid="session-id">{{ session.sessionId }}</dd>
+    <dt i18n="@@session.phaseLabel">Phase</dt>
+    <dd data-testid="session-phase">
+      @switch (session.phase) {
+        @case ('LOBBY') {
+          <ng-container i18n="@@session.phase.LOBBY">Wartet auf ein Issue</ng-container>
+        }
+        @case ('VOTING') {
+          <ng-container i18n="@@session.phase.VOTING">Runde läuft</ng-container>
+        }
+        @case ('REVEALED') {
+          <ng-container i18n="@@session.phase.REVEALED">Runde aufgelöst</ng-container>
+        }
+      }
+    </dd>
+    <dt i18n="@@session.roleLabel">Eigene Rolle</dt>
+    <dd data-testid="session-role">
+      @switch (session.me.role) {
+        @case ('SCRUM_MASTER') {
+          <ng-container i18n="@@session.role.SCRUM_MASTER">Scrum Master</ng-container>
+        }
+        @case ('DEVELOPER') {
+          <ng-container i18n="@@session.role.DEVELOPER">Entwickler</ng-container>
+        }
+      }
+    </dd>
+    <dt i18n="@@session.participantsLabel">Teilnehmer</dt>
+    <dd data-testid="session-participant-count">{{ session.participants.length }}</dd>
+  </dl>
+} @else {
+  <p data-testid="session-loading" i18n="@@session.loading">Sitzung wird geladen</p>
+}

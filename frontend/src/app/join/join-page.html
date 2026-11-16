@@ -1,0 +1,15 @@
+<h1 i18n="@@join.title">Sitzung beitreten</h1>
+<p>
+  <span i18n="@@join.sessionIdLabel">Session-ID:</span>
+  <code data-testid="join-session-id">{{ sessionId() }}</code>
+</p>
+<p i18n="@@join.placeholder">Das Formular zum Beitreten folgt.</p>
+<button
+  mat-flat-button
+  type="button"
+  data-testid="join-session"
+  i18n="@@join.join"
+  (click)="join()"
+>
+  Beitreten
+</button>
