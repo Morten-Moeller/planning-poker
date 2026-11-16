@@ -39,24 +39,29 @@ change touches.
 | Source path | Unit and integration | End-to-end |
 |---|---|---|
 | `backend/src/main/java/planningpoker/platform/` | `backend/src/test/java/planningpoker/platform/` | `frontend/e2e/health.spec.ts` |
-| `backend/src/main/java/planningpoker/session/` | `backend/src/test/java/planningpoker/session/` (contract and stub tests from spec 0002, domain from spec 0004) | flows of the session room (from spec 0011) |
+| `backend/src/main/java/planningpoker/session/` | `backend/src/test/java/planningpoker/session/` (contract and stub tests from spec 0002, domain from spec 0004) | `frontend/e2e/create-and-join.spec.ts` |
 | `backend/src/main/java/planningpoker/gitlab/` | `backend/src/test/java/planningpoker/gitlab/` (from spec 0003) | – |
-| `backend/src/main/java/planningpoker/realtime/` | `backend/src/test/java/planningpoker/realtime/` (from spec 0009) | flows of the session room (from spec 0011) |
-| `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, create and join flows (from spec 0011) |
+| `backend/src/main/java/planningpoker/realtime/` | `backend/src/test/java/planningpoker/realtime/` (from spec 0009) | `frontend/e2e/create-and-join.spec.ts` |
+| `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts` |
 | `frontend/src/app/api/` | `frontend/src/app/api/*.spec.ts` (from spec 0005) | – |
-| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` (from spec 0012) | session room flows (from spec 0012) |
+| `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts` |
+| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, session room flows (from spec 0012) |
 
 ## End-to-end
 
-- Start: the tests start the application themselves. `frontend/playwright.config.ts` has two
-  `webServer` entries: the backend (`./mvnw -q -DskipTests package`, then the jar with
-  `-Dquarkus.profile=e2e` on port 8080) and the frontend dev server on port 4200. The GitLab
-  double (WireMock Standalone on port 8089) joins as a third entry with spec 0011. `make e2e`
-  takes `harness/scripts/app-lock.sh` (owner: the branch), so only one worktree runs the
-  application. The ports are 8080 and 4200 by default; `BACKEND_PORT` and `FRONTEND_PORT`
-  change them when a port is taken on a developer machine. Playwright never reuses a server that
-  already answers on a port (`reuseExistingServer: false`), so the tests always run against the
-  profile `e2e`; a running `quarkus:dev` on the same port fails the start.
+- Start: the tests start the application themselves. `frontend/playwright.config.ts` has three
+  `webServer` entries: the GitLab double (WireMock Standalone, `--root-dir
+  frontend/e2e/gitlab-double`, ready at `/__admin/health`), the backend (`./mvnw -q -DskipTests
+  package`, then the jar with `-Dquarkus.profile=e2e` and
+  `-Dplanningpoker.gitlab.base-url=http://localhost:<GITLAB_DOUBLE_PORT>`) and the frontend dev
+  server. `make gitlab-double` fetches the jar to `backend/target/gitlab-double/` (part of
+  `make install`; `make e2e` runs it first). `make e2e` takes `harness/scripts/app-lock.sh`
+  (owner: the branch), so only one worktree runs the application. The ports are 8080 (backend),
+  4200 (frontend) and 8089 (GitLab double) by default; `BACKEND_PORT`, `FRONTEND_PORT` and
+  `GITLAB_DOUBLE_PORT` change them when a port is taken on a developer machine. Playwright never
+  reuses a server that already answers on a port (`reuseExistingServer: false`), so the tests
+  always run against the profile `e2e` and the double; a running `quarkus:dev` on the same port
+  fails the start.
 - One spec: `pnpm -C frontend exec playwright test e2e/health.spec.ts`; Playwright starts the
   servers for this run as well.
 - Session setup (T6.2): there is no login. A flow creates its session through the start page or
@@ -75,11 +80,16 @@ change touches.
   (issue 42 of project 1234 by default, searches, failures, delays); every test resets the stubs
   in its `@BeforeEach`. Tests of the realtime area use the same test resource with
   `backend/src/test/java/planningpoker/realtime/RestCalls.java` (REST flow and the stub of issue
-  42) and `SocketClient.java` (WebSocket client with timeouts). GitLab data comes from the fixed mappings of the GitLab double
-  (`frontend/e2e/gitlab-double/`, from spec 0011).
+  42) and `SocketClient.java` (WebSocket client with timeouts). GitLab data of the end-to-end
+  flows comes from the fixed mappings of the GitLab double in
+  `frontend/e2e/gitlab-double/mappings/` (spec 0011): project `1234` with issues 42 and 43, the
+  issue search of the project (both issues), notes and weight of both issues; issue 404 answers
+  404. A flow that needs other GitLab data adds a mapping there.
 - Environment check: `make e2e` starts everything; for a manual check start backend and frontend
   as in `README.md`.
-- Named states: none yet; a state the flows need goes into the spec that introduces it.
+- Named states: none yet; a state the flows need goes into the spec that introduces it. The
+  flows of spec 0011 create their session through the start page (issue 42) and join through
+  the join page in a second browser context.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.
 
@@ -93,5 +103,7 @@ change touches.
   mock backend (`project-rules/frontend.md`, Mock backend) on port 4200, under the application
   lock like `make e2e`. The mock session is `K7P2QX9M`; a token in `sessionStorage` under
   `planningpoker.session.K7P2QX9M` with `mock-scrum-master-…` or `mock-developer-…` opens the
-  room in that role. For criteria that the real backend answers (endpoints from spec 0006), the
+  room in that role. The mock answers issue number 404 at the create form with
+  `ISSUE_NOT_FOUND`, the name `Ben` at the join page with `NAME_TAKEN` and every other session id
+  with `SESSION_NOT_FOUND` (spec 0011). For criteria that the real backend answers (endpoints from spec 0006), the
   check runs against the backend, not the mock.

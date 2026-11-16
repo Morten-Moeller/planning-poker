@@ -50,6 +50,11 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   shell shows the German text of `api/error-messages.ts` (`$localize`, id `@@error.<code>`, a
   general text for an unknown code) and never `detail`. A WebSocket message `error` goes the
   same way and ends the connection without a reconnect. Components branch on `errorCode` only.
+- Form errors: a page with a form catches the `ApiError` of its own call and shows the text of
+  `formErrorMessage` (`api/error-messages.ts`) at the form for the codes the form names (create:
+  `ISSUE_NOT_FOUND`, `GITLAB_ERROR`, `VALIDATION_ERROR`; join: `SESSION_NOT_FOUND`,
+  `NAME_TAKEN`, `VALIDATION_ERROR`), then clears `ErrorState`; every other code stays in the
+  banner (spec 0011). The name rule of create and join is `api/participant-name.ts`.
 - Authentication: `authInterceptor` adds `Authorization: Bearer <token>` from the `TokenStore`
   (`sessionStorage`, key `planningpoker.session.<id>`, value `{ participantId, token }`) to
   every call under `/api/sessions/{id}` except the join (`POST …/participants`).

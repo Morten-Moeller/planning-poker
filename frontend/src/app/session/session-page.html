@@ -1,5 +1,6 @@
 <h1 i18n="@@session.title">Sitzung</h1>
 @if (store.session(); as session) {
+  <app-share-session [sessionId]="session.sessionId" />
   <dl>
     <dt i18n="@@session.idLabel">Session-ID</dt>
     <dd data-testid="session-id">{{ session.sessionId }}</dd>

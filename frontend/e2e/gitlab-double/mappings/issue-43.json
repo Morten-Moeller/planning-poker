@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/v4/projects/1234/issues/43"
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "iid": 43,
+      "title": "Password reset",
+      "description": "As a user I want to reset my password by mail.",
+      "web_url": "https://gitlab.example/group/project/-/issues/43",
+      "labels": []
+    }
+  }
+}

@@ -3,13 +3,33 @@
   <span i18n="@@join.sessionIdLabel">Session-ID:</span>
   <code data-testid="join-session-id">{{ sessionId() }}</code>
 </p>
-<p i18n="@@join.placeholder">Das Formular zum Beitreten folgt.</p>
-<button
-  mat-flat-button
-  type="button"
-  data-testid="join-session"
-  i18n="@@join.join"
-  (click)="join()"
->
-  Beitreten
-</button>
+<form class="form" [formGroup]="joinForm" (ngSubmit)="join()" data-testid="join-form">
+  <h2 i18n="@@join.nameTitle">Mit welchem Namen?</h2>
+  <mat-form-field>
+    <mat-label i18n="@@join.name">Name</mat-label>
+    <input matInput formControlName="name" data-testid="join-name" autocomplete="name" />
+    @if (
+      joinForm.controls.name.hasError('required') || joinForm.controls.name.hasError('pattern')
+    ) {
+      <mat-error data-testid="join-name-error" i18n="@@join.nameRequired">
+        Bitte einen Namen eingeben
+      </mat-error>
+    } @else if (joinForm.controls.name.hasError('maxlength')) {
+      <mat-error data-testid="join-name-error" i18n="@@join.nameTooLong">
+        Der Name darf höchstens 30 Zeichen haben
+      </mat-error>
+    }
+  </mat-form-field>
+  @if (joinError(); as text) {
+    <p class="form-error" role="alert" data-testid="join-error">{{ text }}</p>
+  }
+  <button
+    mat-flat-button
+    type="submit"
+    data-testid="join-submit"
+    [disabled]="joining()"
+    i18n="@@join.join"
+  >
+    Beitreten
+  </button>
+</form>

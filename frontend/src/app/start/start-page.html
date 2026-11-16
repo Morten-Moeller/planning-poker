@@ -12,12 +12,88 @@
     }
   }
 </p>
-<button
-  mat-flat-button
-  type="button"
-  data-testid="create-session"
-  i18n="@@start.createSession"
-  (click)="createSession()"
->
-  Sitzung erstellen
-</button>
+
+<section class="forms">
+  <form
+    class="form"
+    [formGroup]="createForm"
+    (ngSubmit)="createSession()"
+    data-testid="create-form"
+  >
+    <h2 i18n="@@start.create.title">Sitzung erstellen</h2>
+    <mat-form-field>
+      <mat-label i18n="@@start.create.name">Name</mat-label>
+      <input matInput formControlName="name" data-testid="create-name" autocomplete="name" />
+      @if (
+        createForm.controls.name.hasError('required') ||
+        createForm.controls.name.hasError('pattern')
+      ) {
+        <mat-error data-testid="create-name-error" i18n="@@start.create.nameRequired">
+          Bitte einen Namen eingeben
+        </mat-error>
+      } @else if (createForm.controls.name.hasError('maxlength')) {
+        <mat-error data-testid="create-name-error" i18n="@@start.create.nameTooLong">
+          Der Name darf höchstens 30 Zeichen haben
+        </mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label i18n="@@start.create.project">GitLab-Projekt-ID</mat-label>
+      <input matInput formControlName="gitlabProjectId" data-testid="create-project" />
+      @if (createForm.controls.gitlabProjectId.invalid) {
+        <mat-error data-testid="create-project-error" i18n="@@start.create.projectRequired">
+          Bitte die GitLab-Projekt-ID eingeben
+        </mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label i18n="@@start.create.issue">Issue-Nummer</mat-label>
+      <input matInput type="number" formControlName="issueIid" data-testid="create-issue" />
+      @if (createForm.controls.issueIid.invalid) {
+        <mat-error data-testid="create-issue-error" i18n="@@start.create.issueInvalid">
+          Bitte eine Issue-Nummer ab 1 eingeben
+        </mat-error>
+      }
+    </mat-form-field>
+    @if (createError(); as text) {
+      <p class="form-error" role="alert" data-testid="create-error">{{ text }}</p>
+    }
+    <button
+      mat-flat-button
+      type="submit"
+      data-testid="create-submit"
+      [disabled]="creating()"
+      i18n="@@start.create.submit"
+    >
+      Sitzung erstellen
+    </button>
+  </form>
+
+  <form class="form" [formGroup]="joinForm" (ngSubmit)="joinBySessionId()" data-testid="join-form">
+    <h2 i18n="@@start.join.title">Sitzung beitreten</h2>
+    <mat-form-field>
+      <mat-label i18n="@@start.join.sessionId">Session-ID</mat-label>
+      <input
+        matInput
+        formControlName="sessionId"
+        data-testid="join-session-id-input"
+        autocomplete="off"
+        spellcheck="false"
+        (input)="uppercaseSessionId()"
+      />
+      @if (joinForm.controls.sessionId.invalid) {
+        <mat-error data-testid="join-session-id-error" i18n="@@start.join.sessionIdInvalid">
+          Die Session-ID hat 8 Zeichen aus Großbuchstaben und Ziffern
+        </mat-error>
+      }
+    </mat-form-field>
+    <button
+      mat-stroked-button
+      type="submit"
+      data-testid="join-session-id-submit"
+      i18n="@@start.join.submit"
+    >
+      Beitreten
+    </button>
+  </form>
+</section>
