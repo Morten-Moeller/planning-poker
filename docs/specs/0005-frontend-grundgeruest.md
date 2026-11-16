@@ -1,14 +1,14 @@
 ---
 id: "0005"
 title: Frontend-Grundgerüst (M8)
-status: Review
+status: done
 risk: high
 adrs: ["0003", "0004"]
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#5"
+note: alle Kriterien erfüllt
 ---
 
 # Frontend-Grundgerüst (M8)
