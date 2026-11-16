@@ -1,14 +1,14 @@
 ---
 id: "0001"
 title: Projektgerüst (M0)
-status: Review
+status: done
 risk: high
 adrs: ["0001", "0002", "0003", "0004"]
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#1"
+note: alle Kriterien erfüllt; A4 in der CI erst mit e2e_in_ci: true auf main
 ---
 
 # Projektgerüst (M0)
