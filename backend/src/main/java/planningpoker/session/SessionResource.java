@@ -61,6 +61,9 @@ public class SessionResource {
     @Inject
     SessionRegistry registry;
 
+    @Inject
+    GitLabIssues gitLabIssues;
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Operation(operationId = "createSession", summary = "Create a session; the caller becomes the scrum master.")
@@ -81,6 +84,7 @@ public class SessionResource {
             description = "GITLAB_ERROR",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response createSession(@NotNull @Valid CreateSessionRequest request) {
+        gitLabIssues.loadIssue(request.gitlabProjectId(), request.issueIid());
         SessionRegistry.Created created =
                 registry.create(request.gitlabProjectId(), request.issueIid(), request.name());
         return Response.status(Response.Status.CREATED)
@@ -175,7 +179,8 @@ public class SessionResource {
             @QueryParam("search") @Parameter(description = "Text to search in title and description.") String search,
             @QueryParam("page") @DefaultValue("1") @Min(1) @Parameter(description = "Page number, starting at 1.")
                     int page) {
-        throw notImplemented();
+        String projectId = registry.read(id, Session::gitlabProjectId);
+        return Response.ok(gitLabIssues.search(projectId, search, page)).build();
     }
 
     @POST
@@ -214,8 +219,16 @@ public class SessionResource {
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response selectIssue(
             @PathParam("id") @Parameter(description = SESSION_ID) String id,
-            @NotNull @Valid SelectIssueRequest request) {
-        throw notImplemented();
+            @NotNull @Valid SelectIssueRequest request,
+            @Context ContainerRequestContext context) {
+        Actor actor = ActorFilter.actorOf(context);
+        String projectId = registry.read(id, Session::gitlabProjectId);
+        Issue issue = gitLabIssues.loadIssue(projectId, request.issueIid());
+        registry.update(id, session -> {
+            session.selectIssue(actor.participantId(), issue);
+            return null;
+        });
+        return Response.noContent().build();
     }
 
     @PUT

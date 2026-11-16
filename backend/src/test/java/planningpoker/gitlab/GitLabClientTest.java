@@ -47,7 +47,7 @@ class GitLabClientTest {
     private static final String ISSUES = "/api/v4/projects/" + PROJECT + "/issues";
     private static final String GITLAB_ERROR_TEXT = "401 Unauthorized - invalid token secret";
     private static final String GITLAB_ERROR_BODY = "{\"message\":\"" + GITLAB_ERROR_TEXT + "\"}";
-    private static final int DELAY_ABOVE_TIMEOUT_MILLIS = 2500;
+    private static final int DELAY_ABOVE_TIMEOUT_MILLIS = (int) WireMockGitLab.TIMEOUT.toMillis() * 2 + 500;
 
     @Inject
     GitLabClient client;

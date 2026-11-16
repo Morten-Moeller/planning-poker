@@ -3,11 +3,12 @@ package planningpoker.gitlab;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
+import java.time.Duration;
 import java.util.Map;
 
 public class WireMockGitLab implements QuarkusTestResourceLifecycleManager {
 
-    static final String TIMEOUT = "1s";
+    public static final Duration TIMEOUT = Duration.ofSeconds(1);
 
     private WireMockServer server;
 
@@ -15,7 +16,11 @@ public class WireMockGitLab implements QuarkusTestResourceLifecycleManager {
     public Map<String, String> start() {
         server = new WireMockServer(WireMockConfiguration.options().dynamicPort());
         server.start();
-        return Map.of("planningpoker.gitlab.base-url", server.baseUrl(), "planningpoker.gitlab.timeout", TIMEOUT);
+        return Map.of(
+                "planningpoker.gitlab.base-url",
+                server.baseUrl(),
+                "planningpoker.gitlab.timeout",
+                TIMEOUT.toSeconds() + "s");
     }
 
     @Override
