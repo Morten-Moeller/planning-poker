@@ -1,5 +1,6 @@
 package planningpoker.session;
 
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -63,6 +64,11 @@ public class SessionResource {
 
     @Inject
     GitLabIssues gitLabIssues;
+
+    @Inject
+    Event<RoundCompleted> roundCompleted;
+
+    private record VoteOutcome(boolean completed, int roundNumber) {}
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -260,8 +266,18 @@ public class SessionResource {
             description = "INVALID_STATE",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response vote(
-            @PathParam("id") @Parameter(description = SESSION_ID) String id, @NotNull @Valid VoteRequest request) {
-        throw notImplemented();
+            @PathParam("id") @Parameter(description = SESSION_ID) String id,
+            @NotNull @Valid VoteRequest request,
+            @Context ContainerRequestContext context) {
+        Actor actor = ActorFilter.actorOf(context);
+        VoteOutcome outcome = registry.update(id, session -> {
+            boolean completed = session.vote(actor.participantId(), request.card());
+            return new VoteOutcome(completed, session.round().map(Round::number).orElse(0));
+        });
+        if (outcome.completed()) {
+            roundCompleted.fire(new RoundCompleted(id, outcome.roundNumber()));
+        }
+        return Response.noContent().build();
     }
 
     @POST
@@ -287,8 +303,14 @@ public class SessionResource {
             responseCode = "409",
             description = "INVALID_STATE",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
-    public Response revealRound(@PathParam("id") @Parameter(description = SESSION_ID) String id) {
-        throw notImplemented();
+    public Response revealRound(
+            @PathParam("id") @Parameter(description = SESSION_ID) String id, @Context ContainerRequestContext context) {
+        Actor actor = ActorFilter.actorOf(context);
+        registry.update(id, session -> {
+            session.reveal(actor.participantId());
+            return null;
+        });
+        return Response.noContent().build();
     }
 
     @POST
@@ -314,8 +336,14 @@ public class SessionResource {
             responseCode = "409",
             description = "INVALID_STATE",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
-    public Response restartRound(@PathParam("id") @Parameter(description = SESSION_ID) String id) {
-        throw notImplemented();
+    public Response restartRound(
+            @PathParam("id") @Parameter(description = SESSION_ID) String id, @Context ContainerRequestContext context) {
+        Actor actor = ActorFilter.actorOf(context);
+        registry.update(id, session -> {
+            session.restart(actor.participantId());
+            return null;
+        });
+        return Response.noContent().build();
     }
 
     @POST

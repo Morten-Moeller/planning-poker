@@ -53,6 +53,7 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 | I26 | Das Token wird dem Teilnehmer der Sitzung aus dem Pfad zugeordnet; ein Token einer anderen Sitzung gilt nicht; eine unbekannte Sitzung antwortet wie eine fehlende. | `session.ActorFilter` über `SessionRegistry.read` | `UNAUTHORIZED`, `SESSION_NOT_FOUND` |
 | I27 | Die Rolle des Endpunkts (`@RequiresRole`) wird vor der Methode geprüft; die Domäne prüft sie erneut. | `session.ActorFilter`, `Session.requireRole` | `FORBIDDEN_ROLE` |
 | I28 | Kein Snapshot enthält ein Token oder vor der Auflösung eine fremde Karte; `preselectedIssueIid` sieht nur der Scrum Master. | `session.SessionViewMapper` | – |
+| I29 | `RoundCompleted` feuert genau einmal je Vollständigkeit, wenn der letzte verbundene Entwickler gewählt hat (I13, I14); eine spätere Kartenänderung feuert nicht erneut. | `session.SessionResource.vote` über den Rückgabewert von `Session.vote` | – |
 
 ## Identität (ADR 0003)
 
