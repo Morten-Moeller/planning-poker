@@ -56,36 +56,13 @@ class SessionResourceTest {
     }
 
     static Stream<Arguments> securedEndpoints() {
-        return Stream.concat(
-                Stream.of(
-                        Arguments.of("GET", "/issues?search=login&page=1", null, Role.SCRUM_MASTER),
-                        Arguments.of("POST", "/active-issue", "{\"issueIid\":42}", Role.SCRUM_MASTER),
-                        Arguments.of("PUT", "/vote", "{\"card\":\"5\"}", Role.DEVELOPER),
-                        Arguments.of("POST", "/round/reveal", null, Role.SCRUM_MASTER),
-                        Arguments.of("POST", "/round/restart", null, Role.SCRUM_MASTER)),
-                stubEndpoints());
-    }
-
-    static Stream<Arguments> stubEndpoints() {
-        return Stream.of(Arguments.of("POST", "/round/confirm", "{\"card\":\"COFFEE\"}", Role.SCRUM_MASTER));
-    }
-
-    @ParameterizedTest(name = "{0} {1}")
-    @MethodSource("stubEndpoints")
-    void answersNotImplementedAsProblemDetailForTheRightRole(String method, String path, String body, Role role) {
-        RequestSpecification request = as(role);
-        if (body != null) {
-            request = request.contentType(ContentType.JSON).body(body);
-        }
-        request.when()
-                .request(method, session + path)
-                .then()
-                .statusCode(501)
-                .contentType(PROBLEM)
-                .body("type", equalTo("about:blank"))
-                .body("title", equalTo("Not Implemented"))
-                .body("status", equalTo(501))
-                .body("errorCode", equalTo("NOT_IMPLEMENTED"));
+        return Stream.of(
+                Arguments.of("GET", "/issues?search=login&page=1", null, Role.SCRUM_MASTER),
+                Arguments.of("POST", "/active-issue", "{\"issueIid\":42}", Role.SCRUM_MASTER),
+                Arguments.of("PUT", "/vote", "{\"card\":\"5\"}", Role.DEVELOPER),
+                Arguments.of("POST", "/round/reveal", null, Role.SCRUM_MASTER),
+                Arguments.of("POST", "/round/restart", null, Role.SCRUM_MASTER),
+                Arguments.of("POST", "/round/confirm", "{\"card\":\"COFFEE\"}", Role.SCRUM_MASTER));
     }
 
     @ParameterizedTest(name = "{0} {1}")

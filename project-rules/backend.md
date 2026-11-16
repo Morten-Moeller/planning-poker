@@ -139,4 +139,32 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   rate limit for anonymous creation is a decision for the hardening (spec 0015).
 - Commands answer 204, or 201 with the new ids; the new state reaches clients through the
   WebSocket snapshot (ADR 0004).
+
+## Realtime
+
+- `SessionSocket` (`quarkus-websockets-next`, `/ws/sessions/{sessionId}`) takes the token only
+  from the first message `auth` (ADR 0003) and resolves it with `Session.participantByToken`
+  under `SessionRegistry.read`, the same token comparison as `ActorFilter` (constant time). An
+  unknown token answers `error` with `UNAUTHORIZED`, an unknown or expired session
+  `SESSION_NOT_FOUND`; both close the connection (code 1008). A message other than `auth` before
+  `auth` answers `error` without a close. After `auth` only `ping` is valid; it answers `pong`.
+- Auth deadline: a Vert.x timer per connection, `planningpoker.realtime.auth-timeout` (default
+  `5s`, `RealtimeConfig`, default in the mapping; the `test` profile sets `1s`). A successful
+  `auth` cancels it; a connection without `auth` closes without a snapshot.
+- `ConnectionRegistry` holds the open connections per session with participant id and role, only
+  in `realtime`. `connected` changes only through `SessionRegistry.update` (`Session.connect`
+  after `auth`, `Session.disconnect` on close when no other connection of the participant is
+  open); a missing session on close is ignored.
+- `SnapshotBroadcaster` observes `SessionChanged` and `RoundCompleted` synchronously in the
+  thread of the command (ADR 0002). It builds each snapshot under `SessionRegistry.read` with
+  `SessionViewMapper.toView(session, participantId)` and sends `session.state` to every
+  connection of the session; `round.allVoted` goes only to connections with role
+  `SCRUM_MASTER`. New commands need no code in `realtime`.
+- `MessageSender` writes the envelope `WsMessage` (`type`, `payload`; no `payload` for `pong`)
+  with the Quarkus `ObjectMapper` and sends without waiting; a failed send closes only that
+  connection (code 1011).
+- Tests: `backend/src/test/java/planningpoker/realtime/` with `SocketClient`
+  (`BasicWebSocketConnector`, message queue, waits with timeout) and `RestCalls`. A test proves
+  the absence of a message with `untilPong`: messages of one connection arrive in order, so
+  everything sent before the `pong` has arrived.
 - Formatting: palantir-java-format through Spotless (`make lint-backend`, `make format`).

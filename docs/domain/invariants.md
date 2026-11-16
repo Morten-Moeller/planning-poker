@@ -55,6 +55,16 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 | I28 | Kein Snapshot enthält ein Token oder vor der Auflösung eine fremde Karte; `preselectedIssueIid` sieht nur der Scrum Master. | `session.SessionViewMapper` | – |
 | I29 | `RoundCompleted` feuert genau einmal je Vollständigkeit, wenn der letzte verbundene Entwickler gewählt hat (I13, I14); eine spätere Kartenänderung feuert nicht erneut. | `session.SessionResource.vote` über den Rückgabewert von `Session.vote` | – |
 
+## Echtzeit (Spec 0009, ADR 0003, ADR 0004)
+
+| Nr | Regel | Durchgesetzt in | Fehlercode |
+|---|---|---|---|
+| I30 | Eine Verbindung erhält das Token nur in der ersten Nachricht `auth`, nie aus der URL; vor `auth` erhält sie keinen Snapshot, eine andere Nachricht vor `auth` beantwortet `error`. | `realtime.SessionSocket` | `UNAUTHORIZED` |
+| I31 | Ein unbekanntes Token oder eine unbekannte Sitzung beantwortet `auth` mit `error` und schließt die Verbindung; ohne `auth` innerhalb von `planningpoker.realtime.auth-timeout` schließt der Server sie ohne Snapshot. | `realtime.SessionSocket` | `UNAUTHORIZED`, `SESSION_NOT_FOUND` |
+| I32 | Der Tokenvergleich für REST und WebSocket ist eine Stelle mit konstanter Laufzeit. | `Session.participantByToken` | – |
+| I33 | `connected` ändert sich nur über `SessionRegistry.update`: wahr nach `auth`, falsch beim Schließen der letzten Verbindung des Teilnehmers; eine verfallene Sitzung beim Schließen wird übergangen (A-10). | `realtime.SessionSocket`, `Session.connect`, `Session.disconnect` | – |
+| I34 | Nach jedem `SessionChanged` erhält jede Verbindung der Sitzung `session.state` mit dem für ihren Teilnehmer gefilterten Snapshot (I28); `round.allVoted` geht je `RoundCompleted` nur an Verbindungen des Scrum Masters. | `realtime.SnapshotBroadcaster` | – |
+
 ## Identität (ADR 0003)
 
 | Nr | Regel | Durchgesetzt in |

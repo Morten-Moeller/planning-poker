@@ -78,10 +78,13 @@ change touches.
   them in their setup. Backend tests of the session area run with the test resource
   `WireMockGitLab` and stub GitLab through `backend/src/test/java/planningpoker/session/GitLabStubs.java`
   (issue 42 of project 1234 by default, searches, failures, delays); every test resets the stubs
-  in its `@BeforeEach`. GitLab data of the end-to-end flows comes from the fixed mappings of the
-  GitLab double in `frontend/e2e/gitlab-double/mappings/` (spec 0011): project `1234` with issues
-  42 and 43, the issue search of the project (both issues), notes and weight of both issues;
-  issue 404 answers 404. A flow that needs other GitLab data adds a mapping there.
+  in its `@BeforeEach`. Tests of the realtime area use the same test resource with
+  `backend/src/test/java/planningpoker/realtime/RestCalls.java` (REST flow and the stub of issue
+  42) and `SocketClient.java` (WebSocket client with timeouts). GitLab data of the end-to-end
+  flows comes from the fixed mappings of the GitLab double in
+  `frontend/e2e/gitlab-double/mappings/` (spec 0011): project `1234` with issues 42 and 43, the
+  issue search of the project (both issues), notes and weight of both issues; issue 404 answers
+  404. A flow that needs other GitLab data adds a mapping there.
 - Environment check: `make e2e` starts everything; for a manual check start backend and frontend
   as in `README.md`.
 - Named states: none yet; a state the flows need goes into the spec that introduces it. The

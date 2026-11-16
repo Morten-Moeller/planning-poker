@@ -2,6 +2,8 @@ package planningpoker.session;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -20,6 +22,10 @@ final class GitLabStubs {
 
     static String issuePath(String projectId, long iid) {
         return issuesPath(projectId) + "/" + iid;
+    }
+
+    static String notesPath(String projectId, long iid) {
+        return issuePath(projectId, iid) + "/notes";
     }
 
     static String issueJson(long iid, String title, String description) {
@@ -68,6 +74,30 @@ final class GitLabStubs {
     static void searchDelayed(WireMockServer server, String projectId, int millis) {
         server.stubFor(get(urlPathEqualTo(issuesPath(projectId)))
                 .willReturn(json(200, "[]").withFixedDelay(millis)));
+    }
+
+    static void note(WireMockServer server, String projectId, long iid) {
+        server.stubFor(post(urlPathEqualTo(notesPath(projectId, iid))).willReturn(json(201, "{\"id\":1}")));
+    }
+
+    static void noteFailing(WireMockServer server, String projectId, long iid, int status) {
+        server.stubFor(post(urlPathEqualTo(notesPath(projectId, iid)))
+                .willReturn(json(status, "{\"message\":\"gitlab failure text\"}")));
+    }
+
+    static void noteDelayed(WireMockServer server, String projectId, long iid, int millis) {
+        server.stubFor(post(urlPathEqualTo(notesPath(projectId, iid)))
+                .willReturn(json(201, "{\"id\":1}").withFixedDelay(millis)));
+    }
+
+    static void weight(WireMockServer server, String projectId, long iid) {
+        server.stubFor(
+                put(urlPathEqualTo(issuePath(projectId, iid))).willReturn(json(200, issueJson(iid, "Login page", ""))));
+    }
+
+    static void weightFailing(WireMockServer server, String projectId, long iid, int status) {
+        server.stubFor(put(urlPathEqualTo(issuePath(projectId, iid)))
+                .willReturn(json(status, "{\"message\":\"gitlab failure text\"}")));
     }
 
     static ResponseDefinitionBuilder json(int status, String body) {

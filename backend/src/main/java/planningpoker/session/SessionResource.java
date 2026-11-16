@@ -27,9 +27,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import planningpoker.platform.ApiException;
 import planningpoker.platform.Authenticated;
-import planningpoker.platform.ErrorCode;
 import planningpoker.platform.ProblemDetail;
 import planningpoker.session.api.ConfirmRequest;
 import planningpoker.session.api.CreateSessionRequest;
@@ -64,6 +62,9 @@ public class SessionResource {
 
     @Inject
     GitLabIssues gitLabIssues;
+
+    @Inject
+    ResultPublisher publisher;
 
     @Inject
     Event<RoundCompleted> roundCompleted;
@@ -381,11 +382,26 @@ public class SessionResource {
             description = "GITLAB_ERROR",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response confirmRound(
-            @PathParam("id") @Parameter(description = SESSION_ID) String id, @NotNull @Valid ConfirmRequest request) {
-        throw notImplemented();
-    }
-
-    private static ApiException notImplemented() {
-        return new ApiException(ErrorCode.NOT_IMPLEMENTED, "This endpoint is not implemented yet.");
+            @PathParam("id") @Parameter(description = SESSION_ID) String id,
+            @NotNull @Valid ConfirmRequest request,
+            @Context ContainerRequestContext context) {
+        Actor actor = ActorFilter.actorOf(context);
+        String projectId = registry.read(id, Session::gitlabProjectId);
+        Confirmation confirmation =
+                registry.update(id, session -> session.beginConfirm(actor.participantId(), request.card()));
+        try {
+            publisher.publish(projectId, confirmation);
+        } catch (RuntimeException e) {
+            registry.update(id, session -> {
+                session.failConfirm();
+                return null;
+            });
+            throw e;
+        }
+        registry.update(id, session -> {
+            session.finishConfirm(request.card());
+            return null;
+        });
+        return Response.noContent().build();
     }
 }

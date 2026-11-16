@@ -49,10 +49,31 @@ gelten je Backend-Instanz, nicht je Sitzung.
 | `planningpoker.gitlab.timeout` | `10s` | Verbindungs- und Lesezeit je GitLab-Aufruf |
 | `planningpoker.session.ttl` | `12h` | Verfall inaktiver Sitzungen |
 
-Das bestätigte Ergebnis wird als Kommentar (Note) am Issue hinterlegt: Endwert, Rundenzahl und
-Verteilung der letzten Runde. Das funktioniert in jedem GitLab-Tarif. Mit `write-weight` setzt
-das Backend Zahlenwerte vorher zusätzlich als `weight`; bei `?` und ☕ wird nur kommentiert.
-Umsetzung ab Spec 0010.
+Das bestätigte Ergebnis wird als Kommentar (Note) am Issue hinterlegt: Endwert, Rundenzahl,
+Verteilung der letzten Runde und Durchschnitt. Das funktioniert in jedem GitLab-Tarif. Mit
+`write-weight` setzt das Backend Zahlenwerte vorher zusätzlich als `weight`; bei `?` und ☕ wird
+nur kommentiert.
+
+Vorlage des Kommentars (Karten in Kartenreihenfolge, Durchschnitt über die Zahlenkarten mit einer
+Nachkommastelle; ohne Zahlenkarte endet der Text mit `Kein Durchschnitt.`):
+
+```markdown
+**Planning Poker: Ergebnis 5**
+
+Runden: 2. Letzte Runde: 3 (1 Stimme), 5 (3 Stimmen), 8 (1 Stimme). Durchschnitt 5,2.
+```
+
+Ablauf von `POST /api/sessions/{id}/round/confirm`:
+
+1. Unter der Sperre der Sitzung: Prüfung von Rolle und Phase `REVEALED`, `round.confirming` wird
+   `true`. Ab hier lehnt die Sitzung jede Steuerungsaktion mit 409 `INVALID_STATE` ab; Beitreten
+   und Lesen bleiben möglich.
+2. Außerhalb der Sperre: mit `write-weight` und Zahlenkarte `PUT …/issues/{iid}` mit `weight`,
+   danach `POST …/issues/{iid}/notes` mit dem Kommentar.
+3. Erfolg: Endwert im jüngsten Protokolleintrag, Phase `LOBBY` ohne aktives Issue, Antwort 204.
+   Fehler oder keine Antwort von GitLab: `confirming` wieder `false`, Phase bleibt `REVEALED`,
+   Antwort 502 `GITLAB_ERROR`; ein erneuter Versuch ist möglich. Schlägt das Gewicht fehl, wird
+   kein Kommentar geschrieben.
 
 ## Schnittstellen
 
