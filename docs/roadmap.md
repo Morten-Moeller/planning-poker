@@ -93,7 +93,8 @@ Hinweise zu den Wellen:
 
 ## Offene Fragen
 
-- [x] Wer setzt die Schlüssel in `harness/config.yml` (`e2e_in_ci: true`, `worktree_setup`, `contracts_generate_target`), die der Umsetzungsplan M0 und M1 zuordnet? → Die Person selbst, auf `main`; die Specs nennen die Werte unter ihren offenen Fragen. (Morten Möller, 2026-11-16)
+- [x] Wer setzt die Schlüssel in `harness/config.yml` (`e2e_in_ci: true`, `worktree_setup`, `contracts_generate_target`), die der Umsetzungsplan M0 und M1 zuordnet? → `e2e_in_ci` und `worktree_setup` die Person selbst auf `main`; `contracts_generate_target` der Implementer von 0002 in derselben Änderung wie das Makefile-Ziel, geprüft von der Person im PR. (Morten Möller, 2026-11-16)
+- [x] Neuer Konfigurationsschlüssel `planningpoker.gitlab.timeout` (Standard `10s`) für Spec 0003, Ergänzung zu Abschnitt 4.7? → Ja; die Person trägt ihn im Umsetzungsplan nach, 0007 ergänzt die README-Tabelle. (Morten Möller, 2026-11-16)
 - [x] Java-Basispaket des Backends? → `planningpoker` mit den Unterpaketen `session`, `gitlab`, `realtime` und `platform`. (Morten Möller, 2026-11-16)
 - [x] Gibt es einen Abgabetermin, der die Reihenfolge der Wellen ändert? → Nein; M14 bleibt der letzte Meilenstein. (Morten Möller, 2026-11-16)
 - [x] Testprojekt für die manuelle Prüfung in M13? → Ein eigenes Projekt auf gitlab.com mit Personal Access Token (Scope `api`) liegt vor. (Morten Möller, 2026-11-16)
