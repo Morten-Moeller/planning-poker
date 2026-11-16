@@ -1,14 +1,14 @@
 ---
 id: "0009"
 title: Echtzeit (M6)
-status: Review
+status: done
 risk: high
 adrs: ["0003", "0004"]
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#10"
+note: alle Kriterien erfüllt
 ---
 
 # Echtzeit (M6)
