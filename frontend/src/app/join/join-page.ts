@@ -1,20 +1,36 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
+import type { ErrorCode } from '../api/api-error';
 import { ApiService } from '../api/api.service';
+import { formErrorMessage } from '../api/error-messages';
+import { ErrorState } from '../api/error-state';
 import { TokenStore } from '../api/token-store';
+
+const NAME_MAX_LENGTH = 30;
+const NOT_BLANK = /\S/;
+const JOIN_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
+  'SESSION_NOT_FOUND',
+  'NAME_TAKEN',
+  'VALIDATION_ERROR',
+]);
 
 @Component({
   selector: 'app-join-page',
-  imports: [MatButtonModule],
+  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
   templateUrl: './join-page.html',
+  styleUrl: './join-page.scss',
 })
 export class JoinPage {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(ApiService);
   private readonly tokens = inject(TokenStore);
+  private readonly errorState = inject(ErrorState);
   private readonly router = inject(Router);
 
   protected readonly sessionId = toSignal(
@@ -22,14 +38,41 @@ export class JoinPage {
     { initialValue: '' },
   );
 
+  protected readonly joinForm = new FormGroup({
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [
+        Validators.required,
+        Validators.pattern(NOT_BLANK),
+        Validators.maxLength(NAME_MAX_LENGTH),
+      ],
+    }),
+  });
+
+  protected readonly joinError = signal<string | null>(null);
+  protected readonly joining = signal(false);
+
   protected join(): void {
+    this.joinError.set(null);
+    if (this.joinForm.invalid) {
+      this.joinForm.markAllAsTouched();
+      return;
+    }
     const sessionId = this.sessionId();
-    this.api.joinSession(sessionId, { name: 'Ben' }).subscribe({
+    this.joining.set(true);
+    this.api.joinSession(sessionId, { name: this.joinForm.controls.name.value.trim() }).subscribe({
       next: ({ participantId, token }) => {
         this.tokens.store(sessionId, { participantId, token });
         void this.router.navigate(['/session', sessionId]);
       },
-      error: () => undefined,
+      error: (error: unknown) => {
+        this.joining.set(false);
+        const message = formErrorMessage(error, JOIN_FORM_ERRORS);
+        if (message !== null) {
+          this.errorState.clear();
+          this.joinError.set(message);
+        }
+      },
     });
   }
 }

@@ -1,0 +1,12 @@
+dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-s);
+  margin: 0 0 var(--app-space-m);
+}
+
+code {
+  font: var(--mat-sys-body-large);
+  overflow-wrap: anywhere;
+}

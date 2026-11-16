@@ -1,0 +1,43 @@
+<section class="share" data-testid="session-share">
+  <h2 i18n="@@share.title">Teilen</h2>
+  <dl>
+    <dt i18n="@@share.linkLabel">Beitrittslink</dt>
+    <dd>
+      <code data-testid="share-link">{{ link() }}</code>
+      @if (canCopy) {
+        <button
+          mat-stroked-button
+          type="button"
+          data-testid="copy-link"
+          i18n="@@share.copyLink"
+          (click)="copy('link')"
+        >
+          Link kopieren
+        </button>
+        @if (copied() === 'link') {
+          <span role="status" data-testid="copy-link-done" i18n="@@share.copied">Kopiert</span>
+        }
+      }
+    </dd>
+    <dt i18n="@@share.sessionIdLabel">Session-ID</dt>
+    <dd>
+      <code data-testid="share-session-id">{{ sessionId() }}</code>
+      @if (canCopy) {
+        <button
+          mat-stroked-button
+          type="button"
+          data-testid="copy-session-id"
+          i18n="@@share.copySessionId"
+          (click)="copy('sessionId')"
+        >
+          Session-ID kopieren
+        </button>
+        @if (copied() === 'sessionId') {
+          <span role="status" data-testid="copy-session-id-done" i18n="@@share.copied">
+            Kopiert
+          </span>
+        }
+      }
+    </dd>
+  </dl>
+</section>

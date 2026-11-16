@@ -2,8 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 const backendPort = process.env['BACKEND_PORT'] ?? '8080';
 const frontendPort = process.env['FRONTEND_PORT'] ?? '4200';
+const gitlabDoublePort = process.env['GITLAB_DOUBLE_PORT'] ?? '8089';
 const javaHome = process.env['JAVA_HOME'];
 const java = javaHome ? `${javaHome}/bin/java` : 'java';
+const gitlabDoubleJar = '../backend/target/gitlab-double/wiremock-standalone.jar';
 
 export default defineConfig({
   testDir: './e2e',
@@ -18,7 +20,13 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      command: `./mvnw -q -DskipTests package && ${java} -Dquarkus.profile=e2e -Dquarkus.http.port=${backendPort} -jar target/quarkus-app/quarkus-run.jar`,
+      command: `${java} -jar ${gitlabDoubleJar} --port ${gitlabDoublePort} --root-dir e2e/gitlab-double --disable-banner`,
+      url: `http://localhost:${gitlabDoublePort}/__admin/health`,
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+    {
+      command: `./mvnw -q -DskipTests package && ${java} -Dquarkus.profile=e2e -Dquarkus.http.port=${backendPort} -Dplanningpoker.gitlab.base-url=http://localhost:${gitlabDoublePort} -jar target/quarkus-app/quarkus-run.jar`,
       cwd: '../backend',
       url: `http://localhost:${backendPort}/api/health`,
       reuseExistingServer: false,

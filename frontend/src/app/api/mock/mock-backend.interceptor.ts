@@ -9,9 +9,17 @@ import {
 import { Observable, of, throwError } from 'rxjs';
 import { ErrorCode, ProblemDetail } from '../api-error';
 import { lobbyScrumMaster } from '../examples';
-import { CreateSessionResponse, IssueListResponse, JoinSessionResponse } from '../api.service';
+import {
+  CreateSessionRequest,
+  CreateSessionResponse,
+  IssueListResponse,
+  JoinSessionRequest,
+  JoinSessionResponse,
+} from '../api.service';
 import { MOCK_SESSION_ID, issueToken, roleOfToken, snapshotFor } from './mock-session';
 
+const MOCK_MISSING_ISSUE_IID = 404;
+const MOCK_TAKEN_NAME = 'Ben';
 const SESSION_PATH = /^\/api\/sessions\/([^/?]+)(\/[^?]*)?/;
 
 export const mockBackendInterceptor: HttpInterceptorFn = (request) => answer(request);
@@ -22,6 +30,9 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
     return ok({ status: 'UP' });
   }
   if (path === '/api/sessions' && request.method === 'POST') {
+    if ((request.body as CreateSessionRequest | null)?.issueIid === MOCK_MISSING_ISSUE_IID) {
+      return problem(404, 'Not Found', 'ISSUE_NOT_FOUND', 'Unknown issue.');
+    }
     const created: CreateSessionResponse = {
       sessionId: MOCK_SESSION_ID,
       participantId: lobbyScrumMaster.me.participantId,
@@ -38,6 +49,10 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
   }
   const subPath = match[2] ?? '';
   if (subPath === '/participants' && request.method === 'POST') {
+    const name = (request.body as JoinSessionRequest | null)?.name?.trim().toLowerCase();
+    if (name === MOCK_TAKEN_NAME.toLowerCase()) {
+      return problem(409, 'Conflict', 'NAME_TAKEN', 'The name is already taken.');
+    }
     const joined: JoinSessionResponse = {
       participantId: snapshotFor('DEVELOPER').me.participantId,
       token: issueToken('DEVELOPER'),
