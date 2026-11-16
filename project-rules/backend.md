@@ -14,6 +14,9 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   `quarkus-rest-client-jackson` for GitLab; `quarkus-smallrye-openapi` for the contract;
   `quarkus-logging-json` for logs (ADR 0001).
 - No database and no migration tool: sessions live in memory (ADR 0002).
+- `backend/pom.xml` manages the versions of jetty (`wiremock-jetty12`), handlebars, guava and
+  json-smart above what WireMock 3.13 declares, because the gate `deps` reports OSV advisories for
+  the declared versions. Drop the pins when a WireMock release declares fixed versions.
 
 ## Structure
 
@@ -53,7 +56,8 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   plain text). Never logged: the GitLab token, participant tokens, hidden card values.
 - Configuration: `backend/src/main/resources/application.properties` holds every
   `planningpoker.*` key with its default. The GitLab token comes from `GITLAB_TOKEN` and has no
-  default; a missing token stops the start with the key name (A6.1, spec 0003). Profiles `test`
+  default; a missing token stops the start with the key name (A6.1). Exception until spec 0003:
+  no code reads the key yet, so the start does not check it. Profiles `test`
   and `e2e` set placeholder values. No secret in the repository.
 - Ports: `quarkus.http.port=8080`, tests on a free port (`quarkus.http.test-port=0`).
 

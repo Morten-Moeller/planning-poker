@@ -51,9 +51,11 @@ change touches.
   double (WireMock Standalone on port 8089) joins as a third entry with spec 0011. `make e2e`
   takes `harness/scripts/app-lock.sh` (owner: the branch), so only one worktree runs the
   application. The ports are 8080 and 4200 by default; `BACKEND_PORT` and `FRONTEND_PORT`
-  change them when a port is taken on a developer machine.
-- One spec: `pnpm -C frontend exec playwright test e2e/health.spec.ts` (with the application
-  already running, Playwright reuses it outside CI).
+  change them when a port is taken on a developer machine. Playwright never reuses a server that
+  already answers on a port (`reuseExistingServer: false`), so the tests always run against the
+  profile `e2e`; a running `quarkus:dev` on the same port fails the start.
+- One spec: `pnpm -C frontend exec playwright test e2e/health.spec.ts`; Playwright starts the
+  servers for this run as well.
 - Session setup (T6.2): there is no login. A flow creates its session through the start page or
   the REST API in a `beforeEach`; the token lands in `sessionStorage` through the application.
 - Environment check (T4.3): Playwright waits for `/api/health` of the backend and for the

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.junit.QuarkusTest;
 import java.io.IOException;
@@ -25,15 +26,22 @@ class LoggingTest {
         String logPath = ConfigProvider.getConfig().getValue("quarkus.log.file.path", String.class);
         String token = ConfigProvider.getConfig().getValue("planningpoker.gitlab.token", String.class);
 
+        long ownProcessId = ProcessHandle.current().pid();
         List<String> lines = Files.readAllLines(Path.of(logPath)).stream()
                 .filter(line -> !line.isBlank())
                 .toList();
 
-        assertFalse(lines.isEmpty(), "no log lines in " + logPath);
+        int ownLines = 0;
         for (String line : lines) {
             assertDoesNotThrow(() -> JSON.readTree(line), "not a JSON line: " + line);
-            assertTrue(JSON.readTree(line).has("message"), "no message field: " + line);
+            JsonNode entry = JSON.readTree(line);
+            if (entry.path("processId").asLong() != ownProcessId) {
+                continue;
+            }
+            ownLines++;
+            assertTrue(entry.has("message"), "no message field: " + line);
             assertFalse(line.contains(token), "token value in log line: " + line);
         }
+        assertTrue(ownLines > 0, "no log lines of this process in " + logPath);
     }
 }
