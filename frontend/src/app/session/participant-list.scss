@@ -26,7 +26,8 @@ li {
   font: var(--mat-sys-label-medium);
 }
 
-.status {
+.status,
+.vote {
   display: inline-flex;
   gap: var(--app-space-s);
   color: var(--mat-sys-on-surface-variant);
@@ -35,4 +36,8 @@ li {
 
 .disconnected .name {
   color: var(--mat-sys-on-surface-variant);
+}
+
+.vote {
+  color: var(--mat-sys-on-surface);
 }

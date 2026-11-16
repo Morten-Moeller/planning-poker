@@ -2,13 +2,15 @@ import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { SessionStore } from '../api/session-store';
 import { ActiveIssue } from './active-issue';
+import { CardDeck } from './card-deck';
 import { IssuePanel } from './issue-panel';
 import { ParticipantList } from './participant-list';
+import { RoundStatus } from './round-status';
 import { ShareSession } from './share-session';
 
 @Component({
   selector: 'app-session-page',
-  imports: [ShareSession, ParticipantList, IssuePanel, ActiveIssue],
+  imports: [ShareSession, ParticipantList, IssuePanel, ActiveIssue, RoundStatus, CardDeck],
   templateUrl: './session-page.html',
   styleUrl: './session-page.scss',
 })

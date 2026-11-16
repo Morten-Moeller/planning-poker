@@ -1,0 +1,229 @@
+import { Browser, Locator, Page, expect, test } from '@playwright/test';
+
+const PROJECT = '1234';
+const CARD_IDS = [
+  'card-0',
+  'card-1',
+  'card-2',
+  'card-3',
+  'card-5',
+  'card-8',
+  'card-13',
+  'card-21',
+  'card-34',
+  'card-?',
+  'card-COFFEE',
+];
+
+interface Snapshot {
+  phase: string;
+  round: { myVote: string | null; votes: unknown[] | null } | null;
+}
+
+interface View {
+  page: Page;
+  snapshots: Snapshot[];
+  chosen: Set<string>;
+}
+
+function watch(page: Page): View {
+  const view: View = { page, snapshots: [], chosen: new Set() };
+  page.on('websocket', (socket) => {
+    socket.on('framereceived', ({ payload }) => {
+      const message = JSON.parse(payload.toString()) as { type: string; payload?: Snapshot };
+      if (message.type === 'session.state' && message.payload !== undefined) {
+        view.snapshots.push(message.payload);
+      }
+    });
+  });
+  return view;
+}
+
+async function createSession(page: Page): Promise<{ scrumMaster: View; link: string }> {
+  const scrumMaster = watch(page);
+  await page.goto('/');
+  await page.getByTestId('create-name').fill('Anna');
+  await page.getByTestId('create-project').fill(PROJECT);
+  await page.getByTestId('create-issue').fill('42');
+  await page.getByTestId('create-submit').click();
+  await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
+  const link = (await page.getByTestId('share-link').textContent()) ?? '';
+  return { scrumMaster, link };
+}
+
+async function join(browser: Browser, link: string, name: string): Promise<View> {
+  const view = watch(await (await browser.newContext()).newPage());
+  await view.page.goto(link);
+  await view.page.getByTestId('join-name').fill(name);
+  await view.page.getByTestId('join-submit').click();
+  await expect(view.page.getByTestId('session-role')).toHaveText('Entwickler');
+  return view;
+}
+
+async function release(scrumMaster: View, developers: View[]): Promise<void> {
+  await expect(scrumMaster.page.getByTestId('participant')).toHaveCount(developers.length + 1);
+  await scrumMaster.page.getByTestId('issue-release').click();
+  for (const view of [scrumMaster, ...developers]) {
+    await expect(view.page.getByTestId('session-phase')).toHaveText('Runde läuft');
+  }
+}
+
+function card(view: View, value: string): Locator {
+  return view.page.getByTestId('card-deck').getByTestId(`card-${value}`);
+}
+
+async function choose(view: View, value: string): Promise<void> {
+  view.chosen.add(value);
+  await card(view, value).click();
+  await expect(card(view, value)).toHaveAttribute('aria-pressed', 'true');
+}
+
+function voteStatus(view: View, name: string): Locator {
+  return view.page
+    .getByTestId('participant')
+    .filter({ has: view.page.getByTestId('participant-name').getByText(name, { exact: true }) })
+    .getByTestId('participant-vote-status');
+}
+
+function expectNoForeignCards(views: View[]): void {
+  for (const view of views) {
+    const hidden = view.snapshots.filter((snapshot) => snapshot.phase !== 'REVEALED');
+    expect(hidden.length).toBeGreaterThan(0);
+    for (const snapshot of hidden) {
+      expect(snapshot.round?.votes ?? null).toBeNull();
+      const myVote = snapshot.round?.myVote ?? null;
+      if (myVote !== null) {
+        expect([...view.chosen]).toContain(myVote);
+      }
+    }
+  }
+}
+
+test.afterEach(async ({ browser, context: own }) => {
+  for (const context of browser.contexts().filter((context) => context !== own)) {
+    await context.close();
+  }
+});
+
+test('a developer chooses and changes a hidden card and the scrum master reveals early', async ({
+  page,
+  browser,
+}) => {
+  const { scrumMaster, link } = await createSession(page);
+  const ben = await join(browser, link, 'Ben');
+  const cem = await join(browser, link, 'Cem');
+  await release(scrumMaster, [ben, cem]);
+
+  const cards = ben.page.getByTestId('card-deck').locator('button');
+  await expect(cards).toHaveCount(11);
+  expect(await cards.evaluateAll((nodes) => nodes.map((node) => node.dataset['testid']))).toEqual(
+    CARD_IDS,
+  );
+  await expect(card(ben, 'COFFEE')).toHaveAccessibleName('Kaffeepause');
+  await expect(scrumMaster.page.getByTestId('card-deck')).toHaveCount(0);
+  await expect(scrumMaster.page.getByTestId('round-reveal')).toBeVisible();
+  for (const developer of [ben, cem]) {
+    await expect(developer.page.getByTestId('card-deck')).toBeVisible();
+    await expect(developer.page.getByTestId('round-reveal')).toHaveCount(0);
+  }
+
+  await choose(ben, '5');
+  await choose(ben, '8');
+  await expect(cards.and(ben.page.locator('[aria-pressed="true"]'))).toHaveCount(1);
+  await expect(card(ben, '5')).toHaveAttribute('aria-pressed', 'false');
+
+  await card(ben, '8').focus();
+  await ben.page.keyboard.press('Tab');
+  await expect(card(ben, '13')).toBeFocused();
+  ben.chosen.add('13');
+  await ben.page.keyboard.press('Enter');
+  await expect(card(ben, '13')).toHaveAttribute('aria-pressed', 'true');
+  await expect(card(ben, '8')).toHaveAttribute('aria-pressed', 'false');
+  await ben.page.keyboard.press('Tab');
+  await expect(card(ben, '21')).toBeFocused();
+  ben.chosen.add('21');
+  await ben.page.keyboard.press(' ');
+  await expect(card(ben, '21')).toHaveAttribute('aria-pressed', 'true');
+  await expect(cards.and(ben.page.locator('[aria-pressed="true"]'))).toHaveCount(1);
+
+  await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('1 von 2');
+  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
+  const reveal = scrumMaster.page.getByTestId('round-reveal');
+  await expect(reveal).toBeEnabled();
+  expectNoForeignCards([scrumMaster, ben, cem]);
+
+  await reveal.click();
+
+  for (const view of [scrumMaster, ben, cem]) {
+    await expect(view.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
+    await expect(view.page.getByTestId('card-deck')).toHaveCount(0);
+  }
+});
+
+test('the others see the vote status and the counter but never the card', async ({
+  page,
+  browser,
+}) => {
+  const { scrumMaster, link } = await createSession(page);
+  const ben = await join(browser, link, 'Ben');
+  const cem = await join(browser, link, 'Cem');
+  await release(scrumMaster, [ben, cem]);
+
+  for (const view of [scrumMaster, ben, cem]) {
+    await expect(view.page.getByTestId('vote-counter')).toContainText('0 von 2');
+    await expect(voteStatus(view, 'Ben')).toHaveText('Ausstehend');
+    await expect(voteStatus(view, 'Cem')).toHaveText('Ausstehend');
+    await expect(voteStatus(view, 'Anna')).toHaveCount(0);
+  }
+  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
+
+  await choose(ben, '5');
+
+  for (const view of [scrumMaster, cem]) {
+    await expect(voteStatus(view, 'Ben')).toHaveText('Hat geschätzt');
+    await expect(voteStatus(view, 'Cem')).toHaveText('Ausstehend');
+    await expect(view.page.getByTestId('vote-counter')).toContainText('1 von 2');
+  }
+  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
+
+  await choose(cem, 'COFFEE');
+
+  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toBeVisible();
+  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveAttribute('role', 'status');
+  await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('2 von 2');
+  for (const developer of [ben, cem]) {
+    await expect(developer.page.getByTestId('vote-counter')).toContainText('2 von 2');
+    await expect(developer.page.getByTestId('all-voted-hint')).toHaveCount(0);
+  }
+  expectNoForeignCards([scrumMaster, ben, cem]);
+
+  await scrumMaster.page.getByTestId('round-reveal').click();
+
+  for (const view of [scrumMaster, ben, cem]) {
+    await expect(view.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
+    await expect(view.page.getByTestId('card-deck')).toHaveCount(0);
+  }
+});
+
+test('a disconnected developer without a vote does not block the hint', async ({
+  page,
+  browser,
+}) => {
+  const { scrumMaster, link } = await createSession(page);
+  const ben = await join(browser, link, 'Ben');
+  const cem = await join(browser, link, 'Cem');
+  const dan = await join(browser, link, 'Dan');
+  await release(scrumMaster, [ben, cem, dan]);
+
+  await choose(ben, '3');
+  await choose(cem, '?');
+
+  await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('2 von 3');
+  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
+
+  await dan.page.context().close();
+
+  await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('2 von 2');
+  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toBeVisible();
+  expectNoForeignCards([scrumMaster, ben, cem]);
+});

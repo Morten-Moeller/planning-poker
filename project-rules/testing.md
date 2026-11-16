@@ -45,7 +45,7 @@ change touches.
 | `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts` |
 | `frontend/src/app/api/` | `frontend/src/app/api/*.spec.ts` (from spec 0005) | – |
 | `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts` |
-| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts` |
+| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts` |
 
 ## End-to-end
 
@@ -92,7 +92,8 @@ change touches.
 - Named states: none yet; a state the flows need goes into the spec that introduces it. The
   flows of spec 0011 and `session-room.spec.ts` (spec 0012) create their session through the
   start page (issue 42, issue 44 for the sanitizing check) and join through the join page in a
-  second browser context.
+  second browser context; `voting-round.spec.ts` (spec 0013) joins two or three developers the
+  same way.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.
 

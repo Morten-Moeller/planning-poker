@@ -7,6 +7,8 @@ import { authInterceptor } from '../api/auth.interceptor';
 import {
   lobbyDeveloper,
   lobbyScrumMaster,
+  revealedDeveloper,
+  revealedScrumMaster,
   SessionView,
   votingDeveloper,
   votingScrumMaster,
@@ -93,6 +95,46 @@ describe('SessionPage', () => {
 
     expect(count('issue-panel')).toBe(1);
     expect(count('lobby-waiting')).toBe(0);
+    http
+      .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
+      .flush({ items: [], nextPage: null });
+  });
+
+  it('shows the card deck and the counter but no reveal button to a developer while voting', async () => {
+    await open(votingDeveloper);
+
+    expect(count('card-deck')).toBe(1);
+    expect(count('vote-counter')).toBe(1);
+    expect(count('round-reveal')).toBe(0);
+    expect(count('all-voted-hint')).toBe(0);
+  });
+
+  it('shows the reveal button and the counter but no card deck to the scrum master while voting', async () => {
+    await open(votingScrumMaster);
+
+    expect(count('card-deck')).toBe(0);
+    expect(count('vote-counter')).toBe(1);
+    expect(count('round-reveal')).toBe(1);
+    http
+      .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
+      .flush({ items: [], nextPage: null });
+  });
+
+  it.each([
+    ['LOBBY', lobbyDeveloper],
+    ['REVEALED', revealedDeveloper],
+  ])('renders no card deck and no counter for a developer in %s', async (_phase, snapshot) => {
+    await open(snapshot);
+
+    expect(count('card-deck')).toBe(0);
+    expect(count('vote-counter')).toBe(0);
+  });
+
+  it('renders no reveal button for the scrum master after the reveal', async () => {
+    await open(revealedScrumMaster);
+
+    expect(count('round-reveal')).toBe(0);
+    expect(count('card-deck')).toBe(0);
     http
       .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
       .flush({ items: [], nextPage: null });

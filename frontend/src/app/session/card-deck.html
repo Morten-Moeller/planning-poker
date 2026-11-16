@@ -1,0 +1,20 @@
+<section class="deck" data-testid="card-deck">
+  <h2 i18n="@@cardDeck.title">Karte wählen</h2>
+  <div class="cards">
+    @for (card of cards; track card) {
+      <button
+        type="button"
+        class="card"
+        [matButton]="card === myVote() ? 'filled' : 'outlined'"
+        [attr.data-testid]="'card-' + card"
+        [attr.aria-pressed]="card === myVote()"
+        [attr.aria-label]="card === 'COFFEE' ? coffeeName : null"
+        [disabled]="sending()"
+        disabledInteractive
+        (click)="choose(card)"
+      >
+        {{ symbol(card) }}
+      </button>
+    }
+  </div>
+</section>
