@@ -1,19 +1,36 @@
 name: Setup
 description: >-
-  Project-owned toolchain setup for the quality gates. Fill the TODO steps with the project's
-  runtime and dependency install. The last steps install the stack-neutral tools for make sast
-  and make deps; keep them or replace them with the project's own.
+  Project-owned toolchain setup for the quality gates: JDK 21 with Maven cache, Node from .nvmrc,
+  pnpm with the frontend dependencies and the Playwright browser. The last steps install the
+  stack-neutral tools for make sast and make deps.
 
 runs:
   using: composite
   steps:
-    # TODO: runtime and dependencies of the project, for example:
-    # - uses: actions/setup-node@v4
-    #   with:
-    #     node-version-file: .nvmrc
-    #     cache: pnpm
-    # - run: pnpm install --frozen-lockfile
-    #   shell: bash
+    - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+      with:
+        distribution: temurin
+        java-version: "21"
+        cache: maven
+        cache-dependency-path: backend/pom.xml
+
+    - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      with:
+        package_json_file: frontend/package.json
+
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+        cache-dependency-path: frontend/pnpm-lock.yaml
+
+    - name: Install frontend dependencies
+      shell: bash
+      run: pnpm -C frontend install --frozen-lockfile
+
+    - name: Install Playwright browser
+      shell: bash
+      run: pnpm -C frontend exec playwright install --with-deps chromium
 
     - name: Install semgrep
       shell: bash

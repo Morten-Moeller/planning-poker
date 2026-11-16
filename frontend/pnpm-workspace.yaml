@@ -1,0 +1,15 @@
+packages:
+  - '.'
+
+minimumReleaseAge: 10080
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
+
+overrides:
+  minimatch@10: ^11.0.3
+
+allowBuilds:
+  '@parcel/watcher': false
+  esbuild: false
+  lmdb: false
+  msgpackr-extract: false
