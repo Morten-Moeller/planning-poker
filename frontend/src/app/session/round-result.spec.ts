@@ -9,6 +9,7 @@ import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
+import { Card } from './cards';
 import { RoundResult } from './round-result';
 
 const SESSION_ID = 'K7P2QX9M';
@@ -53,6 +54,17 @@ const numbers = withRound(revealedScrumMaster, {
     mostFrequent: ['2'],
   },
 });
+
+function withVotes(base: SessionView, cards: Card[]): SessionView {
+  const names = ['Ben', 'Cem', 'Dana'];
+  return withRound(base, {
+    votes: cards.map((card, index) => ({
+      participantId: `id-${names[index].toLowerCase()}`,
+      name: names[index],
+      card,
+    })),
+  });
+}
 
 describe('RoundResult', () => {
   let http: HttpTestingController;
@@ -160,6 +172,45 @@ describe('RoundResult', () => {
     expect(facts.textContent).toContain('Häufigste Werte (Orientierung)');
     expect(facts.querySelectorAll('button, a, input')).toHaveLength(0);
     expect(root().querySelector('.distribution')!.querySelectorAll('button')).toHaveLength(0);
+  });
+
+  it.each([
+    ['scrum master', revealedScrumMaster],
+    ['developer', revealedDeveloper],
+  ])('marks the lowest and the highest card as outliers for the %s', async (_role, base) => {
+    await open(withVotes(base, ['1', '3', '13']));
+
+    const marked = all('result-vote')
+      .filter((row) => row.querySelector('[data-testid="result-vote-outlier"]') !== null)
+      .map((row) => row.querySelector('[data-testid="result-vote-name"]')?.textContent?.trim());
+    expect(marked).toEqual(['Ben', 'Dana']);
+    expect(texts('result-vote-outlier')).toEqual(['Ausreißer', 'Ausreißer']);
+    expect(texts('outlier-hint')).toEqual([
+      'Niedrigste und höchste Schätzung liegen weit auseinander.',
+    ]);
+  });
+
+  it('shows neither outlier nor hint when the cards lie close together', async () => {
+    await open(withVotes(revealedDeveloper, ['3', '5', '8']));
+
+    expect(all('result-vote-outlier')).toHaveLength(0);
+    expect(all('outlier-hint')).toHaveLength(0);
+    expect(root().querySelectorAll('.vote.outlier')).toHaveLength(0);
+  });
+
+  it('puts the outlier text into the row of the vote and keeps it readable', async () => {
+    await open(withVotes(revealedDeveloper, ['1', '3', '13']));
+
+    const row = all('result-vote')[0];
+    const label = row.querySelector<HTMLElement>('[data-testid="result-vote-outlier"]')!;
+    expect(row.textContent?.replace(/\s+/g, ' ').trim()).toBe('Ben1Ausreißer');
+    expect(label.parentElement).toBe(row);
+    expect(row.classList).toContain('outlier');
+    for (let node: HTMLElement | null = label; node !== null; node = node.parentElement) {
+      expect(node.getAttribute('aria-hidden')).toBeNull();
+      expect(node.getAttribute('role')).not.toBe('img');
+      expect(node.getAttribute('aria-label')).toBeNull();
+    }
   });
 
   it('renders the actions for the scrum master', async () => {
