@@ -1,0 +1,56 @@
+package planningpoker.realtime;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+import java.util.Set;
+import org.jboss.logging.Logger;
+import planningpoker.session.Role;
+import planningpoker.session.RoundCompleted;
+import planningpoker.session.SessionChanged;
+import planningpoker.session.SessionException;
+import planningpoker.session.SessionRegistry;
+import planningpoker.session.SessionViewMapper;
+
+@ApplicationScoped
+public class SnapshotBroadcaster {
+
+    private static final Logger LOG = Logger.getLogger(SnapshotBroadcaster.class);
+
+    private final SessionViewMapper mapper = new SessionViewMapper();
+
+    @Inject
+    ConnectionRegistry connections;
+
+    @Inject
+    SessionRegistry registry;
+
+    @Inject
+    MessageSender sender;
+
+    void onSessionChanged(@Observes SessionChanged event) {
+        Set<ConnectionRegistry.Entry> entries = connections.of(event.sessionId());
+        if (entries.isEmpty()) {
+            return;
+        }
+        try {
+            registry.read(event.sessionId(), session -> {
+                for (ConnectionRegistry.Entry entry : entries) {
+                    sender.send(
+                            entry.connection(), WsMessage.sessionState(mapper.toView(session, entry.participantId())));
+                }
+                return null;
+            });
+        } catch (SessionException e) {
+            LOG.debugf("Snapshot for session %s skipped: %s", event.sessionId(), e.errorCode());
+        }
+    }
+
+    void onRoundCompleted(@Observes RoundCompleted event) {
+        for (ConnectionRegistry.Entry entry : connections.of(event.sessionId())) {
+            if (entry.role() == Role.SCRUM_MASTER) {
+                sender.send(entry.connection(), WsMessage.allVoted(event.roundNumber()));
+            }
+        }
+    }
+}
