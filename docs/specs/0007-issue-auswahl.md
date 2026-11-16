@@ -1,14 +1,14 @@
 ---
 id: "0007"
 title: Issue-Auswahl (M5, Teil 1)
-status: Review
+status: done
 risk: medium
 adrs: ["0002"]
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#7"
+note: alle Kriterien erfüllt
 ---
 
 # Issue-Auswahl (M5, Teil 1)
