@@ -44,13 +44,35 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
 
 ## Data
 
-- Sessions live in a `ConcurrentHashMap` in `SessionRegistry`. Every change runs through
-  `SessionRegistry.update(sessionId, command)`: lock per session, command, change event after the
-  lock is released (ADR 0002 replaces A4.1, A4.3, A4.4).
+- Sessions live in a `ConcurrentHashMap` in `SessionRegistry` (`planningpoker.session`). Every
+  change runs through `SessionRegistry.update(sessionId, command)`: lock per session
+  (`ReentrantLock`), `lastActivityAt` from the `Clock` bean, command, change event
+  `SessionChanged(sessionId)` after the lock is released (ADR 0002 replaces A4.1, A4.3, A4.4).
+  `create(gitlabProjectId, issueIid, creatorName)` returns the session with its scrum master;
+  `find(sessionId)` answers empty for an unknown or expired session; a read of the state (the
+  mapper to `SessionView`, from spec 0006) goes through `read(sessionId, query)` under the same
+  lock, without an event. A command or read on a missing session throws
+  `SessionException(SESSION_NOT_FOUND)`. A rejected command leaves `lastActivityAt` unchanged.
+- `Session` is the aggregate; only its methods change the state (A1.4): `join`, `connect`,
+  `disconnect`, `selectIssue`, `vote`, `reveal`, `restart`, `beginConfirm`, `finishConfirm`,
+  `failConfirm`. Role and phase checks live inside these methods and throw `SessionException`
+  with the `ErrorCode` from `platform` (`FORBIDDEN_ROLE`, `INVALID_STATE`, `NAME_TAKEN`,
+  `VALIDATION_ERROR`, `UNAUTHORIZED`). The rules are listed in `docs/domain/invariants.md`.
 - A state check runs inside the lock and answers `INVALID_STATE` on an invalid transition. No
   read, change, save outside the lock.
 - No GitLab call and no slow I/O inside the lock (A3.3). Loading an issue happens before the
-  lock, the state is checked again inside it; the confirmation protects itself with `confirming`.
+  lock, the state is checked again inside it; the confirmation protects itself with `confirming`
+  (`beginConfirm` inside the lock, GitLab call outside, `finishConfirm` or `failConfirm` inside).
+- Change event: `SessionRegistryProducer` wires the registry with `Event<SessionChanged>`; the
+  event fires synchronously in the thread of the command, after the lock is released. Observers
+  (`realtime`, from spec 0009) read the session through the registry, never from the event.
+- Expiry: `SessionConfig` (`@ConfigMapping`, prefix `planningpoker.session`) holds `ttl`
+  (default `12h`). `find` and `update` remove an expired session on access; a Vert.x timer in
+  `SessionRegistryProducer` (every 10 minutes) calls `expire(now)` for the rest. No
+  `quarkus-scheduler`.
+- Time comes from the `Clock` bean (`platform.ClockProducer`, `Clock.systemUTC()`); tests build
+  the registry with a test clock. Ids come from `platform.Ids` (session id, token) and
+  `platform.UuidV7` (participant id), ADR 0003.
 - Personal data: participant names and tokens live only in memory and expire with the session
   (`planningpoker.session.ttl`).
 
