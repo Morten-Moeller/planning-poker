@@ -2,6 +2,7 @@ package planningpoker.session;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -68,7 +69,7 @@ public class SessionResource {
             responseCode = "502",
             description = "GITLAB_ERROR",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
-    public Response createSession(@Valid CreateSessionRequest request) {
+    public Response createSession(@NotNull @Valid CreateSessionRequest request) {
         throw notImplemented();
     }
 
@@ -93,7 +94,8 @@ public class SessionResource {
             description = "NAME_TAKEN",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response joinSession(
-            @PathParam("id") @Parameter(description = SESSION_ID) String id, @Valid JoinSessionRequest request) {
+            @PathParam("id") @Parameter(description = SESSION_ID) String id,
+            @NotNull @Valid JoinSessionRequest request) {
         throw notImplemented();
     }
 
@@ -170,7 +172,8 @@ public class SessionResource {
             description = "GITLAB_ERROR",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response selectIssue(
-            @PathParam("id") @Parameter(description = SESSION_ID) String id, @Valid SelectIssueRequest request) {
+            @PathParam("id") @Parameter(description = SESSION_ID) String id,
+            @NotNull @Valid SelectIssueRequest request) {
         throw notImplemented();
     }
 
@@ -192,7 +195,8 @@ public class SessionResource {
             responseCode = "409",
             description = "INVALID_STATE",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
-    public Response vote(@PathParam("id") @Parameter(description = SESSION_ID) String id, @Valid VoteRequest request) {
+    public Response vote(
+            @PathParam("id") @Parameter(description = SESSION_ID) String id, @NotNull @Valid VoteRequest request) {
         throw notImplemented();
     }
 
@@ -255,7 +259,7 @@ public class SessionResource {
             description = "GITLAB_ERROR",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response confirmRound(
-            @PathParam("id") @Parameter(description = SESSION_ID) String id, @Valid ConfirmRequest request) {
+            @PathParam("id") @Parameter(description = SESSION_ID) String id, @NotNull @Valid ConfirmRequest request) {
         throw notImplemented();
     }
 

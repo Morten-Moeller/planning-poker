@@ -18,6 +18,9 @@ public class ApiExceptionMapper {
                 return toProblem(apiException);
             }
         }
+        if (exception.getResponse().getStatus() == ErrorCode.VALIDATION_ERROR.status()) {
+            return problemResponse(ErrorCode.VALIDATION_ERROR, "The request body is not readable.");
+        }
         return exception.getResponse();
     }
 

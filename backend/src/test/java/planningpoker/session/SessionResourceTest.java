@@ -78,6 +78,25 @@ class SessionResourceTest {
                 .body("detail", containsString(field));
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("unreadableBodies")
+    void rejectsAMissingOrUnreadableBodyWithValidationError(String name, String body) {
+        RequestSpecification request = given().contentType(ContentType.JSON);
+        if (body != null) {
+            request = request.body(body);
+        }
+        request.when()
+                .post("/api/sessions")
+                .then()
+                .statusCode(400)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("VALIDATION_ERROR"));
+    }
+
+    static Stream<Arguments> unreadableBodies() {
+        return Stream.of(Arguments.of("no body", null), Arguments.of("malformed JSON", "{\"name\":"));
+    }
+
     @Test
     void rejectsAPageBelowOneWithValidationError() {
         given().header("Authorization", "Bearer test-token")

@@ -42,6 +42,6 @@ public enum Card {
         return Arrays.stream(values())
                 .filter(card -> card.wireValue.equals(value))
                 .findFirst()
-                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CARD, "Unknown card: " + value));
+                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CARD, "Unknown card."));
     }
 }
