@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -10,10 +10,9 @@ import type { ErrorCode } from '../api/api-error';
 import { ApiService } from '../api/api.service';
 import { formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
+import { participantNameValidators } from '../api/participant-name';
 import { TokenStore } from '../api/token-store';
 
-const NAME_MAX_LENGTH = 30;
-const NOT_BLANK = /\S/;
 const JOIN_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
   'SESSION_NOT_FOUND',
   'NAME_TAKEN',
@@ -41,11 +40,7 @@ export class JoinPage {
   protected readonly joinForm = new FormGroup({
     name: new FormControl('', {
       nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.pattern(NOT_BLANK),
-        Validators.maxLength(NAME_MAX_LENGTH),
-      ],
+      validators: participantNameValidators,
     }),
   });
 

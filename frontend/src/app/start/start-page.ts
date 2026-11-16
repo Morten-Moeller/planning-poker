@@ -10,12 +10,13 @@ import type { ErrorCode } from '../api/api-error';
 import { ApiService } from '../api/api.service';
 import { formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
+import { participantNameValidators } from '../api/participant-name';
 import { TokenStore } from '../api/token-store';
 import { HealthApi } from './health-api';
 
-export const NAME_MAX_LENGTH = 30;
-export const SESSION_ID_PATTERN = /^[A-Z2-9]{8}$/;
+const SESSION_ID_PATTERN = /^[A-Z2-9]{8}$/;
 const NOT_BLANK = /\S/;
+const WHOLE_NUMBER = /^\d+$/;
 const CREATE_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
   'ISSUE_NOT_FOUND',
   'GITLAB_ERROR',
@@ -46,18 +47,14 @@ export class StartPage {
   protected readonly createForm = new FormGroup({
     name: new FormControl('', {
       nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.pattern(NOT_BLANK),
-        Validators.maxLength(NAME_MAX_LENGTH),
-      ],
+      validators: participantNameValidators,
     }),
     gitlabProjectId: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.pattern(NOT_BLANK)],
     }),
     issueIid: new FormControl<number | null>(null, {
-      validators: [Validators.required, Validators.min(1)],
+      validators: [Validators.required, Validators.min(1), Validators.pattern(WHOLE_NUMBER)],
     }),
   });
 

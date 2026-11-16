@@ -20,7 +20,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      command: `${java} -jar ${gitlabDoubleJar} --port ${gitlabDoublePort} --root-dir e2e/gitlab-double --disable-banner`,
+      command: `${java} -jar ${gitlabDoubleJar} --port ${gitlabDoublePort} --bind-address 127.0.0.1 --root-dir e2e/gitlab-double --disable-banner`,
       url: `http://localhost:${gitlabDoublePort}/__admin/health`,
       reuseExistingServer: false,
       timeout: 60_000,

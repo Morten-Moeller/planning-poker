@@ -52,6 +52,12 @@ const invalidCases: InvalidCase[] = [
     text: 'Bitte eine Issue-Nummer ab 1 eingeben',
   },
   {
+    name: 'issue number 1.5',
+    values: { ...VALID, issue: '1.5' },
+    errorId: 'create-issue-error',
+    text: 'Bitte eine Issue-Nummer ab 1 eingeben',
+  },
+  {
     name: 'issue number 0',
     values: { ...VALID, issue: '0' },
     errorId: 'create-issue-error',
