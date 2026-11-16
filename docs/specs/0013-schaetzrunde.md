@@ -1,14 +1,14 @@
 ---
 id: "0013"
 title: Schätzrunde (M11)
-status: Review
+status: done
 risk: medium
 adrs: ["0004"]
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#13"
+note: alle Kriterien erfüllt
 ---
 
 # Schätzrunde (M11)
