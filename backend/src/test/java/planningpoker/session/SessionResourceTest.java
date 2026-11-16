@@ -59,16 +59,15 @@ class SessionResourceTest {
         return Stream.concat(
                 Stream.of(
                         Arguments.of("GET", "/issues?search=login&page=1", null, Role.SCRUM_MASTER),
-                        Arguments.of("POST", "/active-issue", "{\"issueIid\":42}", Role.SCRUM_MASTER)),
+                        Arguments.of("POST", "/active-issue", "{\"issueIid\":42}", Role.SCRUM_MASTER),
+                        Arguments.of("PUT", "/vote", "{\"card\":\"5\"}", Role.DEVELOPER),
+                        Arguments.of("POST", "/round/reveal", null, Role.SCRUM_MASTER),
+                        Arguments.of("POST", "/round/restart", null, Role.SCRUM_MASTER)),
                 stubEndpoints());
     }
 
     static Stream<Arguments> stubEndpoints() {
-        return Stream.of(
-                Arguments.of("PUT", "/vote", "{\"card\":\"5\"}", Role.DEVELOPER),
-                Arguments.of("POST", "/round/reveal", null, Role.SCRUM_MASTER),
-                Arguments.of("POST", "/round/restart", null, Role.SCRUM_MASTER),
-                Arguments.of("POST", "/round/confirm", "{\"card\":\"COFFEE\"}", Role.SCRUM_MASTER));
+        return Stream.of(Arguments.of("POST", "/round/confirm", "{\"card\":\"COFFEE\"}", Role.SCRUM_MASTER));
     }
 
     @ParameterizedTest(name = "{0} {1}")

@@ -66,6 +66,10 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
 - Change event: `SessionRegistryProducer` wires the registry with `Event<SessionChanged>`; the
   event fires synchronously in the thread of the command, after the lock is released. Observers
   (`realtime`, from spec 0009) read the session through the registry, never from the event.
+- Round completion: `SessionResource.vote` fires the CDI event `RoundCompleted(sessionId,
+  roundNumber)` once, when `Session.vote` reports that the last connected developer has voted
+  (A-02, A-10); `realtime` (spec 0009) turns it into the message `round.allVoted` for the scrum
+  master. A later card change in a complete round fires nothing.
 - Expiry: `SessionConfig` (`@ConfigMapping`, prefix `planningpoker.session`) holds `ttl`
   (default `12h`). `find` and `update` remove an expired session on access; a Vert.x timer in
   `SessionRegistryProducer` (every 10 minutes) calls `expire(now)` for the rest. No
