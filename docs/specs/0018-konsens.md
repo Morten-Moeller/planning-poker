@@ -1,14 +1,14 @@
 ---
 id: "0018"
 title: Konsens (M14, O-03)
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#18"
+note: alle Kriterien erfüllt
 ---
 
 # Konsens (M14, O-03)
