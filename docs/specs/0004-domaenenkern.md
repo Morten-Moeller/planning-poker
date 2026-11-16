@@ -1,14 +1,14 @@
 ---
 id: "0004"
 title: Domänenkern (M2)
-status: Review
+status: done
 risk: high
 adrs: ["0002", "0003"]
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#4"
+note: alle Kriterien erfüllt
 ---
 
 # Domänenkern (M2)
