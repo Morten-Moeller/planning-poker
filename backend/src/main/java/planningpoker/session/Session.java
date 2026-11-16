@@ -1,5 +1,7 @@
 package planningpoker.session;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +52,20 @@ public final class Session {
 
     public Optional<Participant> participant(String participantId) {
         return Optional.ofNullable(participants.get(participantId));
+    }
+
+    public Optional<Participant> participantByToken(String token) {
+        if (token == null || token.isEmpty()) {
+            return Optional.empty();
+        }
+        byte[] given = token.getBytes(StandardCharsets.UTF_8);
+        Participant match = null;
+        for (Participant participant : participants.values()) {
+            if (MessageDigest.isEqual(participant.token().getBytes(StandardCharsets.UTF_8), given)) {
+                match = participant;
+            }
+        }
+        return Optional.ofNullable(match);
     }
 
     public Optional<Long> preselectedIssueIid() {
