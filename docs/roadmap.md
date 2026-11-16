@@ -79,9 +79,9 @@ Risikomatrix hebt eine Stufe an, sobald eine hinzugefügte Zeile das Wort enthä
 | 0013 | Schätzrunde (M11) | 9 | 0012 | `frontend/src/app/session/` (Kartenfächer, Fortschritt, Hinweis), `frontend/e2e/` | medium |
 | 0014 | Auflösung und Abschluss (M12) | 10 | 0010, 0013 | `frontend/src/app/session/` (aufgedeckte Ansicht, Auswertung, Aktionen, Protokoll), `frontend/e2e/` | medium |
 | 0015 | Härtung (M13, Teil 1) | 11 | 0014 | `backend/src/main/java/planningpoker/session/` und `platform/` (Obergrenzen, Allowlist, `ErrorCode`), `contracts/api/`, `frontend/src/app/api/` (generierte Typen, Fehlertexte), `frontend/src/app/start/`, `frontend/src/app/join/`, `README.md`, `project-rules/`, `docs/adr/` (ADR 0005) | high |
-| 0016 | Countdown-Timer (M14, O-01) | 12 | 0015 | `contracts/api/`, `backend/src/main/java/planningpoker/session/`, `frontend/src/app/session/` (Rundenansicht) | high |
-| 0017 | Ausreißer (M14, O-02) | 12 | 0015 | `frontend/src/app/session/` (aufgedeckte Ansicht) | medium |
-| 0018 | Konsens (M14, O-03) | 13 | 0017 | `frontend/src/app/session/` (aufgedeckte Ansicht, Animation) | medium |
+| 0016 | Countdown-Timer (M14, O-01) | 12 | 0015 | `contracts/api/`, `backend/src/main/java/planningpoker/session/`, `frontend/src/app/api/`, `frontend/src/app/session/` (Timer-Auswahl, Restzeit, Sitzungsseite), `docs/umsetzungsplan.md`, `docs/domain/`, `docs/adr/` (ADR 0006) | high |
+| 0017 | Ausreißer (M14, O-02) | 12 | 0015 | `frontend/src/app/session/` (aufgedeckte Ansicht `round-result`, `outliers.ts`), `frontend/e2e/` | medium |
+| 0018 | Konsens (M14, O-03) | 13 | 0017 | `frontend/src/app/session/` (aufgedeckte Ansicht, Animation), `docs/domain/glossary.md` (Ausreißer, Konsens) | medium |
 | 0019 | Abgabe (M13, Teil 2) | 14 | 0015, 0016, 0017, 0018 | `frontend/e2e/` (Gesamtablauf mit drei Kontexten), `frontend/src/app/` (Fehler- und Leerzustände, Layout, Hinweise aus den Reviews von 0011 bis 0014), `README.md` (final), `docs/` (Checkliste, Zuordnung R-01 bis R-26) | medium |
 
 Hinweise zu den Wellen:
@@ -90,7 +90,7 @@ Hinweise zu den Wellen:
 - Welle 5 und 6: beide Teile von M5 ändern dieselbe Ressource und laufen nacheinander.
 - Welle 7: `realtime` hört nur auf das Änderungs-Event, 0010 ändert `session` und nutzt `gitlab`, 0011 ist reines Frontend.
 - Welle 11 und 14: M13 ist geteilt (Entscheidung der Person, 2026-11-16). 0015 härtet Backend und Vertrag vor den optionalen Features; 0019 schreibt README und Checkliste zuletzt, damit sie den Stand nach 0016 bis 0018 beschreiben.
-- Welle 12 und 13: 0016 ändert den Vertrag, 0017 und 0018 dieselbe Ansicht, deshalb nacheinander. `wave-check.sh` prüft die Dateilisten, sobald die Specs geschrieben sind.
+- Welle 12 und 13: 0016 ändert den Vertrag, 0017 und 0018 dieselbe Ansicht, deshalb nacheinander. 0016 setzt den Timer als Einstellung der Sitzung um (ADR 0006); Freigabe und aufgedeckte Ansicht bleiben unverändert, deshalb läuft 0017 parallel. Das Glossar ändert in Welle 12 nur 0016; „Ausreißer“ kommt mit 0018 ins Glossar. `wave-check.sh` meldet für 0016 und 0017 keine Überschneidung.
 - Die Specs ab Welle 2 werden mit `/roadmap next` aus dem dann vorhandenen Code geschrieben.
 
 ## Offene Fragen

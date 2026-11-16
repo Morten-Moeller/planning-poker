@@ -9,7 +9,7 @@ import planningpoker.session.Role;
 
 @Schema(
         description =
-                "Snapshot of the session, filtered for the receiver: hidden cards of other participants are missing until the reveal, preselectedIssueIid appears only for the scrum master. In phase LOBBY activeIssue and round are null.",
+                "Snapshot of the session, filtered for the receiver: hidden cards of other participants are missing until the reveal, preselectedIssueIid appears only for the scrum master. In phase LOBBY activeIssue and round are null. timerSeconds, serverTime and round.deadline are the same for both roles.",
         requiredProperties = {
             "sessionId",
             "gitlabProjectId",
@@ -19,7 +19,9 @@ import planningpoker.session.Role;
             "preselectedIssueIid",
             "activeIssue",
             "round",
-            "history"
+            "history",
+            "timerSeconds",
+            "serverTime"
         })
 public record SessionView(
         @Schema(description = "Session id, 8 characters.", examples = "K7P2QX9M") String sessionId,
@@ -35,7 +37,18 @@ public record SessionView(
                 Long preselectedIssueIid,
         @Schema(nullable = true) IssueView activeIssue,
         @Schema(nullable = true) RoundView round,
-        @Schema(description = "Revealed rounds of the session, newest first.") List<HistoryEntryView> history) {
+        @Schema(description = "Revealed rounds of the session, newest first.") List<HistoryEntryView> history,
+        @Schema(
+                        description =
+                                "Timer of the session in seconds for every round that starts from now on; null when the timer is off.",
+                        nullable = true,
+                        examples = "30")
+                Integer timerSeconds,
+        @Schema(
+                        description =
+                                "Time of the server when the snapshot was built, RFC 3339 with offset. Clients compute the remaining time of the round from it.",
+                        examples = "2026-11-16T09:15:00Z")
+                OffsetDateTime serverTime) {
 
     @Schema(
             description = "Identity of the receiver of the snapshot.",
@@ -72,10 +85,11 @@ public record SessionView(
 
     @Schema(
             description =
-                    "The round of the active issue. myVote is the card of the receiver and null without a vote or for the scrum master; votes and stats are null until the reveal.",
-            requiredProperties = {"number", "myVote", "allVoted", "confirming", "votes", "stats"})
+                    "The round of the active issue. myVote is the card of the receiver and null without a vote or for the scrum master; votes and stats are null until the reveal. deadline is the time at which the server reveals the round by itself, RFC 3339 with offset, and null when the round started without a timer.",
+            requiredProperties = {"number", "deadline", "myVote", "allVoted", "confirming", "votes", "stats"})
     public record RoundView(
             @Schema(description = "Round number, starting at 1 per issue.", examples = "1") int number,
+            @Schema(nullable = true) OffsetDateTime deadline,
             @Schema(nullable = true) Card myVote,
             @Schema(description = "Whether every connected developer has voted.") boolean allVoted,
             @Schema(description = "Whether the result is being written to GitLab.") boolean confirming,

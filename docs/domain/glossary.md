@@ -22,8 +22,10 @@ vorkommen sollen. Quelle: `docs/umsetzungsplan.md`, Abschnitte 4.2 bis 4.6.
 | Karte | Ein Wert des Kartensatzes 0, 1, 2, 3, 5, 8, 13, 21, 34, ?, ☕; im Wire-Format als String, ☕ als `COFFEE`. | `Card` | Wert, Punkt, Story Points, Schätzung |
 | Stimme | Die verdeckt gewählte Karte eines Entwicklers in einer Runde; änderbar bis zur Auflösung. | `Round.votes`, `vote` | Tipp, Schätzung, Abgabe |
 | Abstimmungsstatus | Je Teilnehmer, ob er in der laufenden Runde eine Stimme abgegeben hat („Hat geschätzt“ oder „Ausstehend“), ohne den Wert. | `hasVoted` | Fortschritt |
-| Auflösung | Aktion des Scrum Masters, die alle Stimmen der Runde aufdeckt und die Auswertung berechnet (Phase `VOTING` nach `REVEALED`). | `POST …/round/reveal`, `revealed` | Aufdecken, Reveal, Flip |
+| Auflösung | Aktion des Scrum Masters, die alle Stimmen der Runde aufdeckt und die Auswertung berechnet (Phase `VOTING` nach `REVEALED`); hat die Runde eine Frist, löst der Server sie beim Erreichen der Frist selbst auf. | `POST …/round/reveal`, `revealed`, `Session.revealIfDue` | Aufdecken, Reveal, Flip |
 | Auswertung | Verteilung der abgegebenen Karten in Kartenreihenfolge, Durchschnitt über Zahlenkarten und häufigste Werte einer aufgelösten Runde. | `RoundStats` | Statistik, Ergebnis |
+| Timer | Einstellung der Sitzung: Dauer in Sekunden (5 bis 3600) für jede ab jetzt startende Runde, oder aus; setzt nur der Scrum Master, eine laufende Runde behält ihre Frist. | `Session.timerSeconds`, `PUT …/timer`, `timerSeconds` | Countdown-Einstellung, Rundenzeit |
+| Frist | Zeitpunkt, zu dem der Server eine laufende Runde automatisch auflöst; Start der Runde plus Timer, ohne Timer keine Frist. | `Round.deadline`, `round.deadline` | Deadline, Ablaufzeit, Timeout |
 | Neue Runde | Aktion des Scrum Masters, die alle Stimmen löscht und die Rundennummer erhöht (Phase `REVEALED` nach `VOTING`). | `POST …/round/restart` | Neustart, Wiederholung |
 | Bestätigung | Aktion des Scrum Masters, die einen Kartenwert als Endwert festlegt, nach GitLab schreibt und die Sitzung in `LOBBY` zurücksetzt. | `POST …/round/confirm`, `confirming` | Abschluss, Commit, Speichern |
 | Endwert | Der bestätigte Kartenwert einer Runde; steht im Protokolleintrag. | `HistoryEntry.finalCard` | Ergebnis, finaler Wert |

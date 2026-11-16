@@ -16,6 +16,8 @@ import planningpoker.platform.UuidV7;
 public final class Session {
 
     static final int NAME_MAX_LENGTH = 30;
+    static final int TIMER_MIN_SECONDS = 5;
+    static final int TIMER_MAX_SECONDS = 3600;
 
     private final String id;
     private final String gitlabProjectId;
@@ -26,6 +28,7 @@ public final class Session {
     private Long preselectedIssueIid;
     private Issue activeIssue;
     private Round round;
+    private Integer timerSeconds;
     private volatile Instant lastActivityAt;
 
     public Session(String id, String gitlabProjectId, long preselectedIssueIid, Instant now, int maxParticipants) {
@@ -82,6 +85,10 @@ public final class Session {
         return Optional.ofNullable(round);
     }
 
+    public Optional<Integer> timerSeconds() {
+        return Optional.ofNullable(timerSeconds);
+    }
+
     public List<HistoryEntry> history() {
         return Collections.unmodifiableList(history);
     }
@@ -122,11 +129,19 @@ public final class Session {
         actor(participantId).connected(false);
     }
 
-    public void selectIssue(String actorId, Issue issue) {
+    public void setTimer(String actorId, Integer seconds) {
+        requireRole(actorId, Role.SCRUM_MASTER);
+        if (seconds != null && (seconds < TIMER_MIN_SECONDS || seconds > TIMER_MAX_SECONDS)) {
+            throw new SessionException(ErrorCode.VALIDATION_ERROR, "The timer needs 5 to 3600 seconds or no value.");
+        }
+        timerSeconds = seconds;
+    }
+
+    public void selectIssue(String actorId, Issue issue, Instant now) {
         requireRole(actorId, Role.SCRUM_MASTER);
         requireNotConfirming();
         activeIssue = issue;
-        round = new Round(1);
+        round = new Round(1, deadlineFrom(now));
         phase = Phase.VOTING;
     }
 
@@ -141,6 +156,20 @@ public final class Session {
     public void reveal(String actorId) {
         requireRole(actorId, Role.SCRUM_MASTER);
         requirePhase(Phase.VOTING, "Only a running round can be revealed.");
+        revealRound(lastActivityAt);
+    }
+
+    public boolean revealIfDue(Instant now) {
+        boolean due = phase == Phase.VOTING
+                && round.deadline().map(deadline -> !now.isBefore(deadline)).orElse(false);
+        if (!due) {
+            return false;
+        }
+        revealRound(now);
+        return true;
+    }
+
+    private void revealRound(Instant revealedAt) {
         List<Vote> votes = votes();
         RoundStats stats = RoundStats.of(votes);
         round.reveal(stats);
@@ -153,16 +182,20 @@ public final class Session {
                         votes,
                         stats,
                         Optional.empty(),
-                        lastActivityAt));
+                        revealedAt));
         phase = Phase.REVEALED;
     }
 
-    public void restart(String actorId) {
+    public void restart(String actorId, Instant now) {
         requireRole(actorId, Role.SCRUM_MASTER);
         requireNotConfirming();
         requirePhase(Phase.REVEALED, "A new round needs a revealed round.");
-        round = new Round(round.number() + 1);
+        round = new Round(round.number() + 1, deadlineFrom(now));
         phase = Phase.VOTING;
+    }
+
+    private Instant deadlineFrom(Instant start) {
+        return timerSeconds == null ? null : start.plusSeconds(timerSeconds);
     }
 
     public Confirmation beginConfirm(String actorId, Card card) {

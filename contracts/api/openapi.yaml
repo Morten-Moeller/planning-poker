@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Planning Poker API
-  version: 2.0.0
+  version: 2.1.0
   description: |
     Commands go over REST under /api and answer without state. The state reaches every participant
     over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
@@ -516,14 +516,17 @@ components:
       type: object
       required:
       - number
+      - deadline
       - myVote
       - allVoted
       - confirming
       - votes
       - stats
-      description: The round of the active issue. myVote is the card of the receiver
-        and null without a vote or for the scrum master; votes and stats are null
-        until the reveal.
+      description: "The round of the active issue. myVote is the card of the receiver\
+        \ and null without a vote or for the scrum master; votes and stats are null\
+        \ until the reveal. deadline is the time at which the server reveals the round\
+        \ by itself, RFC 3339 with offset, and null when the round started without\
+        \ a timer."
       properties:
         number:
           type: integer
@@ -531,6 +534,13 @@ components:
           description: "Round number, starting at 1 per issue."
           examples:
           - 1
+        deadline:
+          type:
+          - string
+          - "null"
+          anyOf:
+          - $ref: "#/components/schemas/OffsetDateTime"
+          - type: "null"
         myVote:
           anyOf:
           - $ref: "#/components/schemas/Card"
@@ -576,10 +586,13 @@ components:
       - activeIssue
       - round
       - history
+      - timerSeconds
+      - serverTime
       description: "Snapshot of the session, filtered for the receiver: hidden cards\
         \ of other participants are missing until the reveal, preselectedIssueIid\
         \ appears only for the scrum master. In phase LOBBY activeIssue and round\
-        \ are null."
+        \ are null. timerSeconds, serverTime and round.deadline are the same for both\
+        \ roles."
       type: object
       properties:
         sessionId:
@@ -622,6 +635,40 @@ components:
           items:
             $ref: "#/components/schemas/HistoryEntryView"
           description: "Revealed rounds of the session, newest first."
+        timerSeconds:
+          type:
+          - integer
+          - "null"
+          format: int32
+          description: Timer of the session in seconds for every round that starts
+            from now on; null when the timer is off.
+          examples:
+          - 30
+        serverTime:
+          description: "Time of the server when the snapshot was built, RFC 3339 with\
+            \ offset. Clients compute the remaining time of the round from it."
+          type: string
+          examples:
+          - 2026-11-16T09:15:00Z
+          $ref: "#/components/schemas/OffsetDateTime"
+    TimerRequest:
+      required:
+      - seconds
+      description: Sets the timer of the session for every round that starts from
+        now on; null switches it off. A running round keeps its deadline.
+      type: object
+      properties:
+        seconds:
+          type:
+          - integer
+          - "null"
+          format: int32
+          description: "Duration of a round in seconds, 5 to 3600; null switches the\
+            \ timer off."
+          examples:
+          - 30
+          maximum: 3600
+          minimum: 5
     VoteRequest:
       description: Chooses or changes the hidden card of the caller in the running
         round.
@@ -1063,6 +1110,55 @@ paths:
                 $ref: "#/components/schemas/ProblemDetail"
         "409":
           description: INVALID_STATE
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerToken: []
+  /api/sessions/{id}/timer:
+    put:
+      summary: Set or switch off the timer for every round that starts from now on;
+        scrum master only. A running round keeps its deadline.
+      operationId: setTimer
+      tags:
+      - sessions
+      parameters:
+      - description: "Session id, 8 characters."
+        name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TimerRequest"
+        required: true
+      responses:
+        "204":
+          description: Timer set.
+        "400":
+          description: VALIDATION_ERROR
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: FORBIDDEN_ROLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: SESSION_NOT_FOUND
           content:
             application/problem+json:
               schema:

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import planningpoker.session.api.SessionView;
 class SessionViewMapperTest {
 
     private static final ObjectMapper JSON = new ObjectMapper().findAndRegisterModules();
+    private static final Instant SERVER_TIME = Instant.parse("2026-11-16T09:00:12Z");
     private final SessionViewMapper mapper = new SessionViewMapper();
 
     @Test
@@ -23,7 +25,7 @@ class SessionViewMapperTest {
         Session session = SessionBuilder.session().build();
         Participant master = SessionBuilder.master(session);
 
-        SessionView view = mapper.toView(session, master.id());
+        SessionView view = mapper.toView(session, master.id(), SERVER_TIME);
 
         assertEquals(Phase.LOBBY, view.phase());
         assertNull(view.activeIssue());
@@ -39,7 +41,7 @@ class SessionViewMapperTest {
         Session session = SessionBuilder.session().build();
 
         SessionView view =
-                mapper.toView(session, SessionBuilder.developer(session, 0).id());
+                mapper.toView(session, SessionBuilder.developer(session, 0).id(), SERVER_TIME);
 
         assertNull(view.preselectedIssueIid());
         assertEquals(Role.DEVELOPER, view.me().role());
@@ -53,7 +55,7 @@ class SessionViewMapperTest {
         session.vote(first.id(), Card.FIVE);
         session.vote(second.id(), Card.THIRTEEN);
 
-        SessionView view = mapper.toView(session, first.id());
+        SessionView view = mapper.toView(session, first.id(), SERVER_TIME);
 
         assertEquals(Phase.VOTING, view.phase());
         assertEquals(Card.FIVE, view.round().myVote());
@@ -75,7 +77,7 @@ class SessionViewMapperTest {
         Session session = SessionBuilder.session().voting().build();
         session.vote(SessionBuilder.developer(session, 0).id(), Card.EIGHT);
 
-        SessionView view = mapper.toView(session, SessionBuilder.master(session).id());
+        SessionView view = mapper.toView(session, SessionBuilder.master(session).id(), SERVER_TIME);
 
         assertNull(view.round().myVote());
         assertNull(view.round().votes());
@@ -88,8 +90,8 @@ class SessionViewMapperTest {
         Participant master = SessionBuilder.master(session);
         Participant developer = SessionBuilder.developer(session, 0);
 
-        SessionView masterView = mapper.toView(session, master.id());
-        SessionView developerView = mapper.toView(session, developer.id());
+        SessionView masterView = mapper.toView(session, master.id(), SERVER_TIME);
+        SessionView developerView = mapper.toView(session, developer.id(), SERVER_TIME);
 
         assertEquals(Phase.REVEALED, masterView.phase());
         assertEquals(masterView.round().votes(), developerView.round().votes());
@@ -111,11 +113,11 @@ class SessionViewMapperTest {
         Participant master = SessionBuilder.master(session);
         session.beginConfirm(master.id(), Card.FIVE);
         session.finishConfirm(Card.FIVE);
-        session.selectIssue(master.id(), SessionBuilder.OTHER_ISSUE);
+        session.selectIssue(master.id(), SessionBuilder.OTHER_ISSUE, SessionBuilder.CREATED_AT);
         session.vote(SessionBuilder.developer(session, 0).id(), Card.ONE);
         session.reveal(master.id());
 
-        SessionView view = mapper.toView(session, master.id());
+        SessionView view = mapper.toView(session, master.id(), SERVER_TIME);
 
         assertEquals(2, view.history().size());
         assertEquals(SessionBuilder.OTHER_ISSUE.iid(), view.history().get(0).issueIid());
@@ -125,13 +127,42 @@ class SessionViewMapperTest {
     }
 
     @Test
+    void showsTheTimerTheServerTimeAndTheDeadlineToBothRoles() {
+        Session session = SessionBuilder.session().timer(30).voting().build();
+
+        SessionView masterView =
+                mapper.toView(session, SessionBuilder.master(session).id(), SERVER_TIME);
+        SessionView developerView =
+                mapper.toView(session, SessionBuilder.developer(session, 0).id(), SERVER_TIME);
+
+        for (SessionView view : List.of(masterView, developerView)) {
+            assertEquals(30, view.timerSeconds());
+            assertEquals(OffsetDateTime.parse("2026-11-16T09:00:12Z"), view.serverTime());
+            assertEquals(
+                    OffsetDateTime.parse("2026-11-16T09:00:30Z"), view.round().deadline());
+        }
+    }
+
+    @Test
+    void showsNoTimerAndNoDeadlineWithoutTheSetting() {
+        Session session = SessionBuilder.session().voting().build();
+
+        SessionView view =
+                mapper.toView(session, SessionBuilder.developer(session, 0).id(), SERVER_TIME);
+
+        assertNull(view.timerSeconds());
+        assertNull(view.round().deadline());
+        assertEquals(OffsetDateTime.parse("2026-11-16T09:00:12Z"), view.serverTime());
+    }
+
+    @Test
     void keepsTokensOutOfEverySnapshot() throws JsonProcessingException {
         for (Session session : List.of(
                 SessionBuilder.session().build(),
                 SessionBuilder.session().voting().build(),
                 SessionBuilder.session().revealed().build())) {
             for (Participant receiver : session.participants()) {
-                String json = JSON.writeValueAsString(mapper.toView(session, receiver.id()));
+                String json = JSON.writeValueAsString(mapper.toView(session, receiver.id(), SERVER_TIME));
                 for (Participant participant : session.participants()) {
                     assertFalse(json.contains(participant.token()), "token in snapshot: " + json);
                 }

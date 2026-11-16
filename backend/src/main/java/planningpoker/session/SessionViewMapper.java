@@ -1,5 +1,6 @@
 package planningpoker.session;
 
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import planningpoker.platform.ErrorCode;
@@ -7,7 +8,7 @@ import planningpoker.session.api.SessionView;
 
 public final class SessionViewMapper {
 
-    public SessionView toView(Session session, String receiverId) {
+    public SessionView toView(Session session, String receiverId, Instant serverTime) {
         Participant receiver = session.participant(receiverId)
                 .orElseThrow(() -> new SessionException(ErrorCode.UNAUTHORIZED, "Unknown participant."));
         boolean scrumMaster = receiver.role() == Role.SCRUM_MASTER;
@@ -24,7 +25,9 @@ public final class SessionViewMapper {
                 session.round()
                         .map(round -> roundView(session, round, receiverId))
                         .orElse(null),
-                session.history().stream().map(SessionViewMapper::historyView).toList());
+                session.history().stream().map(SessionViewMapper::historyView).toList(),
+                session.timerSeconds().orElse(null),
+                serverTime.atOffset(ZoneOffset.UTC));
     }
 
     private static SessionView.ParticipantView participantView(Session session, Participant participant) {
@@ -42,6 +45,9 @@ public final class SessionViewMapper {
         boolean revealed = round.revealed();
         return new SessionView.RoundView(
                 round.number(),
+                round.deadline()
+                        .map(deadline -> deadline.atOffset(ZoneOffset.UTC))
+                        .orElse(null),
                 round.cardOf(receiverId).orElse(null),
                 session.allVoted(),
                 round.confirming(),

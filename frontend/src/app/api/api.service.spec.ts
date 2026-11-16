@@ -64,6 +64,22 @@ const calls: Call[] = [
     authenticated: true,
   },
   {
+    name: 'setTimer',
+    call: (api) => api.setTimer(SESSION_ID, { seconds: 30 }),
+    method: 'PUT',
+    url: `${BASE}/timer`,
+    body: { seconds: 30 },
+    authenticated: true,
+  },
+  {
+    name: 'setTimer off',
+    call: (api) => api.setTimer(SESSION_ID, { seconds: null }),
+    method: 'PUT',
+    url: `${BASE}/timer`,
+    body: { seconds: null },
+    authenticated: true,
+  },
+  {
     name: 'vote',
     call: (api) => api.vote(SESSION_ID, { card: '5' }),
     method: 'PUT',

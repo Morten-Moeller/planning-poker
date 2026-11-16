@@ -1,0 +1,5 @@
+@if (remaining() !== null) {
+  <p class="round-timer" role="timer" data-testid="round-timer" [class.expired]="remaining() === 0">
+    {{ text() }}
+  </p>
+}

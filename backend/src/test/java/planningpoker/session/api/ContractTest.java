@@ -73,6 +73,13 @@ class ContractTest {
                                 List.of("400", "401", "403", "404", "409", "502")),
                         new Endpoint(
                                 "put",
+                                "/api/sessions/{id}/timer",
+                                "TimerRequest",
+                                "204",
+                                null,
+                                List.of("400", "401", "403", "404")),
+                        new Endpoint(
+                                "put",
                                 "/api/sessions/{id}/vote",
                                 "VoteRequest",
                                 "204",
@@ -182,7 +189,7 @@ class ContractTest {
 
     @Test
     void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
-        assertEquals("2.0.0", contract.at("/info/version").asText());
+        assertEquals("2.1.0", contract.at("/info/version").asText());
         assertEquals(
                 "PROJECT_NOT_ALLOWED",
                 contract.at("/paths/~1api~1sessions/post/responses/403/description")
@@ -195,6 +202,32 @@ class ContractTest {
                 "NAME_TAKEN, LIMIT_REACHED",
                 contract.at("/paths/~1api~1sessions~1{id}~1participants/post/responses/409/description")
                         .asText());
+    }
+
+    @Test
+    void describesTheTimerTheServerTimeAndTheDeadline() {
+        JsonNode view = contract.at("/components/schemas/SessionView");
+        assertTrue(texts(view.get("required")).containsAll(List.of("timerSeconds", "serverTime")));
+        assertEquals(List.of("integer", "null"), texts(view.at("/properties/timerSeconds/type")));
+        assertEquals("string", view.at("/properties/serverTime/type").asText());
+        assertEquals(
+                ref("OffsetDateTime"), view.at("/properties/serverTime/$ref").asText());
+        assertEquals(
+                "date-time",
+                contract.at("/components/schemas/OffsetDateTime/format").asText());
+
+        JsonNode round = contract.at("/components/schemas/RoundView");
+        assertTrue(texts(round.get("required")).contains("deadline"));
+        assertEquals(
+                ref("OffsetDateTime"),
+                round.at("/properties/deadline/anyOf/0/$ref").asText());
+        assertEquals("null", round.at("/properties/deadline/anyOf/1/type").asText());
+
+        JsonNode request = contract.at("/components/schemas/TimerRequest");
+        assertEquals(List.of("seconds"), texts(request.get("required")));
+        assertEquals(5, request.at("/properties/seconds/minimum").asInt());
+        assertEquals(3600, request.at("/properties/seconds/maximum").asInt());
+        assertEquals(List.of("integer", "null"), texts(request.at("/properties/seconds/type")));
     }
 
     static Stream<Arguments> messages() {

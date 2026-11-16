@@ -12,6 +12,7 @@ export type SessionView = Schemas['SessionView'];
 export type IssueListResponse = Schemas['IssueListResponse'];
 export type SelectIssueRequest = Schemas['SelectIssueRequest'];
 export type VoteRequest = Schemas['VoteRequest'];
+export type TimerRequest = Schemas['TimerRequest'];
 export type ConfirmRequest = Schemas['ConfirmRequest'];
 
 export interface IssueQuery {
@@ -48,6 +49,10 @@ export class ApiService {
 
   selectIssue(sessionId: string, request: SelectIssueRequest): Observable<void> {
     return this.http.post<void>(`${sessionPath(sessionId)}/active-issue`, request);
+  }
+
+  setTimer(sessionId: string, request: TimerRequest): Observable<void> {
+    return this.http.put<void>(`${sessionPath(sessionId)}/timer`, request);
   }
 
   vote(sessionId: string, request: VoteRequest): Observable<void> {

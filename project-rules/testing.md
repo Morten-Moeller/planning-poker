@@ -45,7 +45,7 @@ change touches.
 | `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts` |
 | `frontend/src/app/api/` | `frontend/src/app/api/*.spec.ts` (from spec 0005) | – |
 | `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts` |
-| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/outliers.spec.ts` |
+| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts` |
 
 ## End-to-end
 
@@ -97,8 +97,9 @@ change touches.
   start page (issue 42, issue 44 for the sanitizing check) and join through the join page in a
   second browser context; `voting-round.spec.ts` (spec 0013) joins two or three developers the
   same way; `result-round.spec.ts` (spec 0014) joins two developers for the result and the
-  new round and uses issue 45 for the GitLab error; `outliers.spec.ts` (spec 0017) joins two
-  developers on issue 42.
+  new round and uses issue 45 for the GitLab error; `round-timer.spec.ts` (spec 0016) joins one
+  developer, sets the timer to 15 s and waits the real duration for the reveal by the server;
+  `outliers.spec.ts` (spec 0017) joins two developers on issue 42.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.
 

@@ -70,6 +70,7 @@ describe('SessionPage', () => {
     expect(count('issue-panel')).toBe(0);
     expect(count('issue-release')).toBe(0);
     expect(count('issue-search-input')).toBe(0);
+    expect(count('timer-setting')).toBe(0);
     http.expectNone((request) => request.url.endsWith('/issues'));
   });
 
@@ -94,6 +95,7 @@ describe('SessionPage', () => {
     await open(snapshot);
 
     expect(count('issue-panel')).toBe(1);
+    expect(count('timer-setting')).toBe(1);
     expect(count('lobby-waiting')).toBe(0);
     http
       .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
@@ -118,6 +120,24 @@ describe('SessionPage', () => {
     http
       .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
       .flush({ items: [], nextPage: null });
+  });
+
+  it('shows the remaining time while voting with a deadline', async () => {
+    await open(votingDeveloper);
+
+    expect(count('round-timer')).toBe(1);
+  });
+
+  it.each([
+    [
+      'VOTING without deadline',
+      { ...votingDeveloper, round: { ...votingDeveloper.round!, deadline: null } },
+    ],
+    ['REVEALED', revealedDeveloper],
+  ])('shows no remaining time in %s', async (_name, snapshot) => {
+    await open(snapshot);
+
+    expect(count('round-timer')).toBe(0);
   });
 
   it.each([

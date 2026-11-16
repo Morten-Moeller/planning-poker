@@ -63,7 +63,7 @@ class SessionRegistryTest {
                     registry.update(sessionId, session -> session.join(name).id()));
         }
         registry.update(sessionId, session -> {
-            session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE);
+            session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE, SessionBuilder.CREATED_AT);
             return null;
         });
         CountDownLatch start = new CountDownLatch(1);
@@ -92,7 +92,7 @@ class SessionRegistryTest {
 
         registry.update(sessionId, session -> session.join("Anna"));
         registry.update(sessionId, session -> {
-            session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE);
+            session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE, SessionBuilder.CREATED_AT);
             return null;
         });
 
@@ -276,5 +276,121 @@ class SessionRegistryTest {
         Session session = limited.find(sessionId).orElseThrow();
         assertEquals(2, session.participants().size());
         assertEquals(lastActivity, session.lastActivityAt());
+    }
+
+    private String votingSessionWithTimer(int seconds) {
+        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        String sessionId = created.session().id();
+        String master = created.scrumMaster().id();
+        registry.update(sessionId, session -> session.join("Anna"));
+        registry.update(sessionId, session -> {
+            session.setTimer(master, seconds);
+            session.selectIssue(master, SessionBuilder.ISSUE, clock.instant());
+            return null;
+        });
+        events.clear();
+        return sessionId;
+    }
+
+    @Test
+    void revealDue_reveals_a_round_at_and_after_its_deadline_only() {
+        String sessionId = votingSessionWithTimer(30);
+        Session session = registry.find(sessionId).orElseThrow();
+
+        registry.revealDue(START.plusSeconds(30).minusMillis(1));
+        assertEquals(Phase.VOTING, session.phase());
+        assertEquals(List.of(), events);
+
+        registry.revealDue(START.plusSeconds(30));
+        assertEquals(Phase.REVEALED, session.phase());
+        assertEquals(List.of(new SessionChanged(sessionId)), events);
+        assertEquals(START.plusSeconds(30), session.lastActivityAt());
+
+        registry.revealDue(START.plusSeconds(31));
+        assertEquals(1, events.size());
+        assertEquals(1, session.history().size());
+    }
+
+    @Test
+    void revealDue_writes_a_history_entry_without_votes() {
+        String sessionId = votingSessionWithTimer(30);
+
+        registry.revealDue(START.plusSeconds(45));
+
+        Session session = registry.find(sessionId).orElseThrow();
+        assertEquals(1, session.history().size());
+        HistoryEntry entry = session.history().get(0);
+        assertTrue(entry.votes().isEmpty());
+        assertEquals(1, entry.roundNumber());
+        assertEquals(START.plusSeconds(45), entry.revealedAt());
+    }
+
+    @Test
+    void revealDue_leaves_a_round_revealed_by_hand_alone() {
+        String sessionId = votingSessionWithTimer(30);
+        Session session = registry.find(sessionId).orElseThrow();
+        String master = SessionBuilder.master(session).id();
+        registry.update(sessionId, s -> {
+            s.reveal(master);
+            return null;
+        });
+        events.clear();
+
+        registry.revealDue(START.plusSeconds(30));
+
+        assertEquals(Phase.REVEALED, session.phase());
+        assertEquals(1, session.history().size());
+        assertEquals(List.of(), events);
+    }
+
+    @Test
+    void revealDue_uses_the_deadline_of_a_restarted_round() {
+        String sessionId = votingSessionWithTimer(30);
+        Session session = registry.find(sessionId).orElseThrow();
+        String master = SessionBuilder.master(session).id();
+        clock.advance(Duration.ofSeconds(10));
+        registry.update(sessionId, s -> {
+            s.reveal(master);
+            s.restart(master, clock.instant());
+            return null;
+        });
+        events.clear();
+
+        registry.revealDue(START.plusSeconds(30));
+        assertEquals(Phase.VOTING, session.phase());
+        assertEquals(2, session.round().orElseThrow().number());
+        assertEquals(List.of(), events);
+
+        registry.revealDue(START.plusSeconds(40));
+        assertEquals(Phase.REVEALED, session.phase());
+        assertEquals(2, session.history().size());
+        assertEquals(List.of(new SessionChanged(sessionId)), events);
+    }
+
+    @Test
+    void revealDue_leaves_a_round_without_timer_alone() {
+        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        String sessionId = created.session().id();
+        registry.update(sessionId, session -> {
+            session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE, clock.instant());
+            return null;
+        });
+        events.clear();
+
+        registry.revealDue(START.plus(Duration.ofHours(1)));
+
+        assertEquals(Phase.VOTING, registry.find(sessionId).orElseThrow().phase());
+        assertEquals(List.of(), events);
+    }
+
+    @Test
+    void the_event_of_revealDue_fires_after_the_lock_is_released() {
+        String sessionId = votingSessionWithTimer(30);
+        probeNestedUpdate.set(true);
+
+        registry.revealDue(START.plusSeconds(30));
+
+        assertEquals(List.of(Phase.REVEALED), seenByNestedUpdate);
+        assertEquals(sessionId, events.get(0).sessionId());
     }
 }

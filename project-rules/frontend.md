@@ -30,7 +30,9 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
 
 - Server state: the `SessionStore` (signals) takes every `session.state` snapshot from the
   WebSocket in full; nothing is reloaded by hand (ADR 0004 replaces A7.1). Single queries such as
-  the issue search stay local in their component.
+  the issue search stay local in their component. The store keeps the offset between
+  `serverTime` of the last snapshot and the client clock; the remaining time of a round
+  (`RoundTimer`) is `round.deadline` minus `serverNow()`, never the client clock alone (ADR 0006).
 - Client state: the token per session id in `sessionStorage`; locale is fixed to `de`.
 - API client: `ApiService` with the generated types in `frontend/src/app/api/schema.d.ts`
   (`openapi-typescript` from `contracts/api/openapi.yaml`, `make contracts`); a contract type is

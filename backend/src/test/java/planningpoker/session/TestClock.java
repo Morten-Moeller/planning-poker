@@ -6,15 +6,15 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
-class TestClock extends Clock {
+public class TestClock extends Clock {
 
     private volatile Instant now;
 
-    TestClock(Instant start) {
+    public TestClock(Instant start) {
         this.now = start;
     }
 
-    void advance(Duration duration) {
+    public void advance(Duration duration) {
         now = now.plus(duration);
     }
 
