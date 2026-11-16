@@ -139,6 +139,11 @@ describe('SessionPage', () => {
     expect(count('result-accept')).toBe(0);
     expect(count('history-panel')).toBe(1);
     expect(count('history-entry')).toBe(1);
+    expect(
+      (fixture.nativeElement as HTMLElement)
+        .querySelector('[data-testid="history-count"]')
+        ?.textContent?.trim(),
+    ).toBe('1 aufgelöste Runde');
   });
 
   it('shows the result with both actions and the history to the scrum master after the reveal', async () => {

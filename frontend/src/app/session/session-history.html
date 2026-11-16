@@ -1,8 +1,13 @@
 <mat-expansion-panel class="history" data-testid="history-panel">
   <mat-expansion-panel-header data-testid="history-toggle">
     <mat-panel-title i18n="@@history.title">Protokoll</mat-panel-title>
-    <mat-panel-description i18n="@@history.count"
-      >{{ store.history().length }} aufgelöste Runden</mat-panel-description
+    <mat-panel-description
+      data-testid="history-count"
+      i18n="@@history.count"
+      >{store.history().length, plural,
+        =1 {1 aufgelöste Runde}
+        other {{{ store.history().length }} aufgelöste Runden}
+      }</mat-panel-description
     >
   </mat-expansion-panel-header>
   <ol class="entries">
