@@ -1,0 +1,16 @@
+<main>
+  <h1 i18n="@@start.title">Planning Poker</h1>
+  <p data-testid="health-status">
+    @switch (backendReachable()) {
+      @case (true) {
+        <ng-container i18n="@@start.backendReachable">Backend erreichbar</ng-container>
+      }
+      @case (false) {
+        <ng-container i18n="@@start.backendUnreachable">Backend nicht erreichbar</ng-container>
+      }
+      @default {
+        <ng-container i18n="@@start.backendChecking">Backend wird geprüft</ng-container>
+      }
+    }
+  </p>
+</main>

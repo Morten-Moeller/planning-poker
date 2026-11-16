@@ -1,36 +1,75 @@
 ---
-sources: []
+sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/application.properties]
 ---
 
 # Backend rules
 
-<!-- TODO: fill at project start. Delete sections that do not apply. -->
-
 ## Stack
 
-- Language, runtime and version: TODO
-- Framework: TODO
-- Database and migration tool: TODO
+- Java 21 (`maven.compiler.release`), Maven Wrapper (`backend/mvnw`), Quarkus 3.x from the
+  platform BOM in `backend/pom.xml`. Build and tests run with JDK 21 (`JAVA_HOME`); the Makefile
+  picks JDK 21 on macOS when `JAVA_HOME` is empty.
+- Jakarta REST with `quarkus-rest-jackson`, Jakarta Validation, Jakarta CDI;
+  `quarkus-websockets-next` for the WebSocket; MicroProfile REST Client with
+  `quarkus-rest-client-jackson` for GitLab; `quarkus-smallrye-openapi` for the contract;
+  `quarkus-logging-json` for logs (ADR 0001).
+- No database and no migration tool: sessions live in memory (ADR 0002).
+- `backend/pom.xml` manages the versions of jetty (`wiremock-jetty12`), handlebars, guava and
+  json-smart above what WireMock 3.13 declares, because the gate `deps` reports OSV advisories for
+  the declared versions. Drop the pins when a WireMock release declares fixed versions.
 
 ## Structure
 
-- Layering (or the decision not to layer) and the ADR behind it: TODO
-- Where a feature lives: TODO
-- Dependency direction: TODO
+- Base package `planningpoker`, grouped by business capability (A1.1): `session` (session,
+  participants, rounds, history, commands, `SessionRegistry`, mapper to `SessionView`), `gitlab`
+  (REST client, configuration, error mapping), `realtime` (WebSocket endpoint, connection
+  registry, snapshot delivery), `platform` (code without business terms: health, token check,
+  error format, id generation).
+- Dependency direction: `session` and `realtime` use `gitlab` and `platform`; `gitlab` uses
+  `platform`; `platform` uses no feature package (A1.6). `realtime` reacts to the change event of
+  `SessionRegistry` and is never called by `session`.
+- No layering inside a package: a resource class, the domain types and the registry live next to
+  each other. No repository or service interface without a second implementation (A1.2).
+- DTOs are Java records in the package of their resource. They are the source of the contract
+  (`contracts/README.md`, from spec 0002).
 
 ## Data
 
-- Migrations are high risk: one migration per change, reversible, reviewed by a person.
-- Transactions and consistency rules: TODO
-- Personal data: where it lives, how it is deleted: TODO
+- Sessions live in a `ConcurrentHashMap` in `SessionRegistry`. Every change runs through
+  `SessionRegistry.update(sessionId, command)`: lock per session, command, change event after the
+  lock is released (ADR 0002 replaces A4.1, A4.3, A4.4).
+- A state check runs inside the lock and answers `INVALID_STATE` on an invalid transition. No
+  read, change, save outside the lock.
+- No GitLab call and no slow I/O inside the lock (A3.3). Loading an issue happens before the
+  lock, the state is checked again inside it; the confirmation protects itself with `confirming`.
+- Personal data: participant names and tokens live only in memory and expire with the session
+  (`planningpoker.session.ttl`).
 
 ## Errors, logging, configuration
 
-- Error model (exceptions, result types, error codes): TODO
-- Logging library and what is never logged (secrets, personal data): TODO
-- Configuration source and secret handling: TODO. No secret in the repository.
+- Errors: one exception mapper writes RFC 9457 `application/problem+json` with a stable
+  `errorCode` (`VALIDATION_ERROR`, `INVALID_CARD`, `UNAUTHORIZED`, `FORBIDDEN_ROLE`,
+  `SESSION_NOT_FOUND`, `ISSUE_NOT_FOUND`, `NAME_TAKEN`, `INVALID_STATE`, `GITLAB_ERROR`). Domain
+  code throws typed exceptions; only the boundary maps them to HTTP (A3.5). GitLab error texts
+  are never forwarded.
+- Logging: JBoss Logging through `quarkus-logging-json`, JSON lines on the console (`dev` profile
+  plain text). Never logged: the GitLab token, participant tokens, hidden card values.
+- Configuration: `backend/src/main/resources/application.properties` holds every
+  `planningpoker.*` key with its default. The GitLab token comes from `GITLAB_TOKEN` and has no
+  default; a missing token stops the start with the key name (A6.1). Exception until spec 0003:
+  no code reads the key yet, so the start does not check it. Profiles `test`
+  and `e2e` set placeholder values. No secret in the repository.
+- Ports: `quarkus.http.port=8080`, tests on a free port (`quarkus.http.test-port=0`).
 
 ## APIs
 
-- Contract first: every endpoint or event exists in `contracts/` before the code.
-- Authentication and authorisation pattern: TODO
+- Contract first: every endpoint and WebSocket message exists in `contracts/api/openapi.yaml`
+  before a client uses it (from spec 0002). Paths under `/api`, JSON, camelCase fields, enums in
+  UPPER_SNAKE_CASE, times in RFC 3339 with offset (A2.2).
+- Authentication: `Authorization: Bearer <token>` on every call except create and join; the
+  WebSocket takes the token in its first message `auth`, never in the URL (ADR 0003).
+- Authorisation: the role comes from the token (A5.1); a role check per endpoint answers 403
+  `FORBIDDEN_ROLE`. The frontend never sends a role.
+- Commands answer 204, or 201 with the new ids; the new state reaches clients through the
+  WebSocket snapshot (ADR 0004).
+- Formatting: palantir-java-format through Spotless (`make lint-backend`, `make format`).
