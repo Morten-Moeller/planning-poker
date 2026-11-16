@@ -1,7 +1,7 @@
 ---
 id: "0001"
 title: Projektgerüst (M0)
-status: in Arbeit
+status: Review
 risk: high
 adrs: ["0001", "0002", "0003", "0004"]
 owner: Morten Möller
