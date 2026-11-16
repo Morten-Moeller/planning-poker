@@ -1,14 +1,14 @@
 ---
 id: "0015"
 title: Härtung (M13, Teil 1)
-status: Review
+status: done
 risk: high
 adrs: ["0005"]
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#15"
+note: alle Kriterien erfüllt
 ---
 
 # Härtung (M13, Teil 1)
