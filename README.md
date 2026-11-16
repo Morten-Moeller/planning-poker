@@ -50,7 +50,7 @@ gelten je Backend-Instanz, nicht je Sitzung.
 | `planningpoker.session.ttl` | `12h` | Verfall inaktiver Sitzungen |
 | `planningpoker.session.max-sessions` | `1000` | Obergrenze lebender Sitzungen der Instanz; abgelaufene Sitzungen zählen nicht |
 | `planningpoker.session.max-participants` | `50` | Obergrenze der Teilnehmer je Sitzung, der Scrum Master zählt mit |
-| `planningpoker.session.allowed-projects` | keiner, alle Projekte erlaubt | Projekt-Allowlist: kommagetrennte Projekt-IDs oder -Pfade, für die Sitzungen angelegt werden dürfen |
+| `planningpoker.session.allowed-projects` | keiner, alle Projekte erlaubt | Projekt-Allowlist: kommagetrennte Projekt-IDs oder -Pfade, für die Sitzungen angelegt werden dürfen; ein leerer Wert gilt als nicht gesetzt |
 | `planningpoker.realtime.auth-timeout` | `5s` | Zeit bis zur ersten Nachricht `auth` einer WebSocket-Verbindung |
 
 Das bestätigte Ergebnis wird als Kommentar (Note) am Issue hinterlegt: Endwert, Rundenzahl,

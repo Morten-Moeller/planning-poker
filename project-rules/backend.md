@@ -71,8 +71,8 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   (A-02, A-10); `realtime` (spec 0009) turns it into the message `round.allVoted` for the scrum
   master. A later card change in a complete round fires nothing.
 - Expiry: `SessionConfig` (`@ConfigMapping`, prefix `planningpoker.session`) holds `ttl`
-  (default `12h`), `maxSessions`, `maxParticipants` and `allowedProjects`
-  (`Optional<List<String>>`). `find` and `update` remove an expired session on access; a Vert.x timer in
+  (default `12h`), `maxSessions` and `maxParticipants` (`@Min(1)`, defaults in the mapping) and
+  `allowedProjects` (`Optional<List<String>>`; an empty value counts as not set). `find` and `update` remove an expired session on access; a Vert.x timer in
   `SessionRegistryProducer` (every 10 minutes) calls `expire(now)` for the rest. No
   `quarkus-scheduler`.
 - Time comes from the `Clock` bean (`platform.ClockProducer`, `Clock.systemUTC()`); tests build
@@ -98,7 +98,8 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   default; a missing token stops the start with the key name (A6.1): `GitLabConfig`
   (`@ConfigMapping`, prefix `planningpoker.gitlab`) is read by `GitLabClient`, a `@Startup` bean,
   so the config validation fails at start. `planningpoker.gitlab.timeout` (default `10s`, connect
-  and read timeout) has its default in the mapping, not in `application.properties`. Profiles
+  and read timeout), `planningpoker.session.max-sessions` and `max-participants` have their
+  defaults in the mapping, not in `application.properties`. Profiles
   `test` and `e2e` set placeholder values. No secret in the repository.
 - Ports: `quarkus.http.port=8080`, tests on a free port (`quarkus.http.test-port=0`).
 
