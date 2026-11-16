@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/v4/projects/1234/issues/44"
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "iid": 44,
+      "title": "Script check",
+      "description": "**fett**\n\n<script>window.__pwned = true</script>\n\n<img src=\"x\" onerror=\"window.__pwned = true\">",
+      "web_url": "https://gitlab.example/group/project/-/issues/44",
+      "labels": []
+    }
+  }
+}

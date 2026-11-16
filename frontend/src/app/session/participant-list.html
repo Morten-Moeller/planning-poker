@@ -1,0 +1,26 @@
+<section class="participants">
+  <h2 i18n="@@participants.title">Teilnehmer</h2>
+  <ul data-testid="participant-list">
+    @for (participant of store.participants(); track participant.id) {
+      <li data-testid="participant" [class.disconnected]="!participant.connected">
+        <span class="name" data-testid="participant-name">{{ participant.name }}</span>
+        @if (participant.role === 'SCRUM_MASTER') {
+          <span class="role" data-testid="participant-role" i18n="@@participants.scrumMaster"
+            >Scrum Master</span
+          >
+        }
+        <span class="status">
+          @if (participant.connected) {
+            <span class="symbol" aria-hidden="true">●</span>
+            <span data-testid="participant-status" i18n="@@participants.connected">verbunden</span>
+          } @else {
+            <span class="symbol" aria-hidden="true">○</span>
+            <span data-testid="participant-status" i18n="@@participants.disconnected"
+              >getrennt</span
+            >
+          }
+        </span>
+      </li>
+    }
+  </ul>
+</section>
