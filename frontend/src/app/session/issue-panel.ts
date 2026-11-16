@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { filter } from 'rxjs';
+import { Subscription, filter } from 'rxjs';
 import { ApiService, IssueListResponse, IssueQuery } from '../api/api.service';
 import { SessionStore } from '../api/session-store';
 import { SwitchIssueDialog } from './switch-issue-dialog';
@@ -33,6 +33,7 @@ export class IssuePanel implements OnInit {
   protected readonly loading = signal(false);
   protected readonly releasing = signal(false);
   private search: string | undefined;
+  private listing: Subscription | null = null;
 
   protected readonly activeIid = computed(() => this.store.activeIssue()?.iid ?? null);
   private readonly defaultIid = computed(
@@ -89,7 +90,7 @@ export class IssuePanel implements OnInit {
     this.dialog
       .open<SwitchIssueDialog, unknown, boolean>(SwitchIssueDialog)
       .afterClosed()
-      .pipe(filter((confirmed) => confirmed === true))
+      .pipe(filter((confirmed) => confirmed === true && !this.releaseDisabled()))
       .subscribe(() => this.selectIssue(iid));
   }
 
@@ -106,8 +107,9 @@ export class IssuePanel implements OnInit {
   }
 
   private load(query: IssueQuery, append: boolean): void {
+    this.listing?.unsubscribe();
     this.loading.set(true);
-    this.api.listIssues(this.sessionId(), query).subscribe({
+    this.listing = this.api.listIssues(this.sessionId(), query).subscribe({
       next: (response) => {
         this.results.update((current) =>
           append ? [...current, ...response.items] : response.items,

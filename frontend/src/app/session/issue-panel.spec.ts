@@ -205,6 +205,21 @@ describe('IssuePanel', () => {
     http.expectNone(ACTIVE_ISSUE_URL);
   });
 
+  it('sends no switch when the confirmation of the round started while the dialog was open', async () => {
+    await open(votingScrumMaster);
+    await click('issue-result', 0);
+    await click('issue-release');
+
+    await receive({
+      ...votingScrumMaster,
+      round: { ...votingScrumMaster.round!, confirming: true },
+    });
+    (document.querySelector('[data-testid="switch-confirm"]') as HTMLButtonElement).click();
+    await fixture.whenStable();
+
+    http.expectNone(ACTIVE_ISSUE_URL);
+  });
+
   it('switches the issue after the confirmation', async () => {
     await open(votingScrumMaster);
     await click('issue-result', 0);
