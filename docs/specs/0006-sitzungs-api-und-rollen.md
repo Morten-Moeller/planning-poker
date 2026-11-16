@@ -1,7 +1,7 @@
 ---
 id: "0006"
 title: Sitzungs-API und Rollen (M3)
-status: approved
+status: Review
 risk: high
 adrs: ["0003"]
 owner: Morten Möller

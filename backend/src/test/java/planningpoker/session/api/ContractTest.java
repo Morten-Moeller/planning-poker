@@ -63,32 +63,42 @@ class ContractTest {
                                 null,
                                 "200",
                                 "IssueListResponse",
-                                List.of("403", "502")),
+                                List.of("401", "403", "404", "502")),
                         new Endpoint(
                                 "post",
                                 "/api/sessions/{id}/active-issue",
                                 "SelectIssueRequest",
                                 "204",
                                 null,
-                                List.of("403", "404", "409", "502")),
+                                List.of("400", "401", "403", "404", "409", "502")),
                         new Endpoint(
                                 "put",
                                 "/api/sessions/{id}/vote",
                                 "VoteRequest",
                                 "204",
                                 null,
-                                List.of("400", "403", "409")),
+                                List.of("400", "401", "403", "404", "409")),
                         new Endpoint(
-                                "post", "/api/sessions/{id}/round/reveal", null, "204", null, List.of("403", "409")),
+                                "post",
+                                "/api/sessions/{id}/round/reveal",
+                                null,
+                                "204",
+                                null,
+                                List.of("401", "403", "404", "409")),
                         new Endpoint(
-                                "post", "/api/sessions/{id}/round/restart", null, "204", null, List.of("403", "409")),
+                                "post",
+                                "/api/sessions/{id}/round/restart",
+                                null,
+                                "204",
+                                null,
+                                List.of("401", "403", "404", "409")),
                         new Endpoint(
                                 "post",
                                 "/api/sessions/{id}/round/confirm",
                                 "ConfirmRequest",
                                 "204",
                                 null,
-                                List.of("400", "403", "409", "502")))
+                                List.of("400", "401", "403", "404", "409", "502")))
                 .map(endpoint -> Arguments.of(endpoint.method() + " " + endpoint.path(), endpoint));
     }
 

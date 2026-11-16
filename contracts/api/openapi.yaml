@@ -776,6 +776,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
         "403":
           description: FORBIDDEN_ROLE
           content:
@@ -783,7 +789,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
         "404":
-          description: ISSUE_NOT_FOUND
+          description: "ISSUE_NOT_FOUND, SESSION_NOT_FOUND"
           content:
             application/problem+json:
               schema:
@@ -835,8 +841,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IssueListResponse"
+        "401":
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
         "403":
           description: FORBIDDEN_ROLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: SESSION_NOT_FOUND
           content:
             application/problem+json:
               schema:
@@ -922,8 +940,20 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
         "403":
           description: FORBIDDEN_ROLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: SESSION_NOT_FOUND
           content:
             application/problem+json:
               schema:
@@ -958,8 +988,20 @@ paths:
       responses:
         "204":
           description: New round started.
+        "401":
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
         "403":
           description: FORBIDDEN_ROLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: SESSION_NOT_FOUND
           content:
             application/problem+json:
               schema:
@@ -988,8 +1030,20 @@ paths:
       responses:
         "204":
           description: Round revealed.
+        "401":
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
         "403":
           description: FORBIDDEN_ROLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: SESSION_NOT_FOUND
           content:
             application/problem+json:
               schema:
@@ -1030,8 +1084,20 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
         "403":
           description: FORBIDDEN_ROLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: SESSION_NOT_FOUND
           content:
             application/problem+json:
               schema:
