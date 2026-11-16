@@ -1,0 +1,19 @@
+<section class="active-issue" data-testid="active-issue">
+  <h2>
+    <span class="iid" data-testid="active-issue-iid">#{{ issue().iid }}</span>
+    <span data-testid="active-issue-title">{{ issue().title }}</span>
+  </h2>
+  <a
+    data-testid="active-issue-link"
+    [href]="issue().webUrl"
+    target="_blank"
+    [rel]="'noopener'"
+    i18n="@@activeIssue.openInGitLab"
+    >In GitLab öffnen</a
+  >
+  <div
+    class="description"
+    data-testid="active-issue-description"
+    [innerHTML]="descriptionHtml()"
+  ></div>
+</section>

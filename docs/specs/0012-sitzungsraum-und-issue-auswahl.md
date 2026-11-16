@@ -1,7 +1,7 @@
 ---
 id: "0012"
 title: Sitzungsraum und Issue-Auswahl (M10)
-status: approved
+status: Review
 risk: medium
 adrs: ["0004"]
 owner: Morten Möller

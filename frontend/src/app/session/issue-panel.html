@@ -1,0 +1,93 @@
+<section class="panel" data-testid="issue-panel">
+  <h2 i18n="@@issuePanel.title">Issue auswählen</h2>
+  <form class="search" [formGroup]="searchForm" (ngSubmit)="submitSearch()">
+    <mat-form-field>
+      <mat-label i18n="@@issuePanel.searchLabel">Issues suchen</mat-label>
+      <input
+        matInput
+        type="search"
+        formControlName="search"
+        autocomplete="off"
+        data-testid="issue-search-input"
+      />
+    </mat-form-field>
+    <button
+      mat-stroked-button
+      type="submit"
+      data-testid="issue-search-submit"
+      [disabled]="loading()"
+      i18n="@@issuePanel.searchSubmit"
+    >
+      Suchen
+    </button>
+  </form>
+
+  <ul class="results">
+    @for (issue of results(); track issue.iid) {
+      <li>
+        <button
+          type="button"
+          class="result"
+          data-testid="issue-result"
+          [class.selected]="issue.iid === selectedIid()"
+          [attr.aria-pressed]="issue.iid === selectedIid()"
+          (click)="select(issue.iid)"
+        >
+          <span class="iid">#{{ issue.iid }}</span> {{ issue.title }}
+        </button>
+      </li>
+    } @empty {
+      @if (!loading()) {
+        <li data-testid="issue-results-empty" i18n="@@issuePanel.empty">Keine Issues gefunden</li>
+      }
+    }
+  </ul>
+  @if (nextPage() !== null) {
+    <button
+      mat-stroked-button
+      type="button"
+      data-testid="issue-load-more"
+      [disabled]="loading()"
+      (click)="loadMore()"
+      i18n="@@issuePanel.loadMore"
+    >
+      Mehr laden
+    </button>
+  }
+
+  @if (selected(); as issue) {
+    <div class="preview" data-testid="issue-preview">
+      <h3 i18n="@@issuePanel.previewTitle">Vorschau</h3>
+      <p>
+        <span class="iid" data-testid="issue-preview-iid">#{{ issue.iid }}</span>
+        @if (issue.title !== null) {
+          <span data-testid="issue-preview-title">{{ issue.title }}</span>
+        }
+      </p>
+      @if (issue.webUrl !== null) {
+        <a
+          data-testid="issue-preview-link"
+          [href]="issue.webUrl"
+          target="_blank"
+          [rel]="'noopener'"
+          i18n="@@issuePanel.openInGitLab"
+          >In GitLab öffnen</a
+        >
+      }
+    </div>
+  }
+
+  <button
+    mat-flat-button
+    type="button"
+    data-testid="issue-release"
+    [disabled]="releaseDisabled()"
+    (click)="release()"
+  >
+    @if (inLobby()) {
+      <ng-container i18n="@@issuePanel.release">Freigeben</ng-container>
+    } @else {
+      <ng-container i18n="@@issuePanel.switch">Issue wechseln</ng-container>
+    }
+  </button>
+</section>

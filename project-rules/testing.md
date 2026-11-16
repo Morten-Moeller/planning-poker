@@ -45,7 +45,7 @@ change touches.
 | `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts` |
 | `frontend/src/app/api/` | `frontend/src/app/api/*.spec.ts` (from spec 0005) | – |
 | `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts` |
-| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, session room flows (from spec 0012) |
+| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts` |
 
 ## End-to-end
 
@@ -84,12 +84,15 @@ change touches.
   flows comes from the fixed mappings of the GitLab double in
   `frontend/e2e/gitlab-double/mappings/` (spec 0011): project `1234` with issues 42 and 43, the
   issue search of the project (both issues), notes and weight of both issues; issue 404 answers
-  404. A flow that needs other GitLab data adds a mapping there.
+  404. Issue 44 (spec 0012) has `**fett**`, a `<script>` element and an `<img onerror>` in its
+  description for the check of the Markdown sanitizing; it is not part of the issue search. A
+  flow that needs other GitLab data adds a mapping there.
 - Environment check: `make e2e` starts everything; for a manual check start backend and frontend
   as in `README.md`.
 - Named states: none yet; a state the flows need goes into the spec that introduces it. The
-  flows of spec 0011 create their session through the start page (issue 42) and join through
-  the join page in a second browser context.
+  flows of spec 0011 and `session-room.spec.ts` (spec 0012) create their session through the
+  start page (issue 42, issue 44 for the sanitizing check) and join through the join page in a
+  second browser context.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.
 

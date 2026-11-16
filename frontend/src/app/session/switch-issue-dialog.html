@@ -1,0 +1,28 @@
+<div data-testid="switch-dialog">
+  <h2 mat-dialog-title i18n="@@switchIssue.title">Issue wechseln?</h2>
+  <mat-dialog-content>
+    <p i18n="@@switchIssue.text">
+      Die laufende Runde wird verworfen. Die bisherigen Karten gehen verloren.
+    </p>
+  </mat-dialog-content>
+  <mat-dialog-actions [align]="'end'">
+    <button
+      mat-button
+      type="button"
+      data-testid="switch-cancel"
+      [mat-dialog-close]="false"
+      i18n="@@switchIssue.cancel"
+    >
+      Abbrechen
+    </button>
+    <button
+      mat-flat-button
+      type="button"
+      data-testid="switch-confirm"
+      [mat-dialog-close]="true"
+      i18n="@@switchIssue.confirm"
+    >
+      Wechseln
+    </button>
+  </mat-dialog-actions>
+</div>
