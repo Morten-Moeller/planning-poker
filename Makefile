@@ -15,7 +15,7 @@ endif
 
 MVN = cd backend && ./mvnw -q -B
 PNPM = pnpm -C frontend -s
-E2E_OWNER ?= $(shell git branch --show-current 2>/dev/null || echo make-e2e)
+E2E_OWNER ?= $(or $(shell git branch --show-current 2>/dev/null),make-e2e)
 
 .PHONY: test test-backend test-frontend typecheck typecheck-backend typecheck-frontend
 .PHONY: lint lint-backend lint-frontend format e2e install contracts
