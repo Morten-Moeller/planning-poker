@@ -322,7 +322,7 @@ class SessionTest {
 
         @Test
         void the_creator_is_scrum_master_and_every_further_participant_developer() {
-            Session session = new Session("K7P2QX9M", "4711", 42, Instant.EPOCH);
+            Session session = new Session("K7P2QX9M", "4711", 42, Instant.EPOCH, SessionBuilder.MAX_PARTICIPANTS);
 
             Participant creator = session.join("Anna");
             Participant second = session.join("Ben");
@@ -332,6 +332,38 @@ class SessionTest {
             assertEquals(Role.DEVELOPER, second.role());
             assertEquals(Role.DEVELOPER, third.role());
             assertEquals(List.of(creator, second, third), session.participants());
+        }
+
+        @Test
+        void a_join_beyond_the_participant_limit_is_rejected_before_the_name_check() {
+            Session session = new Session("K7P2QX9M", "4711", 42, Instant.EPOCH, 3);
+            session.join("Anna");
+            session.join("Ben");
+            session.join("Cleo");
+            List<Participant> before = session.participants();
+
+            SessionException limit = assertThrows(SessionException.class, () -> session.join("Dora"));
+            SessionException limitBeforeName = assertThrows(SessionException.class, () -> session.join("anna"));
+            SessionException limitBeforeLength = assertThrows(SessionException.class, () -> session.join(" "));
+
+            assertEquals(ErrorCode.LIMIT_REACHED, limit.errorCode());
+            assertEquals(ErrorCode.LIMIT_REACHED, limitBeforeName.errorCode());
+            assertEquals(ErrorCode.LIMIT_REACHED, limitBeforeLength.errorCode());
+            assertEquals(before, session.participants());
+        }
+
+        @Test
+        void a_join_up_to_the_participant_limit_counts_the_scrum_master() {
+            Session session = new Session("K7P2QX9M", "4711", 42, Instant.EPOCH, 2);
+
+            session.join("Anna");
+            Participant developer = session.join("Ben");
+
+            assertEquals(Role.DEVELOPER, developer.role());
+            assertEquals(
+                    ErrorCode.LIMIT_REACHED,
+                    assertThrows(SessionException.class, () -> session.join("Cleo"))
+                            .errorCode());
         }
 
         @Test

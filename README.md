@@ -48,6 +48,10 @@ gelten je Backend-Instanz, nicht je Sitzung.
 | `planningpoker.gitlab.write-weight` | `false` | Zahlenwerte zusätzlich als `weight` setzen (Premium/Ultimate) |
 | `planningpoker.gitlab.timeout` | `10s` | Verbindungs- und Lesezeit je GitLab-Aufruf |
 | `planningpoker.session.ttl` | `12h` | Verfall inaktiver Sitzungen |
+| `planningpoker.session.max-sessions` | `1000` | Obergrenze lebender Sitzungen der Instanz; abgelaufene Sitzungen zählen nicht |
+| `planningpoker.session.max-participants` | `50` | Obergrenze der Teilnehmer je Sitzung, der Scrum Master zählt mit |
+| `planningpoker.session.allowed-projects` | keiner, alle Projekte erlaubt | Projekt-Allowlist: kommagetrennte Projekt-IDs oder -Pfade, für die Sitzungen angelegt werden dürfen; ein leerer Wert gilt als nicht gesetzt |
+| `planningpoker.realtime.auth-timeout` | `5s` | Zeit bis zur ersten Nachricht `auth` einer WebSocket-Verbindung |
 
 Das bestätigte Ergebnis wird als Kommentar (Note) am Issue hinterlegt: Endwert, Rundenzahl,
 Verteilung der letzten Runde und Durchschnitt. Das funktioniert in jedem GitLab-Tarif. Mit
@@ -83,7 +87,7 @@ und `backend/src/main/resources/META-INF/openapi.yaml`); `make contracts` schrei
 TypeScript-Typen `frontend/src/app/api/schema.d.ts`, `make drift` meldet einen veralteten Stand.
 Im Dev-Modus zeigt `http://localhost:8080/q/swagger-ui` den Vertrag. Sechs Beispiel-Snapshots je
 Phase und Rolle liegen unter `contracts/api/examples/`; Backend-Test und Frontend-Typen prüfen sie.
-Bis zum jeweiligen Meilenstein antworten die Sitzungs-Endpunkte 501 `NOT_IMPLEMENTED`.
+Version des Vertrags: `2.0.0` (ADR 0005).
 
 ### Ablauf
 
@@ -101,8 +105,8 @@ Außer beim Erstellen und Beitreten trägt jeder Aufruf `Authorization: Bearer <
 | Methode und Pfad | Rolle | Request | Erfolg | Fehler |
 |---|---|---|---|---|
 | `GET /api/health` | offen | – | 200 `{ status }` | – |
-| `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid }` | 201 `{ sessionId, participantId, token }` | 400, 404 `ISSUE_NOT_FOUND`, 502 |
-| `POST /api/sessions/{id}/participants` | offen | `{ name }` | 201 `{ participantId, token }` | 400, 404, 409 `NAME_TAKEN` |
+| `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid }` | 201 `{ sessionId, participantId, token }` | 400, 403 `PROJECT_NOT_ALLOWED`, 404 `ISSUE_NOT_FOUND`, 409 `LIMIT_REACHED`, 502 |
+| `POST /api/sessions/{id}/participants` | offen | `{ name }` | 201 `{ participantId, token }` | 400, 404, 409 `NAME_TAKEN`, `LIMIT_REACHED` |
 | `GET /api/sessions/{id}` | beide | – | 200 `SessionView` | 401, 404 |
 | `GET /api/sessions/{id}/issues?search=&page=` | Scrum Master | – | 200 `{ items, nextPage }` | 403, 502 |
 | `POST /api/sessions/{id}/active-issue` | Scrum Master | `{ issueIid }` | 204 | 400, 403, 404, 409, 502 |
@@ -142,12 +146,28 @@ Fehler folgen RFC 9457 als `application/problem+json`; Clients entscheiden nur a
 | `INVALID_CARD` | 400 | Karte nicht im Kartensatz |
 | `UNAUTHORIZED` | 401 | Token fehlt oder ist unbekannt |
 | `FORBIDDEN_ROLE` | 403 | Aktion der anderen Rolle vorbehalten |
+| `PROJECT_NOT_ALLOWED` | 403 | Projekt nicht in der Projekt-Allowlist; GitLab wird nicht gefragt |
 | `SESSION_NOT_FOUND` | 404 | Sitzung unbekannt oder verfallen |
 | `ISSUE_NOT_FOUND` | 404 | Issue im GitLab-Projekt nicht gefunden |
 | `NAME_TAKEN` | 409 | Name in der Sitzung bereits vergeben |
 | `INVALID_STATE` | 409 | Aktion in dieser Phase nicht erlaubt oder Bestätigung läuft |
-| `NOT_IMPLEMENTED` | 501 | Endpunkt noch nicht umgesetzt; entfällt mit dem letzten Meilenstein |
+| `LIMIT_REACHED` | 409 | Obergrenze der Sitzungen oder der Teilnehmer der Sitzung erreicht |
 | `GITLAB_ERROR` | 502 | GitLab nicht erreichbar oder Fehlerantwort; der GitLab-Text wird nicht weitergegeben |
+
+Eine unbekannte oder verfallene Sitzung antwortet 404 `SESSION_NOT_FOUND`, ein fehlendes oder
+fremdes Token für eine bestehende Sitzung 401 `UNAUTHORIZED`. Die Antworten bleiben getrennt,
+weil der offene Beitritt die Existenz einer Sitzung ohnehin mit 404 meldet (ADR 0005).
+
+### Verbleibendes Risiko
+
+Erstellen und Beitreten brauchen kein Login (ADR 0003). Das Backend liest jedes Projekt, das der
+GitLab-Token der Instanz sieht; ohne Projekt-Allowlist kann jeder, der das Backend erreicht,
+Titel, Beschreibung und Link der Issues dieser Projekte lesen. Die Obergrenzen begrenzen den
+Speicherbedarf, nicht die Zahl der Aufrufe: es gibt kein Rate-Limit je Client-IP, und
+WebSocket-Verbindungen vor `auth` sind nur durch `planningpoker.realtime.auth-timeout` begrenzt,
+nicht in ihrer Zahl. Ein Aufrufer kann die Obergrenze der Sitzungen ausschöpfen und so bis zum
+Verfall weitere Erstellungen verhindern. Die Anwendung ist deshalb für den Betrieb in einem
+internen Netz gedacht (ADR 0005).
 
 ## Entwicklung
 

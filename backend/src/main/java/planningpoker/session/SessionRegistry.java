@@ -21,21 +21,37 @@ public class SessionRegistry {
     private final Map<String, Entry> sessions = new ConcurrentHashMap<>();
     private final Clock clock;
     private final Duration ttl;
+    private final int maxSessions;
+    private final int maxParticipants;
     private final Consumer<SessionChanged> changed;
+    private final ReentrantLock createLock = new ReentrantLock();
 
-    public SessionRegistry(Clock clock, Duration ttl, Consumer<SessionChanged> changed) {
+    public SessionRegistry(
+            Clock clock, Duration ttl, int maxSessions, int maxParticipants, Consumer<SessionChanged> changed) {
         this.clock = clock;
         this.ttl = ttl;
+        this.maxSessions = maxSessions;
+        this.maxParticipants = maxParticipants;
         this.changed = changed;
     }
 
     public Created create(String gitlabProjectId, long issueIid, String creatorName) {
-        while (true) {
-            Session session = new Session(Ids.sessionId(), gitlabProjectId, issueIid, clock.instant());
-            Participant scrumMaster = session.join(creatorName);
-            if (sessions.putIfAbsent(session.id(), new Entry(session, new ReentrantLock())) == null) {
-                return new Created(session, scrumMaster);
+        createLock.lock();
+        try {
+            Instant now = clock.instant();
+            expire(now);
+            if (sessions.size() >= maxSessions) {
+                throw new SessionException(ErrorCode.LIMIT_REACHED, "The maximum number of sessions is reached.");
             }
+            while (true) {
+                Session session = new Session(Ids.sessionId(), gitlabProjectId, issueIid, now, maxParticipants);
+                Participant scrumMaster = session.join(creatorName);
+                if (sessions.putIfAbsent(session.id(), new Entry(session, new ReentrantLock())) == null) {
+                    return new Created(session, scrumMaster);
+                }
+            }
+        } finally {
+            createLock.unlock();
         }
     }
 

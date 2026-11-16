@@ -27,7 +27,9 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import planningpoker.platform.ApiException;
 import planningpoker.platform.Authenticated;
+import planningpoker.platform.ErrorCode;
 import planningpoker.platform.ProblemDetail;
 import planningpoker.session.api.ConfirmRequest;
 import planningpoker.session.api.CreateSessionRequest;
@@ -69,6 +71,9 @@ public class SessionResource {
     @Inject
     Event<RoundCompleted> roundCompleted;
 
+    @Inject
+    SessionConfig config;
+
     private record VoteOutcome(boolean completed, int roundNumber) {}
 
     @POST
@@ -83,17 +88,26 @@ public class SessionResource {
             description = "VALIDATION_ERROR",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     @APIResponse(
+            responseCode = "403",
+            description = "PROJECT_NOT_ALLOWED",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
             responseCode = "404",
             description = "ISSUE_NOT_FOUND",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "409",
+            description = "LIMIT_REACHED",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     @APIResponse(
             responseCode = "502",
             description = "GITLAB_ERROR",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response createSession(@NotNull @Valid CreateSessionRequest request) {
-        gitLabIssues.loadIssue(request.gitlabProjectId(), request.issueIid());
-        SessionRegistry.Created created =
-                registry.create(request.gitlabProjectId(), request.issueIid(), request.name());
+        String projectId = request.gitlabProjectId().strip();
+        requireAllowedProject(projectId);
+        gitLabIssues.loadIssue(projectId, request.issueIid());
+        SessionRegistry.Created created = registry.create(projectId, request.issueIid(), request.name());
         return Response.status(Response.Status.CREATED)
                 .entity(new CreateSessionResponse(
                         created.session().id(),
@@ -120,7 +134,7 @@ public class SessionResource {
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     @APIResponse(
             responseCode = "409",
-            description = "NAME_TAKEN",
+            description = "NAME_TAKEN, LIMIT_REACHED",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response joinSession(
             @PathParam("id") @Parameter(description = SESSION_ID) String id,
@@ -403,5 +417,14 @@ public class SessionResource {
             return null;
         });
         return Response.noContent().build();
+    }
+
+    private void requireAllowedProject(String projectId) {
+        boolean allowed = config.allowedProjects()
+                .map(projects -> projects.stream().map(String::strip).anyMatch(projectId::equals))
+                .orElse(true);
+        if (!allowed) {
+            throw new ApiException(ErrorCode.PROJECT_NOT_ALLOWED, "Sessions for this GitLab project are not allowed.");
+        }
     }
 }

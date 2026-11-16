@@ -11,6 +11,8 @@ class SessionBuilder {
             new Issue(42, "Login page", "As a user I want to log in.", "https://gitlab.example/i/42");
     static final Issue OTHER_ISSUE = new Issue(43, "Logout", "", "https://gitlab.example/i/43");
 
+    static final int MAX_PARTICIPANTS = 50;
+
     private int developers = 2;
     private Phase phase = Phase.LOBBY;
     private boolean confirming;
@@ -44,7 +46,7 @@ class SessionBuilder {
 
     Session build() {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
-        Session session = new Session("K7P2QX9M", "4711", ISSUE.iid(), CREATED_AT);
+        Session session = new Session("K7P2QX9M", "4711", ISSUE.iid(), CREATED_AT, MAX_PARTICIPANTS);
         Participant master = session.join("Master " + suffix);
         session.connect(master.id());
         for (int i = 1; i <= developers; i++) {

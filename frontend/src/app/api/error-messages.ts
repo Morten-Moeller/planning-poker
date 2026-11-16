@@ -6,11 +6,12 @@ function messagesByCode(): Record<ErrorCode, string> {
     INVALID_CARD: $localize`:@@error.INVALID_CARD:Diese Karte gibt es nicht.`,
     UNAUTHORIZED: $localize`:@@error.UNAUTHORIZED:Der Zugang zur Sitzung ist nicht mehr gültig.`,
     FORBIDDEN_ROLE: $localize`:@@error.FORBIDDEN_ROLE:Diese Aktion ist für Ihre Rolle nicht erlaubt.`,
+    PROJECT_NOT_ALLOWED: $localize`:@@error.PROJECT_NOT_ALLOWED:Für dieses GitLab-Projekt dürfen keine Sitzungen angelegt werden.`,
     SESSION_NOT_FOUND: $localize`:@@error.SESSION_NOT_FOUND:Die Sitzung wurde nicht gefunden oder ist abgelaufen.`,
     ISSUE_NOT_FOUND: $localize`:@@error.ISSUE_NOT_FOUND:Das Issue wurde im GitLab-Projekt nicht gefunden.`,
     NAME_TAKEN: $localize`:@@error.NAME_TAKEN:Der Name ist in dieser Sitzung schon vergeben.`,
     INVALID_STATE: $localize`:@@error.INVALID_STATE:Die Aktion passt nicht zum aktuellen Stand der Sitzung.`,
-    NOT_IMPLEMENTED: $localize`:@@error.NOT_IMPLEMENTED:Diese Funktion steht noch nicht bereit.`,
+    LIMIT_REACHED: $localize`:@@error.LIMIT_REACHED:Die Höchstzahl ist erreicht. Bitte später erneut versuchen.`,
     GITLAB_ERROR: $localize`:@@error.GITLAB_ERROR:GitLab hat nicht geantwortet.`,
   };
 }

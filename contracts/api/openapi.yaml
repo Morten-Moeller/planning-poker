@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Planning Poker API
-  version: 1.0.0
+  version: 2.0.0
   description: |
     Commands go over REST under /api and answer without state. The state reaches every participant
     over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
@@ -219,11 +219,12 @@ components:
       - INVALID_CARD
       - UNAUTHORIZED
       - FORBIDDEN_ROLE
+      - PROJECT_NOT_ALLOWED
       - SESSION_NOT_FOUND
       - ISSUE_NOT_FOUND
       - NAME_TAKEN
       - INVALID_STATE
-      - NOT_IMPLEMENTED
+      - LIMIT_REACHED
       - GITLAB_ERROR
     HealthStatus:
       required:
@@ -701,8 +702,20 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: PROJECT_NOT_ALLOWED
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
         "404":
           description: ISSUE_NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: LIMIT_REACHED
           content:
             application/problem+json:
               schema:
@@ -906,7 +919,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
         "409":
-          description: NAME_TAKEN
+          description: "NAME_TAKEN, LIMIT_REACHED"
           content:
             application/problem+json:
               schema:

@@ -55,6 +55,14 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 | I28 | Kein Snapshot enthält ein Token oder vor der Auflösung eine fremde Karte; `preselectedIssueIid` sieht nur der Scrum Master. | `session.SessionViewMapper` | – |
 | I29 | `RoundCompleted` feuert genau einmal je Vollständigkeit, wenn der letzte verbundene Entwickler gewählt hat (I13, I14); eine spätere Kartenänderung feuert nicht erneut. | `session.SessionResource.vote` über den Rückgabewert von `Session.vote` | – |
 
+## Obergrenzen und Projekt-Allowlist (Spec 0015, ADR 0005)
+
+| Nr | Regel | Durchgesetzt in | Fehlercode |
+|---|---|---|---|
+| I35 | Die Instanz hält höchstens `planningpoker.session.max-sessions` lebende Sitzungen; abgelaufene Sitzungen zählen nicht. Die Zählung und das Anlegen laufen unter einer Sperre. | `SessionRegistry.create` | `LIMIT_REACHED` |
+| I36 | Eine Sitzung hat höchstens `planningpoker.session.max-participants` Teilnehmer, der Scrum Master zählt mit; die Grenze wird vor der Namensprüfung geprüft, ein abgelehnter Beitritt ändert nichts und löst kein `SessionChanged` aus (I19). | `Session.join` | `LIMIT_REACHED` |
+| I37 | Ist `planningpoker.session.allowed-projects` gesetzt, entsteht eine Sitzung nur für eine Projekt-ID der Liste (exakter Vergleich nach dem Trimmen); die Prüfung läuft vor dem GitLab-Aufruf. Ohne den Schlüssel ist jedes Projekt erlaubt. | `SessionResource.createSession` | `PROJECT_NOT_ALLOWED` |
+
 ## Echtzeit (Spec 0009, ADR 0003, ADR 0004)
 
 | Nr | Regel | Durchgesetzt in | Fehlercode |

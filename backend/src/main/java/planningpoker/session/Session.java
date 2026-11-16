@@ -19,6 +19,7 @@ public final class Session {
 
     private final String id;
     private final String gitlabProjectId;
+    private final int maxParticipants;
     private final Map<String, Participant> participants = new LinkedHashMap<>();
     private final List<HistoryEntry> history = new ArrayList<>();
     private Phase phase = Phase.LOBBY;
@@ -27,9 +28,10 @@ public final class Session {
     private Round round;
     private volatile Instant lastActivityAt;
 
-    public Session(String id, String gitlabProjectId, long preselectedIssueIid, Instant now) {
+    public Session(String id, String gitlabProjectId, long preselectedIssueIid, Instant now, int maxParticipants) {
         this.id = id;
         this.gitlabProjectId = gitlabProjectId;
+        this.maxParticipants = maxParticipants;
         this.preselectedIssueIid = preselectedIssueIid;
         this.lastActivityAt = now;
     }
@@ -93,6 +95,10 @@ public final class Session {
     }
 
     public Participant join(String name) {
+        if (participants.size() >= maxParticipants) {
+            throw new SessionException(
+                    ErrorCode.LIMIT_REACHED, "The maximum number of participants in this session is reached.");
+        }
         String trimmed = name.strip();
         if (trimmed.isEmpty() || trimmed.length() > NAME_MAX_LENGTH) {
             throw new SessionException(ErrorCode.VALIDATION_ERROR, "The name needs 1 to 30 characters.");

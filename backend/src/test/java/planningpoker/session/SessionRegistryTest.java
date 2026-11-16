@@ -25,12 +25,14 @@ class SessionRegistryTest {
     private static final Instant START = Instant.parse("2026-11-16T09:00:00Z");
     private static final Duration TTL = Duration.ofHours(12);
     private static final int DEVELOPERS = 50;
+    private static final int MAX_SESSIONS = 1000;
 
     private final TestClock clock = new TestClock(START);
     private final List<SessionChanged> events = new CopyOnWriteArrayList<>();
     private final AtomicBoolean probeNestedUpdate = new AtomicBoolean();
     private final List<Phase> seenByNestedUpdate = new CopyOnWriteArrayList<>();
-    private final SessionRegistry registry = new SessionRegistry(clock, TTL, this::onChanged);
+    private final SessionRegistry registry =
+            new SessionRegistry(clock, TTL, MAX_SESSIONS, DEVELOPERS + 1, this::onChanged);
     private final ExecutorService pool = Executors.newFixedThreadPool(DEVELOPERS);
 
     private void onChanged(SessionChanged event) {
@@ -223,5 +225,56 @@ class SessionRegistryTest {
         registry.expire(clock.instant());
 
         assertTrue(registry.find(sessionId).isPresent());
+    }
+
+    @Test
+    void create_beyond_the_session_limit_is_rejected() {
+        SessionRegistry limited = new SessionRegistry(clock, TTL, 2, 50, this::onChanged);
+        limited.create("4711", 42, "Anna");
+        limited.create("4711", 42, "Ben");
+        events.clear();
+
+        SessionException exception = assertThrows(SessionException.class, () -> limited.create("4711", 42, "Cleo"));
+
+        assertEquals(ErrorCode.LIMIT_REACHED, exception.errorCode());
+        assertEquals(List.of(), events);
+    }
+
+    @Test
+    void an_expired_session_does_not_count_against_the_session_limit() {
+        SessionRegistry limited = new SessionRegistry(clock, TTL, 2, 50, this::onChanged);
+        String first = limited.create("4711", 42, "Anna").session().id();
+        clock.advance(TTL.minusMinutes(1));
+        String second = limited.create("4711", 42, "Ben").session().id();
+        clock.advance(Duration.ofMinutes(2));
+
+        SessionRegistry.Created third = limited.create("4711", 42, "Cleo");
+
+        assertEquals(Optional.empty(), limited.find(first));
+        assertTrue(limited.find(second).isPresent());
+        assertTrue(limited.find(third.session().id()).isPresent());
+        assertEquals(
+                ErrorCode.LIMIT_REACHED,
+                assertThrows(SessionException.class, () -> limited.create("4711", 42, "Dora"))
+                        .errorCode());
+    }
+
+    @Test
+    void the_registry_passes_the_participant_limit_to_every_session() {
+        SessionRegistry limited = new SessionRegistry(clock, TTL, MAX_SESSIONS, 2, this::onChanged);
+        String sessionId = limited.create("4711", 42, "Master").session().id();
+        limited.update(sessionId, session -> session.join("Anna"));
+        events.clear();
+        Instant lastActivity = limited.find(sessionId).orElseThrow().lastActivityAt();
+        clock.advance(Duration.ofMinutes(5));
+
+        SessionException exception =
+                assertThrows(SessionException.class, () -> limited.update(sessionId, session -> session.join("Ben")));
+
+        assertEquals(ErrorCode.LIMIT_REACHED, exception.errorCode());
+        assertEquals(List.of(), events);
+        Session session = limited.find(sessionId).orElseThrow();
+        assertEquals(2, session.participants().size());
+        assertEquals(lastActivity, session.lastActivityAt());
     }
 }

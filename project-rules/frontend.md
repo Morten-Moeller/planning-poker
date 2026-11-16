@@ -52,9 +52,9 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   same way and ends the connection without a reconnect. Components branch on `errorCode` only.
 - Form errors: a page with a form catches the `ApiError` of its own call and shows the text of
   `formErrorMessage` (`api/error-messages.ts`) at the form for the codes the form names (create:
-  `ISSUE_NOT_FOUND`, `GITLAB_ERROR`, `VALIDATION_ERROR`; join: `SESSION_NOT_FOUND`,
-  `NAME_TAKEN`, `VALIDATION_ERROR`), then clears `ErrorState`; every other code stays in the
-  banner (spec 0011). The name rule of create and join is `api/participant-name.ts`.
+  `ISSUE_NOT_FOUND`, `PROJECT_NOT_ALLOWED`, `LIMIT_REACHED`, `GITLAB_ERROR`, `VALIDATION_ERROR`;
+  join: `SESSION_NOT_FOUND`, `NAME_TAKEN`, `LIMIT_REACHED`, `VALIDATION_ERROR`), then clears
+  `ErrorState`; every other code stays in the banner (specs 0011, 0015). The name rule of create and join is `api/participant-name.ts`.
 - Authentication: `authInterceptor` adds `Authorization: Bearer <token>` from the `TokenStore`
   (`sessionStorage`, key `planningpoker.session.<id>`, value `{ participantId, token }`) to
   every call under `/api/sessions/{id}` except the join (`POST …/participants`).

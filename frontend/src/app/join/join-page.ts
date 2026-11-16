@@ -16,6 +16,7 @@ import { TokenStore } from '../api/token-store';
 const JOIN_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
   'SESSION_NOT_FOUND',
   'NAME_TAKEN',
+  'LIMIT_REACHED',
   'VALIDATION_ERROR',
 ]);
 

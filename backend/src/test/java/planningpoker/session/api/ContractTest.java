@@ -48,7 +48,7 @@ class ContractTest {
                                 "CreateSessionRequest",
                                 "201",
                                 "CreateSessionResponse",
-                                List.of("400", "404", "502")),
+                                List.of("400", "403", "404", "409", "502")),
                         new Endpoint(
                                 "post",
                                 "/api/sessions/{id}/participants",
@@ -161,21 +161,40 @@ class ContractTest {
     void listsEveryErrorCodeOfThePlan() {
         List<String> codes = new java.util.ArrayList<>();
         contract.at("/components/schemas/ErrorCode/enum").forEach(code -> codes.add(code.asText()));
-        assertTrue(
-                codes.containsAll(List.of(
+        assertEquals(
+                List.of(
                         "VALIDATION_ERROR",
                         "INVALID_CARD",
                         "UNAUTHORIZED",
                         "FORBIDDEN_ROLE",
+                        "PROJECT_NOT_ALLOWED",
                         "SESSION_NOT_FOUND",
                         "ISSUE_NOT_FOUND",
                         "NAME_TAKEN",
                         "INVALID_STATE",
-                        "GITLAB_ERROR")),
-                "error codes: " + codes);
+                        "LIMIT_REACHED",
+                        "GITLAB_ERROR"),
+                codes);
         assertEquals(
                 List.of("type", "title", "status", "detail", "errorCode"),
                 texts(contract.at("/components/schemas/ProblemDetail/required")));
+    }
+
+    @Test
+    void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
+        assertEquals("2.0.0", contract.at("/info/version").asText());
+        assertEquals(
+                "PROJECT_NOT_ALLOWED",
+                contract.at("/paths/~1api~1sessions/post/responses/403/description")
+                        .asText());
+        assertEquals(
+                "LIMIT_REACHED",
+                contract.at("/paths/~1api~1sessions/post/responses/409/description")
+                        .asText());
+        assertEquals(
+                "NAME_TAKEN, LIMIT_REACHED",
+                contract.at("/paths/~1api~1sessions~1{id}~1participants/post/responses/409/description")
+                        .asText());
     }
 
     static Stream<Arguments> messages() {

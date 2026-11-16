@@ -16,7 +16,8 @@ public class SessionRegistryProducer {
     @Produces
     @Singleton
     SessionRegistry registry(Clock clock, SessionConfig config, Event<SessionChanged> changed, Vertx vertx) {
-        SessionRegistry registry = new SessionRegistry(clock, config.ttl(), changed::fire);
+        SessionRegistry registry =
+                new SessionRegistry(clock, config.ttl(), config.maxSessions(), config.maxParticipants(), changed::fire);
         vertx.setPeriodic(EXPIRY_INTERVAL.toMillis(), timerId -> registry.expire(clock.instant()));
         return registry;
     }

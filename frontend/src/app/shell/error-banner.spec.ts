@@ -10,11 +10,12 @@ const texts: [string, string][] = [
   ['INVALID_CARD', 'Diese Karte gibt es nicht.'],
   ['UNAUTHORIZED', 'Der Zugang zur Sitzung ist nicht mehr gültig.'],
   ['FORBIDDEN_ROLE', 'Diese Aktion ist für Ihre Rolle nicht erlaubt.'],
+  ['PROJECT_NOT_ALLOWED', 'Für dieses GitLab-Projekt dürfen keine Sitzungen angelegt werden.'],
   ['SESSION_NOT_FOUND', 'Die Sitzung wurde nicht gefunden oder ist abgelaufen.'],
   ['ISSUE_NOT_FOUND', 'Das Issue wurde im GitLab-Projekt nicht gefunden.'],
   ['NAME_TAKEN', 'Der Name ist in dieser Sitzung schon vergeben.'],
   ['INVALID_STATE', 'Die Aktion passt nicht zum aktuellen Stand der Sitzung.'],
-  ['NOT_IMPLEMENTED', 'Diese Funktion steht noch nicht bereit.'],
+  ['LIMIT_REACHED', 'Die Höchstzahl ist erreicht. Bitte später erneut versuchen.'],
   ['GITLAB_ERROR', 'GitLab hat nicht geantwortet.'],
   ['SOMETHING_NEW', 'Es ist ein Fehler aufgetreten.'],
 ];
