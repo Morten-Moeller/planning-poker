@@ -1,14 +1,14 @@
 ---
 id: "0016"
 title: Countdown-Timer (M14, O-01)
-status: Review
+status: done
 risk: high
 adrs: ["0006"]
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#17"
+note: alle Kriterien erfüllt
 ---
 
 # Countdown-Timer (M14, O-01)
