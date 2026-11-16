@@ -64,7 +64,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   lock, the state is checked again inside it; the confirmation protects itself with `confirming`
   (`beginConfirm` inside the lock, GitLab call outside, `finishConfirm` or `failConfirm` inside).
 - Change event: `SessionRegistryProducer` wires the registry with `Event<SessionChanged>`; the
-  event fires synchronously in the thread of the command, after the lock is released. Observers
+  event fires synchronously in the thread of the command (or of the periodic check `revealDue`), after the lock is released. Observers
   (`realtime`, from spec 0009) read the session through the registry, never from the event.
 - Round completion: `SessionResource.vote` fires the CDI event `RoundCompleted(sessionId,
   roundNumber)` once, when `Session.vote` reports that the last connected developer has voted
@@ -171,7 +171,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   after `auth`, `Session.disconnect` on close when no other connection of the participant is
   open); a missing session on close is ignored.
 - `SnapshotBroadcaster` observes `SessionChanged` and `RoundCompleted` synchronously in the
-  thread of the command (ADR 0002). It builds each snapshot under `SessionRegistry.read` with
+  thread of the command or of the periodic check (ADR 0002). It builds each snapshot under `SessionRegistry.read` with
   `SessionViewMapper.toView(session, participantId, serverTime)` and sends `session.state` to every
   connection of the session; `round.allVoted` goes only to connections with role
   `SCRUM_MASTER`. New commands need no code in `realtime`.
