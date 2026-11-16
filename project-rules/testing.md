@@ -19,10 +19,13 @@ database engine; integration tests run against the real `SessionRegistry` in mem
 
 - File layout: backend tests mirror the package under `backend/src/test/java/planningpoker/`;
   frontend unit tests next to the file as `*.spec.ts`; end-to-end specs in `frontend/e2e/`.
-- Builders: backend tests build sessions through the HTTP flow (create, join) with helpers in
-  the test package; a `SessionBuilder` for domain unit tests comes with spec 0004. Frontend tests
-  take example snapshots from `contracts/api/examples/` (from spec 0002).
-- Test doubles only for GitLab (WireMock, T1.4). No mocks of own classes.
+- Builders: backend integration tests build sessions through the HTTP flow (create, join) with
+  helpers in the test package; domain unit tests use `SessionBuilder` in
+  `backend/src/test/java/planningpoker/session/` (defaults: scrum master, two connected
+  developers, issue 42; `inPhase`, `voting`, `revealed`, `confirming`). Frontend tests take
+  example snapshots from `contracts/api/examples/` (from spec 0002).
+- Test doubles only for GitLab (WireMock, T1.4) and the clock (`TestClock` in the session test
+  package, T4.1). No mocks of own classes.
 - Coverage floor: none.
 - Backend tests use a free port (`quarkus.http.test-port=0`); the `test` profile writes JSON
   logs to `backend/target/quarkus-test.log`. Two worktrees run `make test` at the same time
