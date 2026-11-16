@@ -92,7 +92,7 @@ Entscheidungen:
 
 - Keine neuen Abhängigkeiten. Verfall ohne `quarkus-scheduler`: `find` entfernt eine verfallene Sitzung beim Zugriff, ein Vert.x-Timer (`io.vertx.mutiny.core.Vertx`, alle 10 Minuten) räumt die übrigen auf.
 - `SessionException(ErrorCode, detail)` im Paket `session` verwendet `planningpoker.platform.ErrorCode` (Antwort auf den Review-Hinweis zu 0002: die Codes bleiben in `platform`, weil sie Teil des Fehlerformats sind; `session` darf `platform` nutzen). 0006 bildet `SessionException` auf `ApiException` ab.
-- `Session` ist das veränderliche Aggregat; nur seine Methoden ändern den Zustand (A1.4). Die Registry hält je Sitzung einen `ReentrantLock`; `update` führt den Befehl unter der Sperre aus, setzt `lastActivityAt`, gibt die Sperre frei und löst dann `SessionChanged` aus. Zeit kommt aus einer `Clock`-Bean (`platform.ClockProducer`, `Clock.systemUTC()`), Tests bauen die Registry mit `Clock.fixed`.
+- `Session` ist das veränderliche Aggregat; nur seine Methoden ändern den Zustand (A1.4). Die Registry hält je Sitzung einen `ReentrantLock`; `update` führt den Befehl unter der Sperre aus, setzt `lastActivityAt` (ein abgelehnter Befehl setzt es zurück), gibt die Sperre frei und löst dann `SessionChanged` aus; `read` liest unter der Sperre ohne Event. Zeit kommt aus einer `Clock`-Bean (`platform.ClockProducer`, `Clock.systemUTC()`), Tests bauen die Registry mit einer `TestClock`, die sie vorrücken.
 - Bestätigung in drei Schritten (4.3): `beginConfirm(scrumMasterId, card)` setzt `confirming` und liefert die Daten für GitLab (Issue, Rundennummer, Auswertung); `finishConfirm(card)` schreibt den Endwert und geht nach `LOBBY` (`activeIssue`, `round`, `preselectedIssueIid` leer); `failConfirm()` setzt `confirming` zurück.
 - UUIDv7 eigene Implementierung in `platform.UuidV7` (48 Bit Millisekunden, 12 Bit Zähler je Millisekunde, 62 Bit Zufall), weil Java 21 keine liefert.
 
@@ -108,12 +108,14 @@ Dateien:
 - `backend/src/main/java/planningpoker/session/SessionException.java`: neu, `ErrorCode` und `detail`
 - `backend/src/main/java/planningpoker/session/SessionChanged.java`: neu, Record `sessionId`
 - `backend/src/main/java/planningpoker/session/SessionConfig.java`: neu, `@ConfigMapping(prefix = "planningpoker.session")`, `ttl`
-- `backend/src/main/java/planningpoker/session/SessionRegistry.java`: neu, `create`, `find`, `update`, `expire`, Sperre je Sitzung, Event
+- `backend/src/main/java/planningpoker/session/SessionRegistry.java`: neu, `create`, `find`, `read`, `update`, `expire`, Sperre je Sitzung, Event
+- `backend/src/main/java/planningpoker/session/Confirmation.java`: neu, Record `issue`, `roundNumber`, `stats`, `card`, Rückgabe von `beginConfirm` für 0010
 - `backend/src/main/java/planningpoker/session/SessionRegistryProducer.java`: neu, CDI-Producer mit `Clock`, `SessionConfig`, `Event<SessionChanged>`, Vert.x-Timer
 - `backend/src/main/java/planningpoker/platform/Ids.java`: neu, `sessionId()`, `token()`
 - `backend/src/main/java/planningpoker/platform/UuidV7.java`: neu, `next()`
 - `backend/src/main/java/planningpoker/platform/ClockProducer.java`: neu, `Clock.systemUTC()`
 - `backend/src/test/java/planningpoker/session/SessionBuilder.java`: neu, Builder mit Standardwerten (Scrum Master, zwei Entwickler, Issue), nur Werte des Tests
+- `backend/src/test/java/planningpoker/session/TestClock.java`: neu, `Clock` mit `advance(Duration)` für die Registry-Tests
 - `backend/src/test/java/planningpoker/session/SessionTest.java`: neu, A1, A2, A3, A5
 - `backend/src/test/java/planningpoker/session/RoundStatsTest.java`: neu, A4, tabellengetrieben
 - `backend/src/test/java/planningpoker/session/SessionRegistryTest.java`: neu, A6, A7, A8
@@ -125,9 +127,9 @@ Schritte:
 
 1. Records `Issue`, `Vote`, `RoundStats` mit `of(...)` nach A-06 (Durchschnitt über Zahlenkarten auf eine Nachkommastelle, `OptionalDouble`; häufigste Werte bei Gleichstand alle, in Kartenreihenfolge; Verteilung nur abgegebene Karten in Kartenreihenfolge).
 2. `Participant`, `Round`, `HistoryEntry`, `SessionException`, `SessionChanged`.
-3. `Session` mit `join(name, role)`, `connect(id)`, `disconnect(id)`, `selectIssue(actorId, issue)`, `vote(actorId, card)` (liefert `boolean allVotedNow`), `reveal(actorId)`, `restart(actorId)`, `beginConfirm(actorId, card)`, `finishConfirm(card)`, `failConfirm()`, `allVoted()`, `touch(now)`; Rollenprüfung über den Teilnehmer zu `actorId` (`FORBIDDEN_ROLE`), Phasenprüfung (`INVALID_STATE`), Namensregel (`NAME_TAKEN`), `confirming` sperrt jede Steuerungsaktion.
+3. `Session` mit `join(name)` (erster Teilnehmer `SCRUM_MASTER`, jeder weitere `DEVELOPER`), `connect(id)`, `disconnect(id)`, `selectIssue(actorId, issue)`, `vote(actorId, card)` (liefert `boolean allVotedNow`), `reveal(actorId)`, `restart(actorId)`, `beginConfirm(actorId, card)`, `finishConfirm(card)`, `failConfirm()`, `allVoted()`, `touch(now)`; Rollenprüfung über den Teilnehmer zu `actorId` (`FORBIDDEN_ROLE`), Phasenprüfung (`INVALID_STATE`), Namensregel (`NAME_TAKEN`, leer oder länger als 30 Zeichen `VALIDATION_ERROR`), `confirming` sperrt jede Steuerungsaktion.
 4. `Ids`, `UuidV7`, `ClockProducer`; `SessionConfig`; `SessionRegistry` mit `ConcurrentHashMap<String, Entry(session, lock)>`, `create(gitlabProjectId, issueIid, creatorName)` liefert Sitzung und Teilnehmer mit Token, `find(id)` mit Verfallsprüfung, `update(id, Function<Session, R>)` mit Sperre, `touch`, Event nach `unlock`; `expire(now)`; `SessionRegistryProducer` mit Vert.x-Timer.
-5. Tests: `SessionBuilder`; `SessionTest` je Tabellenzeile und je ungültigem Übergang; `RoundStatsTest` tabellengetrieben; `SessionRegistryTest` mit `ExecutorService` (50 Stimmen), Event-Zähler als `Consumer<SessionChanged>`, `Clock.fixed` und Verfall; `IdsTest`.
+5. Tests: `SessionBuilder`; `SessionTest` je Tabellenzeile und je ungültigem Übergang; `RoundStatsTest` tabellengetrieben; `SessionRegistryTest` mit `ExecutorService` (50 Stimmen), Event-Zähler als `Consumer<SessionChanged>`, `TestClock` und Verfall; `IdsTest`.
 6. `docs/domain/invariants.md`; `project-rules/backend.md` Abschnitt Data nachziehen.
 7. `make check`; `make e2e` unverändert.
 
@@ -142,7 +144,7 @@ Tests:
 | A5 | `backend/src/test/java/planningpoker/session/SessionTest.java`: `allVoted` mit getrenntem Entwickler, ohne Entwickler, Rückgabewert von `vote` |
 | A6 | `backend/src/test/java/planningpoker/session/SessionRegistryTest.java`: 50 parallele Stimmen |
 | A7 | `backend/src/test/java/planningpoker/session/SessionRegistryTest.java`: Event-Zähler je Befehl, keines bei Ausnahme, Zustand unverändert |
-| A8 | `backend/src/test/java/planningpoker/session/SessionRegistryTest.java`: Verfall mit `Clock.fixed` |
+| A8 | `backend/src/test/java/planningpoker/session/SessionRegistryTest.java`: Verfall mit `TestClock` |
 | A9 | `backend/src/test/java/planningpoker/platform/IdsTest.java`: Alphabet und Länge, Token-Länge und Zufall, UUIDv7-Bits und Ordnung |
 | A10 | Aufruf: Datei vorhanden, jede Regel mit Klasse und Methode |
 

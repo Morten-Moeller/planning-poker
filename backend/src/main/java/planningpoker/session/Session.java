@@ -13,6 +13,8 @@ import planningpoker.platform.UuidV7;
 
 public final class Session {
 
+    static final int NAME_MAX_LENGTH = 30;
+
     private final String id;
     private final String gitlabProjectId;
     private final Map<String, Participant> participants = new LinkedHashMap<>();
@@ -21,7 +23,7 @@ public final class Session {
     private Long preselectedIssueIid;
     private Issue activeIssue;
     private Round round;
-    private Instant lastActivityAt;
+    private volatile Instant lastActivityAt;
 
     public Session(String id, String gitlabProjectId, long preselectedIssueIid, Instant now) {
         this.id = id;
@@ -76,6 +78,9 @@ public final class Session {
 
     public Participant join(String name) {
         String trimmed = name.strip();
+        if (trimmed.isEmpty() || trimmed.length() > NAME_MAX_LENGTH) {
+            throw new SessionException(ErrorCode.VALIDATION_ERROR, "The name needs 1 to 30 characters.");
+        }
         boolean taken = participants.values().stream()
                 .anyMatch(participant -> participant.name().equalsIgnoreCase(trimmed));
         if (taken) {

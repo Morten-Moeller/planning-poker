@@ -116,6 +116,8 @@ class SessionRegistryTest {
         String developer =
                 registry.update(sessionId, session -> session.join("Anna").id());
         events.clear();
+        Instant lastActivity = created.session().lastActivityAt();
+        clock.advance(Duration.ofMinutes(5));
 
         SessionException forbidden = assertThrows(
                 SessionException.class,
@@ -131,6 +133,22 @@ class SessionRegistryTest {
         Session session = registry.find(sessionId).orElseThrow();
         assertEquals(Phase.LOBBY, session.phase());
         assertEquals(Optional.empty(), session.round());
+        assertEquals(lastActivity, session.lastActivityAt());
+    }
+
+    @Test
+    void read_answers_under_the_lock_without_an_event() {
+        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        events.clear();
+
+        Phase phase = registry.read(created.session().id(), Session::phase);
+
+        assertEquals(Phase.LOBBY, phase);
+        assertEquals(List.of(), events);
+        assertEquals(
+                ErrorCode.SESSION_NOT_FOUND,
+                assertThrows(SessionException.class, () -> registry.read("MISSING1", Session::phase))
+                        .errorCode());
     }
 
     @Test

@@ -24,7 +24,7 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 | Nr | Regel | Durchgesetzt in | Fehlercode |
 |---|---|---|---|
 | I11 | Der erste Teilnehmer ist der Scrum Master, jeder weitere ein Entwickler. | `Session.join` | – |
-| I12 | Namen sind getrimmt und je Sitzung eindeutig ohne Beachtung der Groß- und Kleinschreibung. Länge 1 bis 30 Zeichen prüft die Grenze (`CreateSessionRequest`, `JoinSessionRequest`). | `Session.join` | `NAME_TAKEN` |
+| I12 | Namen sind getrimmt, 1 bis 30 Zeichen lang und je Sitzung eindeutig ohne Beachtung der Groß- und Kleinschreibung. Die Grenze prüft die Länge zuerst (`CreateSessionRequest`, `JoinSessionRequest`). | `Session.join` | `VALIDATION_ERROR`, `NAME_TAKEN` |
 | I13 | `allVoted` ist wahr, sobald jeder verbundene Entwickler gewählt hat; ohne verbundene Entwickler nie; ein getrennter Entwickler blockiert nicht, seine Stimme bleibt (A-02, A-10). | `Session.allVoted` | – |
 | I14 | `Session.vote` meldet genau den Aufruf, der `allVoted` von falsch auf wahr setzt. | `Session.vote` | – |
 
@@ -40,9 +40,9 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 
 | Nr | Regel | Durchgesetzt in |
 |---|---|---|
-| I18 | Befehle einer Sitzung laufen nacheinander unter einer Sperre je Sitzung; nur `Session`-Methoden ändern den Zustand (A1.4). | `SessionRegistry.update` (`ReentrantLock` je `Entry`) |
+| I18 | Befehle einer Sitzung laufen nacheinander unter einer Sperre je Sitzung; nur `Session`-Methoden ändern den Zustand (A1.4); Leser gehen über `read` unter dieselbe Sperre. | `SessionRegistry.update`, `SessionRegistry.read` (`ReentrantLock` je `Entry`) |
 | I19 | Jeder erfolgreiche Befehl löst genau ein `SessionChanged` aus, nach dem Verlassen der Sperre; ein Befehl mit `SessionException` löst keines aus. | `SessionRegistry.update` |
-| I20 | Jeder Befehl setzt `lastActivityAt` aus der `Clock`, auch ein abgelehnter; eine Sitzung ohne Aktivität länger als `planningpoker.session.ttl` verfällt beim Zugriff (`find`, `update`) oder im Timer (`expire`). | `SessionRegistry.update`, `SessionRegistry.live`, `SessionRegistry.expire`, Timer in `SessionRegistryProducer` |
+| I20 | Jeder erfolgreiche Befehl setzt `lastActivityAt` aus der `Clock`; ein abgelehnter Befehl lässt es unverändert. Eine Sitzung ohne Aktivität länger als `planningpoker.session.ttl` verfällt beim Zugriff (`find`, `read`, `update`) oder im Timer (`expire`). | `SessionRegistry.update`, `SessionRegistry.live`, `SessionRegistry.expire`, Timer in `SessionRegistryProducer` |
 | I21 | GitLab-Aufrufe laufen nie unter der Sperre: die Bestätigung schützt sich über `confirming` (`beginConfirm` unter der Sperre, GitLab-Aufruf außerhalb, `finishConfirm` oder `failConfirm` unter der Sperre). | `Session.beginConfirm`, `Session.finishConfirm`, `Session.failConfirm`; Aufrufer ab Spec 0010 |
 
 ## Identität (ADR 0003)

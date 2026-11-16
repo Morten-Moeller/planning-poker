@@ -21,6 +21,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import planningpoker.platform.ErrorCode;
 
 class SessionTest {
@@ -354,6 +355,16 @@ class SessionTest {
                     ErrorCode.NAME_TAKEN,
                     assertThrows(SessionException.class, () -> session.join("ANNA "))
                             .errorCode());
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"", "   ", "ThisNameIsLongerThanThirtyCharacters"})
+        void a_blank_or_too_long_name_is_a_validation_error(String name) {
+            Session session = session().build();
+
+            SessionException exception = assertThrows(SessionException.class, () -> session.join(name));
+
+            assertEquals(ErrorCode.VALIDATION_ERROR, exception.errorCode());
         }
 
         @Test

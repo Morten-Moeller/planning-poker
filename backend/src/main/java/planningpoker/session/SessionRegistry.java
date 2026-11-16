@@ -43,6 +43,16 @@ public class SessionRegistry {
         return live(sessionId).map(Entry::session);
     }
 
+    public <R> R read(String sessionId, Function<Session, R> query) {
+        Entry entry = live(sessionId).orElseThrow(SessionRegistry::notFound);
+        entry.lock().lock();
+        try {
+            return query.apply(entry.session());
+        } finally {
+            entry.lock().unlock();
+        }
+    }
+
     public <R> R update(String sessionId, Function<Session, R> command) {
         Entry entry = live(sessionId).orElseThrow(SessionRegistry::notFound);
         R result;
@@ -51,8 +61,15 @@ public class SessionRegistry {
             if (sessions.get(sessionId) != entry) {
                 throw notFound();
             }
-            entry.session().touch(clock.instant());
-            result = command.apply(entry.session());
+            Session session = entry.session();
+            Instant previousActivity = session.lastActivityAt();
+            session.touch(clock.instant());
+            try {
+                result = command.apply(session);
+            } catch (SessionException e) {
+                session.touch(previousActivity);
+                throw e;
+            }
         } finally {
             entry.lock().unlock();
         }

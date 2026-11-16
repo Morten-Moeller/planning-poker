@@ -49,13 +49,15 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   (`ReentrantLock`), `lastActivityAt` from the `Clock` bean, command, change event
   `SessionChanged(sessionId)` after the lock is released (ADR 0002 replaces A4.1, A4.3, A4.4).
   `create(gitlabProjectId, issueIid, creatorName)` returns the session with its scrum master;
-  `find(sessionId)` answers empty for an unknown or expired session. A command on a missing
-  session throws `SessionException(SESSION_NOT_FOUND)`.
+  `find(sessionId)` answers empty for an unknown or expired session; a read of the state (the
+  mapper to `SessionView`, from spec 0006) goes through `read(sessionId, query)` under the same
+  lock, without an event. A command or read on a missing session throws
+  `SessionException(SESSION_NOT_FOUND)`. A rejected command leaves `lastActivityAt` unchanged.
 - `Session` is the aggregate; only its methods change the state (A1.4): `join`, `connect`,
   `disconnect`, `selectIssue`, `vote`, `reveal`, `restart`, `beginConfirm`, `finishConfirm`,
   `failConfirm`. Role and phase checks live inside these methods and throw `SessionException`
   with the `ErrorCode` from `platform` (`FORBIDDEN_ROLE`, `INVALID_STATE`, `NAME_TAKEN`,
-  `UNAUTHORIZED`). The rules are listed in `docs/domain/invariants.md`.
+  `VALIDATION_ERROR`, `UNAUTHORIZED`). The rules are listed in `docs/domain/invariants.md`.
 - A state check runs inside the lock and answers `INVALID_STATE` on an invalid transition. No
   read, change, save outside the lock.
 - No GitLab call and no slow I/O inside the lock (A3.3). Loading an issue happens before the
