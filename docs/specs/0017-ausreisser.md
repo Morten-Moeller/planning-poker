@@ -1,14 +1,14 @@
 ---
 id: "0017"
 title: Ausreißer (M14, O-02)
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#16"
+note: alle Kriterien erfüllt
 ---
 
 # Ausreißer (M14, O-02)
