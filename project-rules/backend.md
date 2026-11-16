@@ -56,9 +56,11 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   plain text). Never logged: the GitLab token, participant tokens, hidden card values.
 - Configuration: `backend/src/main/resources/application.properties` holds every
   `planningpoker.*` key with its default. The GitLab token comes from `GITLAB_TOKEN` and has no
-  default; a missing token stops the start with the key name (A6.1). Exception until spec 0003:
-  no code reads the key yet, so the start does not check it. Profiles `test`
-  and `e2e` set placeholder values. No secret in the repository.
+  default; a missing token stops the start with the key name (A6.1): `GitLabConfig`
+  (`@ConfigMapping`, prefix `planningpoker.gitlab`) is read by `GitLabClient`, a `@Startup` bean,
+  so the config validation fails at start. `planningpoker.gitlab.timeout` (default `10s`, connect
+  and read timeout) has its default in the mapping, not in `application.properties`. Profiles
+  `test` and `e2e` set placeholder values. No secret in the repository.
 - Ports: `quarkus.http.port=8080`, tests on a free port (`quarkus.http.test-port=0`).
 
 ## APIs
