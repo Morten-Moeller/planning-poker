@@ -180,19 +180,13 @@ class ConfirmRoundTest {
         GitLabStubs.noteDelayed(gitlab, GitLabStubs.PROJECT, GitLabStubs.ISSUE, DELAY_BELOW_TIMEOUT_MILLIS);
         flow.revealedRound("5", "8");
 
-        CompletableFuture<Long> firstFinished = CompletableFuture.supplyAsync(() -> {
-            flow.confirm("5").statusCode(204);
-            return System.nanoTime();
-        });
+        CompletableFuture<Void> firstFinished =
+                CompletableFuture.runAsync(() -> flow.confirm("5").statusCode(204));
         awaitNoteRequest();
 
-        SessionApiTest.join(
-                flow.sessionId, "Late " + UUID.randomUUID().toString().substring(0, 8));
-        long joinFinished = System.nanoTime();
         flow.snapshotOf(flow.asScrumMaster())
                 .body("phase", equalTo("REVEALED"))
-                .body("round.confirming", equalTo(true))
-                .body("participants", hasSize(7));
+                .body("round.confirming", equalTo(true));
         flow.confirm("5").statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
         flow.reveal().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
         flow.restart().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
@@ -202,12 +196,29 @@ class ConfirmRoundTest {
                 .body("errorCode", equalTo("INVALID_STATE"));
         flow.snapshotOf(flow.asScrumMaster()).body("round.confirming", equalTo(true));
 
-        assertTrue(joinFinished < firstFinished.join(), "the join waited for the GitLab call");
+        firstFinished.join();
         gitlab.verify(1, postRequestedFor(urlPathEqualTo(NOTES)));
         flow.snapshotOf(flow.asScrumMaster())
                 .body("phase", equalTo("LOBBY"))
-                .body("participants", hasSize(7))
                 .body("history[0].finalCard", equalTo("5"));
+    }
+
+    @Test
+    void acceptsAJoinWhileTheCommentIsWritten() {
+        GitLabStubs.noteDelayed(gitlab, GitLabStubs.PROJECT, GitLabStubs.ISSUE, DELAY_BELOW_TIMEOUT_MILLIS);
+        flow.revealedRound("5", "8");
+
+        CompletableFuture<Long> confirmFinished = CompletableFuture.supplyAsync(() -> {
+            flow.confirm("5").statusCode(204);
+            return System.nanoTime();
+        });
+        awaitNoteRequest();
+        SessionApiTest.join(
+                flow.sessionId, "Late " + UUID.randomUUID().toString().substring(0, 8));
+        long joinFinished = System.nanoTime();
+
+        assertTrue(joinFinished < confirmFinished.join(), "the join waited for the GitLab call");
+        flow.snapshotOf(flow.asScrumMaster()).body("phase", equalTo("LOBBY")).body("participants", hasSize(7));
     }
 
     private void awaitNoteRequest() {
