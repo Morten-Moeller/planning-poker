@@ -71,7 +71,8 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   (A-02, A-10); `realtime` (spec 0009) turns it into the message `round.allVoted` for the scrum
   master. A later card change in a complete round fires nothing.
 - Expiry: `SessionConfig` (`@ConfigMapping`, prefix `planningpoker.session`) holds `ttl`
-  (default `12h`). `find` and `update` remove an expired session on access; a Vert.x timer in
+  (default `12h`), `maxSessions`, `maxParticipants` and `allowedProjects`
+  (`Optional<List<String>>`). `find` and `update` remove an expired session on access; a Vert.x timer in
   `SessionRegistryProducer` (every 10 minutes) calls `expire(now)` for the rest. No
   `quarkus-scheduler`.
 - Time comes from the `Clock` bean (`platform.ClockProducer`, `Clock.systemUTC()`); tests build
@@ -84,8 +85,8 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
 
 - Errors: `planningpoker.platform.ErrorCode` holds every stable `errorCode` with its HTTP status
   (`VALIDATION_ERROR`, `INVALID_CARD`, `UNAUTHORIZED`, `FORBIDDEN_ROLE`, `SESSION_NOT_FOUND`,
-  `ISSUE_NOT_FOUND`, `NAME_TAKEN`, `INVALID_STATE`, `GITLAB_ERROR`; `NOT_IMPLEMENTED` until the
-  last stub is replaced). Code throws `ApiException(ErrorCode, detail)`; `ApiExceptionMapper`
+  `ISSUE_NOT_FOUND`, `PROJECT_NOT_ALLOWED`, `NAME_TAKEN`, `INVALID_STATE`, `LIMIT_REACHED`,
+  `GITLAB_ERROR`). Code throws `ApiException(ErrorCode, detail)`; `ApiExceptionMapper`
   writes RFC 9457 `application/problem+json` (`ProblemDetail`) and unwraps an `ApiException`
   that Jackson wrapped while reading a body (unknown card). `ValidationExceptionMapper` maps
   Bean Validation failures to 400 `VALIDATION_ERROR`. Domain code throws typed exceptions; only
@@ -135,8 +136,14 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
 - Accepted risk (plan, A-01, A-08, A-14): creating a session needs no login, and the backend
   reads the named project with its own GitLab token. Whoever creates a session can read title,
   description and link of the issues of every project that token sees. The project id is
-  URL-encoded in the GitLab path (a `/` becomes `%2F`, tested). An allowlist of projects or a
-  rate limit for anonymous creation is a decision for the hardening (spec 0015).
+  URL-encoded in the GitLab path (a `/` becomes `%2F`, tested). Limits (ADR 0005):
+  `planningpoker.session.allowed-projects`, when set, restricts creation to the listed project
+  ids (exact match after trimming); `SessionResource.createSession` checks it before the GitLab
+  call and answers 403 `PROJECT_NOT_ALLOWED`. `planningpoker.session.max-sessions` (default 1000,
+  expired sessions do not count, checked in `SessionRegistry.create`) and
+  `planningpoker.session.max-participants` (default 50, the scrum master counts, checked first in
+  `Session.join`) answer 409 `LIMIT_REACHED`. No rate limit per client IP and no limit for
+  WebSocket connections before `auth`; both stay accepted risk.
 - Commands answer 204, or 201 with the new ids; the new state reaches clients through the
   WebSocket snapshot (ADR 0004).
 

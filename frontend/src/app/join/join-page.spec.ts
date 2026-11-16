@@ -18,6 +18,7 @@ const JOIN_URL = `/api/sessions/${SESSION_ID}/participants`;
 const formErrors: [string, number, string][] = [
   ['SESSION_NOT_FOUND', 404, 'Die Sitzung wurde nicht gefunden oder ist abgelaufen.'],
   ['NAME_TAKEN', 409, 'Der Name ist in dieser Sitzung schon vergeben.'],
+  ['LIMIT_REACHED', 409, 'Die Höchstzahl ist erreicht. Bitte später erneut versuchen.'],
 ];
 
 describe('JoinPage', () => {
