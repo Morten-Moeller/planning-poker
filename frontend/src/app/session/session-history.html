@@ -1,0 +1,67 @@
+<mat-expansion-panel class="history" data-testid="history-panel">
+  <mat-expansion-panel-header data-testid="history-toggle">
+    <mat-panel-title i18n="@@history.title">Protokoll</mat-panel-title>
+    <mat-panel-description
+      data-testid="history-count"
+      i18n="@@history.count"
+      >{store.history().length, plural,
+        =1 {1 aufgelöste Runde}
+        other {{{ store.history().length }} aufgelöste Runden}
+      }</mat-panel-description
+    >
+  </mat-expansion-panel-header>
+  <ol class="entries">
+    @for (entry of store.history(); track entry.revealedAt + entry.issueIid + entry.roundNumber) {
+      <li class="entry" data-testid="history-entry">
+        <h3>
+          <span data-testid="history-issue">#{{ entry.issueIid }} {{ entry.issueTitle }}</span>
+          <span data-testid="history-round" i18n="@@history.round"
+            >Runde {{ entry.roundNumber }}</span
+          >
+        </h3>
+        <ul class="votes">
+          @for (vote of entry.votes; track vote.participantId) {
+            <li data-testid="history-vote">
+              <span class="name">{{ vote.name }}</span>
+              <span
+                class="card"
+                [attr.role]="name(vote.card) === null ? null : 'img'"
+                [attr.aria-label]="name(vote.card)"
+                >{{ symbol(vote.card) }}</span
+              >
+            </li>
+          }
+        </ul>
+        <dl class="facts">
+          <dt i18n="@@history.average">Durchschnitt</dt>
+          <dd data-testid="history-average">{{ average(entry.stats.average) }}</dd>
+          <dt i18n="@@history.mostFrequent">Häufigste Werte</dt>
+          <dd data-testid="history-most-frequent">
+            @for (card of entry.stats.mostFrequent; track card; let last = $last) {
+              <span
+                [attr.role]="name(card) === null ? null : 'img'"
+                [attr.aria-label]="name(card)"
+                >{{ symbol(card) }}</span
+              >
+              @if (!last) {
+                <span>, </span>
+              }
+            }
+          </dd>
+          <dt i18n="@@history.finalCard">Endwert</dt>
+          @if (entry.finalCard; as finalCard) {
+            <dd
+              data-testid="history-final-card"
+              [attr.role]="name(finalCard) === null ? null : 'img'"
+              [attr.aria-label]="name(finalCard)"
+            >
+              {{ symbol(finalCard) }}
+            </dd>
+          } @else {
+            <dd data-testid="history-no-final-card" i18n="@@history.noFinalCard">ohne Endwert</dd>
+          }
+        </dl>
+      </li>
+    }
+  </ol>
+</mat-expansion-panel>

@@ -8,7 +8,8 @@ import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
-import { Card, CardDeck } from './card-deck';
+import { CardDeck } from './card-deck';
+import { Card } from './cards';
 
 const SESSION_ID = 'K7P2QX9M';
 const VOTE_URL = `/api/sessions/${SESSION_ID}/vote`;

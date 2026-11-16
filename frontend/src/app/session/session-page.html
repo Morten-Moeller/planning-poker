@@ -53,6 +53,12 @@
           <app-card-deck [sessionId]="session.sessionId" />
         }
       }
+      @if (session.phase === 'REVEALED') {
+        <app-round-result [sessionId]="session.sessionId" />
+      }
+      @if (store.history().length > 0) {
+        <app-session-history />
+      }
     </div>
   </div>
 } @else {

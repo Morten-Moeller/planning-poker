@@ -1,0 +1,78 @@
+<section class="result" data-testid="round-result">
+  <h2 i18n="@@roundResult.title">Aufgedeckte Karten</h2>
+  @if (confirming()) {
+    <p class="hint" role="status" data-testid="confirming-hint" i18n="@@roundResult.confirming">
+      Das Ergebnis wird nach GitLab geschrieben.
+    </p>
+  }
+  <ul class="votes">
+    @for (vote of votes(); track vote.participantId) {
+      <li class="vote" data-testid="result-vote">
+        <span class="name" data-testid="result-vote-name">{{ vote.name }}</span>
+        <span
+          class="card"
+          data-testid="result-vote-card"
+          [attr.role]="name(vote.card) === null ? null : 'img'"
+          [attr.aria-label]="name(vote.card)"
+          >{{ symbol(vote.card) }}</span
+        >
+      </li>
+    }
+  </ul>
+
+  @if (stats(); as stats) {
+    <h3 i18n="@@roundResult.statsTitle">Auswertung</h3>
+    <ul class="distribution">
+      @for (entry of stats.distribution; track entry.card) {
+        <li data-testid="result-count" i18n="@@roundResult.count">
+          <span
+            class="card"
+            [attr.role]="name(entry.card) === null ? null : 'img'"
+            [attr.aria-label]="name(entry.card)"
+            >{{ symbol(entry.card) }}</span
+          >: {entry.count, plural, =1 {1 Stimme} other {{{ entry.count }} Stimmen}}
+        </li>
+      }
+    </ul>
+    <dl class="facts">
+      <dt i18n="@@roundResult.average">Durchschnitt (Orientierung)</dt>
+      <dd data-testid="result-average">{{ average() }}</dd>
+      <dt i18n="@@roundResult.mostFrequent">Häufigste Werte (Orientierung)</dt>
+      <dd data-testid="result-most-frequent">
+        @for (card of stats.mostFrequent; track card; let last = $last) {
+          <span [attr.role]="name(card) === null ? null : 'img'" [attr.aria-label]="name(card)">{{
+            symbol(card)
+          }}</span>
+          @if (!last) {
+            <span>, </span>
+          }
+        }
+      </dd>
+    </dl>
+  }
+
+  @if (store.isScrumMaster()) {
+    <div class="actions">
+      <button
+        type="button"
+        mat-stroked-button
+        data-testid="round-restart"
+        [disabled]="actionsDisabled()"
+        (click)="restart()"
+        i18n="@@roundResult.restart"
+      >
+        Neue Runde
+      </button>
+      <button
+        type="button"
+        mat-flat-button
+        data-testid="result-accept"
+        [disabled]="actionsDisabled()"
+        (click)="openConfirm()"
+        i18n="@@roundResult.accept"
+      >
+        Ergebnis übernehmen
+      </button>
+    </div>
+  }
+</section>

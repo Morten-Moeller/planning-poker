@@ -1,0 +1,50 @@
+<div data-testid="confirm-dialog">
+  <h2 mat-dialog-title i18n="@@confirmResult.title">Ergebnis übernehmen</h2>
+  <mat-dialog-content>
+    <p i18n="@@confirmResult.text">
+      Endwert wählen. Er wird als Kommentar in das Issue in GitLab geschrieben.
+    </p>
+    <mat-radio-group
+      class="cards"
+      aria-label="Endwert"
+      i18n-aria-label="@@confirmResult.cardsLabel"
+      [value]="selected()"
+      [disabled]="sending()"
+      (change)="select($event.value)"
+    >
+      @for (card of cards; track card) {
+        <mat-radio-button data-testid="confirm-card" [value]="card" [aria-label]="label(card)">
+          <span aria-hidden="true">{{ symbol(card) }}</span>
+        </mat-radio-button>
+      }
+    </mat-radio-group>
+    @if (error(); as message) {
+      <p class="error" role="alert" data-testid="confirm-error">{{ message }}</p>
+    }
+  </mat-dialog-content>
+  <mat-dialog-actions [align]="'end'">
+    <button
+      mat-button
+      type="button"
+      data-testid="confirm-cancel"
+      [disabled]="sending()"
+      [mat-dialog-close]="false"
+      i18n="@@confirmResult.cancel"
+    >
+      Abbrechen
+    </button>
+    <button
+      mat-flat-button
+      type="button"
+      data-testid="confirm-submit"
+      [disabled]="selected() === null || sending()"
+      (click)="submit()"
+    >
+      @if (error() === null) {
+        <ng-container i18n="@@confirmResult.submit">Übernehmen</ng-container>
+      } @else {
+        <ng-container i18n="@@confirmResult.retry">Erneut versuchen</ng-container>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>
