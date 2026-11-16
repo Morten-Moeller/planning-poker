@@ -20,6 +20,21 @@
             >
           }
         </span>
+        @if (voting() && participant.role === 'DEVELOPER') {
+          <span class="vote">
+            @if (participant.hasVoted) {
+              <span class="symbol" aria-hidden="true">✓</span>
+              <span data-testid="participant-vote-status" i18n="@@participants.voted"
+                >Hat geschätzt</span
+              >
+            } @else {
+              <span class="symbol" aria-hidden="true">…</span>
+              <span data-testid="participant-vote-status" i18n="@@participants.pending"
+                >Ausstehend</span
+              >
+            }
+          </span>
+        }
       </li>
     }
   </ul>

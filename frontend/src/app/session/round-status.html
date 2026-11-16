@@ -1,0 +1,22 @@
+<section class="round-status" data-testid="round-status">
+  <p class="counter" data-testid="vote-counter" i18n="@@roundStatus.counter">
+    {{ voted() }} von {{ total() }} haben geschätzt
+  </p>
+  @if (store.isScrumMaster()) {
+    @if (allVoted()) {
+      <p class="hint" role="status" data-testid="all-voted-hint" i18n="@@roundStatus.allVoted">
+        Alle verbundenen Entwickler haben geschätzt. Die Runde kann aufgelöst werden.
+      </p>
+    }
+    <button
+      type="button"
+      [matButton]="allVoted() ? 'filled' : 'outlined'"
+      data-testid="round-reveal"
+      [disabled]="revealing()"
+      (click)="reveal()"
+      i18n="@@roundStatus.reveal"
+    >
+      Auflösen
+    </button>
+  }
+</section>

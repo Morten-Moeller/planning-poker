@@ -47,6 +47,12 @@
       @if (store.activeIssue(); as issue) {
         <app-active-issue [issue]="issue" />
       }
+      @if (session.phase === 'VOTING') {
+        <app-round-status [sessionId]="session.sessionId" />
+        @if (!store.isScrumMaster()) {
+          <app-card-deck [sessionId]="session.sessionId" />
+        }
+      }
     </div>
   </div>
 } @else {

@@ -9,11 +9,11 @@ database engine; integration tests run against the real `SessionRegistry` in mem
 
 ## Levels
 
-| Level | Tool | Runs in | Scope (harness/testing.md T1) |
-|---|---|---|---|
-| unit | JUnit 5 (backend), vitest with jsdom (frontend) | `make test` | pure calculations and isolated mechanisms, table-driven: domain transitions, round evaluation, store, guards |
-| integration | JUnit 5 with `@QuarkusTest`, REST Assured, WireMock for GitLab, Quarkus WebSocket client | `make test` | one feature through its public interface (HTTP route, WebSocket), real `SessionRegistry` in memory, no database (ADR 0002) |
-| end-to-end | Playwright (Chromium) in `frontend/e2e/` | `make e2e`, in CI with `e2e_in_ci: true` | user flows in the browser against backend profile `e2e` and the GitLab double |
+| Level       | Tool                                                                                     | Runs in                                  | Scope (harness/testing.md T1)                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| unit        | JUnit 5 (backend), vitest with jsdom (frontend)                                          | `make test`                              | pure calculations and isolated mechanisms, table-driven: domain transitions, round evaluation, store, guards               |
+| integration | JUnit 5 with `@QuarkusTest`, REST Assured, WireMock for GitLab, Quarkus WebSocket client | `make test`                              | one feature through its public interface (HTTP route, WebSocket), real `SessionRegistry` in memory, no database (ADR 0002) |
+| end-to-end  | Playwright (Chromium) in `frontend/e2e/`                                                 | `make e2e`, in CI with `e2e_in_ci: true` | user flows in the browser against backend profile `e2e` and the GitLab double                                              |
 
 ## Additions
 
@@ -36,23 +36,23 @@ database engine; integration tests run against the real `SessionRegistry` in mem
 Which tests belong to which source paths. `implement` and `/verify` run the tests of the areas a
 change touches.
 
-| Source path | Unit and integration | End-to-end |
-|---|---|---|
-| `backend/src/main/java/planningpoker/platform/` | `backend/src/test/java/planningpoker/platform/` | `frontend/e2e/health.spec.ts` |
-| `backend/src/main/java/planningpoker/session/` | `backend/src/test/java/planningpoker/session/` (contract and stub tests from spec 0002, domain from spec 0004) | `frontend/e2e/create-and-join.spec.ts` |
-| `backend/src/main/java/planningpoker/gitlab/` | `backend/src/test/java/planningpoker/gitlab/` (from spec 0003) | – |
-| `backend/src/main/java/planningpoker/realtime/` | `backend/src/test/java/planningpoker/realtime/` (from spec 0009) | `frontend/e2e/create-and-join.spec.ts` |
-| `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts` |
-| `frontend/src/app/api/` | `frontend/src/app/api/*.spec.ts` (from spec 0005) | – |
-| `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts` |
-| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts` |
+| Source path                                     | Unit and integration                                                                                           | End-to-end                                                                                                       |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `backend/src/main/java/planningpoker/platform/` | `backend/src/test/java/planningpoker/platform/`                                                                | `frontend/e2e/health.spec.ts`                                                                                    |
+| `backend/src/main/java/planningpoker/session/`  | `backend/src/test/java/planningpoker/session/` (contract and stub tests from spec 0002, domain from spec 0004) | `frontend/e2e/create-and-join.spec.ts`                                                                           |
+| `backend/src/main/java/planningpoker/gitlab/`   | `backend/src/test/java/planningpoker/gitlab/` (from spec 0003)                                                 | –                                                                                                                |
+| `backend/src/main/java/planningpoker/realtime/` | `backend/src/test/java/planningpoker/realtime/` (from spec 0009)                                               | `frontend/e2e/create-and-join.spec.ts`                                                                           |
+| `frontend/src/app/start/`                       | `frontend/src/app/start/*.spec.ts`                                                                             | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts`                                            |
+| `frontend/src/app/api/`                         | `frontend/src/app/api/*.spec.ts` (from spec 0005)                                                              | –                                                                                                                |
+| `frontend/src/app/join/`                        | `frontend/src/app/join/*.spec.ts`                                                                              | `frontend/e2e/create-and-join.spec.ts`                                                                           |
+| `frontend/src/app/session/`                     | `frontend/src/app/session/*.spec.ts`                                                                           | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts` |
 
 ## End-to-end
 
 - Start: the tests start the application themselves. `frontend/playwright.config.ts` has three
   `webServer` entries: the GitLab double (WireMock Standalone, `--root-dir
-  frontend/e2e/gitlab-double`, ready at `/__admin/health`), the backend (`./mvnw -q -DskipTests
-  package`, then the jar with `-Dquarkus.profile=e2e` and
+frontend/e2e/gitlab-double`, ready at `/__admin/health`), the backend (`./mvnw -q -DskipTests
+package`, then the jar with `-Dquarkus.profile=e2e` and
   `-Dplanningpoker.gitlab.base-url=http://localhost:<GITLAB_DOUBLE_PORT>`) and the frontend dev
   server. `make gitlab-double` fetches the jar to `backend/target/gitlab-double/` (part of
   `make install`; `make e2e` runs it first). `make e2e` takes `harness/scripts/app-lock.sh`
@@ -79,12 +79,10 @@ change touches.
   `WireMockGitLab` and stub GitLab through `backend/src/test/java/planningpoker/session/GitLabStubs.java`
   (issue 42 of project 1234 by default, searches, failures, delays); every test resets the stubs
   in its `@BeforeEach`. Tests of the realtime area use the same test resource with
-  `backend/src/test/java/planningpoker/realtime/RestCalls.java` (REST flow and the stub of issue
-  42) and `SocketClient.java` (WebSocket client with timeouts). GitLab data of the end-to-end
+  `backend/src/test/java/planningpoker/realtime/RestCalls.java` (REST flow and the stub of issue 42) and `SocketClient.java` (WebSocket client with timeouts). GitLab data of the end-to-end
   flows comes from the fixed mappings of the GitLab double in
   `frontend/e2e/gitlab-double/mappings/` (spec 0011): project `1234` with issues 42 and 43, the
-  issue search of the project (both issues), notes and weight of both issues; issue 404 answers
-  404. Issue 44 (spec 0012) has `**fett**`, a `<script>` element and an `<img onerror>` in its
+  issue search of the project (both issues), notes and weight of both issues; issue 404 answers 404. Issue 44 (spec 0012) has `**fett**`, a `<script>` element and an `<img onerror>` in its
   description for the check of the Markdown sanitizing; it is not part of the issue search. A
   flow that needs other GitLab data adds a mapping there.
 - Environment check: `make e2e` starts everything; for a manual check start backend and frontend
@@ -92,7 +90,8 @@ change touches.
 - Named states: none yet; a state the flows need goes into the spec that introduces it. The
   flows of spec 0011 and `session-room.spec.ts` (spec 0012) create their session through the
   start page (issue 42, issue 44 for the sanitizing check) and join through the join page in a
-  second browser context.
+  second browser context; `voting-round.spec.ts` (spec 0013) joins two or three developers the
+  same way.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.
 
