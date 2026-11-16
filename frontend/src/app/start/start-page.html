@@ -1,16 +1,23 @@
-<main>
-  <h1 i18n="@@start.title">Planning Poker</h1>
-  <p data-testid="health-status">
-    @switch (backendReachable()) {
-      @case (true) {
-        <ng-container i18n="@@start.backendReachable">Backend erreichbar</ng-container>
-      }
-      @case (false) {
-        <ng-container i18n="@@start.backendUnreachable">Backend nicht erreichbar</ng-container>
-      }
-      @default {
-        <ng-container i18n="@@start.backendChecking">Backend wird geprüft</ng-container>
-      }
+<h1 i18n="@@start.title">Planning Poker</h1>
+<p data-testid="health-status">
+  @switch (backendReachable()) {
+    @case (true) {
+      <ng-container i18n="@@start.backendReachable">Backend erreichbar</ng-container>
     }
-  </p>
-</main>
+    @case (false) {
+      <ng-container i18n="@@start.backendUnreachable">Backend nicht erreichbar</ng-container>
+    }
+    @default {
+      <ng-container i18n="@@start.backendChecking">Backend wird geprüft</ng-container>
+    }
+  }
+</p>
+<button
+  mat-flat-button
+  type="button"
+  data-testid="create-session"
+  i18n="@@start.createSession"
+  (click)="createSession()"
+>
+  Sitzung erstellen
+</button>

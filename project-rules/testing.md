@@ -84,3 +84,9 @@ change touches.
   changes under `frontend/src/app/` or at an endpoint.
 - Browser checks: `http://localhost:4200/` with backend and frontend running
   (`README.md`, Einrichtung und Start); no login; test data as the spec names it.
+- Browser checks without backend: `pnpm -C frontend start:mock` serves the frontend with the
+  mock backend (`project-rules/frontend.md`, Mock backend) on port 4200, under the application
+  lock like `make e2e`. The mock session is `K7P2QX9M`; a token in `sessionStorage` under
+  `planningpoker.session.K7P2QX9M` with `mock-scrum-master-…` or `mock-developer-…` opens the
+  room in that role. For criteria that the real backend answers (endpoints from spec 0006), the
+  check runs against the backend, not the mock.

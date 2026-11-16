@@ -53,6 +53,17 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "mock": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/app/api/backend.providers.ts",
+                  "with": "src/app/api/backend.providers.mock.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -65,6 +76,9 @@
             },
             "development": {
               "buildTarget": "frontend:build:development"
+            },
+            "mock": {
+              "buildTarget": "frontend:build:mock"
             }
           },
           "defaultConfiguration": "development",

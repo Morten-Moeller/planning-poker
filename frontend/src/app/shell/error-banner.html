@@ -1,0 +1,14 @@
+@if (message(); as text) {
+  <div class="banner" role="alert" data-testid="error-banner">
+    <span data-testid="error-message">{{ text }}</span>
+    <button
+      mat-button
+      type="button"
+      data-testid="error-close"
+      i18n="@@error.close"
+      (click)="close()"
+    >
+      Schließen
+    </button>
+  </div>
+}

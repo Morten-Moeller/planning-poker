@@ -15,12 +15,16 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
 ## Structure
 
 - One folder per feature under `frontend/src/app/`: `start` (start page, create), `join`,
-  `session` (room, cards, result, history). Generated API types and the shared services
-  (`ApiService`, `RealtimeService`, `SessionStore`) live in `frontend/src/app/api/` (from spec
-  0005).
+  `session` (room, cards, result, history). `shell` holds the layout: toolbar, `router-outlet`
+  and the `ErrorBanner`. Generated API types and the shared services (`ApiService`,
+  `RealtimeService`, `SessionStore`, `TokenStore`, `ErrorState`) live in `frontend/src/app/api/`;
+  the mock backend for development in `frontend/src/app/api/mock/`; test doubles for the
+  WebSocket in `frontend/src/app/api/testing/` (spec 0005).
 - Shared code goes to `frontend/src/app/api/` only when two features use it (A1.3).
-- Import boundaries: features import from `api/` and from Angular packages; `api/` imports no
-  feature. No feature imports another feature.
+- Import boundaries: features and `shell` import from `api/` and from Angular packages; `api/`
+  imports no feature. No feature imports another feature.
+- Routes: `/` (start), `/session/:id/join`, `/session/:id` (room, `sessionGuard`: without a
+  token for the session id the router goes to `/session/:id/join`).
 
 ## State and data
 
@@ -37,7 +41,23 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `SessionView`: an extra or missing field or a wrong primitive type fails `make typecheck`.
   Tests take their snapshots from there.
 - HTTP through `HttpClient`, WebSocket through RxJS `webSocket` with `auth` as the first message,
-  `ping` every 30 seconds and reconnect with growing delay.
+  `ping` every 30 seconds and reconnect with growing delay (1, 2, 4, 8, 16, then 30 seconds). The
+  socket comes from the `InjectionToken` `WEB_SOCKET_FACTORY`; tests and the mock replace it.
+  `provideBackend()` in `api/backend.providers.ts` wires `HttpClient`, the interceptors and the
+  factory; `app.config.ts` calls it.
+- Error path: `apiErrorInterceptor` turns every `application/problem+json` response into an
+  `ApiError` (`errorCode`, `status`) and reports it to `ErrorState`; the `ErrorBanner` in the
+  shell shows the German text of `api/error-messages.ts` (`$localize`, id `@@error.<code>`, a
+  general text for an unknown code) and never `detail`. A WebSocket message `error` goes the
+  same way and ends the connection without a reconnect. Components branch on `errorCode` only.
+- Authentication: `authInterceptor` adds `Authorization: Bearer <token>` from the `TokenStore`
+  (`sessionStorage`, key `planningpoker.session.<id>`, value `{ participantId, token }`) to
+  every call under `/api/sessions/{id}` except the join (`POST …/participants`).
+- Mock backend: `pnpm -C frontend start:mock` serves the build configuration `mock`
+  (`angular.json`, `fileReplacements` of `backend.providers.ts` by `backend.providers.mock.ts`).
+  The mock answers REST through an `HttpInterceptorFn` and the WebSocket through a fake socket
+  from the example snapshots; tokens carry the role (`mock-scrum-master-…`, `mock-developer-…`),
+  the session id is `K7P2QX9M`. The normal build does not contain the mock.
 
 ## UI
 
