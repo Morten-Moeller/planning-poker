@@ -1,0 +1,14 @@
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+  gap: var(--app-space-s);
+}
+
+.cards span {
+  font: var(--mat-sys-title-medium);
+}
+
+.error {
+  margin: var(--app-space-m) 0 0;
+  color: var(--mat-sys-error);
+}

@@ -5,12 +5,23 @@ import { ActiveIssue } from './active-issue';
 import { CardDeck } from './card-deck';
 import { IssuePanel } from './issue-panel';
 import { ParticipantList } from './participant-list';
+import { RoundResult } from './round-result';
 import { RoundStatus } from './round-status';
+import { SessionHistory } from './session-history';
 import { ShareSession } from './share-session';
 
 @Component({
   selector: 'app-session-page',
-  imports: [ShareSession, ParticipantList, IssuePanel, ActiveIssue, RoundStatus, CardDeck],
+  imports: [
+    ShareSession,
+    ParticipantList,
+    IssuePanel,
+    ActiveIssue,
+    RoundStatus,
+    CardDeck,
+    RoundResult,
+    SessionHistory,
+  ],
   templateUrl: './session-page.html',
   styleUrl: './session-page.scss',
 })

@@ -130,6 +130,47 @@ describe('SessionPage', () => {
     expect(count('vote-counter')).toBe(0);
   });
 
+  it('shows the result and the history but no action to a developer after the reveal', async () => {
+    await open(revealedDeveloper);
+
+    expect(count('round-result')).toBe(1);
+    expect(count('result-vote')).toBe(2);
+    expect(count('round-restart')).toBe(0);
+    expect(count('result-accept')).toBe(0);
+    expect(count('history-panel')).toBe(1);
+    expect(count('history-entry')).toBe(1);
+  });
+
+  it('shows the result with both actions and the history to the scrum master after the reveal', async () => {
+    await open(revealedScrumMaster);
+
+    expect(count('round-result')).toBe(1);
+    expect(count('round-restart')).toBe(1);
+    expect(count('result-accept')).toBe(1);
+    expect(count('history-panel')).toBe(1);
+    http
+      .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
+      .flush({ items: [], nextPage: null });
+  });
+
+  it.each([
+    ['LOBBY', lobbyDeveloper],
+    ['VOTING', votingDeveloper],
+  ])('renders no result and no empty history in %s', async (_phase, snapshot) => {
+    await open(snapshot);
+
+    expect(count('round-result')).toBe(0);
+    expect(count('history-panel')).toBe(0);
+  });
+
+  it('shows the history in the lobby once a round was revealed', async () => {
+    await open({ ...lobbyDeveloper, history: revealedDeveloper.history });
+
+    expect(count('round-result')).toBe(0);
+    expect(count('history-panel')).toBe(1);
+    expect(count('history-entry')).toBe(1);
+  });
+
   it('renders no reveal button for the scrum master after the reveal', async () => {
     await open(revealedScrumMaster);
 

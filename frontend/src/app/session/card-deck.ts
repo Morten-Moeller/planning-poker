@@ -1,23 +1,8 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { ApiService, VoteRequest } from '../api/api.service';
+import { ApiService } from '../api/api.service';
 import { SessionStore } from '../api/session-store';
-
-export type Card = VoteRequest['card'];
-
-export const CARDS: readonly Card[] = [
-  '0',
-  '1',
-  '2',
-  '3',
-  '5',
-  '8',
-  '13',
-  '21',
-  '34',
-  '?',
-  'COFFEE',
-];
+import { CARDS, Card, cardName, cardSymbol } from './cards';
 
 @Component({
   selector: 'app-card-deck',
@@ -32,13 +17,10 @@ export class CardDeck {
   readonly sessionId = input.required<string>();
 
   protected readonly cards = CARDS;
-  protected readonly coffeeName = $localize`:@@cardDeck.coffee:Kaffeepause`;
+  protected readonly symbol = cardSymbol;
+  protected readonly name = cardName;
   protected readonly myVote = computed(() => this.store.round()?.myVote ?? null);
   protected readonly sending = signal(false);
-
-  protected symbol(card: Card): string {
-    return card === 'COFFEE' ? '☕' : card;
-  }
 
   protected choose(card: Card): void {
     if (this.sending()) {

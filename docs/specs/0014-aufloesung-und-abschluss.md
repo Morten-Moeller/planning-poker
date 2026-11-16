@@ -1,7 +1,7 @@
 ---
 id: "0014"
 title: Auflösung und Abschluss (M12)
-status: approved
+status: Review
 risk: medium
 adrs: ["0004"]
 owner: Morten Möller

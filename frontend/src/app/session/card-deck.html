@@ -8,7 +8,7 @@
         [matButton]="card === myVote() ? 'filled' : 'outlined'"
         [attr.data-testid]="'card-' + card"
         [attr.aria-pressed]="card === myVote()"
-        [attr.aria-label]="card === 'COFFEE' ? coffeeName : null"
+        [attr.aria-label]="name(card)"
         [disabled]="sending()"
         disabledInteractive
         (click)="choose(card)"
