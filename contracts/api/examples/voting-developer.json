@@ -1,0 +1,45 @@
+{
+  "sessionId": "K7P2QX9M",
+  "gitlabProjectId": "1234",
+  "phase": "VOTING",
+  "me": { "participantId": "01973f5e-2a4c-7d2e-9f30-4b5c6d7e8f90", "role": "DEVELOPER" },
+  "participants": [
+    {
+      "id": "01973f5e-2a4b-7c1d-8e2f-3a4b5c6d7e8f",
+      "name": "Anna",
+      "role": "SCRUM_MASTER",
+      "connected": true,
+      "hasVoted": false
+    },
+    {
+      "id": "01973f5e-2a4c-7d2e-9f30-4b5c6d7e8f90",
+      "name": "Ben",
+      "role": "DEVELOPER",
+      "connected": true,
+      "hasVoted": true
+    },
+    {
+      "id": "01973f5e-2a4d-7e3f-a041-5c6d7e8f9a01",
+      "name": "Cem",
+      "role": "DEVELOPER",
+      "connected": true,
+      "hasVoted": false
+    }
+  ],
+  "preselectedIssueIid": null,
+  "activeIssue": {
+    "iid": 42,
+    "title": "Login page",
+    "description": "As a user I want to log in with my e-mail address.\n\n- [ ] form\n- [ ] validation",
+    "webUrl": "https://gitlab.com/group/project/-/issues/42"
+  },
+  "round": {
+    "number": 1,
+    "myVote": "5",
+    "allVoted": false,
+    "confirming": false,
+    "votes": null,
+    "stats": null
+  },
+  "history": []
+}

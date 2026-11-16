@@ -1,0 +1,75 @@
+{
+  "sessionId": "K7P2QX9M",
+  "gitlabProjectId": "1234",
+  "phase": "REVEALED",
+  "me": { "participantId": "01973f5e-2a4c-7d2e-9f30-4b5c6d7e8f90", "role": "DEVELOPER" },
+  "participants": [
+    {
+      "id": "01973f5e-2a4b-7c1d-8e2f-3a4b5c6d7e8f",
+      "name": "Anna",
+      "role": "SCRUM_MASTER",
+      "connected": true,
+      "hasVoted": false
+    },
+    {
+      "id": "01973f5e-2a4c-7d2e-9f30-4b5c6d7e8f90",
+      "name": "Ben",
+      "role": "DEVELOPER",
+      "connected": true,
+      "hasVoted": true
+    },
+    {
+      "id": "01973f5e-2a4d-7e3f-a041-5c6d7e8f9a01",
+      "name": "Cem",
+      "role": "DEVELOPER",
+      "connected": true,
+      "hasVoted": true
+    }
+  ],
+  "preselectedIssueIid": null,
+  "activeIssue": {
+    "iid": 42,
+    "title": "Login page",
+    "description": "As a user I want to log in with my e-mail address.\n\n- [ ] form\n- [ ] validation",
+    "webUrl": "https://gitlab.com/group/project/-/issues/42"
+  },
+  "round": {
+    "number": 1,
+    "myVote": "5",
+    "allVoted": true,
+    "confirming": false,
+    "votes": [
+      { "participantId": "01973f5e-2a4c-7d2e-9f30-4b5c6d7e8f90", "name": "Ben", "card": "5" },
+      { "participantId": "01973f5e-2a4d-7e3f-a041-5c6d7e8f9a01", "name": "Cem", "card": "8" }
+    ],
+    "stats": {
+      "distribution": [
+        { "card": "5", "count": 1 },
+        { "card": "8", "count": 1 }
+      ],
+      "average": 6.5,
+      "mostFrequent": ["5", "8"]
+    }
+  },
+  "history": [
+    {
+      "issueIid": 42,
+      "issueTitle": "Login page",
+      "roundNumber": 1,
+      "votes": [
+        { "participantId": "01973f5e-2a4c-7d2e-9f30-4b5c6d7e8f90", "name": "Ben", "card": "5" },
+        { "participantId": "01973f5e-2a4d-7e3f-a041-5c6d7e8f9a01", "name": "Cem", "card": "8" }
+      ],
+      "stats": {
+        "distribution": [
+          { "card": "5", "count": 1 },
+          { "card": "8", "count": 1 }
+        ],
+        "average": 6.5,
+        "mostFrequent": ["5", "8"]
+      },
+      "finalCard": null,
+      "revealedAt": "2026-11-16T09:15:30Z"
+    }
+  ]
+}

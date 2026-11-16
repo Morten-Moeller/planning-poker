@@ -55,15 +55,77 @@ Umsetzung ab Spec 0010.
 
 ## Schnittstellen
 
-Der Server ist die einzige Quelle der Wahrheit: Befehle gehen per REST an `/api`, der Zustand
-kommt per WebSocket unter `/ws/sessions/{sessionId}` als vollständiger, je Teilnehmer gefilterter
-Snapshot zurück. Fehler folgen RFC 9457 (`application/problem+json`) mit einem stabilen
-`errorCode`. Die vollständige Definition (Endpunkte, Nachrichten, Snapshot, Fehlercodes) steht in
-`docs/umsetzungsplan.md`, Abschnitte 4.3 bis 4.6; ab Spec 0002 liegt der generierte Vertrag unter
-`contracts/api/openapi.yaml` und die Swagger-UI im Dev-Modus unter
-`http://localhost:8080/q/swagger-ui`.
+Der Server ist die einzige Quelle der Wahrheit. Der Vertrag liegt generiert in
+`contracts/api/openapi.yaml` (Quelle: die Java-DTOs unter `backend/src/main/java/planningpoker/`
+und `backend/src/main/resources/META-INF/openapi.yaml`); `make contracts` schreibt ihn und die
+TypeScript-Typen `frontend/src/app/api/schema.d.ts`, `make drift` meldet einen veralteten Stand.
+Im Dev-Modus zeigt `http://localhost:8080/q/swagger-ui` den Vertrag. Sechs Beispiel-Snapshots je
+Phase und Rolle liegen unter `contracts/api/examples/`; Backend-Test und Frontend-Typen prüfen sie.
+Bis zum jeweiligen Meilenstein antworten die Sitzungs-Endpunkte 501 `NOT_IMPLEMENTED`.
 
-Vorhanden seit Spec 0001: `GET /api/health` antwortet `{"status":"UP"}`.
+### Ablauf
+
+Befehle gehen per REST an `/api` und antworten ohne Zustand (204 oder 201 mit den neuen IDs).
+Nach jeder Änderung sendet der Server jedem verbundenen Teilnehmer per WebSocket den
+vollständigen, je Empfänger gefilterten Snapshot `session.state` (`SessionView`): verdeckte
+Karten anderer fehlen bis zur Auflösung, `preselectedIssueIid` sieht nur der Scrum Master, in
+`LOBBY` sind `activeIssue` und `round` `null`. Das Frontend ersetzt seinen Zustand mit jedem
+Snapshot vollständig (ADR 0004).
+
+### REST-Endpunkte
+
+Außer beim Erstellen und Beitreten trägt jeder Aufruf `Authorization: Bearer <token>`.
+
+| Methode und Pfad | Rolle | Request | Erfolg | Fehler |
+|---|---|---|---|---|
+| `GET /api/health` | offen | – | 200 `{ status }` | – |
+| `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid }` | 201 `{ sessionId, participantId, token }` | 400, 404 `ISSUE_NOT_FOUND`, 502 |
+| `POST /api/sessions/{id}/participants` | offen | `{ name }` | 201 `{ participantId, token }` | 400, 404, 409 `NAME_TAKEN` |
+| `GET /api/sessions/{id}` | beide | – | 200 `SessionView` | 401, 404 |
+| `GET /api/sessions/{id}/issues?search=&page=` | Scrum Master | – | 200 `{ items, nextPage }` | 403, 502 |
+| `POST /api/sessions/{id}/active-issue` | Scrum Master | `{ issueIid }` | 204 | 400, 403, 404, 409, 502 |
+| `PUT /api/sessions/{id}/vote` | Entwickler | `{ card }` | 204 | 400 `INVALID_CARD`, 403, 409 |
+| `POST /api/sessions/{id}/round/reveal` | Scrum Master | – | 204 | 403, 409 |
+| `POST /api/sessions/{id}/round/restart` | Scrum Master | – | 204 | 403, 409 |
+| `POST /api/sessions/{id}/round/confirm` | Scrum Master | `{ card }` | 204 | 400 `INVALID_CARD`, 403, 409, 502 |
+
+Karten im Wire-Format: `"0"`, `"1"`, `"2"`, `"3"`, `"5"`, `"8"`, `"13"`, `"21"`, `"34"`, `"?"`,
+`"COFFEE"`. Namen haben 1 bis 30 Zeichen (getrimmt).
+
+### WebSocket-Nachrichten
+
+Endpunkt `/ws/sessions/{sessionId}` (Umsetzung ab Spec 0009). Jede Nachricht hat die Hülle
+`{ "type": "…", "payload": { … } }`; das Token steht nie in der URL.
+
+| Richtung | `type` | Payload | Wann |
+|---|---|---|---|
+| Client an Server | `auth` | `{ token }` | erste Nachricht, innerhalb von 5 Sekunden |
+| Server an Client | `session.state` | `SessionView` | nach erfolgreichem `auth` und nach jeder Zustandsänderung |
+| Server an Client | `round.allVoted` | `{ roundNumber }` | nur an den Scrum Master, einmal je Vollständigkeit |
+| Server an Client | `error` | `{ errorCode, detail }` | bei fehlgeschlagenem `auth`; danach schließt der Server |
+| Client an Server | `ping` | keiner | alle 30 Sekunden; der Server antwortet mit `pong` |
+
+### Fehlerformat
+
+Fehler folgen RFC 9457 als `application/problem+json`; Clients entscheiden nur anhand von
+`errorCode`, nie anhand von `detail`:
+
+```json
+{ "type": "about:blank", "title": "Conflict", "status": 409, "detail": "The round is already revealed.", "errorCode": "INVALID_STATE" }
+```
+
+| `errorCode` | Status | Bedeutung |
+|---|---|---|
+| `VALIDATION_ERROR` | 400 | Request-Body oder Parameter ungültig (leerer Name, fehlende Projekt-ID) |
+| `INVALID_CARD` | 400 | Karte nicht im Kartensatz |
+| `UNAUTHORIZED` | 401 | Token fehlt oder ist unbekannt |
+| `FORBIDDEN_ROLE` | 403 | Aktion der anderen Rolle vorbehalten |
+| `SESSION_NOT_FOUND` | 404 | Sitzung unbekannt oder verfallen |
+| `ISSUE_NOT_FOUND` | 404 | Issue im GitLab-Projekt nicht gefunden |
+| `NAME_TAKEN` | 409 | Name in der Sitzung bereits vergeben |
+| `INVALID_STATE` | 409 | Aktion in dieser Phase nicht erlaubt oder Bestätigung läuft |
+| `NOT_IMPLEMENTED` | 501 | Endpunkt noch nicht umgesetzt; entfällt mit dem letzten Meilenstein |
+| `GITLAB_ERROR` | 502 | GitLab nicht erreichbar oder Fehlerantwort; der GitLab-Text wird nicht weitergegeben |
 
 ## Entwicklung
 

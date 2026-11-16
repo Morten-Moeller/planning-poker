@@ -28,8 +28,14 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   WebSocket in full; nothing is reloaded by hand (ADR 0004 replaces A7.1). Single queries such as
   the issue search stay local in their component.
 - Client state: the token per session id in `sessionStorage`; locale is fixed to `de`.
-- API client: `ApiService` with the generated types from `contracts/api/` (`openapi-typescript`,
-  `make contracts`); never hand-written copies. Clients branch on `errorCode` only.
+- API client: `ApiService` with the generated types in `frontend/src/app/api/schema.d.ts`
+  (`openapi-typescript` from `contracts/api/openapi.yaml`, `make contracts`); a contract type is
+  taken as `components['schemas']['<Name>']`, never as a hand-written copy. Clients branch on
+  `errorCode` only.
+- Example snapshots: `frontend/src/app/api/examples.ts` imports the six files of
+  `contracts/api/examples/` (`resolveJsonModule`) and checks them with the type `Exact` against
+  `SessionView`: an extra or missing field or a wrong primitive type fails `make typecheck`.
+  Tests take their snapshots from there.
 - HTTP through `HttpClient`, WebSocket through RxJS `webSocket` with `auth` as the first message,
   `ping` every 30 seconds and reconnect with growing delay.
 

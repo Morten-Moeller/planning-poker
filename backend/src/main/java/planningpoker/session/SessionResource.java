@@ -1,0 +1,265 @@
+package planningpoker.session;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
+import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import planningpoker.platform.ApiException;
+import planningpoker.platform.ErrorCode;
+import planningpoker.platform.ProblemDetail;
+import planningpoker.session.api.ConfirmRequest;
+import planningpoker.session.api.CreateSessionRequest;
+import planningpoker.session.api.CreateSessionResponse;
+import planningpoker.session.api.IssueListResponse;
+import planningpoker.session.api.JoinSessionRequest;
+import planningpoker.session.api.JoinSessionResponse;
+import planningpoker.session.api.SelectIssueRequest;
+import planningpoker.session.api.SessionView;
+import planningpoker.session.api.VoteRequest;
+
+@Path("/api/sessions")
+@Tag(name = "sessions", description = "Sessions, participants and the commands of a round.")
+@SecurityScheme(
+        securitySchemeName = SessionResource.BEARER_TOKEN,
+        type = SecuritySchemeType.HTTP,
+        scheme = "bearer",
+        description = "Token of the participant from the create or join response.")
+@Produces(MediaType.APPLICATION_JSON)
+public class SessionResource {
+
+    static final String BEARER_TOKEN = "bearerToken";
+    private static final String PROBLEM = ProblemDetail.MEDIA_TYPE;
+    private static final String SESSION_ID = "Session id, 8 characters.";
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(operationId = "createSession", summary = "Create a session; the caller becomes the scrum master.")
+    @APIResponse(
+            responseCode = "201",
+            description = "Session created.",
+            content = @Content(schema = @Schema(implementation = CreateSessionResponse.class)))
+    @APIResponse(
+            responseCode = "400",
+            description = "VALIDATION_ERROR",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "404",
+            description = "ISSUE_NOT_FOUND",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "502",
+            description = "GITLAB_ERROR",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    public Response createSession(@Valid CreateSessionRequest request) {
+        throw notImplemented();
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/{id}/participants")
+    @Operation(operationId = "joinSession", summary = "Join a session as developer.")
+    @APIResponse(
+            responseCode = "201",
+            description = "Participant added.",
+            content = @Content(schema = @Schema(implementation = JoinSessionResponse.class)))
+    @APIResponse(
+            responseCode = "400",
+            description = "VALIDATION_ERROR",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "404",
+            description = "SESSION_NOT_FOUND",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "409",
+            description = "NAME_TAKEN",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    public Response joinSession(
+            @PathParam("id") @Parameter(description = SESSION_ID) String id, @Valid JoinSessionRequest request) {
+        throw notImplemented();
+    }
+
+    @GET
+    @Path("/{id}")
+    @SecurityRequirement(name = BEARER_TOKEN)
+    @Operation(operationId = "getSession", summary = "Snapshot of the session, filtered for the caller.")
+    @APIResponse(
+            responseCode = "200",
+            description = "Snapshot.",
+            content = @Content(schema = @Schema(implementation = SessionView.class)))
+    @APIResponse(
+            responseCode = "401",
+            description = "UNAUTHORIZED",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "404",
+            description = "SESSION_NOT_FOUND",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    public Response getSession(@PathParam("id") @Parameter(description = SESSION_ID) String id) {
+        throw notImplemented();
+    }
+
+    @GET
+    @Path("/{id}/issues")
+    @SecurityRequirement(name = BEARER_TOKEN)
+    @Operation(operationId = "listIssues", summary = "Issues of the project of the session; scrum master only.")
+    @APIResponse(
+            responseCode = "200",
+            description = "One page of issues.",
+            content = @Content(schema = @Schema(implementation = IssueListResponse.class)))
+    @APIResponse(
+            responseCode = "403",
+            description = "FORBIDDEN_ROLE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "502",
+            description = "GITLAB_ERROR",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    public Response listIssues(
+            @PathParam("id") @Parameter(description = SESSION_ID) String id,
+            @QueryParam("search") @Parameter(description = "Text to search in title and description.") String search,
+            @QueryParam("page") @DefaultValue("1") @Min(1) @Parameter(description = "Page number, starting at 1.")
+                    int page) {
+        throw notImplemented();
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/{id}/active-issue")
+    @SecurityRequirement(name = BEARER_TOKEN)
+    @Operation(
+            operationId = "selectIssue",
+            summary = "Make an issue active and start round 1; scrum master only. A running round is dropped.")
+    @APIResponse(responseCode = "204", description = "Issue active.")
+    @APIResponse(
+            responseCode = "400",
+            description = "VALIDATION_ERROR",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "403",
+            description = "FORBIDDEN_ROLE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "404",
+            description = "ISSUE_NOT_FOUND",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "409",
+            description = "INVALID_STATE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "502",
+            description = "GITLAB_ERROR",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    public Response selectIssue(
+            @PathParam("id") @Parameter(description = SESSION_ID) String id, @Valid SelectIssueRequest request) {
+        throw notImplemented();
+    }
+
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/{id}/vote")
+    @SecurityRequirement(name = BEARER_TOKEN)
+    @Operation(operationId = "vote", summary = "Choose or change the hidden card; developer only.")
+    @APIResponse(responseCode = "204", description = "Card stored.")
+    @APIResponse(
+            responseCode = "400",
+            description = "INVALID_CARD",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "403",
+            description = "FORBIDDEN_ROLE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "409",
+            description = "INVALID_STATE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    public Response vote(@PathParam("id") @Parameter(description = SESSION_ID) String id, @Valid VoteRequest request) {
+        throw notImplemented();
+    }
+
+    @POST
+    @Path("/{id}/round/reveal")
+    @SecurityRequirement(name = BEARER_TOKEN)
+    @Operation(operationId = "revealRound", summary = "Reveal every card of the round; scrum master only.")
+    @APIResponse(responseCode = "204", description = "Round revealed.")
+    @APIResponse(
+            responseCode = "403",
+            description = "FORBIDDEN_ROLE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "409",
+            description = "INVALID_STATE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    public Response revealRound(@PathParam("id") @Parameter(description = SESSION_ID) String id) {
+        throw notImplemented();
+    }
+
+    @POST
+    @Path("/{id}/round/restart")
+    @SecurityRequirement(name = BEARER_TOKEN)
+    @Operation(operationId = "restartRound", summary = "Start a new round for the active issue; scrum master only.")
+    @APIResponse(responseCode = "204", description = "New round started.")
+    @APIResponse(
+            responseCode = "403",
+            description = "FORBIDDEN_ROLE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "409",
+            description = "INVALID_STATE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    public Response restartRound(@PathParam("id") @Parameter(description = SESSION_ID) String id) {
+        throw notImplemented();
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/{id}/round/confirm")
+    @SecurityRequirement(name = BEARER_TOKEN)
+    @Operation(
+            operationId = "confirmRound",
+            summary = "Confirm the final card, write it to GitLab and return to LOBBY; scrum master only.")
+    @APIResponse(responseCode = "204", description = "Result written to GitLab.")
+    @APIResponse(
+            responseCode = "400",
+            description = "INVALID_CARD",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "403",
+            description = "FORBIDDEN_ROLE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "409",
+            description = "INVALID_STATE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "502",
+            description = "GITLAB_ERROR",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    public Response confirmRound(
+            @PathParam("id") @Parameter(description = SESSION_ID) String id, @Valid ConfirmRequest request) {
+        throw notImplemented();
+    }
+
+    private static ApiException notImplemented() {
+        return new ApiException(ErrorCode.NOT_IMPLEMENTED, "This endpoint is not implemented yet.");
+    }
+}

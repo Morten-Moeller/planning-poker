@@ -1,7 +1,7 @@
 ---
 id: "0002"
 title: Schnittstellenvertrag (M1)
-status: approved
+status: Review
 risk: high
 adrs: ["0004"]
 owner: Morten Möller
