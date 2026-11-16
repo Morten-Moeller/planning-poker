@@ -1,14 +1,14 @@
 ---
 id: "0011"
 title: Erstellen und Beitreten (M9)
-status: Review
+status: done
 risk: high
 adrs: ["0003", "0004"]
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#11"
+note: alle Kriterien erfüllt
 ---
 
 # Erstellen und Beitreten (M9)
