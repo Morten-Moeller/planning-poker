@@ -141,10 +141,13 @@ class SessionRegistryTest {
         SessionRegistry.Created created = registry.create("4711", 42, "Master");
         events.clear();
 
+        clock.advance(Duration.ofMinutes(5));
+
         Phase phase = registry.read(created.session().id(), Session::phase);
 
         assertEquals(Phase.LOBBY, phase);
         assertEquals(List.of(), events);
+        assertEquals(START, created.session().lastActivityAt());
         assertEquals(
                 ErrorCode.SESSION_NOT_FOUND,
                 assertThrows(SessionException.class, () -> registry.read("MISSING1", Session::phase))

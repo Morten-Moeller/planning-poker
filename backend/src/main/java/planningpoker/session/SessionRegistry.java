@@ -47,6 +47,9 @@ public class SessionRegistry {
         Entry entry = live(sessionId).orElseThrow(SessionRegistry::notFound);
         entry.lock().lock();
         try {
+            if (sessions.get(sessionId) != entry) {
+                throw notFound();
+            }
             return query.apply(entry.session());
         } finally {
             entry.lock().unlock();
@@ -66,7 +69,7 @@ public class SessionRegistry {
             session.touch(clock.instant());
             try {
                 result = command.apply(session);
-            } catch (SessionException e) {
+            } catch (RuntimeException e) {
                 session.touch(previousActivity);
                 throw e;
             }
