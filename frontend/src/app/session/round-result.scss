@@ -1,4 +1,5 @@
 .result {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -47,6 +48,15 @@ h3 {
 
 .outlier-label {
   font: var(--mat-sys-label-large);
+}
+
+.consensus-hint {
+  margin: 0;
+  padding: var(--app-space-s) var(--app-space-m);
+  border-radius: var(--mat-sys-corner-small);
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font: var(--mat-sys-title-medium);
 }
 
 .outlier-hint {

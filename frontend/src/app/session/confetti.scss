@@ -1,0 +1,58 @@
+@use 'sass:list';
+@use 'sass:math';
+
+$pieces: 16;
+$colors: (
+  var(--mat-sys-primary),
+  var(--mat-sys-secondary),
+  var(--mat-sys-tertiary),
+  var(--mat-sys-error)
+);
+
+:host {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.piece {
+  position: absolute;
+  top: calc(-1 * var(--app-space-m));
+  width: var(--app-space-s);
+  height: var(--app-space-m);
+  border-radius: var(--mat-sys-corner-extra-small);
+  opacity: 0;
+  animation: fall 2.4s ease-in 1 forwards;
+}
+
+@for $i from 1 through $pieces {
+  .piece:nth-child(#{$i}) {
+    left: math.percentage(math.div($i - 0.5, $pieces));
+    background-color: list.nth($colors, ($i % list.length($colors)) + 1);
+    animation-delay: #{($i * 7 % 10) * 0.06}s;
+  }
+}
+
+@keyframes fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(320px) rotate(540deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    display: none;
+  }
+}

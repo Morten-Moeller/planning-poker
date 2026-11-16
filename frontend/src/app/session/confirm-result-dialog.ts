@@ -12,6 +12,7 @@ import { ConfirmSuccess } from './confirm-success';
 
 export interface ConfirmResultData {
   sessionId: string;
+  suggestedCard?: Card | null;
 }
 
 const CONFIRM_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>(['GITLAB_ERROR']);
@@ -33,7 +34,7 @@ export class ConfirmResultDialog {
   protected readonly cards = CARDS;
   protected readonly symbol = cardSymbol;
   protected readonly label = cardLabel;
-  protected readonly selected = signal<Card | null>(null);
+  protected readonly selected = signal<Card | null>(this.data.suggestedCard ?? null);
   protected readonly sending = signal(false);
   protected readonly error = signal<string | null>(null);
 

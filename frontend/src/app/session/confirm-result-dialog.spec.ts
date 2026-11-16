@@ -154,4 +154,35 @@ describe('ConfirmResultDialog', () => {
     expect(TestBed.inject(ErrorState).error()?.errorCode).toBe('INVALID_STATE');
     expect(text('confirm-submit')).toBe('Übernehmen');
   });
+
+  it('selects the suggested card and enables the submit button', async () => {
+    TestBed.inject(MatDialog).closeAll();
+    await stable();
+    TestBed.inject(MatDialog).open<ConfirmResultDialog, ConfirmResultData, boolean>(
+      ConfirmResultDialog,
+      { data: { sessionId: SESSION_ID, suggestedCard: '8' } },
+    );
+    await stable();
+
+    expect(radio(5).checked).toBe(true);
+    expect(all('confirm-card').filter((card) => card.querySelector('input')!.checked)).toHaveLength(
+      1,
+    );
+    expect(submit().disabled).toBe(false);
+
+    await choose('13');
+    await send();
+
+    const request = http.expectOne(CONFIRM_URL);
+    expect(request.request.body).toEqual({ card: '13' });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await stable();
+  });
+
+  it('selects no card without a suggested card', () => {
+    expect(all('confirm-card').filter((card) => card.querySelector('input')!.checked)).toHaveLength(
+      0,
+    );
+    expect(submit().disabled).toBe(true);
+  });
 });

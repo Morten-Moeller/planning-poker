@@ -1,7 +1,7 @@
 ---
 id: "0018"
 title: Konsens (M14, O-03)
-status: approved
+status: Review
 risk: medium
 adrs: []
 owner: Morten Möller

@@ -5,6 +5,10 @@
       Das Ergebnis wird nach GitLab geschrieben.
     </p>
   }
+  @if (consensusText(); as text) {
+    <app-confetti data-testid="consensus-confetti" />
+    <p class="consensus-hint" role="status" data-testid="consensus-hint">{{ text }}</p>
+  }
   @if (outliers().size > 0) {
     <p class="outlier-hint" data-testid="outlier-hint" i18n="@@roundResult.outlierHint">
       Niedrigste und höchste Schätzung liegen weit auseinander.
