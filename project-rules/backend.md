@@ -110,7 +110,9 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   path parameter `id` and the token through `SessionRegistry.read` to an `Actor(sessionId,
   participantId, role)`: 404 `SESSION_NOT_FOUND` for an unknown session, 401 for a token that
   belongs to no participant of that session. The method reads the actor with
-  `ActorFilter.actorOf(context)`.
+  `ActorFilter.actorOf(context)`. The filter injects `Instance<SessionRegistry>` and resolves it
+  per request: Quarkus creates the REST filters at start before the config mappings
+  (`SessionConfig`) are registered, so a direct injection fails the boot.
 - Authorisation: the role comes from the token (A5.1); `@RequiresRole(Role)` on the method is
   checked by `ActorFilter` and answers 403 `FORBIDDEN_ROLE` before the method runs; the domain
   checks the role again (A1.4). The frontend never sends a role.

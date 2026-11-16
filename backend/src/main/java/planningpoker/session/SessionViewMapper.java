@@ -2,14 +2,14 @@ package planningpoker.session;
 
 import java.time.ZoneOffset;
 import java.util.List;
+import planningpoker.platform.ErrorCode;
 import planningpoker.session.api.SessionView;
 
 public final class SessionViewMapper {
 
     public SessionView toView(Session session, String receiverId) {
         Participant receiver = session.participant(receiverId)
-                .orElseThrow(() ->
-                        new SessionException(planningpoker.platform.ErrorCode.UNAUTHORIZED, "Unknown participant."));
+                .orElseThrow(() -> new SessionException(ErrorCode.UNAUTHORIZED, "Unknown participant."));
         boolean scrumMaster = receiver.role() == Role.SCRUM_MASTER;
         return new SessionView(
                 session.id(),

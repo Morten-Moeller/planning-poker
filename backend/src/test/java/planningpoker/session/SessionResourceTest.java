@@ -3,10 +3,16 @@ package planningpoker.session;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
+import jakarta.ws.rs.HttpMethod;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import planningpoker.platform.Authenticated;
 
 @QuarkusTest
 class SessionResourceTest {
@@ -169,6 +176,27 @@ class SessionResourceTest {
                 .statusCode(400)
                 .contentType(PROBLEM)
                 .body("errorCode", equalTo("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void authenticatesEveryEndpointExceptCreateAndJoin() {
+        Set<String> open = Set.of("createSession", "joinSession");
+        for (Method method : SessionResource.class.getDeclaredMethods()) {
+            boolean endpoint = Arrays.stream(method.getAnnotations())
+                    .anyMatch(annotation -> annotation.annotationType().isAnnotationPresent(HttpMethod.class));
+            if (!endpoint) {
+                continue;
+            }
+            assertEquals(
+                    !open.contains(method.getName()),
+                    method.isAnnotationPresent(Authenticated.class),
+                    method.getName() + " authentication");
+            assertTrue(
+                    open.contains(method.getName())
+                            || method.getName().equals("getSession")
+                            || method.isAnnotationPresent(RequiresRole.class),
+                    method.getName() + " needs a role");
+        }
     }
 
     @Test
