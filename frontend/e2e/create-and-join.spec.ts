@@ -76,7 +76,6 @@ test('a developer joins through the link in a second browser context', async ({
 
   await expect(developer.getByTestId('session-role')).toHaveText('Entwickler');
   await expect(developer.getByTestId('session-participant-count')).toHaveText('2');
-  await page.reload();
   await expect(page.getByTestId('session-participant-count')).toHaveText('2');
   await developer.context().close();
 });
