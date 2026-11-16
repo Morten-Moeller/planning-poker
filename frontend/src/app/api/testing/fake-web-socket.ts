@@ -20,6 +20,10 @@ export class FakeSocket extends Subject<WsMessage> {
   drop(): void {
     this.error(new Error('connection lost'));
   }
+
+  close(): void {
+    this.complete();
+  }
 }
 
 export class FakeSocketFactory {

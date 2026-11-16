@@ -61,8 +61,8 @@ export class RealtimeService {
       tap(() => socket.next({ type: 'ping' })),
       ignoreElements(),
     );
-    return merge(fromServer(socket), auth, pings).pipe(
-      concatWith(throwError(() => new ConnectionClosed())),
+    const messages = fromServer(socket).pipe(concatWith(throwError(() => new ConnectionClosed())));
+    return merge(messages, auth, pings).pipe(
       tap((message) => {
         if (message.type === 'round.allVoted') {
           this.lastAllVoted.set(message.payload);

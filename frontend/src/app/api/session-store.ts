@@ -37,6 +37,7 @@ export class SessionStore {
       .subscribe({
         next: (view) => this.snapshot.set(view),
         error: () => this.snapshot.set(null),
+        complete: () => this.snapshot.set(null),
       });
   }
 

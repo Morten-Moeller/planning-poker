@@ -81,8 +81,10 @@ Begründung: `frontend/src/**` ist medium (kein Muster); der Eskalator `token` g
 (Skript `start:mock`, Manifest) sind medium. Tests low.
 Gates: G0 und G1 in dieser Session. G2: Label `human-approved`. G3: Status `verified`. Reviews:
 Code, Sicherheit, Architektur.
-ADR nötig: nein, weil ADR 0004 (Snapshot und Signals-Store) und ADR 0003 (Token im
-`sessionStorage`) die Entscheidungen festlegen und diese Spec ihnen folgt.
+ADR nötig: kein neuer. Risiko high wegen des Eskalators `token`; die ADR-Pflicht
+(`harness/policies/adr.md`, Bedingung 1) ist durch ADR 0003 (Token im `sessionStorage`) und
+ADR 0004 (Snapshot und Signals-Store) erfüllt, die die Entscheidungen festlegen; diese Spec
+folgt ihnen.
 
 ## Umsetzung
 

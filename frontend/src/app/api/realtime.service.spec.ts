@@ -98,6 +98,18 @@ describe('RealtimeService', () => {
     }
   });
 
+  it('reconnects after the server closed the connection without an error', () => {
+    subscription = service.connect(SESSION_ID, TOKEN).subscribe();
+
+    sockets.last().close();
+    vi.advanceTimersByTime(1_000);
+
+    expect(sockets.sockets).toHaveLength(2);
+    expect(sockets.last().sent).toEqual([{ type: 'auth', payload: { token: TOKEN } }]);
+    vi.advanceTimersByTime(30_000);
+    expect(sockets.sockets[0].sent).toHaveLength(1);
+  });
+
   it('starts the delays again after a connection that delivered a snapshot', () => {
     subscription = service.connect(SESSION_ID, TOKEN).subscribe();
     sockets.last().drop();

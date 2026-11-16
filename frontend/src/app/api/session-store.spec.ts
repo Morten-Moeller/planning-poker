@@ -115,6 +115,18 @@ describe('SessionStore', () => {
     expect(socket.observed).toBe(false);
   });
 
+  it('clears the state after the server rejected the connection', () => {
+    enterWith(votingDeveloper);
+
+    sockets.last().receive({
+      type: 'error',
+      payload: { errorCode: 'UNAUTHORIZED', detail: 'Unknown token.' },
+    });
+
+    expect(store.session()).toBeNull();
+    expect(store.role()).toBeNull();
+  });
+
   it('clears the state when the snapshot cannot be loaded', () => {
     TestBed.inject(TokenStore).store(SESSION_ID, { participantId: 'p-1', token: 'stale' });
     store.enter(SESSION_ID);
