@@ -6,6 +6,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
@@ -20,9 +22,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import planningpoker.gitlab.WireMockGitLab;
 import planningpoker.platform.Authenticated;
 
 @QuarkusTest
+@WithTestResource(WireMockGitLab.class)
 class SessionResourceTest {
 
     private static final String PROBLEM = "application/problem+json";
@@ -32,8 +36,12 @@ class SessionResourceTest {
     private String scrumMasterToken;
     private String developerToken;
 
+    WireMockServer gitlab;
+
     @BeforeEach
     void createSessionWithOneDeveloper() {
+        gitlab.resetAll();
+        GitLabStubs.defaultIssue(gitlab);
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         SessionApiTest.Created created = SessionApiTest.createSession("Anna " + suffix);
         session = "/api/sessions/" + created.sessionId();
@@ -47,10 +55,16 @@ class SessionResourceTest {
         return given().header("Authorization", "Bearer " + token);
     }
 
+    static Stream<Arguments> securedEndpoints() {
+        return Stream.concat(
+                Stream.of(
+                        Arguments.of("GET", "/issues?search=login&page=1", null, Role.SCRUM_MASTER),
+                        Arguments.of("POST", "/active-issue", "{\"issueIid\":42}", Role.SCRUM_MASTER)),
+                stubEndpoints());
+    }
+
     static Stream<Arguments> stubEndpoints() {
         return Stream.of(
-                Arguments.of("GET", "/issues?search=login&page=1", null, Role.SCRUM_MASTER),
-                Arguments.of("POST", "/active-issue", "{\"issueIid\":42}", Role.SCRUM_MASTER),
                 Arguments.of("PUT", "/vote", "{\"card\":\"5\"}", Role.DEVELOPER),
                 Arguments.of("POST", "/round/reveal", null, Role.SCRUM_MASTER),
                 Arguments.of("POST", "/round/restart", null, Role.SCRUM_MASTER),
@@ -76,7 +90,7 @@ class SessionResourceTest {
     }
 
     @ParameterizedTest(name = "{0} {1}")
-    @MethodSource("stubEndpoints")
+    @MethodSource("securedEndpoints")
     void rejectsTheOtherRoleWithForbiddenRole(String method, String path, String body, Role role) {
         Role other = role == Role.SCRUM_MASTER ? Role.DEVELOPER : Role.SCRUM_MASTER;
         RequestSpecification request = as(other);
@@ -93,7 +107,7 @@ class SessionResourceTest {
     }
 
     @ParameterizedTest(name = "{0} {1}")
-    @MethodSource("stubEndpoints")
+    @MethodSource("securedEndpoints")
     void rejectsEveryCommandWithoutAToken(String method, String path, String body, Role role) {
         RequestSpecification request = given();
         if (body != null) {

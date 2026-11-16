@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -18,13 +20,24 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import planningpoker.gitlab.WireMockGitLab;
 
 @QuarkusTest
+@WithTestResource(WireMockGitLab.class)
 class SessionApiTest {
 
     private static final String PROBLEM = "application/problem+json";
     private static final ObjectMapper JSON = new ObjectMapper();
+
+    WireMockServer gitlab;
+
+    @BeforeEach
+    void stubTheIssue() {
+        gitlab.resetAll();
+        GitLabStubs.defaultIssue(gitlab);
+    }
 
     record Created(String sessionId, String participantId, String token) {}
 

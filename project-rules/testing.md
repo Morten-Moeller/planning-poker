@@ -70,7 +70,10 @@ change touches.
 
 - Command: none yet. Sessions live in memory and are created through the public API
   (`POST /api/sessions`, `POST /api/sessions/{id}/participants`); the end-to-end flows create
-  them in their setup. GitLab data comes from the fixed mappings of the GitLab double
+  them in their setup. Backend tests of the session area run with the test resource
+  `WireMockGitLab` and stub GitLab through `backend/src/test/java/planningpoker/session/GitLabStubs.java`
+  (issue 42 of project 1234 by default, searches, failures, delays); every test resets the stubs
+  in its `@BeforeEach`. GitLab data comes from the fixed mappings of the GitLab double
   (`frontend/e2e/gitlab-double/`, from spec 0011).
 - Environment check: `make e2e` starts everything; for a manual check start backend and frontend
   as in `README.md`.

@@ -123,6 +123,11 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   never leave the domain: `Participant.token` has no view field.
 - `SessionException` reaches the client through `SessionExceptionMapper` as
   `application/problem+json` with its `errorCode` and status.
+- GitLab at the boundary: `GitLabIssues` (`planningpoker.session`) loads and searches issues
+  through `GitLabClient` and maps `GitLabException` to `ApiException` (`NOT_FOUND` of a single
+  issue to `ISSUE_NOT_FOUND`, everything else to `GITLAB_ERROR` with a fixed detail text, never
+  the GitLab message). The resource loads the issue before `SessionRegistry.update` (ADR 0002,
+  no GitLab call inside the lock) and hands the finished `Issue` to `Session.selectIssue`.
 - Commands answer 204, or 201 with the new ids; the new state reaches clients through the
   WebSocket snapshot (ADR 0004).
 - Formatting: palantir-java-format through Spotless (`make lint-backend`, `make format`).

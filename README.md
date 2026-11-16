@@ -46,6 +46,7 @@ gelten je Backend-Instanz, nicht je Sitzung.
 | `planningpoker.gitlab.base-url` | `https://gitlab.com` | Basis-URL der GitLab-Instanz |
 | `planningpoker.gitlab.token` | keiner, aus `GITLAB_TOKEN` | Personal Access Token mit Scope `api` |
 | `planningpoker.gitlab.write-weight` | `false` | Zahlenwerte zusätzlich als `weight` setzen (Premium/Ultimate) |
+| `planningpoker.gitlab.timeout` | `10s` | Verbindungs- und Lesezeit je GitLab-Aufruf |
 | `planningpoker.session.ttl` | `12h` | Verfall inaktiver Sitzungen |
 
 Das bestätigte Ergebnis wird als Kommentar (Note) am Issue hinterlegt: Endwert, Rundenzahl und
