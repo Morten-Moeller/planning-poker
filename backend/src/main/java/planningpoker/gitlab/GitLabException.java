@@ -17,8 +17,8 @@ public class GitLabException extends RuntimeException {
         this.status = status;
     }
 
-    public GitLabException(String operation, Throwable cause) {
-        super("GitLab " + operation + " failed: " + Reason.UNAVAILABLE + " (no response)", cause);
+    public GitLabException(String operation, String detail, Throwable cause) {
+        super("GitLab " + operation + " failed: " + Reason.UNAVAILABLE + " (" + detail + ")", cause);
         this.reason = Reason.UNAVAILABLE;
         this.status = 0;
     }

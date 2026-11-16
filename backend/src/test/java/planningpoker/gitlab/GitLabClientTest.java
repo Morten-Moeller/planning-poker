@@ -154,13 +154,39 @@ class GitLabClientTest {
                 Arguments.of("loadIssue", 502, Reason.UNAVAILABLE),
                 Arguments.of("loadIssue", 0, Reason.UNAVAILABLE),
                 Arguments.of("searchIssues", 401, Reason.UNAUTHORIZED),
+                Arguments.of("searchIssues", 404, Reason.NOT_FOUND),
+                Arguments.of("searchIssues", 503, Reason.UNAVAILABLE),
                 Arguments.of("searchIssues", 0, Reason.UNAVAILABLE),
                 Arguments.of("addNote", 401, Reason.UNAUTHORIZED),
                 Arguments.of("addNote", 404, Reason.NOT_FOUND),
+                Arguments.of("addNote", 500, Reason.UNAVAILABLE),
                 Arguments.of("addNote", 0, Reason.UNAVAILABLE),
+                Arguments.of("setWeight", 401, Reason.UNAUTHORIZED),
+                Arguments.of("setWeight", 403, Reason.UNAUTHORIZED),
                 Arguments.of("setWeight", 404, Reason.NOT_FOUND),
                 Arguments.of("setWeight", 500, Reason.UNAVAILABLE),
                 Arguments.of("setWeight", 0, Reason.UNAVAILABLE));
+    }
+
+    static Stream<Arguments> invalidResponses() {
+        return Stream.of(
+                Arguments.of("searchIssues", json(200, "[]").withHeader("x-next-page", "abc")),
+                Arguments.of("searchIssues", html(200, "<html>maintenance</html>")),
+                Arguments.of("searchIssues", json(200, "{not json")),
+                Arguments.of("loadIssue", html(200, "<html>maintenance</html>")),
+                Arguments.of("loadIssue", json(200, "{not json")));
+    }
+
+    @ParameterizedTest(name = "{0} with an invalid response fails with UNAVAILABLE")
+    @MethodSource("invalidResponses")
+    void mapsInvalidResponsesToUnavailable(String operation, ResponseDefinitionBuilder response) {
+        gitlab.stubFor(stubFor(operation).willReturn(response));
+
+        GitLabException e = assertThrows(GitLabException.class, () -> call(operation));
+
+        assertEquals(Reason.UNAVAILABLE, e.reason());
+        assertTrue(e.getMessage().contains(operation), e.getMessage());
+        assertFalse(e.getMessage().contains("maintenance"), e.getMessage());
     }
 
     @ParameterizedTest(name = "{0} with status {1} (0 = timeout) fails with {2}")
@@ -227,6 +253,13 @@ class GitLabClientTest {
         return aResponse()
                 .withStatus(status)
                 .withHeader("Content-Type", "application/json")
+                .withBody(body);
+    }
+
+    private static ResponseDefinitionBuilder html(int status, String body) {
+        return aResponse()
+                .withStatus(status)
+                .withHeader("Content-Type", "text/html")
                 .withBody(body);
     }
 }

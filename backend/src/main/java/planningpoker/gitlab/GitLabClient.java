@@ -78,7 +78,7 @@ public class GitLabClient {
         } catch (WebApplicationException e) {
             throw fromStatus(operation, e.getResponse().getStatus());
         } catch (ProcessingException e) {
-            throw new GitLabException(operation, e);
+            throw new GitLabException(operation, "no response or unreadable response", e);
         }
     }
 
@@ -103,7 +103,11 @@ public class GitLabClient {
         if (value == null || value.isBlank()) {
             return Optional.empty();
         }
-        return Optional.of(Integer.valueOf(value.trim()));
+        try {
+            return Optional.of(Integer.valueOf(value.trim()));
+        } catch (NumberFormatException e) {
+            throw new GitLabException("searchIssues", "invalid header " + NEXT_PAGE_HEADER, e);
+        }
     }
 
     private record JacksonContext(ObjectMapper mapper) implements ContextResolver<ObjectMapper> {
@@ -114,11 +118,22 @@ public class GitLabClient {
         }
     }
 
-    private record PrivateTokenFilter(String token) implements ClientRequestFilter {
+    private static final class PrivateTokenFilter implements ClientRequestFilter {
+
+        private final String token;
+
+        private PrivateTokenFilter(String token) {
+            this.token = token;
+        }
 
         @Override
         public void filter(ClientRequestContext context) {
             context.getHeaders().putSingle(TOKEN_HEADER, token);
+        }
+
+        @Override
+        public String toString() {
+            return "PrivateTokenFilter";
         }
     }
 }
