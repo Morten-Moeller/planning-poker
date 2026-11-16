@@ -1,14 +1,14 @@
 ---
 id: "0003"
 title: GitLab-Client (M4)
-status: Review
+status: done
 risk: high
 adrs: ["0001"]
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
-pr: ""
-note: freigegeben in der Session
+pr: "#2"
+note: alle Kriterien erfüllt
 ---
 
 # GitLab-Client (M4)
