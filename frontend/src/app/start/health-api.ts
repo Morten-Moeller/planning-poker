@@ -1,10 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import type { components } from '../api/schema';
 
-export interface HealthStatus {
-  status: string;
-}
+export type HealthStatus = components['schemas']['HealthStatus'];
 
 @Injectable({ providedIn: 'root' })
 export class HealthApi {

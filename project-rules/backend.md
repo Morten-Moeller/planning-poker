@@ -30,8 +30,17 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   `SessionRegistry` and is never called by `session`.
 - No layering inside a package: a resource class, the domain types and the registry live next to
   each other. No repository or service interface without a second implementation (A1.2).
-- DTOs are Java records in the package of their resource. They are the source of the contract
-  (`contracts/README.md`, from spec 0002).
+- DTOs are Java records in the package `api` below their resource (`planningpoker.session.api`:
+  requests, responses, `SessionView`). They are the source of the contract (`contracts/README.md`):
+  `quarkus-smallrye-openapi` writes `backend/target/openapi/openapi.yaml` on every build, `make
+  contracts` copies it to `contracts/api/openapi.yaml` and generates the frontend types. The
+  WebSocket messages live in `backend/src/main/resources/META-INF/openapi.yaml`, which smallrye
+  merges into the document.
+- Every DTO carries `@Schema` with a description and `requiredProperties`; a field that may be
+  `null` carries `@Schema(nullable = true)` alone, without a description, so the document keeps a
+  clean `anyOf` with the referenced schema. The enums `Card`, `Phase`, `Role` live in
+  `planningpoker.session`; `Card` serializes over `@JsonValue` to the wire values of the deck.
+- `make contracts` after every DTO change; `make drift` fails otherwise.
 
 ## Data
 
@@ -47,11 +56,14 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
 
 ## Errors, logging, configuration
 
-- Errors: one exception mapper writes RFC 9457 `application/problem+json` with a stable
-  `errorCode` (`VALIDATION_ERROR`, `INVALID_CARD`, `UNAUTHORIZED`, `FORBIDDEN_ROLE`,
-  `SESSION_NOT_FOUND`, `ISSUE_NOT_FOUND`, `NAME_TAKEN`, `INVALID_STATE`, `GITLAB_ERROR`). Domain
-  code throws typed exceptions; only the boundary maps them to HTTP (A3.5). GitLab error texts
-  are never forwarded.
+- Errors: `planningpoker.platform.ErrorCode` holds every stable `errorCode` with its HTTP status
+  (`VALIDATION_ERROR`, `INVALID_CARD`, `UNAUTHORIZED`, `FORBIDDEN_ROLE`, `SESSION_NOT_FOUND`,
+  `ISSUE_NOT_FOUND`, `NAME_TAKEN`, `INVALID_STATE`, `GITLAB_ERROR`; `NOT_IMPLEMENTED` until the
+  last stub is replaced). Code throws `ApiException(ErrorCode, detail)`; `ApiExceptionMapper`
+  writes RFC 9457 `application/problem+json` (`ProblemDetail`) and unwraps an `ApiException`
+  that Jackson wrapped while reading a body (unknown card). `ValidationExceptionMapper` maps
+  Bean Validation failures to 400 `VALIDATION_ERROR`. Domain code throws typed exceptions; only
+  the boundary maps them to HTTP (A3.5). GitLab error texts are never forwarded.
 - Logging: JBoss Logging through `quarkus-logging-json`, JSON lines on the console (`dev` profile
   plain text). Never logged: the GitLab token, participant tokens, hidden card values.
 - Configuration: `backend/src/main/resources/application.properties` holds every

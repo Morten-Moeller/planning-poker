@@ -1,0 +1,89 @@
+openapi: 3.1.0
+info:
+  title: Planning Poker API
+  version: 1.0.0
+  description: |
+    Commands go over REST under /api and answer without state. The state reaches every participant
+    over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
+    receiver. Every WebSocket message has the envelope { "type": "...", "payload": { ... } }; the
+    message schemas are WebSocketAuth, WebSocketSessionState, WebSocketRoundAllVoted,
+    WebSocketError, WebSocketPing and WebSocketPong under components.schemas. The first message of
+    the client is auth with the participant token, within 5 seconds; the token is never part of
+    the URL. Errors of the REST API are ProblemDetail (RFC 9457) with a stable errorCode.
+components:
+  schemas:
+    WebSocketAuth:
+      type: object
+      description: First message of the client, within 5 seconds after the connection opened.
+      required: [type, payload]
+      properties:
+        type:
+          type: string
+          enum: [auth]
+        payload:
+          type: object
+          required: [token]
+          properties:
+            token:
+              type: string
+              description: Bearer token of the participant from the create or join response.
+              examples: [a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6]
+    WebSocketSessionState:
+      type: object
+      description: Full snapshot of the session; after a successful auth and after every change.
+      required: [type, payload]
+      properties:
+        type:
+          type: string
+          enum: [session.state]
+        payload:
+          $ref: "#/components/schemas/SessionView"
+    WebSocketRoundAllVoted:
+      type: object
+      description: Every connected developer has voted; only to the scrum master, once per round completion.
+      required: [type, payload]
+      properties:
+        type:
+          type: string
+          enum: [round.allVoted]
+        payload:
+          type: object
+          required: [roundNumber]
+          properties:
+            roundNumber:
+              type: integer
+              format: int32
+              examples: [1]
+    WebSocketError:
+      type: object
+      description: Sent when auth failed; the server closes the connection afterwards.
+      required: [type, payload]
+      properties:
+        type:
+          type: string
+          enum: [error]
+        payload:
+          type: object
+          required: [errorCode, detail]
+          properties:
+            errorCode:
+              $ref: "#/components/schemas/ErrorCode"
+            detail:
+              type: string
+              examples: [Unknown token.]
+    WebSocketPing:
+      type: object
+      description: Sent by the client every 30 seconds; the server answers with pong.
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [ping]
+    WebSocketPong:
+      type: object
+      description: Answer of the server to ping.
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [pong]

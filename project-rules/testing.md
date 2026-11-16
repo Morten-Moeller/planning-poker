@@ -36,7 +36,7 @@ change touches.
 | Source path | Unit and integration | End-to-end |
 |---|---|---|
 | `backend/src/main/java/planningpoker/platform/` | `backend/src/test/java/planningpoker/platform/` | `frontend/e2e/health.spec.ts` |
-| `backend/src/main/java/planningpoker/session/` | `backend/src/test/java/planningpoker/session/` (from spec 0004) | flows of the session room (from spec 0011) |
+| `backend/src/main/java/planningpoker/session/` | `backend/src/test/java/planningpoker/session/` (contract and stub tests from spec 0002, domain from spec 0004) | flows of the session room (from spec 0011) |
 | `backend/src/main/java/planningpoker/gitlab/` | `backend/src/test/java/planningpoker/gitlab/` (from spec 0003) | – |
 | `backend/src/main/java/planningpoker/realtime/` | `backend/src/test/java/planningpoker/realtime/` (from spec 0009) | flows of the session room (from spec 0011) |
 | `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, create and join flows (from spec 0011) |
