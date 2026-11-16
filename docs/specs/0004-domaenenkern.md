@@ -1,7 +1,7 @@
 ---
 id: "0004"
 title: Domänenkern (M2)
-status: approved
+status: Review
 risk: high
 adrs: ["0002", "0003"]
 owner: Morten Möller
