@@ -39,6 +39,21 @@ h3 {
   border-radius: var(--mat-sys-corner-medium);
 }
 
+.vote.outlier {
+  border-color: var(--mat-sys-primary);
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.outlier-label {
+  font: var(--mat-sys-label-large);
+}
+
+.outlier-hint {
+  margin: 0;
+  font: var(--mat-sys-body-large);
+}
+
 .card {
   font: var(--mat-sys-title-large);
 }

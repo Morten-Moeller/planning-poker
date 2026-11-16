@@ -1,7 +1,7 @@
 ---
 id: "0017"
 title: Ausreißer (M14, O-02)
-status: approved
+status: Review
 risk: medium
 adrs: []
 owner: Morten Möller

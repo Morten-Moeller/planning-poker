@@ -5,6 +5,7 @@ import { ApiService } from '../api/api.service';
 import { SessionStore } from '../api/session-store';
 import { cardName, cardSymbol } from './cards';
 import { ConfirmResultData, ConfirmResultDialog } from './confirm-result-dialog';
+import { outlierCards } from './outliers';
 import { averageText } from './round-stats';
 
 @Component({
@@ -24,6 +25,7 @@ export class RoundResult {
   protected readonly name = cardName;
   protected readonly round = computed(() => this.store.round());
   protected readonly votes = computed(() => this.round()?.votes ?? []);
+  protected readonly outliers = computed(() => outlierCards(this.votes()));
   protected readonly stats = computed(() => this.round()?.stats ?? null);
   protected readonly average = computed(() => averageText(this.stats()?.average ?? null));
   protected readonly confirming = computed(() => this.round()?.confirming === true);
