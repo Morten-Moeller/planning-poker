@@ -1,9 +1,9 @@
 ---
 id: "0003"
 title: GitLab-Client (M4)
-status: approved
+status: Review
 risk: high
-adrs: []
+adrs: ["0001"]
 owner: Morten Möller
 created: 2026-11-16
 updated: 2026-11-16
@@ -129,6 +129,7 @@ Contracts zu regenerieren: keine.
 
 ## Offene Fragen
 
+- [x] Welches ADR verlinkt die Spec bei risk high? → ADR 0001 (REST-Client ist dort festgelegt, die Spec folgt ihr nur); kein neues ADR. (Morten Möller, 2026-11-16)
 - [x] Ergänzt der Schlüssel `planningpoker.gitlab.timeout` (Standard `10s`) die Tabelle in Abschnitt 4.7 des Umsetzungsplans? → Ja; die Person trägt ihn in `docs/umsetzungsplan.md` nach, 0007 ergänzt die README-Tabelle. (Morten Möller, 2026-11-16)
 
 ## Verifikationsplan
