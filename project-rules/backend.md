@@ -103,9 +103,26 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   before a client uses it (from spec 0002). Paths under `/api`, JSON, camelCase fields, enums in
   UPPER_SNAKE_CASE, times in RFC 3339 with offset (A2.2).
 - Authentication: `Authorization: Bearer <token>` on every call except create and join; the
-  WebSocket takes the token in its first message `auth`, never in the URL (ADR 0003).
-- Authorisation: the role comes from the token (A5.1); a role check per endpoint answers 403
-  `FORBIDDEN_ROLE`. The frontend never sends a role.
+  WebSocket takes the token in its first message `auth`, never in the URL (ADR 0003). A resource
+  method carries `@Authenticated` (`planningpoker.platform`): `BearerTokenFilter` (priority
+  `AUTHENTICATION`, no business terms) reads the header and answers 401 `UNAUTHORIZED` without a
+  bearer token; `ActorFilter` (`planningpoker.session`, priority `AUTHORIZATION`) resolves the
+  path parameter `id` and the token through `SessionRegistry.read` to an `Actor(sessionId,
+  participantId, role)`: 404 `SESSION_NOT_FOUND` for an unknown session, 401 for a token that
+  belongs to no participant of that session. The method reads the actor with
+  `ActorFilter.actorOf(context)`. The filter injects `Instance<SessionRegistry>` and resolves it
+  per request: Quarkus creates the REST filters at start before the config mappings
+  (`SessionConfig`) are registered, so a direct injection fails the boot.
+- Authorisation: the role comes from the token (A5.1); `@RequiresRole(Role)` on the method is
+  checked by `ActorFilter` and answers 403 `FORBIDDEN_ROLE` before the method runs; the domain
+  checks the role again (A1.4). The frontend never sends a role.
+- Snapshots: `SessionViewMapper.toView(session, receiverId)` builds the `SessionView` under the
+  lock of `SessionRegistry.read` with the filter rules of the plan (4.6): no foreign card before
+  the reveal, `myVote` only for the receiver, `preselectedIssueIid` only for the scrum master,
+  `activeIssue` and `round` `null` in `LOBBY`, history newest first, `revealedAt` in UTC. Tokens
+  never leave the domain: `Participant.token` has no view field.
+- `SessionException` reaches the client through `SessionExceptionMapper` as
+  `application/problem+json` with its `errorCode` and status.
 - Commands answer 204, or 201 with the new ids; the new state reaches clients through the
   WebSocket snapshot (ADR 0004).
 - Formatting: palantir-java-format through Spotless (`make lint-backend`, `make format`).

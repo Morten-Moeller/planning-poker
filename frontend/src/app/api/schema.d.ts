@@ -709,6 +709,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
+            /** @description UNAUTHORIZED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
             /** @description FORBIDDEN_ROLE */
             403: {
                 headers: {
@@ -718,7 +727,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description ISSUE_NOT_FOUND */
+            /** @description ISSUE_NOT_FOUND, SESSION_NOT_FOUND */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -773,8 +782,26 @@ export interface operations {
                     "application/json": components["schemas"]["IssueListResponse"];
                 };
             };
+            /** @description UNAUTHORIZED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
             /** @description FORBIDDEN_ROLE */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description SESSION_NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -879,8 +906,26 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
+            /** @description UNAUTHORIZED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
             /** @description FORBIDDEN_ROLE */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description SESSION_NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -927,8 +972,26 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description UNAUTHORIZED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
             /** @description FORBIDDEN_ROLE */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description SESSION_NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -966,8 +1029,26 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description UNAUTHORIZED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
             /** @description FORBIDDEN_ROLE */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description SESSION_NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1018,8 +1099,26 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
+            /** @description UNAUTHORIZED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
             /** @description FORBIDDEN_ROLE */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description SESSION_NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
