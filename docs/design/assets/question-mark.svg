@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none" role="img" aria-label="Unsicher / nicht einschätzbar">
+  <!-- Transparent canvas. Inline this SVG to inherit currentColor and CSS variables. -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <!-- Floating uncertainty, without absence/time symbols -->
+    <ellipse cx="120" cy="201" rx="52" ry="8" fill="currentColor" opacity=".12"/>
+    <path d="M60 104c-9 16-10 38-2 53M179 111c8-15 8-30 1-44" stroke="currentColor" stroke-width="3" opacity=".35"/>
+    <!-- Offset silhouette gives the question mark a soft sculpted depth -->
+    <path d="M91 84c0-20 15-32 35-32 23 0 38 13 38 32 0 17-11 25-25 34-10 6-14 13-14 24" stroke="var(--poker-ink, #241438)" stroke-width="31" transform="translate(1 6)"/>
+    <path d="M86 79c0-20 15-32 35-32 23 0 38 13 38 32 0 17-11 25-25 34-10 6-14 13-14 24" stroke="var(--poker-ink, #241438)" stroke-width="30"/>
+    <path d="M86 79c0-20 15-32 35-32 23 0 38 13 38 32 0 17-11 25-25 34-10 6-14 13-14 24" stroke="var(--poker-body, #503079)" stroke-width="22"/>
+    <path d="M86 72c3-13 15-21 30-21" stroke="var(--poker-soft, #DDD0F7)" stroke-width="5"/>
+    <path d="M150 92c-4 7-11 12-20 18-9 6-13 13-14 21" stroke="currentColor" stroke-width="5"/>
+    <circle cx="123" cy="179" r="16" fill="var(--poker-ink, #241438)"/>
+    <circle cx="120" cy="174" r="14" fill="var(--poker-body, #503079)" stroke="var(--poker-ink, #241438)" stroke-width="4"/>
+    <path d="M115 169a7 7 0 0 1 8-2" stroke="var(--poker-soft, #DDD0F7)" stroke-width="4"/>
+    <path d="m184 143 6 10-6 10-6-10z" fill="currentColor"/>
+    <path d="M53 57v12m-6-6h12" stroke="currentColor" stroke-width="3"/>
+    <circle cx="70" cy="181" r="3" fill="currentColor" opacity=".65"/>
+  </g>
+</svg>

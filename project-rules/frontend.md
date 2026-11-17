@@ -113,6 +113,24 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   Colors, spacing and type come from the `--mat-sys-*` system variables, never inline values
   (A7.4). Token values are the design team's decision; report, do not change, unless a design
   specification names the value.
+- Theme „Werkbank“ (spec 0027, design files in `docs/design/`): `mat.theme` with the blue palette
+  and `theme-type: color-scheme`; `mat.theme-overrides` sets the fixed values of One Light and,
+  under `prefers-color-scheme: dark`, of One Dark. There is no switch in the UI. Own CSS variables next
+  to `--mat-sys-*`: `--app-on-surface-muted`, `--app-success`, `--app-warning` with their
+  containers, `--app-font-mono`, `--app-label-section`, `--app-value-card`, `--app-value-id`,
+  `--app-space-xs` to `--app-space-3xl` and `--app-corner-control`. Buttons, button toggles and
+  dialogs take their shape from component overrides in `styles.scss`.
+- Fonts: IBM Plex Sans for text (type scale of the design system in `styles.scss`), IBM Plex
+  Mono (`--app-font-mono`) for values such as session id, issue numbers, remaining time and card
+  values; both from Google Fonts in `index.html`, next to Material Symbols.
+- Focus: a global rule in `styles.scss` draws a 3 px outline in `--mat-sys-primary` with 3 px
+  offset on `:focus-visible` (not on inputs and selects inside form fields); filled buttons add a
+  ring in `--mat-sys-surface`. Components do not remove the outline.
+- Toolbar (`shell`): 56 px, `surface-container-low` with a divider, title; in the room the
+  session id (`toolbar-session-id`, mono) and „Name · Rolle“ (`toolbar-me`, hidden below 600 px)
+  from the `SessionStore`.
+- Session page grid: a side column of 320 px and a main column (32/48 px padding) from 720 px;
+  below that one column with the side column under the main area.
 - Styling: SCSS per component, templates in separate `.html` files, new control flow
   (`@if`, `@for`, `@switch`).
 - i18n: every user-facing string carries an `i18n` attribute with an id (`@@feature.key`);
