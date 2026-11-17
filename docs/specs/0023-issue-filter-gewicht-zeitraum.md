@@ -1,14 +1,14 @@
 ---
 id: "0023"
 title: Issue-Liste mit Gewicht und Filtern
-status: Review
+status: done
 risk: high
 adrs: ["0009"]
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#23"
+note: alle Kriterien erfüllt; Browser gegen das echte Projekt 88998176 nicht in dieser Session
 ---
 
 # Issue-Liste mit Gewicht und Filtern
