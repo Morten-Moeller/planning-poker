@@ -145,13 +145,60 @@ test('a taken name shows the message on the join page', async ({ page, browser }
   await developer.context().close();
 });
 
-test('an unknown session id shows the message on the join page', async ({ page }) => {
+test('an unknown session id replaces the join form with the state session not found', async ({
+  page,
+}) => {
   await page.goto('/session/ZZZZ2222/join');
   await page.getByTestId('join-name').fill('Ben');
   await page.getByTestId('join-submit').click();
 
-  await expect(page.getByTestId('join-error')).toHaveText(
-    'Die Sitzung wurde nicht gefunden oder ist abgelaufen.',
+  await expect(page.getByTestId('join-not-found')).toContainText('Sitzung nicht gefunden');
+  await expect(page.getByTestId('join-not-found')).toContainText(
+    'Der Link ist abgelaufen oder falsch.',
   );
+  await expect(page.getByTestId('join-form')).toHaveCount(0);
   await expect(page).toHaveURL(/\/session\/ZZZZ2222\/join$/);
+
+  await page.getByTestId('join-not-found-home').click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByTestId('create-form')).toBeVisible();
 });
+
+async function expectNoHorizontalScroll(page: Page): Promise<void> {
+  const size = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }));
+  expect(size.scrollWidth, JSON.stringify(size)).toBeLessThanOrEqual(size.clientWidth);
+}
+
+for (const colorScheme of ['light', 'dark'] as const) {
+  test.describe(`at 375 px in ${colorScheme}`, () => {
+    test.use({ viewport: { width: 375, height: 812 }, colorScheme });
+
+    test('the start page stacks the panels and the join page fits the width', async ({ page }) => {
+      await page.goto('/');
+      await expect(page.getByTestId('health-status')).toHaveText('Backend erreichbar');
+
+      const create = await page.getByTestId('create-form').boundingBox();
+      const join = await page.getByTestId('join-form').boundingBox();
+      expect(create).not.toBeNull();
+      expect(join).not.toBeNull();
+      expect(join!.y).toBeGreaterThanOrEqual(create!.y + create!.height);
+      expect(Math.abs(join!.x - create!.x)).toBeLessThan(1);
+      await expectNoHorizontalScroll(page);
+
+      await page.getByTestId('join-session-id-input').fill('K7P2QX');
+      await page.getByTestId('join-session-id-submit').click();
+      await expect(page.getByTestId('join-session-id-error')).toHaveText(
+        'Die Session-ID hat 8 Zeichen (6 eingegeben)',
+      );
+      await expectNoHorizontalScroll(page);
+
+      await page.goto('/session/K7P2QX9M/join');
+      await expect(page.getByTestId('join-session-id')).toHaveText('K7P2QX9M');
+      await expect(page.getByTestId('join-form')).toBeVisible();
+      await expectNoHorizontalScroll(page);
+    });
+  });
+}

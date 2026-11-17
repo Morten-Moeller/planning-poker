@@ -1,13 +1,14 @@
-import { Component, DestroyRef, WritableSignal, inject, signal } from '@angular/core';
+import { Component, DestroyRef, WritableSignal, inject, linkedSignal, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 import {
   Observable,
+  Subject,
   catchError,
   combineLatest,
   debounceTime,
@@ -73,6 +74,7 @@ interface SearchQuery {
   ],
   templateUrl: './start-page.html',
   styleUrl: './start-page.scss',
+  providers: [{ provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } }],
 })
 export class StartPage {
   private readonly healthApi = inject(HealthApi);
@@ -81,13 +83,27 @@ export class StartPage {
   private readonly errorState = inject(ErrorState);
   private readonly router = inject(Router);
 
+  private readonly healthChecks = new Subject<void>();
+
   protected readonly backendReachable = toSignal(
-    this.healthApi.status().pipe(
-      map((health) => health.status === 'UP'),
-      catchError(() => of(false)),
+    this.healthChecks.pipe(
+      startWith(undefined),
+      switchMap(() =>
+        this.healthApi.status().pipe(
+          map((health): boolean | undefined => health.status === 'UP'),
+          catchError(() => of(false)),
+          startWith(undefined),
+        ),
+      ),
     ),
     { initialValue: undefined },
   );
+
+  protected readonly backendDown = linkedSignal<boolean | undefined, boolean>({
+    source: this.backendReachable,
+    computation: (reachable, previous) =>
+      reachable === undefined ? (previous?.value ?? false) : !reachable,
+  }).asReadonly();
 
   protected readonly createForm = new FormGroup({
     name: new FormControl('', {
@@ -110,6 +126,11 @@ export class StartPage {
       validators: [Validators.required, Validators.pattern(SESSION_ID_PATTERN)],
     }),
   });
+
+  protected readonly sessionIdLength = toSignal(
+    this.joinForm.controls.sessionId.valueChanges.pipe(map((value) => value.length)),
+    { initialValue: 0 },
+  );
 
   protected readonly createError = signal<string | null>(null);
   protected readonly creating = signal(false);
@@ -193,8 +214,15 @@ export class StartPage {
     return { items: [], searched: true, error: message };
   }
 
+  protected checkBackend(): void {
+    this.healthChecks.next();
+  }
+
   protected createSession(): void {
     this.createError.set(null);
+    if (this.backendDown()) {
+      return;
+    }
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
       return;
@@ -232,6 +260,9 @@ export class StartPage {
   }
 
   protected joinBySessionId(): void {
+    if (this.backendDown()) {
+      return;
+    }
     if (this.joinForm.invalid) {
       this.joinForm.markAllAsTouched();
       return;

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#16181d;}a{color:#61afef;}a:hover{color:#8cc4f5;}*{box-sizing:border-box;}</style>
+</helmet>
+<div style="padding:64px;background:#16181d;width:3064px;display:flex;flex-direction:column;gap:72px;font-family:'IBM Plex Sans',sans-serif;color:#abb2bf;">
+<header style="display:flex;flex-direction:column;gap:12px;max-width:960px;">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.08em;color:#9da5b4;">PLANNING POKER · WERKBANK · EINSTIEG</span>
+<h1 style="margin:0;font-size:40px;font-weight:600;color:#e6e9ef;">Startseite und Beitrittsseite</h1>
+<p style="margin:0;font-size:17px;line-height:1.6;">Hell/Dunkel über die Tweaks. Weiter: <a href="Sitzungsraum.dc.html">Sitzungsraum</a> · <a href="Design-System.dc.html">Design-System</a></p>
+</header>
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<section style="display:flex;flex-direction:column;gap:28px;">
+<div style="display:flex;align-items:baseline;gap:16px;border-bottom:1px solid #2c313a;padding-bottom:14px;"><span style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#9da5b4;">{{ g.no }}</span><h2 style="margin:0;font-size:28px;font-weight:600;color:#e6e9ef;">{{ g.title }}</h2></div>
+<div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;">
+<sc-for list="{{ g.screens }}" as="s" hint-placeholder-count="2">
+<div id="{{ s.id }}" style="display:flex;flex-direction:column;gap:14px;">
+<div style="display:flex;align-items:baseline;gap:12px;"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;background:#3e4451;color:#e6e9ef;padding:3px 8px;border-radius:4px;">{{ s.id }}</span><span style="font-size:18px;font-weight:600;color:#e6e9ef;">{{ s.title }}</span></div>
+<div style="display:flex;gap:40px;align-items:flex-start;">
+<sc-for list="{{ s.frames }}" as="f" hint-placeholder-count="1">
+<div style="width:{{ f.w }};min-height:{{ f.h }};border-radius:12px;overflow:hidden;border:1px solid #0f1115;display:flex;flex-direction:column;">
+<dc-import name="Einstieg" theme="{{ f.theme }}" page="{{ s.page }}" state="{{ s.state }}" mobile="{{ s.mobile }}" style="flex:1;display:flex;flex-direction:column;" hint-size="100%,860px"></dc-import>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;,&quot;both&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'|'both'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const mode = this.props.mode ?? 'dark';
+    const themes = mode === 'both' ? ['dark','light'] : [mode];
+    const S = (id, title, page, state, mobile) => ({ id, title, page, state, mobile: !!mobile, frames: themes.map(th => ({ theme: th, w: mobile ? '375px' : '1440px', h: mobile ? '812px' : '860px' })) });
+    return { groups: [
+      { no:'01', title:'Startseite', screens: [
+        S('ST-OK', 'Backend erreichbar, Projekt-Autocomplete offen', 'start', 'projAc'),
+        S('ST-ISSUE', 'Issue-Autocomplete „#42 …“', 'start', 'issueAc'),
+        S('ST-FEHLER', 'Fehler am Formular', 'start', 'errors'),
+        S('ST-MAX', 'Höchstzahl erreicht', 'start', 'max'),
+        S('ST-DOWN', 'Backend nicht erreichbar', 'start', 'down'),
+        S('ST-LEER', 'Leerzustand „Keine Projekte gefunden“', 'start', 'projEmpty')
+      ]},
+      { no:'02', title:'Beitrittsseite (geteilter Link)', screens: [
+        S('BT-OK', 'Name eingeben', 'join', 'ok'),
+        S('BT-NAME', 'Name schon vergeben', 'join', 'taken'),
+        S('BT-NF', 'Sitzung nicht gefunden', 'join', 'notfound')
+      ]},
+      { no:'03', title:'Mobil (375 px)', screens: [
+        S('M-ST', 'Startseite, Backend wird geprüft', 'start', 'checking', true),
+        S('M-ST-ISSUE', 'Leerzustand „Keine Issues gefunden“', 'start', 'issueEmpty', true),
+        S('M-BT', 'Beitritt', 'join', 'ok', true),
+        S('M-BT-NAME', 'Name schon vergeben', 'join', 'taken', true)
+      ]}
+    ]};
+  }
+}
+</script>
+</body>
+</html>

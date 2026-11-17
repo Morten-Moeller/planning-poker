@@ -25,3 +25,17 @@ test('chooses the project by name and the issue by title and opens the session w
   await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
   await expect(page.getByTestId('issue-preview-iid')).toHaveText('#43');
 });
+
+test('shows the empty state of the issue search and keeps a typed issue number', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByTestId('create-project').fill('1234');
+
+  await page.getByTestId('create-issue').pressSequentially('kein Treffer');
+  await expect(page.getByTestId('create-issue-empty')).toHaveText('Keine Issues gefunden');
+
+  await page.getByTestId('create-issue').fill('42');
+  await expect(page.getByTestId('create-issue-option')).toHaveCount(0);
+  await expect(page.getByTestId('create-issue')).toHaveValue('42');
+});

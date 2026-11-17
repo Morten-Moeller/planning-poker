@@ -2,11 +2,11 @@ import { Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
-import type { ErrorCode } from '../api/api-error';
+import { ApiError, type ErrorCode } from '../api/api-error';
 import { ApiService } from '../api/api.service';
 import { formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
@@ -22,9 +22,10 @@ const JOIN_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
 
 @Component({
   selector: 'app-join-page',
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule],
   templateUrl: './join-page.html',
   styleUrl: './join-page.scss',
+  providers: [{ provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } }],
 })
 export class JoinPage {
   private readonly route = inject(ActivatedRoute);
@@ -47,6 +48,7 @@ export class JoinPage {
 
   protected readonly joinError = signal<string | null>(null);
   protected readonly joining = signal(false);
+  protected readonly sessionNotFound = signal(false);
 
   protected join(): void {
     this.joinError.set(null);
@@ -64,8 +66,18 @@ export class JoinPage {
       error: (error: unknown) => {
         this.joining.set(false);
         const message = formErrorMessage(error, JOIN_FORM_ERRORS);
-        if (message !== null) {
-          this.errorState.clear();
+        if (message === null) {
+          return;
+        }
+        this.errorState.clear();
+        const code = error instanceof ApiError ? error.errorCode : null;
+        if (code === 'SESSION_NOT_FOUND') {
+          this.sessionNotFound.set(true);
+        } else if (code === 'NAME_TAKEN') {
+          const name = this.joinForm.controls.name;
+          name.setErrors({ nameTaken: message });
+          name.markAsTouched();
+        } else {
           this.joinError.set(message);
         }
       },

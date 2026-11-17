@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>body{margin:0;}*{box-sizing:border-box;}button{white-space:nowrap;}</style>
+</helmet>
+<div style="width:100%;min-height:100%;background:{{ t.bg }};color:{{ t.onv }};font-family:'IBM Plex Sans',sans-serif;font-size:15px;line-height:1.5;display:flex;flex-direction:column;">
+<header style="height:56px;flex:none;display:flex;align-items:center;gap:14px;padding:0 {{ padX }};background:{{ t.low }};border-bottom:1px solid {{ t.line }};">
+<div style="width:20px;height:28px;border-radius:4px;background-color:{{ t.pri }};background-image:repeating-linear-gradient(45deg,{{ t.patC }} 0 2px,transparent 2px 8px);"></div>
+<span style="font-size:17px;font-weight:600;color:{{ t.on }};">Planning Poker</span>
+</header>
+
+<sc-if value="{{ isStart }}" hint-placeholder-val="{{ true }}">
+<main style="flex:1;width:100%;max-width:1080px;margin:0 auto;padding:{{ mainPad }};display:flex;flex-direction:column;gap:{{ gapL }};">
+<div style="display:flex;flex-direction:column;gap:16px;">
+<div role="status" style="display:flex;align-items:center;gap:8px;font-size:14px;color:{{ st.fg }};">
+<span style="font-family:'IBM Plex Mono',monospace;font-weight:600;">{{ st.icon }}</span><span>{{ st.text }}</span>
+</div>
+<sc-if value="{{ down }}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 16px;border-radius:8px;background:{{ t.errC }};color:{{ t.onErrC }};"><span style="flex:1 1 240px;">Ohne Backend lassen sich keine Sitzungen erstellen oder betreten.</span><button style="height:36px;padding:0 14px;border-radius:8px;border:1px solid {{ t.onErrC }};background:transparent;color:{{ t.onErrC }};font:500 14px 'IBM Plex Sans',sans-serif;">↻ Erneut prüfen</button></div>
+</sc-if>
+<h1 style="margin:8px 0 0;font-size:{{ h1 }};line-height:1.15;font-weight:600;color:{{ t.on }};letter-spacing:-.01em;">Issues gemeinsam schätzen</h1>
+<p style="margin:0;font-size:17px;line-height:1.6;max-width:560px;">Der Scrum Master erstellt die Sitzung und teilt den Link. Das Team tritt mit Namen bei und schätzt verdeckt.</p>
+</div>
+<div style="display:grid;grid-template-columns:{{ cols }};gap:24px;align-items:start;">
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:{{ cardPad }};background:{{ t.low }};border:1px solid {{ t.ov }};border-radius:12px;">
+<div style="display:flex;flex-direction:column;gap:2px;"><h2 style="margin:0;font-size:20px;font-weight:600;color:{{ t.on }};">Sitzung erstellen</h2><span style="font-size:14px;color:{{ t.muted }};">Für den Scrum Master</span></div>
+<sc-if value="{{ formErr }}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="display:flex;gap:10px;padding:12px 14px;border-radius:8px;background:{{ t.errC }};color:{{ t.onErrC }};font-size:14px;line-height:1.5;"><span style="font-weight:600;">⚠</span><span>{{ formErrText }}</span></div>
+</sc-if>
+<div style="display:flex;flex-direction:column;gap:4px;">
+<div style="position:relative;height:52px;display:flex;align-items:center;padding:0 14px;border:1px solid {{ t.outline }};border-radius:8px;background:{{ t.bg }};"><span style="position:absolute;top:-9px;left:10px;padding:0 4px;background:{{ t.low }};font-size:12px;color:{{ t.muted }};">Dein Name</span><span style="color:{{ t.on }};">Anna</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;position:relative;z-index:3;">
+<div style="position:relative;height:52px;display:flex;align-items:center;gap:8px;padding:0 14px;border:{{ projBorder }};border-radius:8px;background:{{ t.bg }};"><span style="position:absolute;top:-9px;left:10px;padding:0 4px;background:{{ t.low }};font-size:12px;color:{{ projLabel }};">GitLab-Projekt</span><span style="flex:1;color:{{ t.on }};">{{ projValue }}</span><span style="color:{{ t.muted }};">▾</span></div>
+<span style="font-size:12px;color:{{ t.muted }};padding-left:14px;">Name, Pfad oder ID. Eingabe von Hand möglich.</span>
+<sc-if value="{{ projAc }}" hint-placeholder-val="{{ false }}">
+<div role="listbox" style="position:absolute;top:54px;left:0;right:0;background:{{ t.dlg }};border:1px solid {{ t.ov }};border-radius:8px;box-shadow:0 12px 32px {{ t.shadow }};overflow:hidden;">
+<sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
+<div role="option" style="display:flex;flex-direction:column;padding:10px 14px;background:{{ p.bg }};">
+<span style="color:{{ t.on }};font-weight:500;">{{ p.name }}</span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ t.muted }};">{{ p.path }} · {{ p.id }}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ projEmpty }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="position:absolute;top:54px;left:0;right:0;padding:14px;background:{{ t.dlg }};border:1px solid {{ t.ov }};border-radius:8px;box-shadow:0 12px 32px {{ t.shadow }};color:{{ t.muted }};">Keine Projekte gefunden</div>
+</sc-if>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;position:relative;z-index:2;">
+<div style="position:relative;height:52px;display:flex;align-items:center;gap:8px;padding:0 14px;border:{{ issueBorder }};border-radius:8px;background:{{ t.bg }};"><span style="position:absolute;top:-9px;left:10px;padding:0 4px;background:{{ t.low }};font-size:12px;color:{{ issueLabel }};">Issue-Nummer</span><span style="flex:1;color:{{ t.on }};">{{ issueValue }}</span><span style="color:{{ t.muted }};">▾</span></div>
+<span style="font-size:12px;color:{{ issueHintColor }};padding-left:14px;">{{ issueHint }}</span>
+<sc-if value="{{ issueAc }}" hint-placeholder-val="{{ false }}">
+<div role="listbox" style="position:absolute;top:54px;left:0;right:0;background:{{ t.dlg }};border:1px solid {{ t.ov }};border-radius:8px;box-shadow:0 12px 32px {{ t.shadow }};overflow:hidden;">
+<sc-for list="{{ acIssues }}" as="i" hint-placeholder-count="4">
+<div role="option" style="display:flex;gap:10px;padding:10px 14px;background:{{ i.bg }};"><span style="font-family:'IBM Plex Mono',monospace;color:{{ t.muted }};width:36px;">#{{ i.iid }}</span><span style="color:{{ t.on }};">{{ i.title }}</span></div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ issueEmpty }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="position:absolute;top:54px;left:0;right:0;padding:14px;background:{{ t.dlg }};border:1px solid {{ t.ov }};border-radius:8px;box-shadow:0 12px 32px {{ t.shadow }};color:{{ t.muted }};">Keine Issues gefunden</div>
+</sc-if>
+</div>
+<button style="align-self:flex-start;height:44px;padding:0 22px;border-radius:8px;border:none;background:{{ createBg }};color:{{ createFg }};font:600 15px 'IBM Plex Sans',sans-serif;">{{ createText }}</button>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:{{ cardPad }};border:1px solid {{ t.ov }};border-radius:12px;">
+<div style="display:flex;flex-direction:column;gap:2px;"><h2 style="margin:0;font-size:20px;font-weight:600;color:{{ t.on }};">Sitzung beitreten</h2><span style="font-size:14px;color:{{ t.muted }};">Mit der Session-ID vom Scrum Master</span></div>
+<div style="display:flex;flex-direction:column;gap:4px;">
+<div style="position:relative;height:52px;display:flex;align-items:center;padding:0 14px;border:{{ sidBorder }};border-radius:8px;background:{{ t.bg }};"><span style="position:absolute;top:-9px;left:10px;padding:0 4px;background:{{ t.bg }};font-size:12px;color:{{ sidLabel }};">Session-ID</span><span style="font-family:'IBM Plex Mono',monospace;font-size:18px;letter-spacing:.12em;color:{{ t.on }};">{{ sid }}</span></div>
+<span style="font-size:12px;color:{{ sidHintColor }};padding-left:14px;">{{ sidHint }}</span>
+</div>
+<button style="align-self:flex-start;height:44px;padding:0 22px;border-radius:8px;border:1px solid {{ t.outline }};background:transparent;color:{{ t.pri }};font:600 15px 'IBM Plex Sans',sans-serif;">Weiter</button>
+</section>
+</div>
+</main>
+</sc-if>
+
+<sc-if value="{{ isJoin }}" hint-placeholder-val="{{ false }}">
+<main style="flex:1;display:flex;justify-content:center;padding:{{ joinPad }};">
+<section style="width:100%;max-width:440px;display:flex;flex-direction:column;gap:24px;">
+<div style="display:flex;gap:6px;"><sc-for list="{{ backs }}" as="b" hint-placeholder-count="5"><div style="width:28px;height:40px;border-radius:5px;background-color:{{ b.a }};background-image:{{ b.pat }};background-size:{{ b.size }};"></div></sc-for></div>
+<div style="display:flex;flex-direction:column;gap:6px;">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.08em;color:{{ t.muted }};">SITZUNG <span style="color:{{ t.on }};">K7P2QX9M</span></span>
+<h1 style="margin:0;font-size:{{ h1 }};line-height:1.15;font-weight:600;color:{{ t.on }};">Mit welchem Namen?</h1>
+<span style="color:{{ t.muted }};">Du trittst als Entwickler bei. Der Name ist für alle sichtbar.</span>
+</div>
+<sc-if value="{{ joinNotFound }}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:8px;background:{{ t.errC }};color:{{ t.onErrC }};"><span style="font-weight:600;">⚠ Sitzung nicht gefunden</span><span style="font-size:14px;">Der Link ist abgelaufen oder falsch. <a href="#" style="color:{{ t.onErrC }};">Zur Startseite</a></span></div>
+</sc-if>
+<div style="display:flex;flex-direction:column;gap:4px;">
+<div style="position:relative;height:52px;display:flex;align-items:center;padding:0 14px;border:{{ nameBorder }};border-radius:8px;"><span style="position:absolute;top:-9px;left:10px;padding:0 4px;background:{{ t.bg }};font-size:12px;color:{{ nameLabel }};">Name</span><span style="flex:1;color:{{ t.on }};">{{ nameValue }}</span><sc-if value="{{ nameTaken }}" hint-placeholder-val="{{ false }}"><span style="color:{{ t.err }};font-weight:600;">⚠</span></sc-if></div>
+<span style="font-size:12px;color:{{ nameHintColor }};padding-left:14px;">{{ nameHint }}</span>
+</div>
+<button style="height:48px;border-radius:8px;border:none;background:{{ joinBg }};color:{{ joinFg }};font:600 16px 'IBM Plex Sans',sans-serif;">Beitreten</button>
+</section>
+</main>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;page&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;start&quot;,&quot;join&quot;],&quot;default&quot;:&quot;start&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ok&quot;,&quot;checking&quot;,&quot;down&quot;,&quot;errors&quot;,&quot;max&quot;,&quot;projAc&quot;,&quot;projEmpty&quot;,&quot;issueAc&quot;,&quot;issueEmpty&quot;,&quot;taken&quot;,&quot;notfound&quot;],&quot;default&quot;:&quot;ok&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  static T = {
+    dark: { bg:'#282c34', low:'#21252b', c:'#2c313a', high:'#323844', on:'#e6e9ef', onv:'#abb2bf', muted:'#9da5b4', outline:'#7f8794', ov:'#3e4451', line:'#181a1f', pri:'#61afef', onPri:'#1d2026', priC:'#284566', err:'#ef8a92', errC:'#4a2a2f', onErrC:'#ffd9dc', ok:'#98c379', warn:'#e5c07b', dlg:'#2c313a', shadow:'rgba(0,0,0,.4)', patC:'rgba(29,32,38,.3)', dis:'#3a3f4b', onDis:'#9da5b4' },
+    light: { bg:'#fafafa', low:'#f3f3f4', c:'#ececee', high:'#e5e5e6', on:'#232428', onv:'#383a42', muted:'#5d606b', outline:'#8a8d96', ov:'#d4d5d9', line:'#e3e3e6', pri:'#2f5fd0', onPri:'#ffffff', priC:'#dbe6fc', err:'#b8352a', errC:'#fbe2df', onErrC:'#6e1a12', ok:'#3a7a39', warn:'#8a5f00', dlg:'#ffffff', shadow:'rgba(35,36,40,.16)', patC:'rgba(255,255,255,.3)', dis:'#e5e5e6', onDis:'#5d606b' }
+  };
+  renderVals() {
+    const P = this.props, dark = (P.theme ?? 'dark') !== 'light', t = dark ? Component.T.dark : Component.T.light;
+    const mobile = !!P.mobile, page = P.page ?? 'start', s = P.state ?? 'ok';
+    const st = s === 'down' ? { icon:'✕', text:'Backend nicht erreichbar', fg:t.err } : s === 'checking' ? { icon:'◌', text:'Backend wird geprüft …', fg:t.muted } : { icon:'●', text:'Backend erreichbar', fg:t.ok };
+    const errs = { errors:'GitLab verweigert den Zugriff auf dieses Projekt. Prüfe, ob das Token Leserechte hat.', max:'Höchstzahl erreicht: Es laufen bereits 20 Sitzungen. Versuche es später erneut.' };
+    const focus = `2px solid ${t.pri}`, normal = `1px solid ${t.outline}`, bad = `2px solid ${t.err}`;
+    const projAc = s === 'projAc', projEmpty = s === 'projEmpty', issueAc = s === 'issueAc', issueEmpty = s === 'issueEmpty', issueBad = s === 'errors';
+    const sel = (i) => i === 0 ? t.priC : 'transparent';
+    const M = [['#61afef','#2f5fd0','repeating-linear-gradient(45deg, C 0 2px, transparent 2px 8px)','auto'],['#56b6c2','#0a6f8f','radial-gradient(C 1.6px, transparent 1.9px)','9px 9px'],['#98c379','#3a7a39','repeating-linear-gradient(0deg, C 0 2px, transparent 2px 7px)','auto'],['#c678dd','#9a2299','repeating-radial-gradient(circle at 30% 30%, C 0 1.5px, transparent 1.5px 7px)','auto'],['#e5c07b','#8a5f00','conic-gradient(C 25%, transparent 0 50%, C 0 75%, transparent 0)','12px 12px']];
+    const backs = M.map(m => ({ a: dark ? m[0] : m[1], pat: m[2].split('C').join(t.patC), size: m[3] }));
+    const taken = s === 'taken', nf = s === 'notfound';
+    return {
+      t, st, backs, padX: mobile ? '16px' : '24px',
+      isStart: page === 'start', isJoin: page === 'join', down: s === 'down',
+      mainPad: mobile ? '24px 16px 40px' : '56px 48px 72px', gapL: mobile ? '28px' : '40px', h1: mobile ? '28px' : '40px',
+      cols: mobile ? 'minmax(0,1fr)' : 'minmax(0,3fr) minmax(0,2fr)', cardPad: mobile ? '20px 16px' : '28px',
+      formErr: !!errs[s], formErrText: errs[s] ?? '',
+      projBorder: projAc || projEmpty ? focus : normal, projLabel: projAc || projEmpty ? t.pri : t.muted,
+      projValue: projEmpty ? 'kalender' : projAc ? 'web' : 'Webshop Frontend',
+      projAc, projEmpty,
+      projects: [['Webshop Frontend','shop/webshop-frontend','1234'],['Webshop Backend','shop/webshop-backend','1235'],['Web-Analytics','data/web-analytics','2071']].map((p,i) => ({ name:p[0], path:p[1], id:p[2], bg: sel(i) })),
+      issueBorder: issueAc || issueEmpty ? focus : issueBad ? bad : normal, issueLabel: issueAc || issueEmpty ? t.pri : issueBad ? t.err : t.muted,
+      issueValue: issueAc ? 'login' : issueEmpty ? 'zahlung' : issueBad ? '420' : '#42 Passwort per E-Mail zurücksetzen',
+      issueHint: issueBad ? '⚠ Das Issue wurde nicht gefunden' : 'Optional: Issue, mit dem die Sitzung startet',
+      issueHintColor: issueBad ? t.err : t.muted,
+      issueAc, issueEmpty,
+      acIssues: [['42','Passwort per E-Mail zurücksetzen'],['17','Login page'],['63','Login mit SSO'],['88','Login-Sperre nach 5 Versuchen']].map((x,i) => ({ iid:x[0], title:x[1], bg: sel(i) })),
+      createBg: s === 'down' ? t.dis : t.pri, createFg: s === 'down' ? t.onDis : t.onPri, createText: s === 'down' ? 'Sitzung erstellen (Backend fehlt)' : 'Sitzung erstellen',
+      sid: s === 'errors' ? 'K7P2QX' : 'K7P2QX9M', sidBorder: s === 'errors' ? bad : normal, sidLabel: s === 'errors' ? t.err : t.muted,
+      sidHint: s === 'errors' ? '⚠ Die Session-ID hat 8 Zeichen (6 eingegeben)' : '8 Zeichen, z. B. K7P2QX9M', sidHintColor: s === 'errors' ? t.err : t.muted,
+      joinPad: mobile ? '32px 16px' : '96px 24px',
+      joinNotFound: nf, nameTaken: taken,
+      nameBorder: taken ? bad : focus, nameLabel: taken ? t.err : t.pri, nameValue: taken ? 'Ben' : 'Dana',
+      nameHint: taken ? '⚠ Name schon vergeben. Bitte einen anderen wählen.' : 'Höchstens 30 Zeichen', nameHintColor: taken ? t.err : t.muted,
+      joinBg: nf ? t.dis : t.pri, joinFg: nf ? t.onDis : t.onPri
+    };
+  }
+}
+</script>
+</body>
+</html>

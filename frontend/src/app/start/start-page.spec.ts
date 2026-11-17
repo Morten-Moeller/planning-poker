@@ -66,6 +66,21 @@ const invalidCases: InvalidCase[] = [
   },
 ];
 
+function spacedText(element: Element | null | undefined): string {
+  if (!element) {
+    return '';
+  }
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  const parts: string[] = [];
+  while (walker.nextNode()) {
+    const part = (walker.currentNode.textContent ?? '').replace(/\s+/g, ' ').trim();
+    if (part !== '') {
+      parts.push(part);
+    }
+  }
+  return parts.join(' ');
+}
+
 const formErrors: [string, number, string][] = [
   ['ISSUE_NOT_FOUND', 404, 'Das Issue wurde im GitLab-Projekt nicht gefunden.'],
   ['PROJECT_NOT_ALLOWED', 403, 'Für dieses GitLab-Projekt dürfen keine Sitzungen angelegt werden.'],
@@ -213,21 +228,86 @@ describe('StartPage', () => {
     expect(router.url).toBe('/session/K7P2QX9M/join');
   });
 
-  it.each(['K7P2QX9', 'K7P2QX90', ''])(
-    'blocks the join with the session id "%s"',
-    async (sessionId) => {
-      answerHealth();
-      type('join-session-id-input', sessionId);
+  it.each([
+    ['K7P2QX', 'Die Session-ID hat 8 Zeichen (6 eingegeben)'],
+    ['K7P2QX9', 'Die Session-ID hat 8 Zeichen (7 eingegeben)'],
+    ['', 'Die Session-ID hat 8 Zeichen (0 eingegeben)'],
+    ['K7P2QX90', 'Die Session-ID hat 8 Zeichen aus Großbuchstaben und Ziffern'],
+  ])('blocks the join with the session id "%s"', async (sessionId, message) => {
+    answerHealth();
+    type('join-session-id-input', sessionId);
 
-      element('join-session-id-submit')?.click();
-      await fixture.whenStable();
+    element('join-session-id-submit')?.click();
+    await fixture.whenStable();
 
-      expect(router.url).toBe('/');
-      expect(text('join-session-id-error')).toBe(
-        'Die Session-ID hat 8 Zeichen aus Großbuchstaben und Ziffern',
-      );
-    },
-  );
+    expect(router.url).toBe('/');
+    expect(text('join-session-id-error')).toBe(message);
+    expect(spacedText(element('join-session-id-error')?.closest('mat-error'))).toBe(`⚠ ${message}`);
+  });
+
+  it('shows the session id hint and names the button Weiter', async () => {
+    answerHealth();
+    await fixture.whenStable();
+
+    expect(
+      element('join-session-id-input')?.closest('mat-form-field')?.querySelector('mat-hint')
+        ?.textContent,
+    ).toContain('8 Zeichen, z. B. K7P2QX9M');
+    expect(text('join-session-id-submit')).toBe('Weiter');
+  });
+
+  it('locks both forms without backend and frees them after a new check', async () => {
+    http.expectOne('/api/health').flush(null, { status: 503, statusText: 'Service Unavailable' });
+    await fixture.whenStable();
+
+    expect(text('health-down')).toContain(
+      'Ohne Backend lassen sich keine Sitzungen erstellen oder betreten.',
+    );
+    expect(text('create-submit')).toBe('Sitzung erstellen (Backend fehlt)');
+    expect((element('create-submit') as HTMLButtonElement).disabled).toBe(true);
+    expect((element('join-session-id-submit') as HTMLButtonElement).disabled).toBe(true);
+
+    element('health-retry')?.click();
+    await fixture.whenStable();
+    expect(text('health-status')).toBe('Backend wird geprüft …');
+    expect((element('create-submit') as HTMLButtonElement).disabled).toBe(true);
+    expect((element('join-session-id-submit') as HTMLButtonElement).disabled).toBe(true);
+    answerHealth();
+    await fixture.whenStable();
+
+    expect(text('health-status')).toBe('Backend erreichbar');
+    expect(element('health-down')).toBeNull();
+    expect(text('create-submit')).toBe('Sitzung erstellen');
+    expect((element('create-submit') as HTMLButtonElement).disabled).toBe(false);
+    expect((element('join-session-id-submit') as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('keeps the forms locked when the new check fails again', async () => {
+    http.expectOne('/api/health').flush(null, { status: 503, statusText: 'Service Unavailable' });
+    await fixture.whenStable();
+
+    element('health-retry')?.click();
+    await fixture.whenStable();
+    http.expectOne('/api/health').flush(null, { status: 503, statusText: 'Service Unavailable' });
+    await fixture.whenStable();
+
+    expect(text('health-status')).toBe('Backend nicht erreichbar');
+    expect((element('create-submit') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('shows the intro and the two panels', async () => {
+    answerHealth();
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+
+    expect(page.querySelector('h1')?.textContent?.trim()).toBe('Issues gemeinsam schätzen');
+    expect(
+      Array.from(page.querySelectorAll('.panel-head')).map((head) => spacedText(head)),
+    ).toEqual([
+      'Sitzung erstellen Für den Scrum Master',
+      'Sitzung beitreten Mit der Session-ID vom Scrum Master',
+    ]);
+  });
 });
 
 describe('StartPage project and issue choice', () => {

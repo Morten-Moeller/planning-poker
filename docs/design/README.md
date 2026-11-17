@@ -14,12 +14,14 @@ für den Design-Rework (Specs 0027 und folgende); sie werden hier nicht bearbeit
 | `Design-System.dc.html`    | Konzept, Farben, Theme in Angular, Typografie, Abstände, Radien, Karte, Kartenmotive, Teilnehmer-Eintrag, Statushinweise, Timer, Fokus und Bewegung |
 | `Raum.dc.html`             | Komponente des Sitzungsraums mit allen Zuständen (Rolle, Phase, Dialog, mobil, hell und dunkel)                                                     |
 | `Sitzungsraum.dc.html`     | Übersicht aller Screens des Sitzungsraums, setzt `Raum.dc.html` ein                                                                                 |
+| `Einstieg.dc.html`         | Komponente von Startseite und Beitrittsseite mit allen Zuständen (Backend, Autocomplete, Fehler, mobil, hell und dunkel)                            |
+| `Start & Beitritt.dc.html` | Übersicht aller Screens von Start und Beitritt, setzt `Einstieg.dc.html` ein                                                                        |
 | `assets/coffee-break.svg`  | Bildkarte Kaffeepause                                                                                                                               |
 | `assets/question-mark.svg` | Bildkarte Unklar                                                                                                                                    |
 
-Die drei `.dc.html`-Dateien sind unverändert aus dem Export. Sie laden `support.js` aus Claude
-Design und verweisen auf `Start & Beitritt.dc.html`; beide liegen nicht im Repository, die
-Dateien sind deshalb als Quelltext zu lesen, nicht im Browser. Die beiden SVGs sind die lokalen
+Die fünf `.dc.html`-Dateien sind unverändert aus dem Export. Sie laden `support.js` aus Claude
+Design; die Datei liegt nicht im Repository, die `.dc.html`-Dateien sind deshalb als Quelltext
+zu lesen, nicht im Browser. Die beiden SVGs sind die lokalen
 Fassungen der Person ohne die C2PA-Signatur-Metadaten der Originale in Claude Design; die
 Zeichnung ist gleich.
 
@@ -31,7 +33,7 @@ Zeichnung ist gleich.
 | B    | Seitenleiste                                                              | folgt |
 | C    | Tisch und Karten                                                          | folgt |
 | D    | Bedienfeld, Dialoge, Banner                                               | folgt |
-| E    | Start und Beitritt                                                        | folgt |
+| E    | Start und Beitritt                                                        | 0031  |
 
 ## Abweichungen der Umsetzung
 
@@ -48,3 +50,11 @@ Zeichnung ist gleich.
   `--mat-sys-outline-variant`, damit keine Farbe außerhalb der Tokens entsteht.
 - **Hell und dunkel:** Es gilt die Systemeinstellung; einen Schalter in der Oberfläche gibt es
   nicht.
+- **Issue beim Anlegen (Teil E):** Der Entwurf nennt das Issue „Optional: Issue, mit dem die
+  Sitzung startet“. Die Anwendung verlangt das Issue beim Anlegen weiterhin (R-01, Spec 0031).
+- **Höchstzahl (Teil E):** Der Entwurf nennt die Zahl laufender Sitzungen („Es laufen bereits 20
+  Sitzungen“). Das Backend liefert diese Zahl nicht; die Anwendung zeigt den bestehenden Text zu
+  `LIMIT_REACHED`.
+- **Kartenrücken der Beitrittsseite (Teil E):** Die Reihe der fünf Kartenrücken über dem Titel
+  entfällt. Die Farben der Motive stehen nur im Sitzungsraum und in der Kopfzeile; eine dritte
+  Kopie entsteht dafür nicht.
