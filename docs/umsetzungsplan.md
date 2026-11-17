@@ -48,7 +48,7 @@ Die IDs sind stabil und dienen der Nachverfolgung in Specs und Tests. FE = Front
 | R-15 | Nach der Auflösung sehen alle Karte und Name je Teilnehmer. | FE, BE |
 | R-16 | Gruppierte Anzeige: pro abgegebenem Schätzwert die Anzahl der Teilnehmer. | FE, BE |
 | R-17 | Durchschnitt und häufigster Wert werden als Orientierung angezeigt, sind aber nicht als Ergebnis wählbar. | FE, BE |
-| R-18 | Option A: Der Scrum Master startet eine neue Runde für dasselbe Issue; alle Karten werden zurückgesetzt. | FE, BE |
+| R-18 | Option A: Der Scrum Master lässt dasselbe Issue erneut schätzen (neue Runde, ADR 0012); alle Karten werden zurückgesetzt. | FE, BE |
 | R-19 | Abgeschlossene Runden werden im Sitzungsprotokoll festgehalten. Der verwiesene „Abschnitt 7“ fehlt im FE-README (A-05). | FE |
 | R-20 | Option B: Der Scrum Master wählt den finalen Wert ausschließlich aus dem Kartensatz und bestätigt die Runde. | FE, BE |
 | R-21 | Der gewählte Wert wird am GitLab-Issue hinterlegt. Die Form ist frei und im README zu dokumentieren. | FE, BE |

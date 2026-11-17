@@ -11,7 +11,7 @@ Umsetzungsplan geändert.
 
 Ein Scrum-Team schätzt GitLab-Issues synchron in einer gemeinsamen Sitzung: der Scrum Master
 wählt ein Issue und gibt es frei, die Entwickler wählen verdeckt eine Karte, der Scrum Master
-löst auf, startet eine neue Runde oder übernimmt den vereinbarten Wert als Kommentar an das
+löst auf, lässt erneut schätzen oder übernimmt den vereinbarten Wert als Kommentar an das
 GitLab-Issue. Gebaut wird Variante A: Angular-Frontend und Quarkus-Backend in einem Monorepo,
 abgabefertig aus einem frischen Klon nach höchstens fünf dokumentierten Befehlen.
 
@@ -19,7 +19,7 @@ abgabefertig aus einem frischen Klon nach höchstens fünf dokumentierten Befehl
 
 | Nutzer | Was sie damit tun |
 |---|---|
-| Scrum Master | legt die Sitzung an, teilt Link oder Session-ID, wählt Issues, gibt sie frei, löst Runden auf, startet neue Runden, bestätigt den Endwert |
+| Scrum Master | legt die Sitzung an, teilt Link oder Session-ID, wählt Issues, gibt sie frei, löst Runden auf, lässt erneut schätzen, bestätigt den Endwert |
 | Entwickler | tritt mit Namen bei, sieht das freigegebene Issue, wählt verdeckt eine Karte, sieht nach der Auflösung alle Karten und die Auswertung |
 | Prüfer der Coding Challenge | startet beide Projekte nach dem README, liest Variantenwahl, GitLab-Entscheidung und Schnittstellendefinition |
 

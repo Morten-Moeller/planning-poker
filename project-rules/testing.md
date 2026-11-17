@@ -73,10 +73,11 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   frontend with a timeout and fails when one does not come up; `DEBUG=pw:webserver make e2e`
   shows the output of both servers.
 - Selectors: `data-testid` first, then role and accessible name (T6.1).
-- Discussion (spec 0026, ADR 0010): a release, an issue switch and a new round lead to
-  `DISCUSSION`. A flow that votes calls `startVoting(page)` from `frontend/e2e/helpers.ts` with the
-  page of the scrum master after the release or the new round; it waits for „Diskussion“, clicks
-  `round-start` and waits for „Runde läuft“.
+- Discussion (spec 0026, ADR 0010): a release and an issue switch lead to `DISCUSSION`. A flow
+  that votes calls `startVoting(page)` from `frontend/e2e/helpers.ts` with the page of the scrum
+  master after the release; it waits for „Diskussion“, clicks `round-start` and waits for „Runde
+  läuft“. „Erneut schätzen“ (`round-restart`, spec 0034, ADR 0012) leads straight to „Runde
+  läuft“, without `startVoting(page)`.
 
 ## Test data
 
