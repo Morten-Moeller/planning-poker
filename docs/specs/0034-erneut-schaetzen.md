@@ -1,14 +1,14 @@
 ---
 id: "0034"
 title: Erneut schätzen startet sofort
-status: Review
+status: done
 risk: high
 adrs: ["0012"]
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#34"
+note: alle Kriterien erfüllt
 ---
 
 # Erneut schätzen startet sofort
