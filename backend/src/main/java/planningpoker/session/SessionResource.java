@@ -28,9 +28,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import planningpoker.platform.ApiException;
 import planningpoker.platform.Authenticated;
-import planningpoker.platform.ErrorCode;
 import planningpoker.platform.ProblemDetail;
 import planningpoker.session.api.ConfirmRequest;
 import planningpoker.session.api.CreateSessionRequest;
@@ -74,7 +72,7 @@ public class SessionResource {
     Event<RoundCompleted> roundCompleted;
 
     @Inject
-    SessionConfig config;
+    ProjectAllowlist allowlist;
 
     @Inject
     Clock clock;
@@ -110,7 +108,7 @@ public class SessionResource {
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response createSession(@NotNull @Valid CreateSessionRequest request) {
         String projectId = request.gitlabProjectId().strip();
-        requireAllowedProject(projectId);
+        allowlist.requireAllowed(projectId);
         gitLabIssues.loadIssue(projectId, request.issueIid());
         SessionRegistry.Created created = registry.create(projectId, request.issueIid(), request.name());
         return Response.status(Response.Status.CREATED)
@@ -461,14 +459,5 @@ public class SessionResource {
             return null;
         });
         return Response.noContent().build();
-    }
-
-    private void requireAllowedProject(String projectId) {
-        boolean allowed = config.allowedProjects()
-                .map(projects -> projects.stream().map(String::strip).anyMatch(projectId::equals))
-                .orElse(true);
-        if (!allowed) {
-            throw new ApiException(ErrorCode.PROJECT_NOT_ALLOWED, "Sessions for this GitLab project are not allowed.");
-        }
     }
 }

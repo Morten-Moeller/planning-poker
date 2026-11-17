@@ -64,6 +64,14 @@ class ContractTest {
                                 "200",
                                 "IssueListResponse",
                                 List.of("401", "403", "404", "502")),
+                        new Endpoint("get", "/api/projects", null, "200", "ProjectListResponse", List.of("400", "502")),
+                        new Endpoint(
+                                "get",
+                                "/api/projects/{projectId}/issues",
+                                null,
+                                "200",
+                                "IssueListResponse",
+                                List.of("400", "403", "502")),
                         new Endpoint(
                                 "post",
                                 "/api/sessions/{id}/active-issue",
@@ -157,7 +165,12 @@ class ContractTest {
                 .properties()
                 .forEach(path -> path.getValue().properties().forEach(operation -> {
                     String name = operation.getKey() + " " + path.getKey();
-                    boolean open = Set.of("/api/health", "/api/sessions", "/api/sessions/{id}/participants")
+                    boolean open = Set.of(
+                                    "/api/health",
+                                    "/api/sessions",
+                                    "/api/sessions/{id}/participants",
+                                    "/api/projects",
+                                    "/api/projects/{projectId}/issues")
                             .contains(path.getKey());
                     JsonNode security = operation.getValue().at("/security/0/bearerToken");
                     assertEquals(open, security.isMissingNode(), name + " security requirement");
@@ -190,7 +203,7 @@ class ContractTest {
 
     @Test
     void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
-        assertEquals("2.2.0", contract.at("/info/version").asText());
+        assertEquals("2.3.0", contract.at("/info/version").asText());
         assertEquals(
                 "PROJECT_NOT_ALLOWED",
                 contract.at("/paths/~1api~1sessions/post/responses/403/description")
@@ -219,7 +232,24 @@ class ContractTest {
                 Arguments.of("post", "/api/sessions"),
                 Arguments.of("get", "/api/sessions/{id}/issues"),
                 Arguments.of("post", "/api/sessions/{id}/active-issue"),
-                Arguments.of("post", "/api/sessions/{id}/round/confirm"));
+                Arguments.of("post", "/api/sessions/{id}/round/confirm"),
+                Arguments.of("get", "/api/projects"),
+                Arguments.of("get", "/api/projects/{projectId}/issues"));
+    }
+
+    @Test
+    void describesTheProjectList() {
+        assertEquals(
+                "PROJECT_NOT_ALLOWED",
+                contract.at("/paths/~1api~1projects~1{projectId}~1issues/get/responses/403/description")
+                        .asText());
+        JsonNode list = contract.at("/components/schemas/ProjectListResponse");
+        assertEquals(List.of("items", "nextPage"), texts(list.get("required")));
+        assertEquals(
+                ref("ProjectSummary"), list.at("/properties/items/items/$ref").asText());
+        assertEquals(
+                List.of("id", "name", "pathWithNamespace", "webUrl"),
+                texts(contract.at("/components/schemas/ProjectSummary/required")));
     }
 
     @Test
