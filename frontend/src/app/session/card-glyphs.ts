@@ -9,7 +9,8 @@ const SOURCES: Record<GlyphCard, string> = {
   '?': 'question-mark.svg',
   COFFEE: 'coffee-break.svg',
 };
-const REMOVED_ELEMENTS = 'metadata, script, foreignObject, title, desc, a, use, image';
+const REMOVED_ELEMENTS =
+  'metadata, script, style, foreignObject, title, desc, a, use, image, set, animate, animateMotion, animateTransform';
 const REMOVED_ATTRIBUTES = ['role', 'aria-label', 'aria-labelledby', 'aria-describedby'];
 
 export function isGlyphCard(card: Card): card is GlyphCard {
@@ -25,7 +26,7 @@ export function cleanGlyph(source: string, parser: DOMParser, serializer: XMLSer
   for (const node of [svg, ...Array.from(svg.querySelectorAll('*'))]) {
     for (const attribute of Array.from(node.attributes)) {
       const name = attribute.name.toLowerCase();
-      if (name.startsWith('on') || name.endsWith('href')) {
+      if (name.startsWith('on') || name.endsWith('href') || name === 'style') {
         node.removeAttribute(attribute.name);
       }
     }

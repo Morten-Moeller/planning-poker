@@ -6,7 +6,8 @@ import { Card } from './cards';
 const GLYPH_SOURCE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Pause">
   <metadata><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/></metadata>
   <script>alert(1)</script>
-  <g onclick="alert(2)"><path d="M0 0h10" fill="var(--poker-body, #503079)"/></g>
+  <style>path { fill: red; }</style>
+  <g onclick="alert(2)" style="color: red"><path d="M0 0h10" fill="var(--poker-body, #503079)"><set attributeName="fill" to="red"/></path></g>
 </svg>`;
 
 describe('PokerCard', () => {
@@ -118,6 +119,7 @@ describe('PokerCard', () => {
     expect(svg.querySelector('metadata')).toBeNull();
     expect(svg.querySelector('script')).toBeNull();
     expect(svg.querySelector('[onclick]')).toBeNull();
+    expect(svg.querySelector('style, set, [style]')).toBeNull();
     expect(svg.querySelector('path')?.getAttribute('fill')).toBe('var(--poker-body, #503079)');
     expect(face(root).getAttribute('aria-label')).toBe('Karte Kaffeepause');
   });
