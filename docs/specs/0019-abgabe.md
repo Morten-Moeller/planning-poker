@@ -1,14 +1,14 @@
 ---
 id: "0019"
 title: Abgabe (M13, Teil 2)
-status: Review
+status: done
 risk: high
 adrs: ["0003"]
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#19"
+note: alle Kriterien erfüllt; Kontrast und Screenreader prüft die Person nach docs/abgabe/checkliste.md
 ---
 
 # Abgabe (M13, Teil 2)
