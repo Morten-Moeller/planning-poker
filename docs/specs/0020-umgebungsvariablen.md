@@ -1,7 +1,7 @@
 ---
 id: "0020"
 title: Umgebungsvariablen in .env.example
-status: approved
+status: Review
 risk: high
 adrs: ["0001"]
 owner: Morten Möller
