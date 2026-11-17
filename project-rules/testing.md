@@ -58,7 +58,9 @@ change touches.
   `make install`; `make e2e` runs it first). `make e2e` takes `harness/scripts/app-lock.sh`
   (owner: the branch), so only one worktree runs the application. The ports are 8080 (backend),
   4200 (frontend) and 8089 (GitLab double) by default; `BACKEND_PORT`, `FRONTEND_PORT` and
-  `GITLAB_DOUBLE_PORT` change them when a port is taken on a developer machine. Playwright never
+  `GITLAB_DOUBLE_PORT` change them when a port is taken on a developer machine. `make e2e` never
+  reads `.env` (only `make backend` and `make frontend` do), so it sees neither the GitLab token
+  nor the ports from there; set the variables on the call. Playwright never
   reuses a server that already answers on a port (`reuseExistingServer: false`), so the tests
   always run against the profile `e2e` and the double; a running `quarkus:dev` on the same port
   fails the start.
