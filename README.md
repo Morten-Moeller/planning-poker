@@ -10,8 +10,8 @@ Kommentar an das GitLab-Issue. Lösung der Coding Challenge Planning Poker
 ## Schnellstart
 
 Voraussetzungen: JDK 21 (`JAVA_HOME`), Node in der Version aus `.nvmrc`, pnpm 12, Git und ein
-GitLab-Token mit Scope `api` (Abschnitt GitLab, Absatz Token). Aus einem frischen Klon starten fünf Befehle die
-Anwendung; die letzten beiden laufen je in einem eigenen Terminal:
+GitLab-Token mit Scope `api` (Abschnitt GitLab, Absatz Token). Aus einem frischen Klon starten
+fünf Befehle die Anwendung; die letzten beiden laufen je in einem eigenen Terminal:
 
 ```bash
 git clone https://github.com/Morten-Moeller/planning-poker.git && cd planning-poker
@@ -71,7 +71,9 @@ dazu `QUARKUS_HTTP_PORT` für den Port des Backends.
 
 Token: Ein klassischer Personal Access Token oder ein Project Access Token mit Scope `api` und
 mindestens der Rolle Developer im Projekt funktioniert. Das Backend liest damit Issues und schreibt
-Kommentar und Gewicht. Ein fine-grained Token ohne Rechte am Projekt bekommt von GitLab 403.
+Kommentar und Gewicht. Ein fine-grained Token ohne Rechte am Projekt bekommt von GitLab 403. Ein
+Project Access Token gilt nur für sein Projekt und ist deshalb die engere Wahl; ein Personal
+Access Token gilt für jedes Projekt seines Besitzers.
 
 Das bestätigte Ergebnis wird als Kommentar (Note) am Issue hinterlegt: Endwert, Rundenzahl,
 Verteilung der letzten Runde und Durchschnitt. Das funktioniert in jedem GitLab-Tarif. Mit

@@ -62,8 +62,9 @@ Danach eine Runde mit `?` bestätigen: der Kommentar endet mit „Kein Durchschn
 ### K-06 Gewicht (optional)
 
 Nur mit GitLab Premium oder Ultimate: Backend mit `PLANNINGPOKER_GITLAB_WRITE_WEIGHT=true` in
-`.env` starten (Vorschlag aus `.env.example`), einen Zahlenwert bestätigen. Das Issue hat danach das Gewicht des Endwerts und den
-Kommentar. Ohne passenden Tarif: Punkt als „entfällt“ vermerken. (R-21, A-07)
+`.env` starten (Vorschlag aus `.env.example`), einen Zahlenwert bestätigen. Das Issue hat danach
+das Gewicht des Endwerts und den Kommentar. Ohne passenden Tarif: Punkt als „entfällt“ vermerken.
+(R-21, A-07)
 
 - Ergebnis:
 - Datum:
