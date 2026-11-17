@@ -1,14 +1,14 @@
 ---
 id: "0028"
 title: Design Werkbank, Teil B, Seitenleiste und Rundenmotiv
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#29"
+note: alle Kriterien erfüllt
 ---
 
 # Design Werkbank, Teil B, Seitenleiste und Rundenmotiv
