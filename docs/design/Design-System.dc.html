@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#16181d;}a{color:#61afef;}a:hover{color:#8cc4f5;}*{box-sizing:border-box;}button{white-space:nowrap;}</style>
+</helmet>
+<div style="padding:72px 64px 120px;background:#16181d;width:1600px;display:flex;flex-direction:column;gap:96px;font-family:'IBM Plex Sans',sans-serif;font-size:16px;line-height:1.6;color:#abb2bf;">
+
+<header style="display:flex;flex-direction:column;gap:12px;max-width:960px;">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.08em;color:#9da5b4;">PLANNING POKER · WERKBANK · DESIGN-SYSTEM</span>
+<h1 style="margin:0;font-size:48px;line-height:1.1;font-weight:600;color:#e6e9ef;letter-spacing:-.01em;">Werkbank</h1>
+<p style="margin:0;font-size:18px;text-wrap:pretty;">Farben, Typografie, Abstände und Komponenten für Planning Poker, abgebildet auf Angular Material 3. Screens: <a href="Sitzungsraum.dc.html">Sitzungsraum</a> · <a href="Start &amp; Beitritt.dc.html">Start &amp; Beitritt</a></p>
+</header>
+
+<section style="display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;">
+<h2 style="margin:0;font-size:24px;font-weight:600;color:#e6e9ef;">1 Konzept</h2>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;">
+<div style="display:flex;flex-direction:column;gap:8px;"><h3 style="margin:0;font-size:17px;font-weight:600;color:#e6e9ef;">Stimmung</h3><p style="margin:0;">Ein Werkzeug, kein Spiel. Die Oberfläche sieht aus wie die Umgebung, in der das Team ohnehin arbeitet: Editor, Terminal, GitLab. Über eine Stunde im Meeting soll nichts blinken oder drängeln. Ausdruck bekommen nur die Karten; ihr Motiv wechselt mit jeder Runde.</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;"><h3 style="margin:0;font-size:17px;font-weight:600;color:#e6e9ef;">Farbwelt</h3><p style="margin:0;">Dunkel auf Basis von One Dark, hell auf Basis von One Light. Neutrale Flächen in drei Stufen, Blau als Primärfarbe. Grün, Gelb und Rot nur für Status, immer zusammen mit Text oder Symbol. Die fünf Akzentfarben von One Dark tragen die Kartenmotive. Wo das Original den AA-Kontrast verfehlt, sind die Werte angepasst.</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;"><h3 style="margin:0;font-size:17px;font-weight:600;color:#e6e9ef;">Typografie</h3><p style="margin:0;">IBM Plex Sans für Text und Bedienelemente, IBM Plex Mono für alles, was ein Wert ist: Kartenwerte, Session-ID, Issue-Nummern, Restzeit, Abschnittsmarken. Beide Schnitte haben gleiche Proportionen und klare Ziffern (0 und O, 1 und l sind gut unterscheidbar). Fließtext 15 px, damit die Seitenleiste dicht bleibt.</p></div>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;">
+<div style="display:flex;flex-direction:column;gap:8px;"><h2 style="margin:0;font-size:24px;font-weight:600;color:#e6e9ef;">2 Farben</h2><span style="font-size:14px;color:#9da5b4;">Kontrast gegen surface. Text ab 4,5 : 1, Linien und Bedienelemente ab 3 : 1.</span></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;">
+<sc-for list="{{ palettes }}" as="pl" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:{{ pl.bg }};border:1px solid #0f1115;">
+<div style="padding:16px 20px;font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.08em;color:{{ pl.muted }};">{{ pl.title }}</div>
+<sc-for list="{{ pl.rows }}" as="r" hint-placeholder-count="20">
+<div style="display:grid;grid-template-columns:36px minmax(0,1fr) 84px 64px;align-items:center;gap:12px;padding:7px 20px;border-top:1px solid {{ pl.line }};font-size:13px;">
+<span style="width:36px;height:24px;border-radius:4px;background:{{ r.hex }};border:1px solid {{ pl.line }};"></span>
+<span style="display:flex;flex-direction:column;line-height:1.35;min-width:0;"><span style="font-family:'IBM Plex Mono',monospace;color:{{ pl.on }};">{{ r.token }}</span><span style="color:{{ pl.muted }};">{{ r.use }}</span></span>
+<span style="font-family:'IBM Plex Mono',monospace;color:{{ pl.on }};">{{ r.hex }}</span>
+<span style="font-family:'IBM Plex Mono',monospace;color:{{ pl.muted }};text-align:right;">{{ r.cr }}</span>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;">
+<div style="display:flex;flex-direction:column;gap:8px;"><h2 style="margin:0;font-size:24px;font-weight:600;color:#e6e9ef;">3 Theme in Angular</h2><span style="font-size:14px;color:#9da5b4;">Ersetzt das Azure-Theme in styles.scss.</span></div>
+<pre style="margin:0;padding:24px 28px;background:#21252b;border:1px solid #2c313a;border-radius:12px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.7;color:#abb2bf;overflow:auto;"><span style="color:#c678dd;">@use</span> <span style="color:#98c379;">'@angular/material'</span> as mat;
+
+html {
+  color-scheme: light dark;
+  <span style="color:#c678dd;">@include</span> mat.theme((
+    color: (primary: mat.$blue-palette, theme-type: color-scheme),
+    typography: (plain-family: <span style="color:#98c379;">'IBM Plex Sans'</span>, brand-family: <span style="color:#98c379;">'IBM Plex Sans'</span>),
+    density: 0,
+  ));
+  <span style="color:#7f8794;">// Hell (One Light): feste Werte statt generierter Palette</span>
+  <span style="color:#c678dd;">@include</span> mat.theme-overrides((
+    primary: <span style="color:#d19a66;">#2f5fd0</span>, on-primary: <span style="color:#d19a66;">#ffffff</span>, primary-container: <span style="color:#d19a66;">#dbe6fc</span>, on-primary-container: <span style="color:#d19a66;">#142f6e</span>,
+    surface: <span style="color:#d19a66;">#fafafa</span>, surface-container-lowest: <span style="color:#d19a66;">#ffffff</span>, surface-container-low: <span style="color:#d19a66;">#f3f3f4</span>, surface-container: <span style="color:#d19a66;">#ececee</span>,
+    on-surface: <span style="color:#d19a66;">#232428</span>, on-surface-variant: <span style="color:#d19a66;">#5d606b</span>, outline: <span style="color:#d19a66;">#8a8d96</span>, outline-variant: <span style="color:#d19a66;">#d4d5d9</span>,
+    error: <span style="color:#d19a66;">#b8352a</span>, error-container: <span style="color:#d19a66;">#fbe2df</span>, on-error-container: <span style="color:#d19a66;">#6e1a12</span>,
+    corner-extra-small: 4px, corner-small: 6px, corner-medium: 10px, corner-large: 12px, corner-extra-large: 16px,
+  ));
+  --app-space-xs: 4px; --app-space-s: 8px; --app-space-m: 16px; --app-space-l: 24px; --app-space-xl: 32px; --app-space-2xl: 48px;
+  --app-success: <span style="color:#d19a66;">#3a7a39</span>; --app-success-container: <span style="color:#d19a66;">#dcefd9</span>; --app-on-success-container: <span style="color:#d19a66;">#1f4a1e</span>;
+  --app-warning: <span style="color:#d19a66;">#8a5f00</span>; --app-warning-container: <span style="color:#d19a66;">#fbedc9</span>; --app-on-warning-container: <span style="color:#d19a66;">#4f3600</span>;
+  --app-font-mono: <span style="color:#98c379;">'IBM Plex Mono'</span>, ui-monospace, monospace;
+}
+<span style="color:#7f8794;">// Dunkel (One Dark): gleiche Schlüssel, Werte aus der rechten Tabelle</span>
+<span style="color:#c678dd;">@media</span> (prefers-color-scheme: dark) { html { <span style="color:#c678dd;">@include</span> mat.theme-overrides((primary: <span style="color:#d19a66;">#61afef</span>, …)); --app-success: <span style="color:#d19a66;">#98c379</span>; … } }
+
+<span style="color:#7f8794;">// Buttons: 8 px statt Pille, damit sie zur Karte passen</span>
+<span style="color:#c678dd;">@include</span> mat.button-overrides((filled-container-shape: 8px, outlined-container-shape: 8px, text-container-shape: 6px));
+<span style="color:#c678dd;">@include</span> mat.button-toggle-overrides((shape: 8px, selected-state-background-color: var(--mat-sys-primary-container)));
+<span style="color:#c678dd;">@include</span> mat.dialog-overrides((container-shape: 16px));</pre>
+</section>
+
+<section style="display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;">
+<h2 style="margin:0;font-size:24px;font-weight:600;color:#e6e9ef;">4 Typografie</h2>
+<div style="display:flex;flex-direction:column;">
+<sc-for list="{{ type }}" as="ty" hint-placeholder-count="10">
+<div style="display:grid;grid-template-columns:260px 200px minmax(0,1fr);align-items:baseline;gap:24px;padding:14px 0;border-top:1px solid #2c313a;">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#e6e9ef;">{{ ty.token }}</span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#9da5b4;">{{ ty.spec }}</span>
+<span style="font-family:{{ ty.fam }};font-size:{{ ty.size }};line-height:{{ ty.lh }};font-weight:{{ ty.w }};letter-spacing:{{ ty.ls }};color:#e6e9ef;">{{ ty.sample }}</span>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;">
+<h2 style="margin:0;font-size:24px;font-weight:600;color:#e6e9ef;">5 Abstände und Radien</h2>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:48px;">
+<div style="display:flex;flex-direction:column;gap:10px;">
+<sc-for list="{{ spaces }}" as="sp" hint-placeholder-count="7">
+<div style="display:grid;grid-template-columns:150px 50px minmax(0,1fr);align-items:center;gap:16px;font-size:13px;"><span style="font-family:'IBM Plex Mono',monospace;color:#e6e9ef;">{{ sp.token }}</span><span style="font-family:'IBM Plex Mono',monospace;color:#9da5b4;">{{ sp.v }}</span><div style="display:flex;align-items:center;gap:12px;"><span style="width:{{ sp.v }};height:16px;background:#61afef;border-radius:2px;flex:none;"></span><span style="color:#9da5b4;">{{ sp.use }}</span></div></div>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;">
+<sc-for list="{{ radii }}" as="ra" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:220px 50px minmax(0,1fr);align-items:center;gap:16px;font-size:13px;"><span style="font-family:'IBM Plex Mono',monospace;color:#e6e9ef;">{{ ra.token }}</span><span style="font-family:'IBM Plex Mono',monospace;color:#9da5b4;">{{ ra.v }}</span><div style="display:flex;align-items:center;gap:12px;"><span style="width:36px;height:28px;border:2px solid #61afef;border-radius:{{ ra.v }};flex:none;"></span><span style="color:#9da5b4;">{{ ra.use }}</span></div></div>
+</sc-for>
+</div>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;">
+<div style="display:flex;flex-direction:column;gap:8px;"><h2 style="margin:0;font-size:24px;font-weight:600;color:#e6e9ef;">6 Karte</h2><span style="font-size:14px;color:#9da5b4;">&lt;app-card&gt; auf Basis von &lt;button mat-button&gt; mit eigenem Stil, aria-pressed</span></div>
+<div style="display:flex;flex-direction:column;gap:40px;">
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;font-size:15px;">
+<div style="display:flex;flex-direction:column;gap:6px;"><h3 style="margin:0;font-size:16px;font-weight:600;color:#e6e9ef;">Aufbau</h3><span>84 × 124 px (mobil: Raster mit 6 Spalten, Höhe 76 px, mindestens 44 px Trefferfläche). Radius 10 px. Oben 6 px Motivband, Wert mittig in Plex Mono 38/600.</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;"><h3 style="margin:0;font-size:16px;font-weight:600;color:#e6e9ef;">Zustände</h3><span>Gewählt heißt: volle Motivfarbe, „✓ GEWÄHLT“ als Text, 12 px angehoben. Verdeckt: Motivmuster ohne Wert. Gesperrt (Besprechung): gestrichelt auf Grau, aria-disabled, Hinweis als Text über dem Fächer. Ausstehend: gestrichelter Rahmen. Ausreißer: Rahmen in Warnfarbe plus Etikett „Ausreißer“.</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;"><h3 style="margin:0;font-size:16px;font-weight:600;color:#e6e9ef;">Screenreader</h3><span>aria-label „Karte 5“, „Karte Unklar“, „Karte Kaffeepause“. Fächer als role="group" mit Label „Deine Karte“. Pfeiltasten wechseln den Fokus, Leertaste und Enter wählen.</span></div>
+</div>
+<sc-for list="{{ cardThemes }}" as="ct" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:20px;padding:28px;border-radius:12px;background:{{ ct.t.bg }};">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;color:{{ ct.t.muted }};">{{ ct.title }}</span>
+<div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-end;">
+<sc-for list="{{ ct.states }}" as="c" hint-placeholder-count="9">
+<div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100px;">
+<div style="height:20px;display:flex;align-items:flex-end;"><sc-if value="{{ c.outlier }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px;background:{{ ct.t.warnC }};color:{{ ct.t.onWarnC }};">Ausreißer</span></sc-if></div>
+<div style="width:84px;height:124px;border-radius:10px;border:{{ c.border }};background-color:{{ c.bg }};background-image:{{ c.pat }};background-size:{{ ct.m.size }};color:{{ c.fg }};display:flex;flex-direction:column;overflow:hidden;transform:{{ c.tf }};outline:{{ c.outline }};outline-offset:3px;opacity:{{ c.op }};font-family:'IBM Plex Mono',monospace;">
+<span style="height:6px;flex:none;background-color:{{ c.band }};background-image:{{ c.bandPat }};background-size:{{ ct.m.size }};"></span>
+<span style="font-size:11px;font-weight:600;padding:2px 8px 0;height:16px;">{{ c.label }}</span>
+<span style="flex:1;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:{{ c.w }};margin-top:-16px;">{{ c.v }}</span>
+</div>
+<span style="font-size:13px;font-weight:500;color:{{ ct.t.on }};text-align:center;">{{ c.name }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;">
+<div style="display:flex;flex-direction:column;gap:8px;"><h2 style="margin:0;font-size:24px;font-weight:600;color:#e6e9ef;">7 Kartenmotive</h2><span style="font-size:14px;color:#9da5b4;">Jede Runde ein Motiv, für alle gleich</span></div>
+<div style="display:flex;flex-direction:column;gap:28px;">
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;font-size:15px;">
+<div style="display:flex;flex-direction:column;gap:6px;"><h3 style="margin:0;font-size:16px;font-weight:600;color:#e6e9ef;">Auswahl</h3><span>Das Frontend berechnet das Motiv aus Session-ID, Issue-Nummer und Rundennummer (Hash modulo 5). So sehen alle dasselbe, ohne dass sich Snapshot oder Vertrag ändern. Ergibt der Hash das Motiv der Vorrunde, wird das nächste genommen.</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;"><h3 style="margin:0;font-size:16px;font-weight:600;color:#e6e9ef;">Bedeutung</h3><span>Keine. Das Motiv zeigt nur, dass eine neue Runde läuft, und gibt dem Raum Abwechslung. Zustände hängen nie am Motiv, sie stehen immer als Text oder Symbol daneben. In der Phasenleiste steht „Kartensatz: Ringe“.</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;"><h3 style="margin:0;font-size:16px;font-weight:600;color:#e6e9ef;">Tokens</h3><span>Die Bildkarten ? und ☕ (SVG) färben sich über --poker-body (Motivfarbe), --poker-shade (30 % dunkler), --poker-soft (70 % heller), --poker-ink (Kontur) und currentColor (Textfarbe der Karte).</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.7;">--app-card-accent<br>--app-card-on-accent<br>--app-card-pattern<br>--app-card-pattern-size<br>gesetzt per [attr.data-motif] am Raum</span></div>
+</div>
+<div style="display:flex;align-items:center;gap:16px;">
+<button onClick="{{ shuffle }}" style="height:40px;padding:0 18px;border-radius:8px;border:none;background:#61afef;color:#1d2026;font:600 14px 'IBM Plex Sans',sans-serif;cursor:pointer;">↻ Neue Runde</button>
+<span style="font-size:15px;color:#e6e9ef;">Runde {{ round }}: <strong>{{ curName }}</strong></span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;">
+<sc-for list="{{ motifs }}" as="mo" hint-placeholder-count="5">
+<div style="display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:12px;border:{{ mo.frame }};background:#21252b;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:16px;font-weight:600;color:#e6e9ef;">{{ mo.name }}</span><span style="font-size:12px;font-weight:600;color:#61afef;">{{ mo.cur }}</span></div>
+<div style="display:flex;gap:6px;">
+<div style="width:48px;height:70px;border-radius:8px;background-color:{{ mo.d }};background-image:{{ mo.patD }};background-size:{{ mo.size }};"></div>
+<div style="width:48px;height:70px;border-radius:8px;background:{{ mo.d }};color:#1d2026;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;">5</div>
+<div style="width:48px;height:70px;border-radius:8px;background-color:{{ mo.l }};background-image:{{ mo.patL }};background-size:{{ mo.size }};"></div>
+<div style="width:48px;height:70px;border-radius:8px;background:{{ mo.l }};color:#fff;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;">5</div>
+</div>
+<div style="display:flex;gap:6px;">
+<div style="width:48px;height:70px;border-radius:8px;background:#1d2026;border:1.5px solid #3e4451;display:flex;align-items:center;justify-content:center;">{{ mo.gqD }}</div>
+<div style="width:48px;height:70px;border-radius:8px;background:#1d2026;border:1.5px solid #3e4451;display:flex;align-items:center;justify-content:center;">{{ mo.gcD }}</div>
+<div style="width:48px;height:70px;border-radius:8px;background:#ffffff;border:1.5px solid #d4d5d9;display:flex;align-items:center;justify-content:center;">{{ mo.gqL }}</div>
+<div style="width:48px;height:70px;border-radius:8px;background:#ffffff;border:1.5px solid #d4d5d9;display:flex;align-items:center;justify-content:center;">{{ mo.gcL }}</div>
+</div>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.6;color:#9da5b4;">dunkel {{ mo.d }} · {{ mo.crD }}<br>hell {{ mo.l }} · {{ mo.crL }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;">
+<div style="display:flex;flex-direction:column;gap:8px;"><h2 style="margin:0;font-size:24px;font-weight:600;color:#e6e9ef;">8 Teilnehmer-Eintrag</h2><span style="font-size:14px;color:#9da5b4;">mat-list-item, 3 Spalten</span></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;">
+<sc-for list="{{ partThemes }}" as="pt" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:6px;padding:20px;border-radius:12px;background:{{ pt.t.low }};">
+<sc-for list="{{ pt.rows }}" as="p" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:16px;align-items:center;">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:6px;background:{{ p.rowBg }};">
+<div style="width:16px;height:22px;border-radius:3px;flex:none;border:{{ p.chipBorder }};background-color:{{ p.chipBg }};background-image:{{ p.chipPat }};"></div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:15px;font-weight:500;color:{{ p.nameColor }};">{{ p.name }}</span><sc-if value="{{ p.sm }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;line-height:18px;font-weight:600;white-space:nowrap;color:{{ pt.t.onWarnC }};background:{{ pt.t.warnC }};padding:1px 7px;border-radius:4px;">★ Scrum Master</span></sc-if></div>
+<span style="font-size:13px;color:{{ p.statusColor }};">{{ p.status }}</span>
+</div>
+<span style="font-size:12px;color:{{ p.connColor }};white-space:nowrap;">{{ p.conn }}</span>
+</div>
+<span style="font-size:13px;color:{{ pt.t.muted }};">{{ p.note }}</span>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;">
+<div style="display:flex;flex-direction:column;gap:8px;"><h2 style="margin:0;font-size:24px;font-weight:600;color:#e6e9ef;">9 Statushinweise</h2><span style="font-size:14px;color:#9da5b4;">Farbe nie allein: jedes Element hat Symbol und Text</span></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;">
+<sc-for list="{{ noteThemes }}" as="nt" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:12px;background:{{ nt.t.bg }};">
+<sc-for list="{{ nt.notes }}" as="n" hint-placeholder-count="7">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:16px;align-items:center;">
+<div style="display:flex;gap:10px;align-items:center;padding:{{ n.pad }};border-radius:8px;background:{{ n.bg }};color:{{ n.fg }};font-size:14px;"><span style="font-weight:600;font-family:'IBM Plex Mono',monospace;">{{ n.icon }}</span><span>{{ n.text }}</span></div>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ nt.t.muted }};">{{ n.meta }}</span>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;">
+<div style="display:flex;flex-direction:column;gap:8px;"><h2 style="margin:0;font-size:24px;font-weight:600;color:#e6e9ef;">10 Timer</h2><span style="font-size:14px;color:#9da5b4;">role="timer", Frist vom Server</span></div>
+<div style="display:flex;flex-direction:column;gap:20px;">
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;">
+<sc-for list="{{ timerThemes }}" as="tt" hint-placeholder-count="2">
+<div style="display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:12px;background:{{ tt.t.c }};">
+<sc-for list="{{ tt.items }}" as="ti" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:170px minmax(0,1fr);gap:16px;align-items:center;">
+<span style="justify-self:start;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;color:{{ ti.fg }};background:{{ ti.bg }};border:{{ ti.border }};padding:3px 10px;border-radius:6px;">{{ ti.text }}</span>
+<span style="font-size:13px;color:{{ tt.t.onv }};">{{ ti.note }}</span>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+<p style="margin:0;font-size:15px;max-width:900px;">Der Timer zählt sekundengenau, wird aber nur alle 15 Sekunden und in den letzten 10 Sekunden vorgelesen (aria-live="polite" auf einem separaten Text), damit Screenreader nicht jede Sekunde ansagen. Läuft die Zeit ab, wird nicht automatisch aufgelöst; der Scrum Master entscheidet. Auswahl im mat-select: Aus, 15 s, 30 s, 1 min, 2 min, 5 min.</p>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;">
+<h2 style="margin:0;font-size:24px;font-weight:600;color:#e6e9ef;">11 Fokus und Bewegung</h2>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px;font-size:15px;">
+<div style="display:flex;flex-direction:column;gap:12px;">
+<h3 style="margin:0;font-size:16px;font-weight:600;color:#e6e9ef;">Tastaturfokus</h3>
+<span>3 px Rahmen in --mat-sys-primary, 3 px Abstand, nur bei :focus-visible. Auf gefüllten Flächen (gewählte Karte, Primär-Button) zusätzlich 3 px innerer Ring in surface, damit der Fokus auf jeder Motivfarbe sichtbar bleibt.</span>
+<div style="display:flex;gap:28px;align-items:center;padding:24px;background:#282c34;border-radius:12px;">
+<span style="width:72px;height:104px;border-radius:10px;border:1.5px solid #3e4451;background:#1d2026;color:#e6e9ef;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:32px;outline:3px solid #61afef;outline-offset:3px;">8</span>
+<span style="height:40px;padding:0 18px;border-radius:8px;background:#61afef;color:#1d2026;display:flex;align-items:center;font-weight:600;font-size:14px;box-shadow:0 0 0 3px #282c34,0 0 0 6px #61afef;">Auflösen</span>
+<span style="height:40px;padding:0 14px;border-radius:8px;border:1px solid #7f8794;color:#61afef;display:flex;align-items:center;font-weight:500;font-size:14px;outline:3px solid #61afef;outline-offset:3px;">Kopieren</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;">
+<h3 style="margin:0;font-size:16px;font-weight:600;color:#e6e9ef;">Bewegung</h3>
+<sc-for list="{{ motion }}" as="mv" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:170px 120px minmax(0,1fr);gap:16px;padding:8px 0;border-top:1px solid #2c313a;font-size:14px;"><span style="color:#e6e9ef;">{{ mv.what }}</span><span style="font-family:'IBM Plex Mono',monospace;color:#9da5b4;">{{ mv.how }}</span><span>{{ mv.reduced }}</span></div>
+</sc-for>
+</div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { round: 1, cur: 0 };
+  static T = {
+    dark: { bg:'#282c34', low:'#21252b', lowest:'#1d2026', c:'#2c313a', on:'#e6e9ef', onv:'#abb2bf', muted:'#9da5b4', outline:'#7f8794', ov:'#3e4451', pri:'#61afef', onPri:'#1d2026', priC:'#284566', onPriC:'#d3e7fb', err:'#ef8a92', errC:'#4a2a2f', onErrC:'#ffd9dc', ok:'#98c379', okC:'#2f3d2b', onOkC:'#d4ecc6', warn:'#e5c07b', warnC:'#4a3d26', onWarnC:'#f7e3bd', inv:'#e6e9ef', onInv:'#282c34', patC:'rgba(29,32,38,.30)' },
+    light: { bg:'#fafafa', low:'#f3f3f4', lowest:'#ffffff', c:'#ececee', on:'#232428', onv:'#383a42', muted:'#5d606b', outline:'#8a8d96', ov:'#d4d5d9', pri:'#2f5fd0', onPri:'#ffffff', priC:'#dbe6fc', onPriC:'#142f6e', err:'#b8352a', errC:'#fbe2df', onErrC:'#6e1a12', ok:'#3a7a39', okC:'#dcefd9', onOkC:'#1f4a1e', warn:'#8a5f00', warnC:'#fbedc9', onWarnC:'#4f3600', inv:'#2b2d33', onInv:'#f3f3f4', patC:'rgba(255,255,255,.30)' }
+  };
+  static M = [
+    ['Raster','#61afef','#2f5fd0','repeating-linear-gradient(45deg, C 0 2px, transparent 2px 8px)','auto','6,9 : 1','5,7 : 1'],
+    ['Punkte','#56b6c2','#0a6f8f','radial-gradient(C 1.6px, transparent 1.9px)','9px 9px','6,9 : 1','5,7 : 1'],
+    ['Zeilen','#98c379','#3a7a39','repeating-linear-gradient(0deg, C 0 2px, transparent 2px 7px)','auto','8,1 : 1','5,2 : 1'],
+    ['Ringe','#c678dd','#9a2299','repeating-radial-gradient(circle at 30% 30%, C 0 1.5px, transparent 1.5px 7px)','auto','5,5 : 1','6,9 : 1'],
+    ['Stufen','#e5c07b','#8a5f00','conic-gradient(C 25%, transparent 0 50%, C 0 75%, transparent 0)','12px 12px','9,4 : 1','5,6 : 1']
+  ];
+
+  static svgP = null; static svgs = null;
+  static loadSvgs() {
+    if (!Component.svgP) Component.svgP = Promise.all(['assets/coffee-break.svg','assets/question-mark.svg'].map(u => fetch(u).then(r => r.text()))).then(([c, q]) => {
+      const clean = s => s.replace(/<metadata>[\s\S]*?<\/metadata>/, '').replace(/role="img"/, 'aria-hidden="true" focusable="false"').replace(/aria-label="[^"]*"/, '').replace('<svg ', '<svg width="100%" height="100%" ');
+      Component.svgs = { '☕': clean(c), '?': clean(q) };
+    }).catch(() => {});
+    return Component.svgP;
+  }
+  static mix(a, b, k) { const p = h => [1,3,5].map(i => parseInt(h.substr(i,2),16)); const x = p(a), y = p(b); return '#' + x.map((v,i) => Math.round(v + (y[i]-v)*k).toString(16).padStart(2,'0')).join(''); }
+  static gpal(accent, dark, mode, t) {
+    const M = Component.mix;
+    if (mode === 'locked') return { body: t.ov, shade: M(t.ov, '#000000', .25), soft: t.c, ink: t.muted, cur: t.muted };
+    if (mode === 'sel') return { body: M(accent, '#ffffff', dark ? .55 : .7), shade: M(accent, '#ffffff', .3), soft: '#ffffff', ink: dark ? '#1d2026' : M(accent, '#000000', .6), cur: dark ? '#1d2026' : '#ffffff' };
+    return { body: accent, shade: M(accent, '#000000', .35), soft: M(accent, '#ffffff', .72), ink: dark ? '#14161a' : M(accent, '#000000', .62), cur: t.on };
+  }
+  glyph(v, pal, size) {
+    const svg = Component.svgs && Component.svgs[v];
+    if (!svg) return v;
+    return React.createElement('span', { 'aria-hidden': 'true', style: { display:'inline-flex', width:size, height:size, maxWidth:'100%', margin:'0 auto', color: pal.cur, '--poker-ink': pal.ink, '--poker-body': pal.body, '--poker-shade': pal.shade, '--poker-soft': pal.soft }, dangerouslySetInnerHTML: { __html: svg } });
+  }
+  componentDidMount() { Component.loadSvgs().then(() => this.forceUpdate()); }
+  hash(str) { let h = 2166136261; for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return Math.abs(h); }
+  shuffle = () => this.setState(s => { const r = s.round + 1; let i = this.hash('K7P2QX9M:42:' + r) % 5; if (i === s.cur) i = (i + 1) % 5; return { round: r, cur: i }; });
+  renderVals() {
+    const T = Component.T, M = Component.M, cur = this.state.cur;
+    const pat = (m, t) => m[3].split('C').join(t.patC);
+    const pal = (title, t, rows, bg, line) => ({ title, bg, line, on: t.on, muted: t.muted, rows: rows.map(r => ({ token: r[0], hex: r[1], use: r[2], cr: r[3] ?? '' })) });
+    const palettes = [
+      pal('HELL · ONE LIGHT', T.light, [
+        ['--mat-sys-surface','#fafafa','Seitenhintergrund'],['--mat-sys-surface-container-lowest','#ffffff','Kartenvorderseite, Dialog'],['--mat-sys-surface-container-low','#f3f3f4','Toolbar, Seitenleiste'],['--mat-sys-surface-container','#ececee','Phasenleiste, Zeile „du“'],['--mat-sys-surface-container-high','#e5e5e6','Hover'],
+        ['--mat-sys-on-surface','#232428','Überschriften, Werte','14,9 : 1'],['--mat-sys-on-surface-variant','#383a42','Fließtext','10,9 : 1'],['--app-on-surface-muted','#5d606b','Sekundärtext, Labels','6,0 : 1'],['--mat-sys-outline','#8a8d96','Feldrahmen','3,2 : 1'],['--mat-sys-outline-variant','#d4d5d9','Trennlinien'],
+        ['--mat-sys-primary','#2f5fd0','Primär, Links, Fokus','5,5 : 1'],['--mat-sys-on-primary','#ffffff','Text auf Primär'],['--mat-sys-primary-container','#dbe6fc','Auswahl'],['--mat-sys-on-primary-container','#142f6e','Text auf Auswahl','10,1 : 1'],
+        ['--mat-sys-error','#b8352a','Fehlertext','5,6 : 1'],['--mat-sys-error-container','#fbe2df','Fehlerfläche'],['--app-success','#3a7a39','„Hat geschätzt“','5,0 : 1'],['--app-success-container','#dcefd9','Konsens, Endwert'],['--app-warning','#8a5f00','„Ausstehend“','5,4 : 1'],['--app-warning-container','#fbedc9','Ausreißer, Timer, SM-Etikett']
+      ], '#fafafa', '#e3e3e6'),
+      pal('DUNKEL · ONE DARK', T.dark, [
+        ['--mat-sys-surface','#282c34','Seitenhintergrund'],['--mat-sys-surface-container-lowest','#1d2026','Kartenvorderseite'],['--mat-sys-surface-container-low','#21252b','Toolbar, Seitenleiste'],['--mat-sys-surface-container','#2c313a','Phasenleiste, Dialog'],['--mat-sys-surface-container-high','#323844','Hover'],
+        ['--mat-sys-on-surface','#e6e9ef','Überschriften, Werte','11,5 : 1'],['--mat-sys-on-surface-variant','#abb2bf','Fließtext','6,6 : 1'],['--app-on-surface-muted','#9da5b4','Sekundärtext, Labels','5,6 : 1'],['--mat-sys-outline','#7f8794','Feldrahmen','3,9 : 1'],['--mat-sys-outline-variant','#3e4451','Trennlinien'],
+        ['--mat-sys-primary','#61afef','Primär, Links, Fokus','5,9 : 1'],['--mat-sys-on-primary','#1d2026','Text auf Primär'],['--mat-sys-primary-container','#284566','Auswahl'],['--mat-sys-on-primary-container','#d3e7fb','Text auf Auswahl','7,8 : 1'],
+        ['--mat-sys-error','#ef8a92','Fehlertext (heller als One Dark)','5,8 : 1'],['--mat-sys-error-container','#4a2a2f','Fehlerfläche'],['--app-success','#98c379','„Hat geschätzt“','6,9 : 1'],['--app-success-container','#2f3d2b','Konsens, Endwert'],['--app-warning','#e5c07b','„Ausstehend“','8,1 : 1'],['--app-warning-container','#4a3d26','Ausreißer, Timer, SM-Etikett']
+      ], '#282c34', '#3a3f4b')
+    ];
+    const P = "'IBM Plex Sans',sans-serif", Mo = "'IBM Plex Mono',monospace";
+    const type = [
+      ['--mat-sys-display-small','Sans 40/48 · 600',P,'40px','48px',600,'-.01em','Issues gemeinsam schätzen'],
+      ['--mat-sys-headline-small','Sans 26/32 · 600',P,'26px','32px',600,'0','Passwort per E-Mail zurücksetzen'],
+      ['--mat-sys-title-large','Sans 20/28 · 600',P,'20px','28px',600,'0','Issue auswählen'],
+      ['--mat-sys-title-medium','Sans 16/24 · 600',P,'16px','24px',600,'0','Deine Karte'],
+      ['--mat-sys-body-large','Sans 17/28 · 400',P,'17px','28px',400,'0','Nutzer sollen einen Link per E-Mail anfordern können.'],
+      ['--mat-sys-body-medium','Sans 15/24 · 400',P,'15px','24px',400,'0','Der Link ist 30 Minuten gültig und nur einmal verwendbar.'],
+      ['--mat-sys-body-small','Sans 13/20 · 400',P,'13px','20px',400,'0','✓ Hat geschätzt · ● verbunden'],
+      ['--mat-sys-label-large','Sans 14/20 · 500',P,'14px','20px',500,'0','Ergebnis übernehmen'],
+      ['--app-label-section','Mono 12/16 · 500 · +.08em',Mo,'12px','16px',500,'.08em','TEILNEHMER · 6'],
+      ['--app-value-card','Mono 38/38 · 600',Mo,'38px','38px',600,'0','13'],
+      ['--app-value-id','Mono 15/24 · 400 · +.06em',Mo,'15px','24px',400,'.06em','K7P2QX9M · #42 · Noch 0:42']
+    ].map(x => ({ token:x[0], spec:x[1], fam:x[2], size:x[3], lh:x[4], w:x[5], ls:x[6], sample:x[7] }));
+    const spaces = [['--app-space-xs','4px','Symbol zu Text'],['--app-space-s','8px','Innen in Chips, Listenzeilen'],['--app-space-m','16px','Formularfelder untereinander'],['--app-space-l','24px','Seitenleiste innen, zwischen Karten'],['--app-space-xl','32px','Hauptbereich oben'],['--app-space-2xl','48px','Hauptbereich seitlich (Desktop)'],['--app-space-3xl','64px','Abschnitte der Startseite']].map(x => ({ token:x[0], v:x[1], use:x[2] }));
+    const radii = [['--mat-sys-corner-extra-small','4px','Etiketten, Session-ID-Chip'],['--mat-sys-corner-small','6px','Listenzeilen, Code'],['--app-corner-control','8px','Buttons, Felder, Hinweise'],['--mat-sys-corner-medium','10px','Spielkarte'],['--mat-sys-corner-large','12px','Panels'],['--mat-sys-corner-extra-large','16px','Dialog']].map(x => ({ token:x[0], v:x[1], use:x[2] }));
+
+    const mk = (t, m, dark) => {
+      const a = dark ? m[1] : m[2], onA = dark ? '#1d2026' : '#ffffff', p = pat(m, t);
+      const face = { border:`1.5px solid ${t.ov}`, bg:t.lowest, pat:'none', fg:t.on, band:a, bandPat:p, label:'', tf:'none', outline:'none', op:1, w:500, outlier:false };
+      return [
+        { ...face, v:'8', name:'Offen' },
+        { ...face, v:'8', name:'Hover', border:`1.5px solid ${a}`, tf:'translateY(-4px)' },
+        { ...face, v:'8', name:'Fokus', outline:`3px solid ${t.pri}` },
+        { ...face, v:'5', name:'Gewählt', border:'none', bg:a, fg:onA, band:'transparent', bandPat:'none', label:'✓ GEWÄHLT', tf:'translateY(-12px)', w:600 },
+        { ...face, v:'', name:'Verdeckt', border:'none', bg:a, pat:p, band:'transparent', bandPat:'none' },
+        { ...face, v:'8', name:'Gesperrt (Besprechung)', border:`1.5px dashed ${t.ov}`, bg:t.c, fg:t.muted, band:'transparent', bandPat:'none', w:500 },
+        { ...face, v:'…', name:'Ausstehend', border:`1.5px dashed ${t.outline}`, bg:'transparent', fg:t.muted, band:'transparent', bandPat:'none', w:400 },
+        { ...face, v:'5', name:'Aufgedeckt · Cem', w:600 },
+        { ...face, v:'13', name:'Aufgedeckt · Dana', w:600, border:`2px solid ${t.warn}`, outlier:true },
+        { ...face, v: this.glyph('☕', Component.gpal(a, dark, 'face', t), '62px'), name:'Kaffeepause', w:500 },
+        { ...face, v: this.glyph('?', Component.gpal(a, dark, 'sel', t), '52px'), name:'Gewählt · ?', border:'none', bg:a, fg:onA, band:'transparent', bandPat:'none', label:'✓ GEWÄHLT', tf:'translateY(-12px)' }
+      ];
+    };
+    const m0 = M[0];
+    const cardThemes = [
+      { title:'DUNKEL · MOTIV RASTER', t:T.dark, m:{ size:m0[4] }, states: mk(T.dark, m0, true) },
+      { title:'HELL · MOTIV RINGE', t:T.light, m:{ size:M[3][4] }, states: mk(T.light, M[3], false) }
+    ];
+    const motifs = M.map((m, i) => ({ gqD: this.glyph('?', Component.gpal(m[1], true, 'face', T.dark), '40px'), gcD: this.glyph('☕', Component.gpal(m[1], true, 'face', T.dark), '40px'), gqL: this.glyph('?', Component.gpal(m[2], false, 'face', T.light), '40px'), gcL: this.glyph('☕', Component.gpal(m[2], false, 'face', T.light), '40px'), name:m[0], d:m[1], l:m[2], size:m[4], patD:m[3].split('C').join(T.dark.patC), patL:m[3].split('C').join(T.light.patC), crD:m[5], crL:m[6], frame: i === cur ? '2px solid #61afef' : '1px solid #2c313a', cur: i === cur ? 'diese Runde' : '' }));
+
+    const partRows = (t, dark) => {
+      const a = dark ? M[0][1] : M[0][2], p = pat(M[0], t);
+      const base = { rowBg:'transparent', sm:false, nameColor:t.on, connColor:t.muted, conn:'● verbunden' };
+      return [
+        { ...base, name:'Anna', sm:true, status:'Moderiert, schätzt nicht mit', statusColor:t.muted, chipBorder:'none', chipBg:'transparent', chipPat:'none', rowBg:t.c, note:'Scrum Master, eigene Zeile' },
+        { ...base, name:'Ben', status:'✓ Hat geschätzt', statusColor:t.ok, chipBorder:'none', chipBg:a, chipPat:p, note:'geschätzt (ohne Wert)' },
+        { ...base, name:'Dana', status:'○ Ausstehend', statusColor:t.warn, chipBorder:`1.5px dashed ${t.outline}`, chipBg:'transparent', chipPat:'none', note:'ausstehend' },
+        { ...base, name:'Finn', status:'○ Ausstehend', statusColor:t.warn, chipBorder:`1.5px dashed ${t.outline}`, chipBg:'transparent', chipPat:'none', conn:'○ getrennt', connColor:t.err, nameColor:t.muted, note:'getrennt' },
+        { ...base, name:'Eva', status:'Bereit', statusColor:t.muted, chipBorder:`1.5px dashed ${t.outline}`, chipBg:'transparent', chipPat:'none', note:'ohne laufende Runde' }
+      ];
+    };
+    const partThemes = [{ t:T.dark, rows: partRows(T.dark, true) }, { t:T.light, rows: partRows(T.light, false) }];
+
+    const notes = t => [
+      { icon:'●', text:'Backend erreichbar', bg:'transparent', fg:t.ok, pad:'4px 0', meta:'Status-Zeile' },
+      { icon:'ⓘ', text:'Ins GitLab-Issue wird ein Kommentar geschrieben.', bg:t.c, fg:t.onv, pad:'10px 14px', meta:'Info · role=note' },
+      { icon:'✓', text:'Konsens: Alle haben 5 gewählt.', bg:t.okC, fg:t.onOkC, pad:'10px 14px', meta:'Erfolg · role=status' },
+      { icon:'↕', text:'Niedrigste und höchste Schätzung liegen weit auseinander.', bg:t.warnC, fg:t.onWarnC, pad:'10px 14px', meta:'Warnung · role=note' },
+      { icon:'⚠', text:'Das Issue wurde nicht gefunden', bg:t.errC, fg:t.onErrC, pad:'10px 14px', meta:'Fehler · role=alert' },
+      { icon:'⚠', text:'Name schon vergeben', bg:'transparent', fg:t.err, pad:'4px 0', meta:'Feldfehler · mat-error' },
+      { icon:'✓', text:'Endwert 5 in GitLab-Issue #42 gespeichert.', bg:t.inv, fg:t.onInv, pad:'10px 14px', meta:'Snackbar' }
+    ];
+    const noteThemes = [{ t:T.dark, notes: notes(T.dark) }, { t:T.light, notes: notes(T.light) }];
+
+    const timers = t => [
+      { text:'◷ Noch 0:42', fg:t.onWarnC, bg:t.warnC, border:'none', note:'läuft' },
+      { text:'◷ Noch 0:07', fg:t.onWarnC, bg:t.warnC, border:`2px solid ${t.warn}`, note:'letzte 10 Sekunden: Rahmen kommt dazu, keine Animation' },
+      { text:'⏱ Zeit abgelaufen', fg:t.onErrC, bg:t.errC, border:'none', note:'abgelaufen; Runde bleibt offen' },
+      { text:'Kein Timer', fg:t.muted, bg:'transparent', border:`1px dashed ${t.ov}`, note:'Timer „Aus“: Element entfällt in der Phasenleiste' }
+    ];
+    const timerThemes = [{ t:T.dark, items: timers(T.dark) }, { t:T.light, items: timers(T.light) }];
+
+    const motion = [
+      ['Karte wählen','150 ms ease-out','Anheben entfällt, Zustand nur über Fläche und Text'],
+      ['Aufdecken','Drehung 240 ms, versetzt 40 ms','Werte erscheinen sofort, ohne Drehung'],
+      ['Konfetti','2,6 s, einmal je Runde','entfällt; der Konsens-Hinweis bleibt'],
+      ['Dialog, Snackbar','Material-Standard','Material schaltet selbst ab (MATERIAL_ANIMATIONS)'],
+      ['Fortschrittsbalken','Breite 200 ms','springt ohne Übergang']
+    ].map(x => ({ what:x[0], how:x[1], reduced:x[2] }));
+
+    return { palettes, type, spaces, radii, cardThemes, motifs, round: this.state.round, curName: M[cur][0], shuffle: this.shuffle, partThemes, noteThemes, timerThemes, motion };
+  }
+}
+</script>
+</body>
+</html>

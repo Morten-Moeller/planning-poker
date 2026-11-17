@@ -44,8 +44,9 @@ change touches.
 | `backend/src/main/java/planningpoker/realtime/` | `backend/src/test/java/planningpoker/realtime/` (from spec 0009) | `frontend/e2e/create-and-join.spec.ts` |
 | `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/project-picker.spec.ts` |
 | `frontend/src/app/api/` | `frontend/src/app/api/*.spec.ts` (from spec 0005) | – |
+| `frontend/src/app/shell/`, `frontend/src/styles.scss`, `frontend/src/index.html` | `frontend/src/app/shell/*.spec.ts` | `frontend/e2e/theme.spec.ts`, `frontend/e2e/layout.spec.ts` |
 | `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/full-flow.spec.ts` |
-| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/issue-filter.spec.ts` |
+| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/issue-filter.spec.ts`, `frontend/e2e/theme.spec.ts` |
 
 ## End-to-end
 
@@ -119,7 +120,10 @@ change touches.
   a scrum master and two developers (one joins through the link, one through the session id on
   the start page, both in small letters) on issues 42 and 43, confirms issue 43 and counts its
   notes in the double, and opens an unknown session id with a stored token;
-  `layout.spec.ts` (spec 0019) joins one developer at a viewport of 375×800.
+  `layout.spec.ts` (spec 0019) joins one developer at a viewport of 375×800 and checks the
+  320 px side column at 1440×900 (spec 0027); `theme.spec.ts` (spec 0027) reads the theme
+  tokens under `emulateMedia({ colorScheme })`, the fonts and the keyboard focus on the start
+  page and joins two developers (`Ben`, and `Cem` at 375×800) for the toolbar.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.
 

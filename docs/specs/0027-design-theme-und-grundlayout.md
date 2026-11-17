@@ -1,8 +1,8 @@
 ---
 id: "0027"
 title: Design Werkbank, Teil A, Theme und Grundlayout
-status: approved
-risk: medium
+status: Review
+risk: high
 adrs: []
 owner: Morten Möller
 created: 2026-11-17
@@ -81,8 +81,9 @@ keine
 
 ## Risiko
 
-Stufe: medium
-Begründung: `harness/scripts/risk-level.sh` meldet medium für `frontend/src/` (Anwendungscode und
+Stufe: high (bei der Umsetzung gemessen, siehe Offene Fragen)
+Begründung: Der Schlüsselwort-Eskalator hebt medium auf high, weil zwei neue Zeilen in
+`project-rules/` das Wort „tokens“ für Design-Tokens nutzen. Ohne ihn meldet `harness/scripts/risk-level.sh` medium für `frontend/src/` (Anwendungscode und
 Styles). `docs/` und Tests sind low.
 Gates: G0 und G1 in dieser Session, G2 über das Label `human-approved`; `verify` läuft auch bei
 medium. Reviews: Code und Sicherheit.
@@ -145,6 +146,8 @@ Contracts zu regenerieren: keine.
 - [x] Design-Dateien ins Repository? → Ja, unter `docs/design/`. (Morten Möller, 2026-11-17)
 - [x] Schnitt? → A Theme und Grundlayout, B Seitenleiste, C Tisch und Karten, D Bedienfeld, Dialoge und Banner (mit Vertragsänderung für Projektname, Gesamtzahl und `write-weight`), E Start und Beitritt. (Morten Möller, 2026-11-17)
 - [x] Automatische Auflösung bei Ablauf des Timers trotz Hinweis im Design-System? → Ja, wie O-01 und 0016; `docs/design/README.md` nennt die Abweichung. (Morten Möller, 2026-11-17)
+- [x] DesignSync im Worker nicht verfügbar, wer legt die Dateien ab? → Die Person exportiert sie aus Claude Design; die SVGs sind ihre lokalen Fassungen ohne die C2PA-Signatur-Metadaten der Originale, `docs/design/README.md` nennt das. (Morten Möller, 2026-11-17)
+- [x] Risikostufe: Eskalator „token“ meldet high für Design-Tokens in project-rules? → Formulierung auf „variables“ ändern, Stufe medium. Die Rechteprüfung des Workers hat die Änderung abgelehnt; es geht mit Stufe high weiter. (Morten Möller, 2026-11-17)
 
 ## Verifikationsplan
 
