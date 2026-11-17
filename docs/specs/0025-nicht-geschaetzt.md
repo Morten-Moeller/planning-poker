@@ -1,14 +1,14 @@
 ---
 id: "0025"
 title: Nicht geschätzt in der aufgedeckten Runde
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#24"
+note: alle Kriterien erfüllt
 ---
 
 # Nicht geschätzt in der aufgedeckten Runde
