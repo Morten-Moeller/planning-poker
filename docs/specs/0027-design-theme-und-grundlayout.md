@@ -1,14 +1,14 @@
 ---
 id: "0027"
 title: Design Werkbank, Teil A, Theme und Grundlayout
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#27"
+note: alle Kriterien erfüllt
 ---
 
 # Design Werkbank, Teil A, Theme und Grundlayout
