@@ -5,7 +5,7 @@
   },
   "response": {
     "status": 200,
-    "headers": { "Content-Type": "application/json" },
+    "headers": { "Content-Type": "application/json", "X-Total": "2" },
     "jsonBody": [
       {
         "iid": 43,

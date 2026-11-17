@@ -1,6 +1,13 @@
 {
   "sessionId": "K7P2QX9M",
   "gitlabProjectId": "1234",
+  "project": {
+    "id": 1234,
+    "name": "Frontend",
+    "pathWithNamespace": "webshop/frontend",
+    "webUrl": "https://gitlab.com/webshop/frontend"
+  },
+  "writeWeight": false,
   "phase": "VOTING",
   "me": {
     "participantId": "01973f5e-2a4b-7c1d-8e2f-3a4b5c6d7e8f",

@@ -72,6 +72,11 @@ final class GitLabStubs {
         server.stubFor(get(urlPathEqualTo(issuesPath(projectId))).willReturn(response));
     }
 
+    static void searchWithTotal(WireMockServer server, String projectId, String body, String total) {
+        server.stubFor(get(urlPathEqualTo(issuesPath(projectId)))
+                .willReturn(json(200, body).withHeader("x-total", total)));
+    }
+
     static void searchWithWeight(WireMockServer server, String projectId, String gitLabWeight, String body) {
         server.stubFor(get(urlPathEqualTo(issuesPath(projectId)))
                 .withQueryParam("weight", WireMock.equalTo(gitLabWeight))

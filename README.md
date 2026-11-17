@@ -144,7 +144,11 @@ Karten anderer fehlen bis zur Auflösung, `preselectedIssueIid` sieht nur der Sc
 Frist. Das Frontend ersetzt seinen Zustand mit jedem
 Snapshot vollständig (ADR 0004). Jeder Snapshot trägt `timerSeconds` (Timer der Sitzung oder
 `null`), `serverTime` (Serverzeit beim Erzeugen) und in `round` die Frist `deadline` (oder
-`null`); alle Zeiten in RFC 3339 mit Offset.
+`null`); alle Zeiten in RFC 3339 mit Offset. Dazu kommen `project` (`id`, `name`,
+`pathWithNamespace`, `webUrl`; beim Anlegen einmal aus GitLab geladen, `null`, wenn GitLab das
+Projekt nicht liefert) und `writeWeight` (die Einstellung `planningpoker.gitlab.write-weight`).
+Beide Issue-Listen tragen `total`, die Gesamtzahl aus dem GitLab-Header `X-Total`, oder `null`,
+wenn GitLab den Header weglässt.
 
 ### Zustandsautomat
 
@@ -177,11 +181,11 @@ trägt jeder Aufruf `Authorization: Bearer <token>`.
 |---|---|---|---|---|
 | `GET /api/health` | offen | – | 200 `{ status }` | – |
 | `GET /api/projects?search=&page=` | offen | – | 200 `{ items: [{ id, name, pathWithNamespace, webUrl }], nextPage }` | 400, 502 |
-| `GET /api/projects/{projectId}/issues?search=&page=` | offen | – | 200 `{ items, nextPage }` (offene Issues mit `weight`) | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
+| `GET /api/projects/{projectId}/issues?search=&page=` | offen | – | 200 `{ items, nextPage, total }` (offene Issues mit `weight`) | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
 | `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid }` | 201 `{ sessionId, participantId, token }` | 400, 403 `PROJECT_NOT_ALLOWED`, 404 `ISSUE_NOT_FOUND`, 409 `LIMIT_REACHED`, 502 |
 | `POST /api/sessions/{id}/participants` | offen | `{ name }` | 201 `{ participantId, token }` | 400, 404, 409 `NAME_TAKEN`, `LIMIT_REACHED` |
 | `GET /api/sessions/{id}` | beide | – | 200 `SessionView` | 401, 404 |
-| `GET /api/sessions/{id}/issues?search=&page=&weight=&period=` | Scrum Master | – | 200 `{ items, nextPage }` mit `weight` je Eintrag | 400 `VALIDATION_ERROR`, 403, 502 |
+| `GET /api/sessions/{id}/issues?search=&page=&weight=&period=` | Scrum Master | – | 200 `{ items, nextPage, total }` mit `weight` je Eintrag | 400 `VALIDATION_ERROR`, 403, 502 |
 | `POST /api/sessions/{id}/active-issue` | Scrum Master | `{ issueIid }` | 204 | 400, 403, 404, 409, 502 |
 | `PUT /api/sessions/{id}/timer` | Scrum Master | `{ seconds }` (5 bis 3600 oder `null`) | 204 | 400, 403 |
 | `PUT /api/sessions/{id}/vote` | Entwickler | `{ card }` | 204 | 400 `INVALID_CARD`, 403, 409 |

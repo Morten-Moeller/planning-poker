@@ -12,11 +12,15 @@ class SessionBuilder {
     static final Issue OTHER_ISSUE = new Issue(43, "Logout", "", "https://gitlab.example/i/43");
 
     static final int MAX_PARTICIPANTS = 50;
+    static final Project PROJECT =
+            new Project(4711, "Frontend", "webshop/frontend", "https://gitlab.example/webshop/frontend");
 
     private int developers = 2;
     private Phase phase = Phase.LOBBY;
     private boolean confirming;
     private Integer timerSeconds;
+    private Project project;
+    private boolean writeWeight;
 
     static SessionBuilder session() {
         return new SessionBuilder();
@@ -24,6 +28,16 @@ class SessionBuilder {
 
     SessionBuilder developers(int developers) {
         this.developers = developers;
+        return this;
+    }
+
+    SessionBuilder project(Project project) {
+        this.project = project;
+        return this;
+    }
+
+    SessionBuilder writeWeight(boolean writeWeight) {
+        this.writeWeight = writeWeight;
         return this;
     }
 
@@ -56,7 +70,8 @@ class SessionBuilder {
 
     Session build() {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
-        Session session = new Session("K7P2QX9M", "4711", ISSUE.iid(), CREATED_AT, MAX_PARTICIPANTS);
+        Session session =
+                new Session("K7P2QX9M", "4711", ISSUE.iid(), CREATED_AT, MAX_PARTICIPANTS, project, writeWeight);
         Participant master = session.join("Master " + suffix);
         session.connect(master.id());
         for (int i = 1; i <= developers; i++) {

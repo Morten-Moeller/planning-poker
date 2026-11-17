@@ -35,6 +35,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import planningpoker.gitlab.WireMockGitLab;
 
 @QuarkusTest
@@ -128,6 +129,65 @@ class IssueSelectionTest {
                 .withQueryParam("search", WireMock.equalTo("login"))
                 .withQueryParam("per_page", WireMock.equalTo("20"))
                 .withQueryParam("page", WireMock.equalTo("1")));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"session", "project"})
+    void listsTheTotalFromTheGitLabHeader(String list) {
+        GitLabStubs.searchWithTotal(
+                gitlab, GitLabStubs.PROJECT, "[" + GitLabStubs.issueJson(7, "Login", "Form") + "]", "23");
+
+        listIssues(list).then().statusCode(200).body("items", hasSize(1)).body("total", equalTo(23));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"session", "project"})
+    void listsNoTotalWhenGitLabOmitsTheHeader(String list) {
+        GitLabStubs.search(gitlab, GitLabStubs.PROJECT, "[" + GitLabStubs.issueJson(7, "Login", "Form") + "]", null);
+
+        listIssues(list).then().statusCode(200).body("$", hasKey("total")).body("total", nullValue());
+    }
+
+    private io.restassured.response.Response listIssues(String list) {
+        return "session".equals(list)
+                ? asScrumMaster().when().get(session + "/issues")
+                : given().when().get("/api/projects/" + GitLabStubs.PROJECT + "/issues");
+    }
+
+    @Test
+    void createsTheSessionWithTheProjectOfGitLab() {
+        GitLabStubs.project(gitlab, 1234, "Frontend", "webshop/frontend");
+        SessionApiTest.Created created = SessionApiTest.createSession(
+                "Cleo " + UUID.randomUUID().toString().substring(0, 8));
+
+        given().header("Authorization", "Bearer " + created.token())
+                .when()
+                .get("/api/sessions/" + created.sessionId())
+                .then()
+                .statusCode(200)
+                .body("project.id", equalTo(1234))
+                .body("project.name", equalTo("Frontend"))
+                .body("project.pathWithNamespace", equalTo("webshop/frontend"))
+                .body("project.webUrl", equalTo("https://gitlab.example/webshop/frontend"))
+                .body("writeWeight", equalTo(false));
+        gitlab.verify(getRequestedFor(urlPathEqualTo(GitLabStubs.projectPath(GitLabStubs.PROJECT))));
+    }
+
+    @Test
+    void createsTheSessionWithoutProjectWhenGitLabFailsOnTheProject() {
+        GitLabStubs.projectFailing(gitlab, GitLabStubs.PROJECT, 500);
+        SessionApiTest.Created created = SessionApiTest.createSession(
+                "Cleo " + UUID.randomUUID().toString().substring(0, 8));
+
+        given().header("Authorization", "Bearer " + created.token())
+                .when()
+                .get("/api/sessions/" + created.sessionId())
+                .then()
+                .statusCode(200)
+                .body("$", hasKey("project"))
+                .body("project", nullValue())
+                .body("writeWeight", equalTo(false));
+        gitlab.verify(getRequestedFor(urlPathEqualTo(GitLabStubs.projectPath(GitLabStubs.PROJECT))));
     }
 
     @Test

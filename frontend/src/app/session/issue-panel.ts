@@ -29,7 +29,7 @@ import {
 import { formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
 import { SessionStore } from '../api/session-store';
-import { SwitchIssueDialog } from './switch-issue-dialog';
+import { SwitchIssueData, SwitchIssueDialog } from './switch-issue-dialog';
 
 export type IssueSummary = IssueListResponse['items'][number];
 
@@ -37,6 +37,9 @@ const SEARCH_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
   'GITLAB_ACCESS_DENIED',
   'GITLAB_ERROR',
 ]);
+
+const DEFAULT_WEIGHT: WeightFilter = 'NONE';
+const DEFAULT_PERIOD: UpdatedPeriod = 'ALL';
 
 @Component({
   selector: 'app-issue-panel',
@@ -65,17 +68,20 @@ export class IssuePanel implements OnInit {
 
   protected readonly results = signal<IssueSummary[]>([]);
   protected readonly nextPage = signal<number | null>(null);
+  protected readonly total = signal<number | null>(null);
   protected readonly loading = signal(false);
   protected readonly failure = signal<string | null>(null);
   protected readonly failed = computed(() => this.failure() !== null);
   protected readonly releasing = signal(false);
-  protected readonly weight = signal<WeightFilter>('NONE');
-  protected readonly period = signal<UpdatedPeriod>('ALL');
+  protected readonly weight = signal<WeightFilter>(DEFAULT_WEIGHT);
+  protected readonly period = signal<UpdatedPeriod>(DEFAULT_PERIOD);
   private search: string | undefined;
   private listing: Subscription | null = null;
   private lastLoad: { query: IssueFilterQuery; append: boolean } = { query: {}, append: false };
   private lastPhase: SessionView['phase'] | null = null;
 
+  protected readonly project = computed(() => this.store.session()?.project ?? null);
+  protected readonly projectId = computed(() => this.store.session()?.gitlabProjectId ?? '');
   protected readonly activeIid = computed(() => this.store.activeIssue()?.iid ?? null);
   private readonly defaultIid = computed(
     () => this.activeIid() ?? this.store.session()?.preselectedIssueIid ?? null,
@@ -131,6 +137,14 @@ export class IssuePanel implements OnInit {
     this.load(this.query(), false);
   }
 
+  protected resetFilters(): void {
+    this.weight.set(DEFAULT_WEIGHT);
+    this.period.set(DEFAULT_PERIOD);
+    this.searchForm.controls.search.setValue('');
+    this.search = undefined;
+    this.load(this.query(), false);
+  }
+
   protected loadMore(): void {
     const page = this.nextPage();
     if (page === null) {
@@ -157,10 +171,21 @@ export class IssuePanel implements OnInit {
       return;
     }
     this.dialog
-      .open<SwitchIssueDialog, unknown, boolean>(SwitchIssueDialog)
+      .open<SwitchIssueDialog, SwitchIssueData, boolean>(SwitchIssueDialog, {
+        data: this.switchData(),
+      })
       .afterClosed()
       .pipe(filter((confirmed) => confirmed === true && !this.releaseDisabled()))
       .subscribe(() => this.selectIssue(iid));
+  }
+
+  private switchData(): SwitchIssueData {
+    return {
+      revealed: this.store.phase() === 'REVEALED',
+      roundNumber: this.store.round()?.number ?? 1,
+      issueIid: this.activeIid() ?? 0,
+      votes: this.store.participants().filter((participant) => participant.hasVoted).length,
+    };
   }
 
   private selectIssue(issueIid: number): void {
@@ -187,6 +212,7 @@ export class IssuePanel implements OnInit {
           append ? [...current, ...response.items] : response.items,
         );
         this.nextPage.set(response.nextPage);
+        this.total.set(response.total);
         this.loading.set(false);
       },
       error: (error: unknown) => {

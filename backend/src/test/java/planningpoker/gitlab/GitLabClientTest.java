@@ -80,7 +80,8 @@ class GitLabClientTest {
                                         + "{\"iid\":9,\"title\":\"Logout\",\"description\":null,\"web_url\":\"https://gitlab.example/g/p/-/issues/9\",\"weight\":null},"
                                         + "{\"iid\":11,\"title\":\"Free\",\"description\":null,\"web_url\":\"https://gitlab.example/g/p/-/issues/11\"},"
                                         + "{\"iid\":12,\"title\":\"Empty\",\"description\":null,\"web_url\":\"https://gitlab.example/g/p/-/issues/12\",\"weight\":\"\"}]")
-                        .withHeader("x-next-page", "2")));
+                        .withHeader("x-next-page", "2")
+                        .withHeader("x-total", "23")));
 
         IssuePage page = client.searchIssues(PROJECT, query("log", 1));
 
@@ -93,6 +94,7 @@ class GitLabClientTest {
         assertNull(page.items().get(2).weight());
         assertNull(page.items().get(3).weight());
         assertEquals(Optional.of(2), page.nextPage());
+        assertEquals(Optional.of(23), page.total());
         gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES))
                 .withHeader("PRIVATE-TOKEN", equalTo(config.token()))
                 .withQueryParam("state", equalTo("opened"))
@@ -125,6 +127,15 @@ class GitLabClientTest {
 
         assertEquals(List.of(), page.items());
         assertEquals(Optional.empty(), page.nextPage());
+    }
+
+    @Test
+    void returnsNoTotalWhenGitLabOmitsTheHeader() {
+        gitlab.stubFor(get(urlPathEqualTo(ISSUES)).willReturn(json(200, "[]")));
+
+        IssuePage page = client.searchIssues(PROJECT, query("log", 1));
+
+        assertEquals(Optional.empty(), page.total());
     }
 
     @Test
@@ -257,6 +268,7 @@ class GitLabClientTest {
     static Stream<Arguments> invalidResponses() {
         return Stream.of(
                 Arguments.of("searchIssues", json(200, "[]").withHeader("x-next-page", "abc")),
+                Arguments.of("searchIssues", json(200, "[]").withHeader("x-total", "abc")),
                 Arguments.of("searchIssues", html(200, "<html>maintenance</html>")),
                 Arguments.of("searchIssues", json(200, "{not json")),
                 Arguments.of("loadIssue", html(200, "<html>maintenance</html>")),

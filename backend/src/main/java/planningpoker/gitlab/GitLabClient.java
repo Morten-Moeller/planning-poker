@@ -28,6 +28,7 @@ public class GitLabClient {
     static final int PAGE_SIZE = 20;
     static final String TOKEN_HEADER = "PRIVATE-TOKEN";
     static final String NEXT_PAGE_HEADER = "x-next-page";
+    static final String TOTAL_HEADER = "x-total";
 
     private final GitLabApi api;
     private final GitLabProjectApi projectApi;
@@ -54,7 +55,7 @@ public class GitLabClient {
                     projectApi.searchProjects(true, true, search, "last_activity_at", PAGE_SIZE, page)) {
                 failOnError("searchProjects", null, response);
                 List<GitLabProject> items = response.readEntity(new GenericType<List<GitLabProject>>() {});
-                return new ProjectPage(items, nextPage("searchProjects", response));
+                return new ProjectPage(items, intHeader("searchProjects", response, NEXT_PAGE_HEADER));
             }
         });
     }
@@ -77,7 +78,10 @@ public class GitLabClient {
                     query.page())) {
                 failOnError("searchIssues", projectId, response);
                 List<GitLabIssue> items = response.readEntity(new GenericType<List<GitLabIssue>>() {});
-                return new IssuePage(items, nextPage("searchIssues", response));
+                return new IssuePage(
+                        items,
+                        intHeader("searchIssues", response, NEXT_PAGE_HEADER),
+                        intHeader("searchIssues", response, TOTAL_HEADER));
             }
         });
     }
@@ -138,15 +142,15 @@ public class GitLabClient {
                 operation, projectId == null ? "" : projectId.replaceAll("\\p{Cntrl}", "_"), status, reason);
     }
 
-    private static Optional<Integer> nextPage(String operation, Response response) {
-        String value = response.getHeaderString(NEXT_PAGE_HEADER);
+    private static Optional<Integer> intHeader(String operation, Response response, String header) {
+        String value = response.getHeaderString(header);
         if (value == null || value.isBlank()) {
             return Optional.empty();
         }
         try {
             return Optional.of(Integer.valueOf(value.trim()));
         } catch (NumberFormatException e) {
-            throw new GitLabException(operation, "invalid header " + NEXT_PAGE_HEADER, e);
+            throw new GitLabException(operation, "invalid header " + header, e);
         }
     }
 

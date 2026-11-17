@@ -59,7 +59,8 @@ public class GitLabIssues {
                             .map(issue -> new IssueListResponse.IssueSummary(
                                     issue.iid(), issue.title(), issue.webUrl(), issue.weight()))
                             .toList(),
-                    result.nextPage().orElse(null));
+                    result.nextPage().orElse(null),
+                    result.total().orElse(null));
         } catch (GitLabException e) {
             throw gitLabError(e);
         }

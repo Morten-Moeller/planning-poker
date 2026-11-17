@@ -37,6 +37,34 @@ class SessionViewMapperTest {
     }
 
     @Test
+    void showsTheProjectAndTheWeightSettingToBothRoles() {
+        Session session = SessionBuilder.session()
+                .project(SessionBuilder.PROJECT)
+                .writeWeight(true)
+                .build();
+
+        for (Participant receiver : session.participants()) {
+            SessionView view = mapper.toView(session, receiver.id(), SERVER_TIME);
+
+            assertEquals(
+                    new SessionView.ProjectView(
+                            4711, "Frontend", "webshop/frontend", "https://gitlab.example/webshop/frontend"),
+                    view.project());
+            assertTrue(view.writeWeight());
+        }
+    }
+
+    @Test
+    void showsNoProjectWhenTheSessionHasNone() {
+        Session session = SessionBuilder.session().build();
+
+        SessionView view = mapper.toView(session, SessionBuilder.master(session).id(), SERVER_TIME);
+
+        assertNull(view.project());
+        assertFalse(view.writeWeight());
+    }
+
+    @Test
     void hidesThePreselectedIssueFromDevelopers() {
         Session session = SessionBuilder.session().build();
 

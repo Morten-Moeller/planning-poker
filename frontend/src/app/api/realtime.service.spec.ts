@@ -124,6 +124,68 @@ describe('RealtimeService', () => {
     expect(sockets.sockets).toHaveLength(4);
   });
 
+  it('reports the time of the next attempt while the connection is lost', () => {
+    subscription = service.connect(SESSION_ID, TOKEN).subscribe();
+    sockets.last().receive({ type: 'session.state', payload: lobbyDeveloper });
+    expect(service.connection()).toEqual({ status: 'OPEN' });
+
+    sockets.last().drop();
+
+    expect(service.connection()).toEqual({ status: 'WAITING', retryAt: Date.now() + 1_000 });
+    vi.advanceTimersByTime(1_000);
+    expect(service.connection()).toEqual({ status: 'CONNECTING' });
+    sockets.last().drop();
+    expect(service.connection()).toEqual({ status: 'WAITING', retryAt: Date.now() + 2_000 });
+  });
+
+  it('reports the open connection again with the next snapshot', () => {
+    subscription = service.connect(SESSION_ID, TOKEN).subscribe();
+    sockets.last().drop();
+    vi.advanceTimersByTime(1_000);
+
+    sockets.last().receive({ type: 'session.state', payload: lobbyDeveloper });
+
+    expect(service.connection()).toEqual({ status: 'OPEN' });
+  });
+
+  it('reconnects at once on reconnectNow and keeps the delay otherwise', () => {
+    subscription = service.connect(SESSION_ID, TOKEN).subscribe();
+    sockets.last().drop();
+    vi.advanceTimersByTime(1_000);
+    sockets.last().drop();
+    expect(sockets.sockets).toHaveLength(2);
+
+    service.reconnectNow();
+
+    expect(sockets.sockets).toHaveLength(3);
+    expect(sockets.last().sent).toEqual([{ type: 'auth', payload: { token: TOKEN } }]);
+    expect(service.connection()).toEqual({ status: 'CONNECTING' });
+    vi.advanceTimersByTime(2_000);
+    expect(sockets.sockets).toHaveLength(3);
+  });
+
+  it('ignores reconnectNow while the connection is open', () => {
+    subscription = service.connect(SESSION_ID, TOKEN).subscribe();
+
+    service.reconnectNow();
+
+    expect(sockets.sockets).toHaveLength(1);
+  });
+
+  it('reports no lost connection after an error message or after leaving', () => {
+    subscription = service.connect(SESSION_ID, TOKEN).subscribe();
+    sockets.last().drop();
+    subscription.unsubscribe();
+    expect(service.connection()).toEqual({ status: 'OPEN' });
+
+    subscription = service.connect(SESSION_ID, TOKEN).subscribe();
+    sockets.last().receive({
+      type: 'error',
+      payload: { errorCode: 'UNAUTHORIZED', detail: 'Unknown token.' },
+    });
+    expect(service.connection()).toEqual({ status: 'OPEN' });
+  });
+
   it('shows the error and does not reconnect after an error message', () => {
     const received: unknown[] = [];
     let completed = false;

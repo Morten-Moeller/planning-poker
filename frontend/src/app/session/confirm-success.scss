@@ -1,0 +1,12 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-m);
+}
+
+.open {
+  padding: var(--app-space-s);
+  color: var(--mat-sys-inverse-primary);
+  font: var(--mat-sys-label-large);
+  text-decoration: none;
+}

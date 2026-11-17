@@ -163,7 +163,11 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   `loadProject`, filters name and path case-insensitively, answers without `nextPage` and answers
   an empty list without a GitLab call for `page>1`; an entry that GitLab rejects with 403 or 404
   is left out (the `WARN` line of `GitLabClient` names it), 401 and other errors map like the
-  issues. `ProjectAllowlist` (`planningpoker.session`) holds the trimmed entries of
+  issues. `SessionResource.createSession` loads the project once after the allowlist and the
+  issue with `GitLabProjects.loadForSession`; a failure leaves `Session.project` empty, the
+  creation succeeds, and the `WARN` line of `GitLabClient` is the only trace. The snapshot carries
+  it as `project` and the setting `write-weight` as `writeWeight`. `GitLabClient.searchIssues`
+  reads `X-Total` into `IssuePage.total`; both issue lists answer it as `total` or `null`. `ProjectAllowlist` (`planningpoker.session`) holds the trimmed entries of
   `SessionConfig.allowedProjects` and the check `requireAllowed`, used by `createSession` and
   `listProjectIssues` before any GitLab call.
 - Accepted risk (plan, A-01, A-08, A-14): creating a session needs no login, and the backend
