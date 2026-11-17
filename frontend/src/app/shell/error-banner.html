@@ -18,6 +18,7 @@
       type="button"
       class="on-error"
       data-testid="connection-reconnect"
+      [disabled]="secondsLeft() === null"
       i18n="@@connection.reconnect"
       (click)="reconnect()"
     >

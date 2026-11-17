@@ -1,6 +1,14 @@
-<span matSnackBarLabel data-testid="confirm-success" i18n="@@confirmResult.success"
-  >✓ Endwert {{ value }} in GitLab-Issue #{{ data.issueIid }} gespeichert.</span
->
+<span matSnackBarLabel data-testid="confirm-success">
+  @if (data.issueIid !== null) {
+    <ng-container i18n="@@confirmResult.success"
+      >✓ Endwert {{ value }} in GitLab-Issue #{{ data.issueIid }} gespeichert.</ng-container
+    >
+  } @else {
+    <ng-container i18n="@@confirmResult.successWithoutIssue"
+      >✓ Endwert {{ value }} in GitLab gespeichert.</ng-container
+    >
+  }
+</span>
 @if (data.webUrl !== null) {
   <div matSnackBarActions>
     <a

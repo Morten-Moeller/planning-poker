@@ -33,10 +33,6 @@ public final class Session {
     private Integer timerSeconds;
     private volatile Instant lastActivityAt;
 
-    public Session(String id, String gitlabProjectId, long preselectedIssueIid, Instant now, int maxParticipants) {
-        this(id, gitlabProjectId, preselectedIssueIid, now, maxParticipants, null, false);
-    }
-
     public Session(
             String id,
             String gitlabProjectId,

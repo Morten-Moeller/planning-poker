@@ -35,10 +35,6 @@ public class SessionRegistry {
         this.changed = changed;
     }
 
-    public Created create(String gitlabProjectId, long issueIid, String creatorName) {
-        return create(gitlabProjectId, issueIid, creatorName, null, false);
-    }
-
     public Created create(
             String gitlabProjectId, long issueIid, String creatorName, Project project, boolean writeWeight) {
         createLock.lock();

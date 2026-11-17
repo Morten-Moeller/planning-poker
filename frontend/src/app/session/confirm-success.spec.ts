@@ -50,4 +50,13 @@ describe('ConfirmSuccess', () => {
       '✓ Endwert Kaffeepause in GitLab-Issue #43 gespeichert.',
     );
   });
+
+  it('names the final value without an issue number when the issue is unknown', async () => {
+    await show({ card: '8', issueIid: null, webUrl: null });
+
+    expect(element('confirm-success')?.textContent?.trim()).toBe(
+      '✓ Endwert 8 in GitLab gespeichert.',
+    );
+    expect(element('confirm-success-open')).toBeNull();
+  });
 });

@@ -125,6 +125,7 @@ describe('ErrorBanner', () => {
 
       expect(sockets.sockets).toHaveLength(2);
       expect(element('connection-banner')).not.toBeNull();
+      expect((element('connection-reconnect') as HTMLButtonElement).disabled).toBe(true);
       sockets.last().receive({ type: 'session.state', payload: lobbyDeveloper });
       await render();
       expect(element('connection-banner')).toBeNull();

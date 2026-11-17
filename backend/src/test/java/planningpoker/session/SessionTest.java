@@ -384,7 +384,8 @@ class SessionTest {
 
         @Test
         void the_creator_is_scrum_master_and_every_further_participant_developer() {
-            Session session = new Session("K7P2QX9M", "4711", 42, Instant.EPOCH, SessionBuilder.MAX_PARTICIPANTS);
+            Session session =
+                    new Session("K7P2QX9M", "4711", 42, Instant.EPOCH, SessionBuilder.MAX_PARTICIPANTS, null, false);
 
             Participant creator = session.join("Anna");
             Participant second = session.join("Ben");
@@ -398,7 +399,7 @@ class SessionTest {
 
         @Test
         void a_join_beyond_the_participant_limit_is_rejected_before_the_name_check() {
-            Session session = new Session("K7P2QX9M", "4711", 42, Instant.EPOCH, 3);
+            Session session = new Session("K7P2QX9M", "4711", 42, Instant.EPOCH, 3, null, false);
             session.join("Anna");
             session.join("Ben");
             session.join("Cleo");
@@ -416,7 +417,7 @@ class SessionTest {
 
         @Test
         void a_join_up_to_the_participant_limit_counts_the_scrum_master() {
-            Session session = new Session("K7P2QX9M", "4711", 42, Instant.EPOCH, 2);
+            Session session = new Session("K7P2QX9M", "4711", 42, Instant.EPOCH, 2, null, false);
 
             session.join("Anna");
             Participant developer = session.join("Ben");
