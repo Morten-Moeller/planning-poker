@@ -1,4 +1,4 @@
-import { Component, DestroyRef, WritableSignal, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, WritableSignal, inject, linkedSignal, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -99,7 +99,11 @@ export class StartPage {
     { initialValue: undefined },
   );
 
-  protected readonly backendDown = computed(() => this.backendReachable() === false);
+  protected readonly backendDown = linkedSignal<boolean | undefined, boolean>({
+    source: this.backendReachable,
+    computation: (reachable, previous) =>
+      reachable === undefined ? (previous?.value ?? false) : !reachable,
+  }).asReadonly();
 
   protected readonly createForm = new FormGroup({
     name: new FormControl('', {

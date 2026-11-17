@@ -270,6 +270,8 @@ describe('StartPage', () => {
     element('health-retry')?.click();
     await fixture.whenStable();
     expect(text('health-status')).toBe('Backend wird geprüft …');
+    expect((element('create-submit') as HTMLButtonElement).disabled).toBe(true);
+    expect((element('join-session-id-submit') as HTMLButtonElement).disabled).toBe(true);
     answerHealth();
     await fixture.whenStable();
 
