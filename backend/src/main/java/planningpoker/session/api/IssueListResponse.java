@@ -5,11 +5,17 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 @Schema(
         description = "One page of the issues of the project.",
-        requiredProperties = {"items", "nextPage"})
+        requiredProperties = {"items", "nextPage", "total"})
 public record IssueListResponse(
         @Schema(description = "Issues of this page.") List<IssueSummary> items,
         @Schema(description = "Number of the next page; null on the last page.", nullable = true, examples = "2")
-                Integer nextPage) {
+                Integer nextPage,
+        @Schema(
+                        description =
+                                "Number of issues that match the query, from the GitLab header X-Total; null when GitLab omits it for large results.",
+                        nullable = true,
+                        examples = "23")
+                Integer total) {
 
     @Schema(
             description = "Issue of the project without its description.",

@@ -20,6 +20,7 @@ import {
   ProjectSummary,
 } from '../api.service';
 import {
+  MOCK_PROJECT,
   MOCK_SESSION_ID,
   Phase,
   changeMockPhase,
@@ -34,12 +35,7 @@ const MOCK_TAKEN_NAME = 'Ben';
 const SESSION_PATH = /^\/api\/sessions\/([^/?]+)(\/[^?]*)?/;
 const PROJECT_ISSUES_PATH = /^\/api\/projects\/[^/?]+\/issues$/;
 const MOCK_PROJECTS: ProjectSummary[] = [
-  {
-    id: 1234,
-    name: 'Planning Poker',
-    pathWithNamespace: 'group/planning-poker',
-    webUrl: 'https://gitlab.com/group/planning-poker',
-  },
+  MOCK_PROJECT,
   {
     id: 5678,
     name: 'Poker Tools',
@@ -82,6 +78,10 @@ const MOCK_ISSUES: IssueSummary[] = [
   },
 ];
 
+function issueList(items: IssueSummary[]): IssueListResponse {
+  return { items, nextPage: null, total: items.length };
+}
+
 export const mockBackendInterceptor: HttpInterceptorFn = (request) => answer(request);
 
 function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
@@ -103,11 +103,7 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
   }
   if (PROJECT_ISSUES_PATH.test(path)) {
     const search = searchText(request);
-    const issues: IssueListResponse = {
-      items: MOCK_ISSUES.filter((issue) => issue.title.toLowerCase().includes(search)),
-      nextPage: null,
-    };
-    return ok(issues);
+    return ok(issueList(MOCK_ISSUES.filter((issue) => issue.title.toLowerCase().includes(search))));
   }
   if (path === '/api/sessions' && request.method === 'POST') {
     if ((request.body as CreateSessionRequest | null)?.issueIid === MOCK_MISSING_ISSUE_IID) {
@@ -149,16 +145,16 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
   if (subPath === '/issues') {
     const search = searchText(request);
     const weight = request.params.get('weight');
-    const issues: IssueListResponse = {
-      items: MOCK_ISSUES.filter(
-        (issue) =>
-          issue.title.toLowerCase().includes(search) &&
-          (weight !== 'NONE' || issue.weight === null) &&
-          (weight !== 'ANY' || issue.weight !== null),
+    return ok(
+      issueList(
+        MOCK_ISSUES.filter(
+          (issue) =>
+            issue.title.toLowerCase().includes(search) &&
+            (weight !== 'NONE' || issue.weight === null) &&
+            (weight !== 'ANY' || issue.weight !== null),
+        ),
       ),
-      nextPage: null,
-    };
-    return ok(issues);
+    );
   }
   const command = PHASE_COMMANDS[`${request.method} ${subPath}`];
   if (command !== undefined) {

@@ -54,7 +54,7 @@ class SessionRegistryTest {
 
     @Test
     void fifty_developers_vote_at_the_same_time_and_no_vote_is_lost() throws Exception {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         String sessionId = created.session().id();
         List<String> developers = new ArrayList<>();
         for (int i = 0; i < DEVELOPERS; i++) {
@@ -87,7 +87,7 @@ class SessionRegistryTest {
 
     @Test
     void every_successful_command_fires_exactly_one_event() {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         String sessionId = created.session().id();
         events.clear();
 
@@ -102,7 +102,7 @@ class SessionRegistryTest {
 
     @Test
     void the_event_fires_after_the_lock_is_released() {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         String sessionId = created.session().id();
         probeNestedUpdate.set(true);
 
@@ -114,7 +114,7 @@ class SessionRegistryTest {
 
     @Test
     void a_rejected_command_fires_no_event_and_changes_nothing() {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         String sessionId = created.session().id();
         String developer =
                 registry.update(sessionId, session -> session.join("Anna").id());
@@ -141,7 +141,7 @@ class SessionRegistryTest {
 
     @Test
     void read_answers_under_the_lock_without_an_event() {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         events.clear();
 
         clock.advance(Duration.ofMinutes(5));
@@ -168,7 +168,7 @@ class SessionRegistryTest {
 
     @Test
     void create_returns_the_session_with_its_scrum_master() {
-        SessionRegistry.Created created = registry.create("4711", 42, "  Master ");
+        SessionRegistry.Created created = registry.create("4711", 42, "  Master ", null, false);
 
         assertEquals(8, created.session().id().length());
         assertEquals("4711", created.session().gitlabProjectId());
@@ -182,7 +182,7 @@ class SessionRegistryTest {
 
     @Test
     void every_command_sets_the_last_activity_from_the_clock() {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         clock.advance(Duration.ofMinutes(5));
 
         registry.update(created.session().id(), session -> session.join("Anna"));
@@ -192,7 +192,7 @@ class SessionRegistryTest {
 
     @Test
     void a_session_without_activity_for_longer_than_the_ttl_expires() {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         String sessionId = created.session().id();
 
         registry.expire(START.plus(TTL));
@@ -208,7 +208,7 @@ class SessionRegistryTest {
 
     @Test
     void find_removes_an_expired_session_on_access() {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         String sessionId = created.session().id();
         clock.advance(TTL.plusSeconds(1));
 
@@ -217,7 +217,7 @@ class SessionRegistryTest {
 
     @Test
     void activity_keeps_a_session_alive() {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         String sessionId = created.session().id();
         clock.advance(TTL.minusMinutes(1));
         registry.update(sessionId, session -> session.join("Anna"));
@@ -231,11 +231,12 @@ class SessionRegistryTest {
     @Test
     void create_beyond_the_session_limit_is_rejected() {
         SessionRegistry limited = new SessionRegistry(clock, TTL, 2, 50, this::onChanged);
-        limited.create("4711", 42, "Anna");
-        limited.create("4711", 42, "Ben");
+        limited.create("4711", 42, "Anna", null, false);
+        limited.create("4711", 42, "Ben", null, false);
         events.clear();
 
-        SessionException exception = assertThrows(SessionException.class, () -> limited.create("4711", 42, "Cleo"));
+        SessionException exception =
+                assertThrows(SessionException.class, () -> limited.create("4711", 42, "Cleo", null, false));
 
         assertEquals(ErrorCode.LIMIT_REACHED, exception.errorCode());
         assertEquals(List.of(), events);
@@ -244,26 +245,27 @@ class SessionRegistryTest {
     @Test
     void an_expired_session_does_not_count_against_the_session_limit() {
         SessionRegistry limited = new SessionRegistry(clock, TTL, 2, 50, this::onChanged);
-        String first = limited.create("4711", 42, "Anna").session().id();
+        String first = limited.create("4711", 42, "Anna", null, false).session().id();
         clock.advance(TTL.minusMinutes(1));
-        String second = limited.create("4711", 42, "Ben").session().id();
+        String second = limited.create("4711", 42, "Ben", null, false).session().id();
         clock.advance(Duration.ofMinutes(2));
 
-        SessionRegistry.Created third = limited.create("4711", 42, "Cleo");
+        SessionRegistry.Created third = limited.create("4711", 42, "Cleo", null, false);
 
         assertEquals(Optional.empty(), limited.find(first));
         assertTrue(limited.find(second).isPresent());
         assertTrue(limited.find(third.session().id()).isPresent());
         assertEquals(
                 ErrorCode.LIMIT_REACHED,
-                assertThrows(SessionException.class, () -> limited.create("4711", 42, "Dora"))
+                assertThrows(SessionException.class, () -> limited.create("4711", 42, "Dora", null, false))
                         .errorCode());
     }
 
     @Test
     void the_registry_passes_the_participant_limit_to_every_session() {
         SessionRegistry limited = new SessionRegistry(clock, TTL, MAX_SESSIONS, 2, this::onChanged);
-        String sessionId = limited.create("4711", 42, "Master").session().id();
+        String sessionId =
+                limited.create("4711", 42, "Master", null, false).session().id();
         limited.update(sessionId, session -> session.join("Anna"));
         events.clear();
         Instant lastActivity = limited.find(sessionId).orElseThrow().lastActivityAt();
@@ -280,7 +282,7 @@ class SessionRegistryTest {
     }
 
     private String votingSessionWithTimer(int seconds) {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         String sessionId = created.session().id();
         String master = created.scrumMaster().id();
         registry.update(sessionId, session -> session.join("Anna"));
@@ -372,7 +374,7 @@ class SessionRegistryTest {
 
     @Test
     void revealDue_leaves_a_round_without_timer_alone() {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         String sessionId = created.session().id();
         registry.update(sessionId, session -> {
             session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE);
@@ -389,7 +391,7 @@ class SessionRegistryTest {
 
     @Test
     void revealDue_leaves_a_round_in_discussion_alone() {
-        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        SessionRegistry.Created created = registry.create("4711", 42, "Master", null, false);
         String sessionId = created.session().id();
         String master = created.scrumMaster().id();
         registry.update(sessionId, session -> {

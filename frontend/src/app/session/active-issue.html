@@ -1,19 +1,35 @@
 <section class="active-issue" data-testid="active-issue">
-  <h2>
+  <div class="head">
     <span class="iid" data-testid="active-issue-iid">#{{ issue().iid }}</span>
-    <span data-testid="active-issue-title">{{ issue().title }}</span>
-  </h2>
-  <a
-    data-testid="active-issue-link"
-    [href]="issue().webUrl"
-    target="_blank"
-    [rel]="'noopener'"
-    i18n="@@activeIssue.openInGitLab"
-    >In GitLab öffnen</a
-  >
-  <div
-    class="description"
-    data-testid="active-issue-description"
-    [innerHTML]="descriptionHtml()"
-  ></div>
+    <h2 data-testid="active-issue-title">{{ issue().title }}</h2>
+    <a
+      data-testid="active-issue-link"
+      [href]="issue().webUrl"
+      target="_blank"
+      [rel]="'noopener'"
+      i18n="@@activeIssue.openInGitLab"
+      >In GitLab öffnen ↗</a
+    >
+  </div>
+  <div class="description-frame" [class.collapsed]="collapsed()">
+    <div
+      class="description"
+      id="active-issue-description"
+      data-testid="active-issue-description"
+      [innerHTML]="descriptionHtml()"
+    ></div>
+  </div>
+  @if (collapsed()) {
+    <button
+      type="button"
+      class="expand"
+      data-testid="active-issue-expand"
+      [attr.aria-controls]="'active-issue-description'"
+      aria-expanded="false"
+      (click)="expand()"
+    >
+      <span aria-hidden="true">▾ </span
+      ><ng-container i18n="@@activeIssue.expand">Ganze Beschreibung anzeigen</ng-container>
+    </button>
+  }
 </section>

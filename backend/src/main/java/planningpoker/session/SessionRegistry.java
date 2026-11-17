@@ -35,7 +35,8 @@ public class SessionRegistry {
         this.changed = changed;
     }
 
-    public Created create(String gitlabProjectId, long issueIid, String creatorName) {
+    public Created create(
+            String gitlabProjectId, long issueIid, String creatorName, Project project, boolean writeWeight) {
         createLock.lock();
         try {
             Instant now = clock.instant();
@@ -44,7 +45,8 @@ public class SessionRegistry {
                 throw new SessionException(ErrorCode.LIMIT_REACHED, "The maximum number of sessions is reached.");
             }
             while (true) {
-                Session session = new Session(Ids.sessionId(), gitlabProjectId, issueIid, now, maxParticipants);
+                Session session = new Session(
+                        Ids.sessionId(), gitlabProjectId, issueIid, now, maxParticipants, project, writeWeight);
                 Participant scrumMaster = session.join(creatorName);
                 if (sessions.putIfAbsent(session.id(), new Entry(session, new ReentrantLock())) == null) {
                     return new Created(session, scrumMaster);

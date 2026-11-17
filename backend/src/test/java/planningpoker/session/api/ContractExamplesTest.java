@@ -65,6 +65,16 @@ class ContractExamplesTest {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("examples")
+    void namesTheProjectAndTheWeightSettingForBothRoles(String file, Phase phase, Role role) throws IOException {
+        SessionView view = strictMapper().readValue(EXAMPLES.resolve(file).toFile(), SessionView.class);
+
+        assertNotNull(view.project(), "the example names the project");
+        assertEquals(view.gitlabProjectId(), String.valueOf(view.project().id()));
+        assertEquals(false, view.writeWeight(), "the examples show the default write-weight=false");
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("examples")
     void followsTheFilterRulesOfTheSnapshot(String file, Phase phase, Role role) throws IOException {
         SessionView view = strictMapper().readValue(EXAMPLES.resolve(file).toFile(), SessionView.class);
 

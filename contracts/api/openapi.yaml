@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Planning Poker API
-  version: 3.0.0
+  version: 3.1.0
   description: |
     Commands go over REST under /api and answer without state. The state reaches every participant
     over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
@@ -289,6 +289,7 @@ components:
       required:
       - items
       - nextPage
+      - total
       description: One page of the issues of the project.
       type: object
       properties:
@@ -305,6 +306,15 @@ components:
           description: Number of the next page; null on the last page.
           examples:
           - 2
+        total:
+          type:
+          - integer
+          - "null"
+          format: int32
+          description: "Number of issues that match the query, from the GitLab header\
+            \ X-Total; null when GitLab omits it for large results."
+          examples:
+          - 23
     IssueSummary:
       type: object
       required:
@@ -542,6 +552,37 @@ components:
           description: Link to the project in GitLab.
           examples:
           - https://gitlab.com/group/planning-poker
+    ProjectView:
+      type: object
+      required:
+      - id
+      - name
+      - pathWithNamespace
+      - webUrl
+      description: "The GitLab project of the session, loaded once at creation; null\
+        \ when GitLab did not answer with the project."
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Numeric id of the project.
+          examples:
+          - 1234
+        name:
+          type: string
+          description: Name of the project.
+          examples:
+          - Frontend
+        pathWithNamespace:
+          type: string
+          description: Path of the project with its namespace.
+          examples:
+          - webshop/frontend
+        webUrl:
+          type: string
+          description: Link to the project in GitLab.
+          examples:
+          - https://gitlab.com/webshop/frontend
     Role:
       description: Role of a participant. The server takes it from the token.
       type: string
@@ -642,6 +683,8 @@ components:
       required:
       - sessionId
       - gitlabProjectId
+      - project
+      - writeWeight
       - phase
       - me
       - participants
@@ -668,6 +711,14 @@ components:
           description: Id or path of the GitLab project.
           examples:
           - "1234"
+        project:
+          anyOf:
+          - $ref: "#/components/schemas/ProjectView"
+          - type: "null"
+        writeWeight:
+          type: boolean
+          description: Whether the confirmation also sets a number card as weight
+            of the GitLab issue (setting planningpoker.gitlab.write-weight).
         phase:
           $ref: "#/components/schemas/Phase"
         me:

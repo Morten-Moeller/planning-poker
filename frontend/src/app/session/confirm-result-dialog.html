@@ -1,25 +1,120 @@
 <div data-testid="confirm-dialog">
   <h2 mat-dialog-title i18n="@@confirmResult.title">Ergebnis übernehmen</h2>
-  <mat-dialog-content>
-    <p i18n="@@confirmResult.text">
-      Endwert wählen. Er wird als Kommentar in das Issue in GitLab geschrieben.
+  <mat-dialog-content class="content">
+    <p class="lead" data-testid="confirm-lead">
+      @if (issue !== null) {
+        <ng-container i18n="@@confirmResult.finalValueFor"
+          >Endwert für
+          <strong data-testid="confirm-issue">#{{ issue.iid }} {{ issue.title }}</strong
+          >.</ng-container
+        >&ngsp;
+      }
+      @if (consensus !== null) {
+        <ng-container i18n="@@confirmResult.consensus"
+          >Konsens: {{ label(consensus) }} ist vorausgewählt.</ng-container
+        >
+      } @else {
+        <ng-container i18n="@@confirmResult.noConsensus"
+          >Kein Konsens, deshalb ist nichts vorausgewählt.</ng-container
+        >
+      }
     </p>
-    <mat-radio-group
+    <div
       class="cards"
+      role="radiogroup"
       aria-label="Endwert"
       i18n-aria-label="@@confirmResult.cardsLabel"
-      [value]="selected()"
-      [disabled]="sending()"
-      (change)="select($event.value)"
     >
-      @for (card of cards; track card) {
-        <mat-radio-button data-testid="confirm-card" [value]="card" [aria-label]="label(card)">
-          <span aria-hidden="true">{{ symbol(card) }}</span>
-        </mat-radio-button>
+      @for (option of options; track option.card) {
+        <label
+          class="option"
+          data-testid="confirm-card"
+          [class.selected]="option.card === selected()"
+          [class.most-frequent]="option.mostFrequent && option.card !== selected()"
+          [class.disabled]="sending()"
+        >
+          <input
+            type="radio"
+            name="confirm-card"
+            [value]="option.card"
+            [checked]="option.card === selected()"
+            [disabled]="sending()"
+            [attr.aria-label]="label(option.card)"
+            [attr.aria-describedby]="option.votes > 0 ? 'confirm-votes-' + option.card : null"
+            (change)="select(option.card)"
+          />
+          <span class="value" aria-hidden="true">
+            @if (option.card === selected()) {
+              ✓
+            }
+            {{ symbol(option.card) }}</span
+          >
+          <span class="votes" data-testid="confirm-card-votes">
+            @if (option.votes > 0) {
+              <span aria-hidden="true">{{ option.votes }}×</span>
+              <span class="hidden-text" [id]="'confirm-votes-' + option.card">
+                @if (option.mostFrequent) {
+                  <ng-container i18n="@@confirmResult.votesMostFrequent"
+                    >{option.votes, plural, =1 {1 Stimme} other {{{ option.votes }} Stimmen}},
+                    häufigster Wert</ng-container
+                  >
+                } @else {
+                  <ng-container i18n="@@confirmResult.votes">{option.votes, plural,
+                    =1 {1 Stimme}
+                    other {{{ option.votes }} Stimmen}
+                  }</ng-container>
+                }
+              </span>
+            }
+          </span>
+        </label>
       }
-    </mat-radio-group>
+    </div>
+    @if (showMostFrequent) {
+      <p class="legend" data-testid="confirm-legend">
+        <span class="swatch" aria-hidden="true"></span>
+        <span i18n="@@confirmResult.legend"
+          >Häufigster Wert dieser Runde, darunter die Anzahl der Stimmen. Nur zur
+          Orientierung.</span
+        >
+      </p>
+    }
+    <p class="note" data-testid="confirm-note">
+      <span class="info" aria-hidden="true">ⓘ</span>
+      <span>
+        <ng-container i18n="@@confirmResult.comment"
+          >Ins GitLab-Issue #{{ issue?.iid }} wird ein Kommentar mit dem Endwert
+          geschrieben.</ng-container
+        >&ngsp;
+        @if (writeWeight) {
+          <ng-container i18n="@@confirmResult.weightSet"
+            >Zahlenwerte werden zusätzlich als Gewicht gesetzt.</ng-container
+          >
+        } @else {
+          <ng-container i18n="@@confirmResult.weightKept"
+            >Das Gewicht des Issues bleibt unverändert.</ng-container
+          >
+        }
+      </span>
+    </p>
+    @if (sending()) {
+      <div class="writing" role="status" data-testid="confirm-writing">
+        <mat-progress-bar [mode]="'indeterminate'" />
+        <span i18n="@@confirmResult.writing">Das Ergebnis wird nach GitLab geschrieben …</span>
+      </div>
+    }
     @if (error(); as message) {
-      <p class="error" role="alert" data-testid="confirm-error">{{ message }}</p>
+      <div class="error" role="alert" data-testid="confirm-error">
+        <span aria-hidden="true">⚠</span>
+        <span>
+          <strong data-testid="confirm-error-message">{{ message }}</strong
+          >&ngsp;
+          <ng-container i18n="@@confirmResult.errorHint"
+            >Der Kommentar wurde nicht geschrieben. Prüfe das Token und versuche es
+            erneut.</ng-container
+          >
+        </span>
+      </div>
     }
   </mat-dialog-content>
   <mat-dialog-actions [align]="'end'">
@@ -40,7 +135,9 @@
       [disabled]="selected() === null || sending()"
       (click)="submit()"
     >
-      @if (error() === null) {
+      @if (sending()) {
+        <ng-container i18n="@@confirmResult.submitting">Wird übernommen …</ng-container>
+      } @else if (error() === null) {
         <ng-container i18n="@@confirmResult.submit">Übernehmen</ng-container>
       } @else {
         <ng-container i18n="@@confirmResult.retry">Erneut versuchen</ng-container>

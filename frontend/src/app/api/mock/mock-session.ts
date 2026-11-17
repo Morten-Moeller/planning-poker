@@ -17,6 +17,15 @@ export type Phase = components['schemas']['Phase'];
 
 export const MOCK_SESSION_ID = lobbyScrumMaster.sessionId;
 
+export const MOCK_PROJECT: components['schemas']['ProjectSummary'] = {
+  id: 1234,
+  name: 'Planning Poker',
+  pathWithNamespace: 'group/planning-poker',
+  webUrl: 'https://gitlab.com/group/planning-poker',
+};
+
+export const MOCK_WRITE_WEIGHT = false;
+
 const TOKEN_PREFIX: Record<Role, string> = {
   SCRUM_MASTER: 'mock-scrum-master-',
   DEVELOPER: 'mock-developer-',
@@ -61,5 +70,10 @@ export function roleOfToken(token: string | null): Role | null {
 
 export function snapshotFor(role: Role): SessionView {
   const example = EXAMPLES[mockPhase][role];
-  return { ...example, serverTime: new Date().toISOString() };
+  return {
+    ...example,
+    project: MOCK_PROJECT,
+    writeWeight: MOCK_WRITE_WEIGHT,
+    serverTime: new Date().toISOString(),
+  };
 }

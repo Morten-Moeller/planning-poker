@@ -125,7 +125,7 @@ describe('IssuePanel', () => {
 
     expect(texts('issue-result')).toEqual([
       '#43 Password reset ohne Gewicht',
-      '#42 Login page ohne Gewicht',
+      '✓ #42 Login page ohne Gewicht',
     ]);
     expect(all('issue-result')[1].getAttribute('aria-pressed')).toBe('true');
     expect(one('issue-preview-iid').textContent?.trim()).toBe('#42');
@@ -294,7 +294,7 @@ describe('IssuePanel', () => {
     expect(one('issue-results-error-message').textContent?.trim()).toBe(
       'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.',
     );
-    expect(one('issue-results-retry').textContent?.trim()).toBe('Erneut versuchen');
+    expect(one('issue-results-retry').textContent?.trim()).toBe('↻ Erneut versuchen');
     expect(all('issue-results-empty')).toHaveLength(0);
     expect(TestBed.inject(ErrorState).error()).toBeNull();
 
@@ -305,7 +305,7 @@ describe('IssuePanel', () => {
     await fixture.whenStable();
 
     expect(all('issue-results-error')).toHaveLength(0);
-    expect(texts('issue-result')).toEqual(['#42 Login page ohne Gewicht']);
+    expect(texts('issue-result')).toEqual(['✓ #42 Login page ohne Gewicht']);
   });
 
   it('shows the access denied text of GitLab in the error state and clears the banner', async () => {
@@ -327,7 +327,7 @@ describe('IssuePanel', () => {
     expect(one('issue-results-error-message').textContent?.trim()).toBe(
       'GitLab verweigert den Zugriff. Der GitLab-Token des Backends braucht Scope api und Rechte im Projekt.',
     );
-    expect(one('issue-results-retry').textContent?.trim()).toBe('Erneut versuchen');
+    expect(one('issue-results-retry').textContent?.trim()).toBe('↻ Erneut versuchen');
     expect(TestBed.inject(ErrorState).error()).toBeNull();
   });
 
@@ -428,5 +428,99 @@ describe('IssuePanel', () => {
     await receive(votingScrumMaster);
 
     http.expectNone((r) => r.url === ISSUES_URL);
+  });
+
+  it('names the project of the session with name and id, or the id alone', async () => {
+    await open({
+      ...lobbyScrumMaster,
+      project: {
+        id: 1234,
+        name: 'Frontend',
+        pathWithNamespace: 'webshop/frontend',
+        webUrl: 'https://gitlab.example/webshop/frontend',
+      },
+    });
+    expect(texts('issue-panel-project')).toEqual(['Projekt: Frontend · 1234']);
+
+    await receive({ ...lobbyScrumMaster, project: null });
+
+    expect(texts('issue-panel-project')).toEqual(['Projekt: 1234']);
+  });
+
+  it('counts the loaded issues against the total of GitLab, or alone without a total', async () => {
+    await open(lobbyScrumMaster);
+    expect(texts('issue-count')).toEqual(['2 Issues']);
+
+    one('issue-filter-weight-all').querySelector('button')!.click();
+    await fixture.whenStable();
+    http
+      .expectOne((r) => r.url === ISSUES_URL)
+      .flush({ items: FIRST_PAGE, nextPage: 2, total: 23 });
+    await fixture.whenStable();
+    expect(texts('issue-count')).toEqual(['2 von 23 Issues']);
+
+    await click('issue-load-more');
+    http
+      .expectOne((r) => r.url === ISSUES_URL)
+      .flush({ items: SECOND_PAGE, nextPage: null, total: 23 });
+    await fixture.whenStable();
+    expect(texts('issue-count')).toEqual(['3 von 23 Issues']);
+  });
+
+  it('shows the selection with its title and the release button below the list', async () => {
+    await open(lobbyScrumMaster);
+
+    expect(texts('issue-preview')).toEqual(['Ausgewählt: #42 Login page']);
+    expect(one('issue-release').textContent?.trim()).toBe('Freigeben');
+  });
+
+  it('resets the search and the filters to the defaults from the empty state', async () => {
+    await open(lobbyScrumMaster);
+    one('issue-filter-weight-all').querySelector('button')!.click();
+    await fixture.whenStable();
+    http.expectOne((r) => r.url === ISSUES_URL).flush({ items: [], nextPage: null, total: 0 });
+    await fixture.whenStable();
+    const input = one('issue-search-input') as HTMLInputElement;
+    input.value = 'kein Treffer';
+    input.dispatchEvent(new Event('input'));
+    await click('issue-search-submit');
+    http.expectOne((r) => r.url === ISSUES_URL).flush({ items: [], nextPage: null, total: 0 });
+    await fixture.whenStable();
+    expect(texts('issue-results-empty')).toEqual(['Keine Issues gefunden']);
+    expect(all('issue-count')).toHaveLength(0);
+
+    await click('issue-filter-reset');
+
+    const request = http.expectOne((r) => r.url === ISSUES_URL);
+    expect(params(request.request.params)).toEqual({ weight: 'NONE', period: 'ALL' });
+    request.flush({ items: FIRST_PAGE, nextPage: null, total: 2 });
+    await fixture.whenStable();
+    expect((one('issue-search-input') as HTMLInputElement).value).toBe('');
+    expect(one('issue-filter-weight-none').getAttribute('class')).toContain(
+      'mat-button-toggle-checked',
+    );
+    expect(all('issue-results-empty')).toHaveLength(0);
+    expect(texts('issue-count')).toEqual(['2 von 2 Issues']);
+  });
+
+  it('shows the error state with its title, the text of the code and the retry', async () => {
+    await open(lobbyScrumMaster);
+    await click('issue-search-submit');
+    http
+      .expectOne((r) => r.url === ISSUES_URL)
+      .flush(
+        { type: 'about:blank', title: 'Bad Gateway', status: 502, errorCode: 'GITLAB_ERROR' },
+        { status: 502, statusText: 'Bad Gateway' },
+      );
+    await fixture.whenStable();
+
+    expect(one('issue-results-error').getAttribute('role')).toBe('alert');
+    expect(one('issue-results-error').textContent).toContain(
+      'Die Issues konnten nicht geladen werden.',
+    );
+    expect(texts('issue-results-error-message')).toEqual([
+      'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.',
+    ]);
+    expect(texts('issue-results-retry')).toEqual(['↻ Erneut versuchen']);
   });
 });
