@@ -9,6 +9,15 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformerV2;
+import com.github.tomakehurst.wiremock.http.ResponseDefinition;
+import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
+import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 final class GitLabStubs {
 
@@ -107,6 +116,12 @@ final class GitLabStubs {
                 .willReturn(json(201, "{\"id\":1}").withFixedDelay(millis)));
     }
 
+    static void noteHeld(WireMockServer server, String projectId, long iid) {
+        HeldResponses.hold();
+        server.stubFor(post(urlPathEqualTo(notesPath(projectId, iid)))
+                .willReturn(json(201, "{\"id\":1}").withTransformers(HeldResponses.NAME)));
+    }
+
     static void weight(WireMockServer server, String projectId, long iid) {
         server.stubFor(
                 put(urlPathEqualTo(issuePath(projectId, iid))).willReturn(json(200, issueJson(iid, "Login page", ""))));
@@ -155,5 +170,86 @@ final class GitLabStubs {
                 .withStatus(status)
                 .withHeader("Content-Type", "application/json")
                 .withBody(body);
+    }
+
+    public static final class HeldGitLab implements QuarkusTestResourceLifecycleManager {
+
+        static final Duration TIMEOUT = Duration.ofSeconds(5);
+
+        private WireMockServer server;
+
+        @Override
+        public Map<String, String> start() {
+            server = new WireMockServer(
+                    WireMockConfiguration.options().dynamicPort().extensions(new HeldResponses()));
+            server.start();
+            return Map.of(
+                    "planningpoker.gitlab.base-url",
+                    server.baseUrl(),
+                    "planningpoker.gitlab.timeout",
+                    TIMEOUT.toSeconds() + "s");
+        }
+
+        @Override
+        public void stop() {
+            HeldResponses.release();
+            if (server != null) {
+                server.stop();
+            }
+        }
+
+        @Override
+        public void inject(TestInjector testInjector) {
+            testInjector.injectIntoFields(server, new TestInjector.MatchesType(WireMockServer.class));
+        }
+    }
+
+    static final class HeldResponses implements ResponseDefinitionTransformerV2 {
+
+        static final String NAME = "held-response";
+
+        private static final Duration LONGEST_HOLD = HeldGitLab.TIMEOUT.multipliedBy(4);
+
+        private static volatile CountDownLatch received = new CountDownLatch(1);
+        private static volatile CountDownLatch released = new CountDownLatch(0);
+
+        static void hold() {
+            received = new CountDownLatch(1);
+            released = new CountDownLatch(1);
+        }
+
+        static void release() {
+            released.countDown();
+        }
+
+        static boolean awaitRequest(Duration limit) {
+            try {
+                return received.await(limit.toMillis(), TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+
+        @Override
+        public ResponseDefinition transform(ServeEvent serveEvent) {
+            received.countDown();
+            try {
+                released.await(LONGEST_HOLD.toMillis(), TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return serveEvent.getResponseDefinition();
+        }
+
+        @Override
+        public boolean applyGlobally() {
+            return false;
+        }
+
+        @Override
+        public String getName() {
+            return NAME;
+        }
     }
 }

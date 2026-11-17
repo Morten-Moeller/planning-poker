@@ -468,6 +468,49 @@ describe('StartPage project and issue choice', () => {
       fixture.detectChanges();
     }
 
+    it('loads all projects on focus of the empty field, searches a text and skips a number', async () => {
+      input('create-project').focus();
+      fixture.detectChanges();
+      await wait(0);
+      http.expectOne('/api/projects').flush({
+        items: [
+          {
+            id: 1234,
+            name: 'Planning Poker',
+            pathWithNamespace: 'group/planning-poker',
+            webUrl: 'https://gitlab.example/group/planning-poker',
+          },
+          {
+            id: 9012,
+            name: 'Release Notes',
+            pathWithNamespace: 'group/release-notes',
+            webUrl: 'https://gitlab.example/group/release-notes',
+          },
+        ],
+        nextPage: null,
+      });
+      fixture.detectChanges();
+      expect(optionTexts('create-project-option')).toEqual([
+        'Planning Poker | group/planning-poker · 1234',
+        'Release Notes | group/release-notes · 9012',
+      ]);
+
+      typeInto('create-project', 'pok');
+      await wait(300);
+      http.expectOne('/api/projects?search=pok').flush({ items: [], nextPage: null });
+
+      typeInto('create-project', '1234');
+      await wait(300);
+      http.expectNone((request) => request.url === '/api/projects');
+      http.expectOne('/api/projects/1234/issues').flush({ items: [], nextPage: null });
+
+      typeInto('create-project', '');
+      input('create-project').blur();
+      input('create-project').focus();
+      await wait(0);
+      http.expectOne('/api/projects').flush({ items: [], nextPage: null });
+    });
+
     it('drops a late project result after the field holds an id', async () => {
       typeInto('create-project', 'pok');
       await wait(300);

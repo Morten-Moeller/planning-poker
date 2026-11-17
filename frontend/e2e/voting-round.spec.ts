@@ -307,3 +307,97 @@ test('the card deck has six columns of at least 44 px and no horizontal scrollin
     ),
   ).toBe(true);
 });
+
+test('the card deck is at most 1000 px wide, centred and has portrait cards at 1920 px', async ({
+  page,
+  browser,
+}) => {
+  const { scrumMaster, link } = await createSession(page);
+  const ben = await join(browser, link, 'Ben', { width: 1920, height: 1080 });
+  await scrumMaster.page.getByTestId('issue-release').click();
+
+  for (const id of ['card-deck-locked', 'card-deck']) {
+    if (id === 'card-deck') {
+      await startVoting(scrumMaster.page);
+    }
+    const deck = ben.page.getByTestId(id);
+    await expect(deck).toBeVisible();
+    const { deckBox, parentBox } = await deck.evaluate((node) => ({
+      deckBox: node.getBoundingClientRect().toJSON() as DOMRect,
+      parentBox: (node.parentElement as HTMLElement).getBoundingClientRect().toJSON() as DOMRect,
+    }));
+    expect(deckBox.width).toBeLessThanOrEqual(1000);
+    expect(parentBox.right - parentBox.left).toBeGreaterThan(1000);
+    expect(
+      Math.abs(deckBox.left - parentBox.left - (parentBox.right - deckBox.right)),
+    ).toBeLessThanOrEqual(1);
+    const cards = await deck
+      .locator('.card')
+      .evaluateAll((nodes) =>
+        nodes.map((node) => node.getBoundingClientRect().toJSON() as DOMRect),
+      );
+    expect(cards).toHaveLength(11);
+    for (const box of cards) {
+      expect(box.height).toBeGreaterThan(box.width);
+    }
+  }
+});
+
+interface SeatBox {
+  cardTop: number;
+  cardHeight: number;
+  nameTop: number;
+}
+
+async function seatBoxes(view: View): Promise<SeatBox[]> {
+  return view.page
+    .getByTestId('seat-table')
+    .locator('li')
+    .evaluateAll((seats) =>
+      seats.map((seat) => {
+        const card = seat.querySelector('.card')!.getBoundingClientRect();
+        const name = seat.querySelector('.name')!.getBoundingClientRect();
+        return { cardTop: card.top, cardHeight: card.height, nameTop: name.top };
+      }),
+    );
+}
+
+function expectAligned(boxes: SeatBox[]): void {
+  expect(boxes).toHaveLength(2);
+  const [first, second] = boxes;
+  expect(Math.abs(first.cardTop - second.cardTop)).toBeLessThanOrEqual(0.5);
+  expect(Math.abs(first.cardHeight - second.cardHeight)).toBeLessThanOrEqual(0.5);
+  expect(Math.abs(first.nameTop - second.nameTop)).toBeLessThanOrEqual(0.5);
+}
+
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 375, height: 800 },
+]) {
+  test(`the seats at the table stay aligned with a developer without a vote at ${viewport.width} px`, async ({
+    page,
+    browser,
+  }) => {
+    await page.setViewportSize(viewport);
+    const { scrumMaster, link } = await createSession(page);
+    const ben = await join(browser, link, 'Ben');
+    const cem = await join(browser, link, 'Cem');
+    await release(scrumMaster, [ben, cem]);
+    await choose(ben, '21');
+
+    const table = scrumMaster.page.getByTestId('seat-table');
+    await expect(table.getByTestId('seat-status')).toHaveText(['✓ geschätzt', 'ausstehend']);
+    await expect(table.getByTestId('seat-card').nth(1)).toHaveText('…');
+    expectAligned(await seatBoxes(scrumMaster));
+
+    await scrumMaster.page.getByTestId('round-reveal').click();
+    await expect(scrumMaster.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
+    await expect(table.getByTestId('result-vote-card')).toHaveText('21');
+    await expect(table.getByTestId('seat-card')).toHaveText('–');
+    await expect(table.getByTestId('seat-status')).toHaveText('nicht geschätzt');
+    await table.evaluate((node) =>
+      Promise.all(node.getAnimations({ subtree: true }).map((animation) => animation.finished)),
+    );
+    expectAligned(await seatBoxes(scrumMaster));
+  });
+}

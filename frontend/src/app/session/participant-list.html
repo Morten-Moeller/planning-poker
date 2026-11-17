@@ -49,6 +49,12 @@
                   >Hat geschätzt</span
                 ></span
               >
+            } @else if (store.phase() === 'REVEALED') {
+              <span class="activity"
+                ><span data-testid="participant-vote-status" i18n="@@participants.notVoted"
+                  >Nicht geschätzt</span
+                ></span
+              >
             } @else {
               <span class="activity pending"
                 ><span aria-hidden="true">○ </span

@@ -20,7 +20,9 @@ h2 {
 }
 
 .iid {
-  font: var(--app-value-id);
+  font: var(--mat-sys-headline-small);
+  font-family: var(--app-font-mono);
+  font-weight: 400;
   color: var(--app-on-surface-muted);
 }
 

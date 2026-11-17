@@ -26,7 +26,13 @@
           [outlier]="seat.outlier"
           [flip]="motion && seat.state === 'revealed'"
           [flipDelay]="seat.flipIndex * flipStep"
-          [pendingText]="seat.status === 'disconnected' ? disconnectedCard : '…'"
+          [pendingText]="
+            seat.status === 'disconnected'
+              ? disconnectedCard
+              : seat.status === 'notVoted'
+                ? '–'
+                : '…'
+          "
           [testId]="seat.status === 'revealed' ? 'result-vote-card' : 'seat-card'"
         />
         @switch (seat.status) {
