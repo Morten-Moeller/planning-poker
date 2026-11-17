@@ -36,7 +36,7 @@ public class SessionRegistry {
     }
 
     public Created create(
-            String gitlabProjectId, long issueIid, String creatorName, Project project, boolean writeWeight) {
+            String gitlabProjectId, Long issueIid, String creatorName, Project project, boolean writeWeight) {
         createLock.lock();
         try {
             Instant now = clock.instant();

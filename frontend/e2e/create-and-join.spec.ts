@@ -37,7 +37,7 @@ test('blocks an incomplete create form and keeps the start page', async ({ page 
 
   await expect(page.getByTestId('create-name-error')).toHaveText('Bitte einen Namen eingeben');
   await expect(page.getByTestId('create-project-error')).toBeVisible();
-  await expect(page.getByTestId('create-issue-error')).toBeVisible();
+  await expect(page.getByTestId('create-issue-error')).toHaveCount(0);
   await expect(page).toHaveURL(/\/$/);
 });
 

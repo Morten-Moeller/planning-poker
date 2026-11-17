@@ -182,7 +182,7 @@ trägt jeder Aufruf `Authorization: Bearer <token>`.
 | `GET /api/health` | offen | – | 200 `{ status }` | – |
 | `GET /api/projects?search=&page=` | offen | – | 200 `{ items: [{ id, name, pathWithNamespace, webUrl }], nextPage }` | 400, 502 |
 | `GET /api/projects/{projectId}/issues?search=&page=` | offen | – | 200 `{ items, nextPage, total }` (offene Issues mit `weight`) | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
-| `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid }` | 201 `{ sessionId, participantId, token }` | 400, 403 `PROJECT_NOT_ALLOWED`, 404 `ISSUE_NOT_FOUND`, 409 `LIMIT_REACHED`, 502 |
+| `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid? }`; ohne `issueIid` startet die Sitzung ohne Vorauswahl | 201 `{ sessionId, participantId, token }` | 400, 403 `PROJECT_NOT_ALLOWED`, 404 `ISSUE_NOT_FOUND` oder `PROJECT_NOT_FOUND`, 409 `LIMIT_REACHED`, 502 |
 | `POST /api/sessions/{id}/participants` | offen | `{ name }` | 201 `{ participantId, token }` | 400, 404, 409 `NAME_TAKEN`, `LIMIT_REACHED` |
 | `GET /api/sessions/{id}` | beide | – | 200 `SessionView` | 401, 404 |
 | `GET /api/sessions/{id}/issues?search=&page=&weight=&period=` | Scrum Master | – | 200 `{ items, nextPage, total }` mit `weight` je Eintrag | 400 `VALIDATION_ERROR`, 403, 502 |
@@ -228,6 +228,7 @@ Fehler folgen RFC 9457 als `application/problem+json`; Clients entscheiden nur a
 | `PROJECT_NOT_ALLOWED` | 403 | Projekt nicht in der Projekt-Allowlist; GitLab wird nicht gefragt |
 | `SESSION_NOT_FOUND` | 404 | Sitzung unbekannt oder verfallen |
 | `ISSUE_NOT_FOUND` | 404 | Issue im GitLab-Projekt nicht gefunden |
+| `PROJECT_NOT_FOUND` | 404 | Beim Anlegen ohne Issue: GitLab-Projekt nicht gefunden oder für den Token nicht sichtbar (ADR 0011) |
 | `NAME_TAKEN` | 409 | Name in der Sitzung bereits vergeben |
 | `INVALID_STATE` | 409 | Aktion in dieser Phase nicht erlaubt oder Bestätigung läuft |
 | `LIMIT_REACHED` | 409 | Obergrenze der Sitzungen oder der Teilnehmer der Sitzung erreicht |
@@ -239,7 +240,8 @@ fremdes Token für eine bestehende Sitzung 401 `UNAUTHORIZED`. Die Antworten ble
 weil der offene Beitritt die Existenz einer Sitzung ohnehin mit 404 meldet (ADR 0005).
 
 Ein privates Projekt, das der GitLab-Token nicht sieht, beantwortet GitLab mit 404; das Backend
-meldet dann `ISSUE_NOT_FOUND` und nicht `GITLAB_ACCESS_DENIED` (ADR 0007). Jede Fehlerantwort und
+meldet dann `ISSUE_NOT_FOUND`, beim Anlegen ohne Issue `PROJECT_NOT_FOUND`, und nicht
+`GITLAB_ACCESS_DENIED` (ADR 0007, ADR 0011). Jede Fehlerantwort und
 jede fehlende Antwort von GitLab schreibt das Backend als eine Zeile auf `WARN` ins Log, mit
 Operation, Projekt-ID, Status und Grund, ohne Token und ohne Antworttext von GitLab.
 

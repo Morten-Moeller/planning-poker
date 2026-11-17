@@ -80,6 +80,11 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `create-issue-empty`; `PROJECT_NOT_ALLOWED`, `GITLAB_ACCESS_DENIED` and `GITLAB_ERROR` show
   their text in `create-project-search-error` and `create-issue-search-error` and clear
   `ErrorState`.
+- Issue field optional (spec 0033, ADR 0011): `create-issue` is labelled „Issue (optional)“ with
+  the hint „Optional: Issue, mit dem die Sitzung startet“. An empty field (or spaces) is valid and
+  the request has no `issueIid`; a value that is not a whole number from 1 shows
+  `create-issue-error`. `PROJECT_NOT_FOUND` sets the error `notFound` on the project control and
+  shows its text in `create-project-error`, not in `create-error`; a change of the field clears it.
 - Start and join page (spec 0031): an unreachable backend shows `health-down` with the button
   `health-retry`; the join page shows `join-role-hint` and, for `SESSION_NOT_FOUND`,
   `join-not-found` with the link `join-not-found-home` instead of the form. Above the title of the

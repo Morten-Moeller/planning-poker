@@ -9,6 +9,7 @@ function messagesByCode(): Record<ErrorCode, string> {
     PROJECT_NOT_ALLOWED: $localize`:@@error.PROJECT_NOT_ALLOWED:Für dieses GitLab-Projekt dürfen keine Sitzungen angelegt werden.`,
     SESSION_NOT_FOUND: $localize`:@@error.SESSION_NOT_FOUND:Die Sitzung wurde nicht gefunden oder ist abgelaufen.`,
     ISSUE_NOT_FOUND: $localize`:@@error.ISSUE_NOT_FOUND:Das Issue wurde im GitLab-Projekt nicht gefunden.`,
+    PROJECT_NOT_FOUND: $localize`:@@error.PROJECT_NOT_FOUND:Das GitLab-Projekt wurde nicht gefunden.`,
     NAME_TAKEN: $localize`:@@error.NAME_TAKEN:Der Name ist in dieser Sitzung schon vergeben.`,
     INVALID_STATE: $localize`:@@error.INVALID_STATE:Die Aktion passt nicht zum aktuellen Stand der Sitzung.`,
     LIMIT_REACHED: $localize`:@@error.LIMIT_REACHED:Die Höchstzahl ist erreicht. Bitte später erneut versuchen.`,

@@ -1,8 +1,11 @@
 package planningpoker.session;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.absent;
+import static com.github.tomakehurst.wiremock.client.WireMock.anyRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasKey;
@@ -188,6 +191,94 @@ class IssueSelectionTest {
                 .body("project", nullValue())
                 .body("writeWeight", equalTo(false));
         gitlab.verify(getRequestedFor(urlPathEqualTo(GitLabStubs.projectPath(GitLabStubs.PROJECT))));
+    }
+
+    private static io.restassured.response.Response createWithoutIssue(String name) {
+        return given().contentType(ContentType.JSON)
+                .body("{\"name\":\"" + name + "\",\"gitlabProjectId\":\"1234\"}")
+                .when()
+                .post("/api/sessions");
+    }
+
+    @Test
+    void createsTheSessionWithoutIssueAfterLoadingTheProject() {
+        gitlab.resetRequests();
+        GitLabStubs.project(gitlab, 1234, "Frontend", "webshop/frontend");
+
+        io.restassured.response.Response created =
+                createWithoutIssue("Cleo " + UUID.randomUUID().toString().substring(0, 8));
+
+        created.then().statusCode(201);
+        given().header("Authorization", "Bearer " + created.path("token"))
+                .when()
+                .get("/api/sessions/" + created.path("sessionId"))
+                .then()
+                .statusCode(200)
+                .body("$", hasKey("preselectedIssueIid"))
+                .body("preselectedIssueIid", nullValue())
+                .body("project.id", equalTo(1234))
+                .body("project.name", equalTo("Frontend"))
+                .body("phase", equalTo("LOBBY"));
+        gitlab.verify(1, getRequestedFor(urlPathEqualTo(GitLabStubs.projectPath(GitLabStubs.PROJECT))));
+        gitlab.verify(0, getRequestedFor(urlPathMatching(ISSUES + "/.*")));
+    }
+
+    static Stream<Arguments> projectFailures() {
+        return Stream.of(
+                Arguments.of(404, 404, "PROJECT_NOT_FOUND"),
+                Arguments.of(401, 502, "GITLAB_ACCESS_DENIED"),
+                Arguments.of(403, 502, "GITLAB_ACCESS_DENIED"),
+                Arguments.of(500, 502, "GITLAB_ERROR"));
+    }
+
+    @ParameterizedTest(name = "GitLab {0} on the project answers {2}")
+    @MethodSource("projectFailures")
+    void refusesToCreateASessionWithoutIssueWhenTheProjectFails(int gitLabStatus, int status, String errorCode) {
+        gitlab.resetRequests();
+        GitLabStubs.projectFailing(gitlab, GitLabStubs.PROJECT, gitLabStatus);
+        String name = "Dora " + UUID.randomUUID().toString().substring(0, 8);
+
+        createWithoutIssue(name)
+                .then()
+                .statusCode(status)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo(errorCode))
+                .body("detail", not(containsGitLabText()));
+        gitlab.verify(0, getRequestedFor(urlPathMatching(ISSUES + "/.*")));
+    }
+
+    @ParameterizedTest(name = "issueIid {0} answers VALIDATION_ERROR")
+    @ValueSource(strings = {"0", "-1"})
+    void refusesAnIssueIidBelowOne(String issueIid) {
+        gitlab.resetRequests();
+
+        given().contentType(ContentType.JSON)
+                .body("{\"name\":\"Anna\",\"gitlabProjectId\":\"1234\",\"issueIid\":" + issueIid + "}")
+                .when()
+                .post("/api/sessions")
+                .then()
+                .statusCode(400)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("VALIDATION_ERROR"));
+        gitlab.verify(0, anyRequestedFor(anyUrl()));
+    }
+
+    @Test
+    void createsTheSessionWithIssueAndLoadsTheIssueFirst() {
+        gitlab.resetRequests();
+        GitLabStubs.project(gitlab, 1234, "Frontend", "webshop/frontend");
+        SessionApiTest.Created created = SessionApiTest.createSession(
+                "Emil " + UUID.randomUUID().toString().substring(0, 8));
+
+        given().header("Authorization", "Bearer " + created.token())
+                .when()
+                .get("/api/sessions/" + created.sessionId())
+                .then()
+                .statusCode(200)
+                .body("preselectedIssueIid", equalTo(42))
+                .body("project.id", equalTo(1234));
+        gitlab.verify(
+                1, getRequestedFor(urlPathEqualTo(GitLabStubs.issuePath(GitLabStubs.PROJECT, GitLabStubs.ISSUE))));
     }
 
     @Test
