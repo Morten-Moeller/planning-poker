@@ -48,6 +48,42 @@ class SessionViewMapperTest {
     }
 
     @Test
+    void showsTheIssueAndAnEmptyRoundToBothRolesInDiscussion() {
+        Session session = SessionBuilder.session().timer(30).discussion().build();
+
+        for (Participant receiver : session.participants()) {
+            SessionView view = mapper.toView(session, receiver.id(), SERVER_TIME);
+
+            assertEquals(Phase.DISCUSSION, view.phase());
+            assertEquals(SessionBuilder.ISSUE.iid(), view.activeIssue().iid());
+            assertEquals(1, view.round().number());
+            assertNull(view.round().myVote());
+            assertFalse(view.round().allVoted());
+            assertNull(view.round().votes());
+            assertNull(view.round().stats());
+            assertNull(view.round().deadline());
+            assertTrue(view.participants().stream().noneMatch(SessionView.ParticipantView::hasVoted));
+        }
+    }
+
+    @Test
+    void showsNoCardOfTheLastRoundInTheDiscussionOfANewRound() throws JsonProcessingException {
+        Session session = SessionBuilder.session().revealed().build();
+        Participant master = SessionBuilder.master(session);
+        Participant developer = SessionBuilder.developer(session, 0);
+        session.restart(master.id());
+
+        SessionView view = mapper.toView(session, developer.id(), SERVER_TIME);
+
+        assertEquals(Phase.DISCUSSION, view.phase());
+        assertEquals(2, view.round().number());
+        assertNull(view.round().myVote());
+        assertNull(view.round().votes());
+        assertNull(view.round().stats());
+        assertTrue(JSON.writeValueAsString(view.round()).contains("\"myVote\":null"));
+    }
+
+    @Test
     void showsOnlyTheOwnCardWhileVoting() throws JsonProcessingException {
         Session session = SessionBuilder.session().voting().build();
         Participant first = SessionBuilder.developer(session, 0);
@@ -113,7 +149,8 @@ class SessionViewMapperTest {
         Participant master = SessionBuilder.master(session);
         session.beginConfirm(master.id(), Card.FIVE);
         session.finishConfirm(Card.FIVE);
-        session.selectIssue(master.id(), SessionBuilder.OTHER_ISSUE, SessionBuilder.CREATED_AT);
+        session.selectIssue(master.id(), SessionBuilder.OTHER_ISSUE);
+        session.startVoting(master.id(), SessionBuilder.CREATED_AT);
         session.vote(SessionBuilder.developer(session, 0).id(), Card.ONE);
         session.reveal(master.id());
 

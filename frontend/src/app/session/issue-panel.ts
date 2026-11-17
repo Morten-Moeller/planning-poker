@@ -89,6 +89,9 @@ export class IssuePanel implements OnInit {
     return this.results().find((issue) => issue.iid === iid) ?? { iid, title: null, webUrl: null };
   });
   protected readonly inLobby = computed(() => this.store.phase() === 'LOBBY');
+  private readonly withoutVotes = computed(
+    () => this.inLobby() || this.store.phase() === 'DISCUSSION',
+  );
   protected readonly releaseDisabled = computed(
     () =>
       this.releasing() ||
@@ -149,7 +152,7 @@ export class IssuePanel implements OnInit {
     if (iid === null || this.releaseDisabled()) {
       return;
     }
-    if (this.inLobby()) {
+    if (this.withoutVotes()) {
       this.selectIssue(iid);
       return;
     }

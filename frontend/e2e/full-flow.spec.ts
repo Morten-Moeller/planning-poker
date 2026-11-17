@@ -1,5 +1,6 @@
 import { Browser, Locator, Page, expect, test } from '@playwright/test';
 import { countNotes } from './gitlab-double';
+import { startVoting } from './helpers';
 
 const PROJECT = '1234';
 const CONFIRMED_ISSUE = 43;
@@ -40,6 +41,8 @@ async function search(page: Page, text: string): Promise<void> {
 }
 
 async function playRound(anna: Page, ben: Page, cem: Page, everybody: Page[]): Promise<void> {
+  await expectAll(everybody, 'session-phase', 'Diskussion');
+  await startVoting(anna);
   await expectAll(everybody, 'session-phase', 'Runde läuft');
   await expectAll(everybody, 'vote-counter', '0 von 2 haben geschätzt');
   await vote(ben, '5');

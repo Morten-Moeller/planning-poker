@@ -37,6 +37,10 @@ class SessionBuilder {
         return this;
     }
 
+    SessionBuilder discussion() {
+        return inPhase(Phase.DISCUSSION);
+    }
+
     SessionBuilder voting() {
         return inPhase(Phase.VOTING);
     }
@@ -65,7 +69,11 @@ class SessionBuilder {
         if (phase == Phase.LOBBY) {
             return session;
         }
-        session.selectIssue(master.id(), ISSUE, CREATED_AT);
+        session.selectIssue(master.id(), ISSUE);
+        if (phase == Phase.DISCUSSION) {
+            return session;
+        }
+        session.startVoting(master.id(), CREATED_AT);
         if (phase == Phase.VOTING) {
             return session;
         }

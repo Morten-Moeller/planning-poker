@@ -9,15 +9,14 @@ import java.util.Optional;
 public final class Round {
 
     private final int number;
-    private final Instant deadline;
+    private Instant deadline;
     private final Map<String, Card> votes = new LinkedHashMap<>();
     private boolean revealed;
     private boolean confirming;
     private RoundStats stats;
 
-    Round(int number, Instant deadline) {
+    Round(int number) {
         this.number = number;
-        this.deadline = deadline;
     }
 
     public int number() {
@@ -50,6 +49,10 @@ public final class Round {
 
     public Optional<RoundStats> stats() {
         return Optional.ofNullable(stats);
+    }
+
+    void start(Instant deadline) {
+        this.deadline = deadline;
     }
 
     void vote(String participantId, Card card) {

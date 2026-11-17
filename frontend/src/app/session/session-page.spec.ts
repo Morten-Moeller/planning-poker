@@ -6,6 +6,8 @@ import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { authInterceptor } from '../api/auth.interceptor';
 import { ErrorState } from '../api/error-state';
 import {
+  discussionDeveloper,
+  discussionScrumMaster,
   lobbyDeveloper,
   lobbyScrumMaster,
   revealedDeveloper,
@@ -60,12 +62,22 @@ describe('SessionPage', () => {
     await fixture.whenStable();
   }
 
+  function text(id: string): string {
+    return (
+      (fixture.nativeElement as HTMLElement)
+        .querySelector(`[data-testid="${id}"]`)
+        ?.textContent?.replace(/\s+/g, ' ')
+        .trim() ?? ''
+    );
+  }
+
   function count(id: string): number {
     return (fixture.nativeElement as HTMLElement).querySelectorAll(`[data-testid="${id}"]`).length;
   }
 
   it.each([
     ['LOBBY', lobbyDeveloper],
+    ['DISCUSSION', discussionDeveloper],
     ['VOTING', votingDeveloper],
   ])('renders no controls of the scrum master for a developer in %s', async (_phase, snapshot) => {
     await open(snapshot);
@@ -101,6 +113,34 @@ describe('SessionPage', () => {
     expect(count('issue-panel')).toBe(1);
     expect(count('timer-setting')).toBe(1);
     expect(count('lobby-waiting')).toBe(0);
+    http
+      .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
+      .flush({ items: [], nextPage: null });
+  });
+
+  it('shows the issue and the discussion hint but no cards, counter or timer to a developer in DISCUSSION', async () => {
+    await open(discussionDeveloper);
+
+    expect(count('active-issue')).toBe(1);
+    expect(count('discussion-hint')).toBe(1);
+    expect(count('lobby-waiting')).toBe(0);
+    expect(count('card-deck')).toBe(0);
+    expect(count('vote-counter')).toBe(0);
+    expect(count('round-timer')).toBe(0);
+    expect(count('round-start')).toBe(0);
+    expect(count('participant-vote-status')).toBe(0);
+    expect(text('session-phase')).toBe('Diskussion');
+  });
+
+  it('shows the start of the voting with the timer to the scrum master in DISCUSSION', async () => {
+    await open(discussionScrumMaster);
+
+    expect(count('active-issue')).toBe(1);
+    expect(count('discussion-hint')).toBe(1);
+    expect(count('round-start')).toBe(1);
+    expect(text('round-start-timer')).toBe('Timer: 1 min');
+    expect(count('round-reveal')).toBe(0);
+    expect(count('card-deck')).toBe(0);
     http
       .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
       .flush({ items: [], nextPage: null });

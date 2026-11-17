@@ -1,7 +1,7 @@
 ---
 id: "0026"
 title: Diskussionsphase vor der Schätzung
-status: approved
+status: Review
 risk: high
 adrs: ["0010"]
 owner: Morten Möller

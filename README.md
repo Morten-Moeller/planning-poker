@@ -124,9 +124,9 @@ Der Server ist die einzige Quelle der Wahrheit. Der Vertrag liegt generiert in
 `contracts/api/openapi.yaml` (Quelle: die Java-DTOs unter `backend/src/main/java/planningpoker/`
 und `backend/src/main/resources/META-INF/openapi.yaml`); `make contracts` schreibt ihn und die
 TypeScript-Typen `frontend/src/app/api/schema.d.ts`, `make drift` meldet einen veralteten Stand.
-Im Dev-Modus zeigt `http://localhost:8080/q/swagger-ui` den Vertrag. Sechs Beispiel-Snapshots je
+Im Dev-Modus zeigt `http://localhost:8080/q/swagger-ui` den Vertrag. Acht Beispiel-Snapshots je
 Phase und Rolle liegen unter `contracts/api/examples/`; Backend-Test und Frontend-Typen prüfen sie.
-Version des Vertrags: `2.4.0` (ADR 0005 bis ADR 0009).
+Version des Vertrags: `3.0.0` (ADR 0005 bis ADR 0010).
 
 ### Ablauf
 
@@ -140,7 +140,8 @@ Befehle gehen per REST an `/api` und antworten ohne Zustand (204 oder 201 mit de
 Nach jeder Änderung sendet der Server jedem verbundenen Teilnehmer per WebSocket den
 vollständigen, je Empfänger gefilterten Snapshot `session.state` (`SessionView`): verdeckte
 Karten anderer fehlen bis zur Auflösung, `preselectedIssueIid` sieht nur der Scrum Master, in
-`LOBBY` sind `activeIssue` und `round` `null`. Das Frontend ersetzt seinen Zustand mit jedem
+`LOBBY` sind `activeIssue` und `round` `null`, in `DISCUSSION` hat `round` weder Stimmen noch
+Frist. Das Frontend ersetzt seinen Zustand mit jedem
 Snapshot vollständig (ADR 0004). Jeder Snapshot trägt `timerSeconds` (Timer der Sitzung oder
 `null`), `serverTime` (Serverzeit beim Erzeugen) und in `round` die Frist `deadline` (oder
 `null`); alle Zeiten in RFC 3339 mit Offset.
@@ -149,18 +150,22 @@ Snapshot vollständig (ADR 0004). Jeder Snapshot trägt `timerSeconds` (Timer de
 
 | Phase | Ereignis | Auslöser | Neue Phase |
 |---|---|---|---|
-| `LOBBY` | Freigabe | Scrum Master | `VOTING`, Runde 1 |
-| `VOTING`, `REVEALED` | Issue-Wechsel | Scrum Master | `VOTING`, Runde 1 |
+| `LOBBY` | Freigabe | Scrum Master | `DISCUSSION`, Runde 1 |
+| `DISCUSSION`, `VOTING`, `REVEALED` | Issue-Wechsel | Scrum Master | `DISCUSSION`, Runde 1 |
+| `DISCUSSION` | Schätzung starten | Scrum Master | `VOTING`, Frist aus dem Timer |
 | `VOTING` | Auflösung | Scrum Master | `REVEALED` |
 | `VOTING` | Frist erreicht | Server | `REVEALED` |
-| `REVEALED` | Neue Runde | Scrum Master | `VOTING`, Rundennummer plus 1 |
+| `REVEALED` | Neue Runde | Scrum Master | `DISCUSSION`, Rundennummer plus 1 |
 | `REVEALED` | Bestätigung | Scrum Master | `LOBBY` |
 
-Timer (ADR 0006): Der Scrum Master setzt mit `PUT …/timer` eine Dauer von 5 bis 3600 Sekunden
-oder schaltet ihn mit `null` ab. Jede danach startende Runde (Freigabe, Issue-Wechsel, Neue
-Runde) bekommt die Frist Start plus Dauer; eine laufende Runde behält ihre Frist. Eine Prüfung
-alle 250 ms löst jede Runde mit erreichter Frist auf, auch ohne Stimmen und ohne verbundenen
-Scrum Master. Das Frontend zeigt die Restzeit aus `deadline` und der Abweichung der eigenen Uhr
+In `DISCUSSION` sehen alle das aktive Issue, die Karten sind gesperrt: Stimme, Auflösung und
+Bestätigung antworten 409 `INVALID_STATE` (ADR 0010).
+
+Timer (ADR 0010, löst ADR 0006 ab): Der Scrum Master setzt mit `PUT …/timer` eine Dauer von 5 bis
+3600 Sekunden oder schaltet ihn mit `null` ab. Die Frist entsteht erst mit „Schätzung starten“:
+Start plus Dauer. Eine Änderung in `DISCUSSION` wirkt auf diesen Start, eine laufende Schätzung
+behält ihre Frist. Eine Prüfung alle 250 ms löst jede Runde in `VOTING` mit erreichter Frist auf,
+auch ohne Stimmen und ohne verbundenen Scrum Master. Das Frontend zeigt die Restzeit aus `deadline` und der Abweichung der eigenen Uhr
 zu `serverTime`.
 
 ### REST-Endpunkte
@@ -180,6 +185,7 @@ trägt jeder Aufruf `Authorization: Bearer <token>`.
 | `POST /api/sessions/{id}/active-issue` | Scrum Master | `{ issueIid }` | 204 | 400, 403, 404, 409, 502 |
 | `PUT /api/sessions/{id}/timer` | Scrum Master | `{ seconds }` (5 bis 3600 oder `null`) | 204 | 400, 403 |
 | `PUT /api/sessions/{id}/vote` | Entwickler | `{ card }` | 204 | 400 `INVALID_CARD`, 403, 409 |
+| `POST /api/sessions/{id}/round/start` | Scrum Master | – | 204 | 403, 409 |
 | `POST /api/sessions/{id}/round/reveal` | Scrum Master | – | 204 | 403, 409 |
 | `POST /api/sessions/{id}/round/restart` | Scrum Master | – | 204 | 403, 409 |
 | `POST /api/sessions/{id}/round/confirm` | Scrum Master | `{ card }` | 204 | 400 `INVALID_CARD`, 403, 409, 502 |
@@ -256,7 +262,7 @@ erfährt kein fremder Server, wer eine Sitzung geöffnet hat.
 
 | ID | Feature | Verhalten |
 |---|---|---|
-| O-01 | Timer | Der Scrum Master stellt in der Sitzung eine Dauer von 5 bis 3600 Sekunden ein. Jede danach startende Runde zeigt allen die Restzeit; bei Ablauf löst der Server die Runde auf, auch ohne verbundenen Scrum Master (ADR 0006). |
+| O-01 | Timer | Der Scrum Master stellt in der Sitzung eine Dauer von 5 bis 3600 Sekunden ein. Die Frist beginnt mit „Schätzung starten“ und zeigt allen die Restzeit; bei Ablauf löst der Server die Runde auf, auch ohne verbundenen Scrum Master (ADR 0010). |
 | O-02 | Ausreißer | Liegen niedrigste und höchste Zahlenkarte einer aufgelösten Runde mehr als zwei Positionen im Kartensatz auseinander, tragen die Stimmen mit diesen Karten den Text „Ausreißer“. Das Frontend berechnet die Markierung aus dem Snapshot. |
 | O-03 | Konsens | Zeigen mindestens zwei Stimmen dieselbe Zahlenkarte und keine andere, sehen alle einen Hinweis mit Konfetti; im Dialog „Ergebnis übernehmen“ ist der Wert vorausgewählt. Unter reduzierter Bewegung entfällt das Konfetti. |
 

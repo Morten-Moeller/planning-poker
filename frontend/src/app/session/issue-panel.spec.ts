@@ -8,6 +8,7 @@ import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { authInterceptor } from '../api/auth.interceptor';
 import { ErrorState } from '../api/error-state';
 import {
+  discussionScrumMaster,
   lobbyScrumMaster,
   revealedScrumMaster,
   SessionView,
@@ -190,6 +191,19 @@ describe('IssuePanel', () => {
 
     const request = http.expectOne(ACTIVE_ISSUE_URL);
     expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ issueIid: 43 });
+    expect(document.querySelector('[data-testid="switch-dialog"]')).toBeNull();
+    request.flush(null, { status: 204, statusText: 'No Content' });
+  });
+
+  it('switches the issue in DISCUSSION without a dialog', async () => {
+    await open(discussionScrumMaster);
+    expect(one('issue-release').textContent?.trim()).toBe('Issue wechseln');
+    await click('issue-result', 0);
+
+    await click('issue-release');
+
+    const request = http.expectOne(ACTIVE_ISSUE_URL);
     expect(request.request.body).toEqual({ issueIid: 43 });
     expect(document.querySelector('[data-testid="switch-dialog"]')).toBeNull();
     request.flush(null, { status: 204, statusText: 'No Content' });

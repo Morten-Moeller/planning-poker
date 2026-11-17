@@ -1,9 +1,11 @@
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { WebSocketFactory } from '../web-socket-factory';
 import type { WsMessage } from '../ws-messages';
-import { roleOfToken, snapshotFor } from './mock-session';
+import { mockPhaseChanges, roleOfToken, snapshotFor } from './mock-session';
 
 class MockSessionSocket extends Subject<WsMessage> {
+  private phaseChanges: Subscription | null = null;
+
   override next(message: WsMessage): void {
     if (message.type === 'auth') {
       this.answerAuth(message.payload.token);
@@ -24,6 +26,20 @@ class MockSessionSocket extends Subject<WsMessage> {
       return;
     }
     super.next({ type: 'session.state', payload: snapshotFor(role) });
+    this.phaseChanges?.unsubscribe();
+    this.phaseChanges = mockPhaseChanges.subscribe(() =>
+      super.next({ type: 'session.state', payload: snapshotFor(role) }),
+    );
+  }
+
+  override complete(): void {
+    this.phaseChanges?.unsubscribe();
+    super.complete();
+  }
+
+  override unsubscribe(): void {
+    this.phaseChanges?.unsubscribe();
+    super.unsubscribe();
   }
 }
 

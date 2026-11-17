@@ -38,7 +38,7 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   (`openapi-typescript` from `contracts/api/openapi.yaml`, `make contracts`); a contract type is
   taken as `components['schemas']['<Name>']`, never as a hand-written copy. Clients branch on
   `errorCode` only.
-- Example snapshots: `frontend/src/app/api/examples.ts` imports the six files of
+- Example snapshots: `frontend/src/app/api/examples.ts` imports the eight files of
   `contracts/api/examples/` (`resolveJsonModule`) and checks them with the type `Exact` against
   `SessionView`: an extra or missing field or a wrong primitive type fails `make typecheck`.
   Tests take their snapshots from there.
@@ -85,6 +85,12 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   with the last submitted search text. Each entry shows `issue-result-weight` („Gewicht 5“ or
   „ohne Gewicht“). When the phase changes from `REVEALED` to `LOBBY`, the panel loads page 1 again
   with the current filters. The filters live only in the component.
+- Discussion (spec 0026, ADR 0010): in `DISCUSSION` the session page shows the active issue and
+  `RoundStatus` with `discussion-hint` to both roles, no card deck, no counter and no remaining
+  time; the phase reads „Diskussion“. The scrum master sees `round-start` („Schätzung starten“,
+  `ApiService.startVoting`) and, with a timer, `round-start-timer` („Timer: 1 min“). An issue
+  switch in `LOBBY` or `DISCUSSION` opens no dialog. The participant list shows the vote status
+  only in `VOTING`.
 - Session ids from the route of the join page are taken in capital letters, like the input on
   the start page. The name rule of create and join is `api/participant-name.ts`.
 - Authentication: `authInterceptor` adds `Authorization: Bearer <token>` from the `TokenStore`
@@ -96,7 +102,10 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   from the example snapshots; tokens carry the role (`mock-scrum-master-…`, `mock-developer-…`),
   the session id is `K7P2QX9M`. The project list and the issues of every project come from fixed
   data (projects 1234 „Planning Poker“, 5678 „Poker Tools“, 9012 „Release Notes“; issues 42 and
-  43 without weight, 46 with weight 3), filtered by `search` and, in the session, by `weight`. The normal build does not contain the mock.
+  43 without weight, 46 with weight 3), filtered by `search` and, in the session, by `weight`. The
+  mock keeps one phase (`mock-session.ts`, start `LOBBY`): release, `round/start`, reveal, restart
+  and confirm change it like the server, answer 409 `INVALID_STATE` in a wrong phase and send the
+  example snapshot of the new phase to every mock socket. The normal build does not contain the mock.
 
 ## UI
 

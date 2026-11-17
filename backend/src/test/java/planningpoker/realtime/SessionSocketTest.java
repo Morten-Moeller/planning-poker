@@ -124,6 +124,26 @@ class SessionSocketTest {
     }
 
     @Test
+    void sendsTheIssueWithoutCardsAndDeadlineToEveryClientInDiscussion() {
+        RestCalls.Participant ben = join("Ben");
+        List<SocketClient> all = List.of(connectAs(scrumMaster), connectAs(ben));
+
+        RestCalls.releaseIssue(sessionId, scrumMaster);
+
+        for (SocketClient client : all) {
+            JsonNode view =
+                    client.awaitState(state -> state.path("phase").asText().equals("DISCUSSION"), "phase DISCUSSION");
+            assertEquals(RestCalls.ISSUE, view.path("activeIssue").path("iid").asLong());
+            assertEquals(1, view.path("round").path("number").asInt());
+            assertTrue(view.path("round").path("myVote").isNull());
+            assertTrue(view.path("round").path("votes").isNull());
+            assertTrue(view.path("round").path("stats").isNull());
+            assertTrue(view.path("round").path("deadline").isNull());
+            assertFalse(view.path("round").path("allVoted").asBoolean());
+        }
+    }
+
+    @Test
     void hidesForeignCardsAfterAVote() {
         RestCalls.Participant ben = join("Ben");
         RestCalls.Participant cem = join("Cem");
@@ -131,6 +151,7 @@ class SessionSocketTest {
         SocketClient benClient = connectAs(ben);
         SocketClient cemClient = connectAs(cem);
         RestCalls.releaseIssue(sessionId, scrumMaster);
+        RestCalls.startVoting(sessionId, scrumMaster);
         RestCalls.vote(sessionId, cem, "8");
         cemClient.awaitState(view -> view.path("round").path("myVote").asText().equals("8"), "myVote 8 of Cem");
 
@@ -154,6 +175,7 @@ class SessionSocketTest {
         RestCalls.Participant cem = join("Cem");
         List<SocketClient> all = List.of(connectAs(scrumMaster), connectAs(ben), connectAs(cem));
         RestCalls.releaseIssue(sessionId, scrumMaster);
+        RestCalls.startVoting(sessionId, scrumMaster);
         RestCalls.vote(sessionId, ben, "5");
         RestCalls.vote(sessionId, cem, "8");
 
@@ -181,6 +203,7 @@ class SessionSocketTest {
         SocketClient benClient = connectAs(ben);
         SocketClient cemClient = connectAs(cem);
         RestCalls.releaseIssue(sessionId, scrumMaster);
+        RestCalls.startVoting(sessionId, scrumMaster);
         RestCalls.vote(sessionId, ben, "5");
         assertFalse(types(master.untilPong()).contains(WsMessage.ROUND_ALL_VOTED));
 
@@ -289,6 +312,7 @@ class SessionSocketTest {
         SocketClient master = connectAs(scrumMaster);
         SocketClient benClient = connectAs(ben);
         RestCalls.releaseIssue(sessionId, scrumMaster);
+        RestCalls.startVoting(sessionId, scrumMaster);
         RestCalls.vote(sessionId, ben, "5");
         master.await(WsMessage.ROUND_ALL_VOTED);
         master.untilPong();

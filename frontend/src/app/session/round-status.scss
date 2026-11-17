@@ -10,6 +10,17 @@
   font: var(--mat-sys-title-medium);
 }
 
+.start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-m);
+}
+
+.timer {
+  font: var(--mat-sys-body-large);
+}
+
 .hint {
   margin: 0;
   padding: var(--app-space-s) var(--app-space-m);

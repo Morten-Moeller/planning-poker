@@ -72,6 +72,10 @@ change touches.
   frontend with a timeout and fails when one does not come up; `DEBUG=pw:webserver make e2e`
   shows the output of both servers.
 - Selectors: `data-testid` first, then role and accessible name (T6.1).
+- Discussion (spec 0026, ADR 0010): a release, an issue switch and a new round lead to
+  `DISCUSSION`. A flow that votes calls `startVoting(page)` from `frontend/e2e/helpers.ts` with the
+  page of the scrum master after the release or the new round; it waits for „Diskussion“, clicks
+  `round-start` and waits for „Runde läuft“.
 
 ## Test data
 
@@ -107,7 +111,8 @@ change touches.
   second browser context; `voting-round.spec.ts` (spec 0013) joins two or three developers the
   same way; `result-round.spec.ts` (spec 0014) joins two developers for the result and the
   new round and stubs its own issue for the GitLab error (`gitlab-double.ts`); `round-timer.spec.ts` (spec 0016) joins one
-  developer, sets the timer to 15 s and waits the real duration for the reveal by the server;
+  developer, sets the timer to 15 s, checks the discussion without cards and remaining time, starts
+  the voting (spec 0026) and waits the real duration for the reveal by the server;
   `outliers.spec.ts` (spec 0017) joins two developers on issue 42;
   `consensus.spec.ts` (spec 0018) joins two developers on issue 42, both vote `5`, and runs one
   flow under `reducedMotion: 'reduce'`; `full-flow.spec.ts` (spec 0019) runs the whole flow with

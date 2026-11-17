@@ -75,6 +75,10 @@ export class ApiService {
     return this.http.put<void>(`${sessionPath(sessionId)}/vote`, request);
   }
 
+  startVoting(sessionId: string): Observable<void> {
+    return this.http.post<void>(`${sessionPath(sessionId)}/round/start`, null);
+  }
+
   revealRound(sessionId: string): Observable<void> {
     return this.http.post<void>(`${sessionPath(sessionId)}/round/reveal`, null);
   }

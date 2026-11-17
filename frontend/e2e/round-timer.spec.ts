@@ -1,4 +1,5 @@
 import { Browser, Page, expect, test } from '@playwright/test';
+import { startVoting } from './helpers';
 
 const PROJECT = '1234';
 const TIMER_SECONDS = 15;
@@ -40,6 +41,22 @@ test('the server reveals the round at the deadline without the scrum master', as
   await expect(scrumMaster.getByTestId('participant')).toHaveCount(2);
   await scrumMaster.getByTestId('issue-release').click();
 
+  await expect(developer.getByTestId('session-phase')).toHaveText('Diskussion');
+  await expect(developer.getByTestId('active-issue-title')).toHaveText('Login page');
+  await expect(developer.getByTestId('card-deck')).toHaveCount(0);
+  await expect(developer.getByRole('timer')).toHaveCount(0);
+  await expect(scrumMaster.getByTestId('round-start-timer')).toHaveText('Timer: 15 s');
+  await scrumMaster.waitForTimeout(2_000);
+  await expect(developer.getByTestId('session-phase')).toHaveText('Diskussion');
+
+  await startVoting(scrumMaster);
+
+  await expect(developer.getByTestId('card-deck')).toBeVisible();
+  await developer.getByTestId('card-deck').getByTestId('card-5').click();
+  await expect(developer.getByTestId('card-deck').getByTestId('card-5')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   for (const page of [scrumMaster, developer]) {
     await expect(page.getByTestId('session-phase')).toHaveText('Runde läuft');
     await expect(page.getByRole('timer')).toHaveText(/Noch 0:1\d/);

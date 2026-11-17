@@ -73,6 +73,15 @@ class RoundCommandsTest {
                 .statusCode(204);
     }
 
+    private ValidatableResponse startVoting() {
+        return asScrumMaster().when().post(session + "/round/start").then();
+    }
+
+    private void openVoting(long iid) {
+        releaseIssue(iid);
+        startVoting().statusCode(204);
+    }
+
     private ValidatableResponse vote(int developer, String card) {
         return asDeveloper(developer)
                 .contentType(ContentType.JSON)
@@ -108,8 +117,93 @@ class RoundCommandsTest {
     }
 
     @Test
-    void storesTheHiddenCardAndShowsOnlyTheOwnValue() {
+    void releasesTheIssueIntoDiscussionAndStartsTheVotingOnRequest() {
         releaseIssue(GitLabStubs.ISSUE);
+
+        for (RequestSpecification caller : new RequestSpecification[] {asScrumMaster(), asDeveloper(0)}) {
+            snapshotOf(caller)
+                    .body("phase", equalTo("DISCUSSION"))
+                    .body("activeIssue.iid", equalTo(42))
+                    .body("round.number", equalTo(1))
+                    .body("round.myVote", nullValue())
+                    .body("round.allVoted", equalTo(false))
+                    .body("round.votes", nullValue())
+                    .body("round.stats", nullValue())
+                    .body("round.deadline", nullValue());
+        }
+
+        startVoting().statusCode(204);
+
+        snapshotOf(asDeveloper(0)).body("phase", equalTo("VOTING")).body("round.number", equalTo(1));
+    }
+
+    @Test
+    void rejectsCardsRevealAndConfirmInDiscussion() {
+        releaseIssue(GitLabStubs.ISSUE);
+
+        vote(0, "5").statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
+        reveal().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
+        asScrumMaster()
+                .contentType(ContentType.JSON)
+                .body("{\"card\":\"5\"}")
+                .when()
+                .post(session + "/round/confirm")
+                .then()
+                .statusCode(409)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("INVALID_STATE"));
+
+        snapshotOf(asScrumMaster()).body("phase", equalTo("DISCUSSION")).body("history", hasSize(0));
+    }
+
+    @Test
+    void switchesTheIssueInDiscussion() {
+        releaseIssue(GitLabStubs.ISSUE);
+
+        releaseIssue(43);
+
+        snapshotOf(asDeveloper(0))
+                .body("phase", equalTo("DISCUSSION"))
+                .body("activeIssue.iid", equalTo(43))
+                .body("round.number", equalTo(1));
+    }
+
+    @Test
+    void switchesTheIssueWhileVotingIntoDiscussion() {
+        openVoting(GitLabStubs.ISSUE);
+        vote(0, "5").statusCode(204);
+
+        releaseIssue(43);
+
+        snapshotOf(asDeveloper(0))
+                .body("phase", equalTo("DISCUSSION"))
+                .body("activeIssue.iid", equalTo(43))
+                .body("round.myVote", nullValue())
+                .body(hasVotedOf(0), equalTo(false));
+    }
+
+    @Test
+    void rejectsTheStartOutsideDiscussionAndByDevelopers() {
+        startVoting().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
+
+        releaseIssue(GitLabStubs.ISSUE);
+        asDeveloper(0)
+                .when()
+                .post(session + "/round/start")
+                .then()
+                .statusCode(403)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("FORBIDDEN_ROLE"));
+        startVoting().statusCode(204);
+
+        startVoting().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
+        reveal().statusCode(204);
+        startVoting().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
+    }
+
+    @Test
+    void storesTheHiddenCardAndShowsOnlyTheOwnValue() {
+        openVoting(GitLabStubs.ISSUE);
 
         vote(0, "5").statusCode(204);
 
@@ -130,7 +224,7 @@ class RoundCommandsTest {
     void rejectsACardInLobbyAndAfterTheReveal() {
         vote(0, "5").statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
 
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         vote(0, "5").statusCode(204);
         reveal().statusCode(204);
 
@@ -139,7 +233,7 @@ class RoundCommandsTest {
 
     @Test
     void rejectsACardOfTheScrumMaster() {
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
 
         asScrumMaster()
                 .contentType(ContentType.JSON)
@@ -154,7 +248,7 @@ class RoundCommandsTest {
 
     @Test
     void revealsEveryCardWithTheStatsForEveryone() {
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         vote(0, "5").statusCode(204);
         vote(1, "8").statusCode(204);
         vote(2, "5").statusCode(204);
@@ -180,7 +274,7 @@ class RoundCommandsTest {
 
     @Test
     void revealsWithOneOfThreeVotes() {
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         vote(2, "13").statusCode(204);
 
         reveal().statusCode(204);
@@ -198,7 +292,7 @@ class RoundCommandsTest {
     void rejectsTheRevealOutsideVotingAndByDevelopers() {
         reveal().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
 
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         asDeveloper(0)
                 .when()
                 .post(session + "/round/reveal")
@@ -213,14 +307,15 @@ class RoundCommandsTest {
 
     @Test
     void startsANewRoundWithoutCards() {
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         vote(0, "5").statusCode(204);
         reveal().statusCode(204);
 
         restart().statusCode(204);
 
         snapshotOf(asDeveloper(0))
-                .body("phase", equalTo("VOTING"))
+                .body("phase", equalTo("DISCUSSION"))
+                .body("round.deadline", nullValue())
                 .body("round.number", equalTo(2))
                 .body("round.myVote", nullValue())
                 .body("round.votes", nullValue())
@@ -232,7 +327,7 @@ class RoundCommandsTest {
     void rejectsANewRoundOutsideRevealedAndByDevelopers() {
         restart().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
 
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         restart().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
         reveal().statusCode(204);
 
@@ -247,7 +342,7 @@ class RoundCommandsTest {
 
     @Test
     void recordsEveryRevealInTheHistoryNewestFirst() {
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         vote(0, "3").statusCode(204);
         reveal().statusCode(204);
 
@@ -262,6 +357,7 @@ class RoundCommandsTest {
                 .body("history[0].revealedAt", matchesPattern("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z"));
 
         restart().statusCode(204);
+        startVoting().statusCode(204);
         vote(1, "8").statusCode(204);
         reveal().statusCode(204);
 
@@ -273,14 +369,14 @@ class RoundCommandsTest {
 
     @Test
     void keepsTheRevealedEntryWhenTheIssueChanges() {
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         vote(0, "5").statusCode(204);
         reveal().statusCode(204);
 
         releaseIssue(43);
 
         snapshotOf(asDeveloper(0))
-                .body("phase", equalTo("VOTING"))
+                .body("phase", equalTo("DISCUSSION"))
                 .body("activeIssue.iid", equalTo(43))
                 .body("round.number", equalTo(1))
                 .body("round.myVote", nullValue())
@@ -292,7 +388,7 @@ class RoundCommandsTest {
 
     @Test
     void completesTheRoundOnceWhenTheLastConnectedDeveloperVotes() {
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         connectDevelopers();
 
         vote(0, "5").statusCode(204);
@@ -310,7 +406,7 @@ class RoundCommandsTest {
 
     @Test
     void neverCompletesTheRoundWithoutConnectedDevelopers() {
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
 
         vote(0, "5").statusCode(204);
         vote(1, "5").statusCode(204);
@@ -322,12 +418,13 @@ class RoundCommandsTest {
 
     @Test
     void runsTwoRoundsFromReleaseToReveal() {
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         vote(0, "5").statusCode(204);
         vote(1, "8").statusCode(204);
         vote(2, "13").statusCode(204);
         reveal().statusCode(204);
         restart().statusCode(204);
+        startVoting().statusCode(204);
         vote(0, "8").statusCode(204);
         vote(1, "8").statusCode(204);
         vote(2, "8").statusCode(204);

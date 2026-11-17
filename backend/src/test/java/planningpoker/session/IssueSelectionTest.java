@@ -337,7 +337,7 @@ class IssueSelectionTest {
                     .get(session)
                     .then()
                     .statusCode(200)
-                    .body("phase", equalTo("VOTING"))
+                    .body("phase", equalTo("DISCUSSION"))
                     .body("activeIssue.iid", equalTo(42))
                     .body("activeIssue.title", equalTo("Login page"))
                     .body("activeIssue.description", equalTo("As a user I want to log in."))
@@ -359,7 +359,7 @@ class IssueSelectionTest {
                 .get(session)
                 .then()
                 .statusCode(200)
-                .body("phase", equalTo("VOTING"))
+                .body("phase", equalTo("DISCUSSION"))
                 .body("activeIssue.iid", equalTo(43))
                 .body("activeIssue.description", equalTo(""))
                 .body("round.number", equalTo(1))
@@ -385,7 +385,7 @@ class IssueSelectionTest {
                 .get(session)
                 .then()
                 .body("activeIssue.iid", equalTo(42))
-                .body("phase", equalTo("VOTING"));
+                .body("phase", equalTo("DISCUSSION"));
     }
 
     @ParameterizedTest(name = "GitLab {0} answers {1}")

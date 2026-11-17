@@ -1,4 +1,5 @@
 import { Browser, Locator, Page, expect, test } from '@playwright/test';
+import { startVoting } from './helpers';
 import { removeStubs, stubIssueWithFailingFirstNote, uniqueIssueIid } from './gitlab-double';
 
 const PROJECT = '1234';
@@ -118,6 +119,7 @@ test('everybody sees the same result, the scrum master starts a new round and co
   const everybody = [anna, ben, cem];
   await expect(anna.page.getByTestId('participant')).toHaveCount(3);
   await anna.page.getByTestId('issue-release').click();
+  await startVoting(anna.page);
 
   await playRound(anna, [
     [ben, '5'],
@@ -145,6 +147,8 @@ test('everybody sees the same result, the scrum master starts a new round and co
 
   await anna.page.getByTestId('round-restart').click();
 
+  await expectPhase(everybody, 'Diskussion');
+  await startVoting(anna.page);
   await expectPhase(everybody, 'Runde läuft');
   for (const view of everybody) {
     await expect(voteStatus(view, 'Ben')).toHaveText('Ausstehend');
@@ -201,6 +205,7 @@ test('a GitLab error stays in the dialog and the second attempt confirms the res
   const ben = await join(browser, link, 'Ben');
   await expect(anna.page.getByTestId('participant')).toHaveCount(2);
   await anna.page.getByTestId('issue-release').click();
+  await startVoting(anna.page);
   await playRound(anna, [[ben, '3']]);
 
   await anna.page.getByTestId('result-accept').click();

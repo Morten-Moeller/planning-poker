@@ -4,24 +4,49 @@
       Runde {{ round.number }}
     </p>
   }
-  <p class="counter" data-testid="vote-counter" i18n="@@roundStatus.counter">
-    {{ voted() }} von {{ total() }} haben geschätzt
-  </p>
-  @if (store.isScrumMaster()) {
-    @if (allVoted()) {
-      <p class="hint" role="status" data-testid="all-voted-hint" i18n="@@roundStatus.allVoted">
-        Alle verbundenen Entwickler haben geschätzt. Die Runde kann aufgelöst werden.
-      </p>
+  @if (discussion()) {
+    <p class="hint" role="status" data-testid="discussion-hint" i18n="@@roundStatus.discussion">
+      Diskussion: Die Karten werden geöffnet, wenn der Scrum Master die Schätzung startet.
+    </p>
+    @if (store.isScrumMaster()) {
+      <div class="start">
+        <button
+          type="button"
+          [matButton]="'filled'"
+          data-testid="round-start"
+          [disabled]="starting()"
+          (click)="startVoting()"
+          i18n="@@roundStatus.start"
+        >
+          Schätzung starten
+        </button>
+        @if (timerLabel(); as label) {
+          <span class="timer" data-testid="round-start-timer" i18n="@@roundStatus.startTimer"
+            >Timer: {{ label }}</span
+          >
+        }
+      </div>
     }
-    <button
-      type="button"
-      [matButton]="allVoted() ? 'filled' : 'outlined'"
-      data-testid="round-reveal"
-      [disabled]="revealing()"
-      (click)="reveal()"
-      i18n="@@roundStatus.reveal"
-    >
-      Auflösen
-    </button>
+  } @else {
+    <p class="counter" data-testid="vote-counter" i18n="@@roundStatus.counter">
+      {{ voted() }} von {{ total() }} haben geschätzt
+    </p>
+    @if (store.isScrumMaster()) {
+      @if (allVoted()) {
+        <p class="hint" role="status" data-testid="all-voted-hint" i18n="@@roundStatus.allVoted">
+          Alle verbundenen Entwickler haben geschätzt. Die Runde kann aufgelöst werden.
+        </p>
+      }
+      <button
+        type="button"
+        [matButton]="allVoted() ? 'filled' : 'outlined'"
+        data-testid="round-reveal"
+        [disabled]="revealing()"
+        (click)="reveal()"
+        i18n="@@roundStatus.reveal"
+      >
+        Auflösen
+      </button>
+    }
   }
 </section>

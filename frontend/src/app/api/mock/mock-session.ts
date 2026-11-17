@@ -1,7 +1,19 @@
+import { Subject } from 'rxjs';
 import type { components } from '../schema';
-import { lobbyDeveloper, lobbyScrumMaster, SessionView } from '../examples';
+import {
+  discussionDeveloper,
+  discussionScrumMaster,
+  lobbyDeveloper,
+  lobbyScrumMaster,
+  revealedDeveloper,
+  revealedScrumMaster,
+  SessionView,
+  votingDeveloper,
+  votingScrumMaster,
+} from '../examples';
 
 export type Role = components['schemas']['Role'];
+export type Phase = components['schemas']['Phase'];
 
 export const MOCK_SESSION_ID = lobbyScrumMaster.sessionId;
 
@@ -9,6 +21,26 @@ const TOKEN_PREFIX: Record<Role, string> = {
   SCRUM_MASTER: 'mock-scrum-master-',
   DEVELOPER: 'mock-developer-',
 };
+
+const EXAMPLES: Record<Phase, Record<Role, SessionView>> = {
+  LOBBY: { SCRUM_MASTER: lobbyScrumMaster, DEVELOPER: lobbyDeveloper },
+  DISCUSSION: { SCRUM_MASTER: discussionScrumMaster, DEVELOPER: discussionDeveloper },
+  VOTING: { SCRUM_MASTER: votingScrumMaster, DEVELOPER: votingDeveloper },
+  REVEALED: { SCRUM_MASTER: revealedScrumMaster, DEVELOPER: revealedDeveloper },
+};
+
+let mockPhase: Phase = 'LOBBY';
+
+export const mockPhaseChanges = new Subject<Phase>();
+
+export function currentMockPhase(): Phase {
+  return mockPhase;
+}
+
+export function changeMockPhase(phase: Phase): void {
+  mockPhase = phase;
+  mockPhaseChanges.next(phase);
+}
 
 export function issueToken(role: Role): string {
   return TOKEN_PREFIX[role] + crypto.randomUUID();
@@ -28,6 +60,6 @@ export function roleOfToken(token: string | null): Role | null {
 }
 
 export function snapshotFor(role: Role): SessionView {
-  const example = role === 'SCRUM_MASTER' ? lobbyScrumMaster : lobbyDeveloper;
+  const example = EXAMPLES[mockPhase][role];
   return { ...example, serverTime: new Date().toISOString() };
 }

@@ -1,4 +1,5 @@
 import { Browser, Locator, Page, expect, test } from '@playwright/test';
+import { startVoting } from './helpers';
 
 const PROJECT = '1234';
 
@@ -98,8 +99,10 @@ test('the scrum master releases an issue and the developer sees it without reloa
 
   await scrumMaster.getByTestId('issue-release').click();
 
-  await expect(scrumMaster.getByTestId('session-phase')).toHaveText('Runde läuft');
+  await expect(scrumMaster.getByTestId('session-phase')).toHaveText('Diskussion');
   await expect(developer.getByTestId('lobby-waiting')).toHaveCount(0);
+  await expect(developer.getByTestId('discussion-hint')).toBeVisible();
+  await expect(developer.getByTestId('card-deck')).toHaveCount(0);
   await expect(developer.getByTestId('active-issue-title')).toHaveText('Password reset');
   await expect(developer.getByTestId('active-issue-description')).toContainText(
     'reset my password',
@@ -120,6 +123,7 @@ test('switching the issue while voting asks first and can be cancelled', async (
   const release = scrumMaster.getByTestId('issue-release');
   await release.click();
   await expect(developer.getByTestId('active-issue-title')).toHaveText('Login page');
+  await startVoting(scrumMaster);
 
   await expect(release).toHaveText('Issue wechseln');
   await expect(release).toBeDisabled();

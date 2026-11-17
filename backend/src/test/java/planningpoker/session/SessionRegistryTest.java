@@ -63,7 +63,8 @@ class SessionRegistryTest {
                     registry.update(sessionId, session -> session.join(name).id()));
         }
         registry.update(sessionId, session -> {
-            session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE, SessionBuilder.CREATED_AT);
+            session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE);
+            session.startVoting(created.scrumMaster().id(), SessionBuilder.CREATED_AT);
             return null;
         });
         CountDownLatch start = new CountDownLatch(1);
@@ -92,7 +93,7 @@ class SessionRegistryTest {
 
         registry.update(sessionId, session -> session.join("Anna"));
         registry.update(sessionId, session -> {
-            session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE, SessionBuilder.CREATED_AT);
+            session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE);
             return null;
         });
 
@@ -285,7 +286,8 @@ class SessionRegistryTest {
         registry.update(sessionId, session -> session.join("Anna"));
         registry.update(sessionId, session -> {
             session.setTimer(master, seconds);
-            session.selectIssue(master, SessionBuilder.ISSUE, clock.instant());
+            session.selectIssue(master, SessionBuilder.ISSUE);
+            session.startVoting(master, clock.instant());
             return null;
         });
         events.clear();
@@ -351,7 +353,8 @@ class SessionRegistryTest {
         clock.advance(Duration.ofSeconds(10));
         registry.update(sessionId, s -> {
             s.reveal(master);
-            s.restart(master, clock.instant());
+            s.restart(master);
+            s.startVoting(master, clock.instant());
             return null;
         });
         events.clear();
@@ -372,7 +375,8 @@ class SessionRegistryTest {
         SessionRegistry.Created created = registry.create("4711", 42, "Master");
         String sessionId = created.session().id();
         registry.update(sessionId, session -> {
-            session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE, clock.instant());
+            session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE);
+            session.startVoting(created.scrumMaster().id(), clock.instant());
             return null;
         });
         events.clear();
@@ -380,6 +384,26 @@ class SessionRegistryTest {
         registry.revealDue(START.plus(Duration.ofHours(1)));
 
         assertEquals(Phase.VOTING, registry.find(sessionId).orElseThrow().phase());
+        assertEquals(List.of(), events);
+    }
+
+    @Test
+    void revealDue_leaves_a_round_in_discussion_alone() {
+        SessionRegistry.Created created = registry.create("4711", 42, "Master");
+        String sessionId = created.session().id();
+        String master = created.scrumMaster().id();
+        registry.update(sessionId, session -> {
+            session.setTimer(master, 30);
+            session.selectIssue(master, SessionBuilder.ISSUE);
+            return null;
+        });
+        events.clear();
+
+        registry.revealDue(START.plus(Duration.ofHours(1)));
+
+        Session session = registry.find(sessionId).orElseThrow();
+        assertEquals(Phase.DISCUSSION, session.phase());
+        assertTrue(session.history().isEmpty());
         assertEquals(List.of(), events);
     }
 
