@@ -82,6 +82,13 @@ nur kommentiert. Der Standard in `application.properties` ist `false`, `.env.exa
 `PLANNINGPOKER_GITLAB_WRITE_WEIGHT=true` vor. Ohne GitLab Premium oder Ultimate den Wert in `.env`
 auf `false` setzen.
 
+Die Issue-Liste im Sitzungsraum zeigt das Gewicht je Issue und filtert über GitLab (ADR 0009):
+`weight` (`NONE` ohne Gewicht, `ANY` mit Gewicht, `ALL`) wird zu `weight=None` oder `weight=Any`,
+`period` (`WEEK` 7 Tage, `MONTH` 30 Tage, `YEAR` 365 Tage, `ALL`) zu `updated_after`. Beide
+Parameter haben in der API den Standard `ALL`; das Bedienfeld startet mit „Ohne Gewicht“ und
+„Alle“. Die Liste ist nach der letzten Änderung absteigend sortiert. GitLab Free kennt kein
+Gewicht: Der Gewichtsfilter wirkt dort nicht, und `weight` ist `null`.
+
 Vorlage des Kommentars (Karten in Kartenreihenfolge, Durchschnitt über die Zahlenkarten mit einer
 Nachkommastelle; ohne Zahlenkarte endet der Text mit `Kein Durchschnitt.`):
 
@@ -112,7 +119,7 @@ und `backend/src/main/resources/META-INF/openapi.yaml`); `make contracts` schrei
 TypeScript-Typen `frontend/src/app/api/schema.d.ts`, `make drift` meldet einen veralteten Stand.
 Im Dev-Modus zeigt `http://localhost:8080/q/swagger-ui` den Vertrag. Sechs Beispiel-Snapshots je
 Phase und Rolle liegen unter `contracts/api/examples/`; Backend-Test und Frontend-Typen prüfen sie.
-Version des Vertrags: `2.3.0` (ADR 0005 bis ADR 0008).
+Version des Vertrags: `2.4.0` (ADR 0005 bis ADR 0009).
 
 ### Ablauf
 
@@ -158,11 +165,11 @@ trägt jeder Aufruf `Authorization: Bearer <token>`.
 |---|---|---|---|---|
 | `GET /api/health` | offen | – | 200 `{ status }` | – |
 | `GET /api/projects?search=&page=` | offen | – | 200 `{ items: [{ id, name, pathWithNamespace, webUrl }], nextPage }` | 400, 502 |
-| `GET /api/projects/{projectId}/issues?search=&page=` | offen | – | 200 `{ items, nextPage }` (offene Issues) | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
+| `GET /api/projects/{projectId}/issues?search=&page=` | offen | – | 200 `{ items, nextPage }` (offene Issues mit `weight`) | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
 | `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid }` | 201 `{ sessionId, participantId, token }` | 400, 403 `PROJECT_NOT_ALLOWED`, 404 `ISSUE_NOT_FOUND`, 409 `LIMIT_REACHED`, 502 |
 | `POST /api/sessions/{id}/participants` | offen | `{ name }` | 201 `{ participantId, token }` | 400, 404, 409 `NAME_TAKEN`, `LIMIT_REACHED` |
 | `GET /api/sessions/{id}` | beide | – | 200 `SessionView` | 401, 404 |
-| `GET /api/sessions/{id}/issues?search=&page=` | Scrum Master | – | 200 `{ items, nextPage }` | 403, 502 |
+| `GET /api/sessions/{id}/issues?search=&page=&weight=&period=` | Scrum Master | – | 200 `{ items, nextPage }` mit `weight` je Eintrag | 400 `VALIDATION_ERROR`, 403, 502 |
 | `POST /api/sessions/{id}/active-issue` | Scrum Master | `{ issueIid }` | 204 | 400, 403, 404, 409, 502 |
 | `PUT /api/sessions/{id}/timer` | Scrum Master | `{ seconds }` (5 bis 3600 oder `null`) | 204 | 400, 403 |
 | `PUT /api/sessions/{id}/vote` | Entwickler | `{ card }` | 204 | 400 `INVALID_CARD`, 403, 409 |

@@ -1,12 +1,31 @@
-import { Component, OnInit, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+  untracked,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { Subscription, filter } from 'rxjs';
 import type { ErrorCode } from '../api/api-error';
-import { ApiService, IssueListResponse, IssueQuery } from '../api/api.service';
+import {
+  ApiService,
+  IssueFilterQuery,
+  IssueListResponse,
+  SessionView,
+  UpdatedPeriod,
+  WeightFilter,
+} from '../api/api.service';
 import { formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
 import { SessionStore } from '../api/session-store';
@@ -21,7 +40,14 @@ const SEARCH_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
 
 @Component({
   selector: 'app-issue-panel',
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+  ],
   templateUrl: './issue-panel.html',
   styleUrl: './issue-panel.scss',
 })
@@ -43,9 +69,12 @@ export class IssuePanel implements OnInit {
   protected readonly failure = signal<string | null>(null);
   protected readonly failed = computed(() => this.failure() !== null);
   protected readonly releasing = signal(false);
+  protected readonly weight = signal<WeightFilter>('NONE');
+  protected readonly period = signal<UpdatedPeriod>('ALL');
   private search: string | undefined;
   private listing: Subscription | null = null;
-  private lastLoad: { query: IssueQuery; append: boolean } = { query: {}, append: false };
+  private lastLoad: { query: IssueFilterQuery; append: boolean } = { query: {}, append: false };
+  private lastPhase: SessionView['phase'] | null = null;
 
   protected readonly activeIid = computed(() => this.store.activeIssue()?.iid ?? null);
   private readonly defaultIid = computed(
@@ -68,8 +97,29 @@ export class IssuePanel implements OnInit {
       this.selectedIid() === this.activeIid(),
   );
 
+  constructor() {
+    effect(() => {
+      const phase = this.store.phase();
+      const previous = this.lastPhase;
+      this.lastPhase = phase;
+      if (previous === 'REVEALED' && phase === 'LOBBY') {
+        untracked(() => this.load(this.query(), false));
+      }
+    });
+  }
+
   ngOnInit(): void {
-    this.load({}, false);
+    this.load(this.query(), false);
+  }
+
+  protected changeWeight(change: MatButtonToggleChange): void {
+    this.weight.set(change.value as WeightFilter);
+    this.load(this.query(), false);
+  }
+
+  protected changePeriod(change: MatSelectChange<UpdatedPeriod>): void {
+    this.period.set(change.value);
+    this.load(this.query(), false);
   }
 
   protected submitSearch(): void {
@@ -118,11 +168,12 @@ export class IssuePanel implements OnInit {
     });
   }
 
-  private query(): IssueQuery {
-    return this.search === undefined ? {} : { search: this.search };
+  private query(): IssueFilterQuery {
+    const filters = { weight: this.weight(), period: this.period() };
+    return this.search === undefined ? filters : { search: this.search, ...filters };
   }
 
-  private load(query: IssueQuery, append: boolean): void {
+  private load(query: IssueFilterQuery, append: boolean): void {
     this.listing?.unsubscribe();
     this.lastLoad = { query, append };
     this.loading.set(true);

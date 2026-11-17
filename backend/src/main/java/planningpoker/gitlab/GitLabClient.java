@@ -63,9 +63,18 @@ public class GitLabClient {
         return call("loadProject", projectId, () -> projectApi.loadProject(projectId));
     }
 
-    public IssuePage searchIssues(String projectId, String search, int page) {
+    public IssuePage searchIssues(String projectId, IssueQuery query) {
         return call("searchIssues", projectId, () -> {
-            try (Response response = api.searchIssues(projectId, "opened", search, PAGE_SIZE, page)) {
+            try (Response response = api.searchIssues(
+                    projectId,
+                    "opened",
+                    query.search(),
+                    query.weight(),
+                    query.updatedAfter() == null ? null : query.updatedAfter().toString(),
+                    "updated_at",
+                    "desc",
+                    PAGE_SIZE,
+                    query.page())) {
                 failOnError("searchIssues", projectId, response);
                 List<GitLabIssue> items = response.readEntity(new GenericType<List<GitLabIssue>>() {});
                 return new IssuePage(items, nextPage("searchIssues", response));

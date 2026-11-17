@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Planning Poker API
-  version: 2.3.0
+  version: 2.4.0
   description: |
     Commands go over REST under /api and answer without state. The state reaches every participant
     over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
@@ -311,6 +311,7 @@ components:
       - iid
       - title
       - webUrl
+      - weight
       description: Issue of the project without its description.
       properties:
         iid:
@@ -329,6 +330,15 @@ components:
           description: Link to the issue in GitLab.
           examples:
           - https://gitlab.com/group/project/-/issues/42
+        weight:
+          type:
+          - integer
+          - "null"
+          format: int32
+          description: Weight of the issue; null without weight or when GitLab has
+            no weight.
+          examples:
+          - 5
     IssueView:
       type: object
       required:
@@ -720,6 +730,15 @@ components:
           - 30
           maximum: 3600
           minimum: 5
+    UpdatedPeriod:
+      description: "Period of the last change of the issues: WEEK 7 days, MONTH 30\
+        \ days, YEAR 365 days, ALL without filter."
+      type: string
+      enum:
+      - WEEK
+      - MONTH
+      - YEAR
+      - ALL
     VoteRequest:
       description: Chooses or changes the hidden card of the caller in the running
         round.
@@ -751,6 +770,14 @@ components:
           - Ben
         card:
           $ref: "#/components/schemas/Card"
+    WeightFilter:
+      description: "Filter on the weight of the issues: NONE without weight, ANY with\
+        \ weight, ALL without filter."
+      type: string
+      enum:
+      - NONE
+      - ANY
+      - ALL
   securitySchemes:
     bearerToken:
       type: http
@@ -1014,7 +1041,8 @@ paths:
       - bearerToken: []
   /api/sessions/{id}/issues:
     get:
-      summary: Issues of the project of the session; scrum master only.
+      summary: "Open issues of the project of the session, newest change first; scrum\
+        \ master only."
       operationId: listIssues
       tags:
       - sessions
@@ -1033,11 +1061,27 @@ paths:
           format: int32
           minimum: 1
           default: 1
+      - description: "Period of the last change: WEEK 7 days, MONTH 30 days, YEAR\
+          \ 365 days, ALL without filter."
+        name: period
+        in: query
+        schema:
+          allOf:
+          - $ref: "#/components/schemas/UpdatedPeriod"
+          - default: ALL
       - description: Text to search in title and description.
         name: search
         in: query
         schema:
           type: string
+      - description: "Filter on the weight: NONE without weight, ANY with weight,\
+          \ ALL without filter. GitLab Free ignores NONE and ANY."
+        name: weight
+        in: query
+        schema:
+          allOf:
+          - $ref: "#/components/schemas/WeightFilter"
+          - default: ALL
       responses:
         "200":
           description: One page of issues.
@@ -1045,6 +1089,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IssueListResponse"
+        "400":
+          description: VALIDATION_ERROR
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
         "401":
           description: UNAUTHORIZED
           content:

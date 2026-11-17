@@ -136,6 +136,13 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   never leave the domain: `Participant.token` has no view field.
 - `SessionException` reaches the client through `SessionExceptionMapper` as
   `application/problem+json` with its `errorCode` and status.
+- Issue filters (ADR 0009): `GitLabClient.searchIssues` takes an `IssueQuery` (search, GitLab
+  weight, `updated_after`, page) and always sends `state=opened`, `order_by=updated_at` and
+  `sort=desc`. `GitLabIssues.search` maps `WeightFilter` (`NONE` to `weight=None`, `ANY` to
+  `weight=Any`, `ALL` without parameter) and `UpdatedPeriod` (now from the `Clock`, truncated to
+  seconds, minus 7, 30 or 365 days; `ALL` without parameter); the start page searches with `ALL`
+  and `ALL`. Both enums parse query values with `fromString` and answer an unknown value with 400
+  `VALIDATION_ERROR`. `IssueSummary.weight` is the GitLab `weight` or `null`.
 - GitLab at the boundary: `GitLabIssues` (`planningpoker.session`) loads and searches issues
   through `GitLabClient` and maps `GitLabException` to `ApiException` (`NOT_FOUND` of a single
   issue to `ISSUE_NOT_FOUND`, `UNAUTHORIZED` (GitLab 401 or 403) to `GITLAB_ACCESS_DENIED`,

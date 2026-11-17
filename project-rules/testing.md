@@ -39,13 +39,13 @@ change touches.
 | Source path | Unit and integration | End-to-end |
 |---|---|---|
 | `backend/src/main/java/planningpoker/platform/` | `backend/src/test/java/planningpoker/platform/` | `frontend/e2e/health.spec.ts` |
-| `backend/src/main/java/planningpoker/session/` | `backend/src/test/java/planningpoker/session/` (contract and stub tests from spec 0002, domain from spec 0004) | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/project-picker.spec.ts` |
+| `backend/src/main/java/planningpoker/session/` | `backend/src/test/java/planningpoker/session/` (contract and stub tests from spec 0002, domain from spec 0004) | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/project-picker.spec.ts`, `frontend/e2e/issue-filter.spec.ts` |
 | `backend/src/main/java/planningpoker/gitlab/` | `backend/src/test/java/planningpoker/gitlab/` (from spec 0003) | – |
 | `backend/src/main/java/planningpoker/realtime/` | `backend/src/test/java/planningpoker/realtime/` (from spec 0009) | `frontend/e2e/create-and-join.spec.ts` |
 | `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/project-picker.spec.ts` |
 | `frontend/src/app/api/` | `frontend/src/app/api/*.spec.ts` (from spec 0005) | – |
 | `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/full-flow.spec.ts` |
-| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts` |
+| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/issue-filter.spec.ts` |
 
 ## End-to-end
 

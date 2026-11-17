@@ -2,6 +2,7 @@ package planningpoker.session.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -203,7 +204,7 @@ class ContractTest {
 
     @Test
     void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
-        assertEquals("2.3.0", contract.at("/info/version").asText());
+        assertEquals("2.4.0", contract.at("/info/version").asText());
         assertEquals(
                 "PROJECT_NOT_ALLOWED",
                 contract.at("/paths/~1api~1sessions/post/responses/403/description")
@@ -235,6 +236,34 @@ class ContractTest {
                 Arguments.of("post", "/api/sessions/{id}/round/confirm"),
                 Arguments.of("get", "/api/projects"),
                 Arguments.of("get", "/api/projects/{projectId}/issues"));
+    }
+
+    @Test
+    void describesTheIssueFiltersAndTheWeight() {
+        JsonNode parameters = contract.at("/paths/~1api~1sessions~1{id}~1issues/get/parameters");
+        assertFilter(parameters, "weight", "WeightFilter", List.of("NONE", "ANY", "ALL"));
+        assertFilter(parameters, "period", "UpdatedPeriod", List.of("WEEK", "MONTH", "YEAR", "ALL"));
+        assertEquals(
+                "VALIDATION_ERROR",
+                contract.at("/paths/~1api~1sessions~1{id}~1issues/get/responses/400/description")
+                        .asText());
+        JsonNode summary = contract.at("/components/schemas/IssueSummary");
+        assertTrue(texts(summary.get("required")).contains("weight"));
+        assertEquals(List.of("integer", "null"), texts(summary.at("/properties/weight/type")));
+    }
+
+    private void assertFilter(JsonNode parameters, String name, String schema, List<String> values) {
+        JsonNode parameter = null;
+        for (JsonNode candidate : parameters) {
+            if (name.equals(candidate.get("name").asText())) {
+                parameter = candidate;
+            }
+        }
+        assertNotNull(parameter, "parameter " + name + " is missing");
+        assertEquals("query", parameter.get("in").asText());
+        assertEquals(ref(schema), parameter.at("/schema/allOf/0/$ref").asText());
+        assertEquals("ALL", parameter.at("/schema/allOf/1/default").asText());
+        assertEquals(values, texts(contract.at("/components/schemas/" + schema + "/enum")));
     }
 
     @Test

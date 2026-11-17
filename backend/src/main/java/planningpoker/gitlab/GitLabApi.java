@@ -21,6 +21,10 @@ public interface GitLabApi {
             @PathParam("id") String projectId,
             @QueryParam("state") String state,
             @QueryParam("search") String search,
+            @QueryParam("weight") String weight,
+            @QueryParam("updated_after") String updatedAfter,
+            @QueryParam("order_by") String orderBy,
+            @QueryParam("sort") String sort,
             @QueryParam("per_page") int perPage,
             @QueryParam("page") int page);
 

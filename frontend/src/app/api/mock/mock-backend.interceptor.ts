@@ -46,8 +46,24 @@ const MOCK_PROJECTS: ProjectSummary[] = [
   },
 ];
 const MOCK_ISSUES: IssueSummary[] = [
-  { iid: 42, title: 'Login page', webUrl: 'https://gitlab.com/group/project/-/issues/42' },
-  { iid: 43, title: 'Password reset', webUrl: 'https://gitlab.com/group/project/-/issues/43' },
+  {
+    iid: 42,
+    title: 'Login page',
+    webUrl: 'https://gitlab.com/group/project/-/issues/42',
+    weight: null,
+  },
+  {
+    iid: 43,
+    title: 'Password reset',
+    webUrl: 'https://gitlab.com/group/project/-/issues/43',
+    weight: null,
+  },
+  {
+    iid: 46,
+    title: 'Export as CSV',
+    webUrl: 'https://gitlab.com/group/project/-/issues/46',
+    weight: 3,
+  },
 ];
 
 export const mockBackendInterceptor: HttpInterceptorFn = (request) => answer(request);
@@ -115,14 +131,15 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
     return ok(snapshotFor(role));
   }
   if (subPath === '/issues') {
+    const search = searchText(request);
+    const weight = request.params.get('weight');
     const issues: IssueListResponse = {
-      items: [
-        {
-          iid: 42,
-          title: 'Login page',
-          webUrl: 'https://gitlab.com/group/project/-/issues/42',
-        },
-      ],
+      items: MOCK_ISSUES.filter(
+        (issue) =>
+          issue.title.toLowerCase().includes(search) &&
+          (weight !== 'NONE' || issue.weight === null) &&
+          (weight !== 'ANY' || issue.weight !== null),
+      ),
       nextPage: null,
     };
     return ok(issues);

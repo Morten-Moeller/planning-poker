@@ -66,6 +66,36 @@ function withVotes(base: SessionView, cards: Card[]): SessionView {
   });
 }
 
+type Participant = SessionView['participants'][number];
+
+function developer(name: string, connected = true): Participant {
+  return {
+    id: `id-${name.toLowerCase()}`,
+    name,
+    role: 'DEVELOPER',
+    connected,
+    hasVoted: false,
+  };
+}
+
+function withTeam(
+  base: SessionView,
+  developers: Participant[],
+  votes: { name: string; card: Card }[],
+): SessionView {
+  const scrumMaster = base.participants.find((participant) => participant.role === 'SCRUM_MASTER')!;
+  return {
+    ...withRound(base, {
+      votes: votes.map((vote) => ({
+        participantId: `id-${vote.name.toLowerCase()}`,
+        name: vote.name,
+        card: vote.card,
+      })),
+    }),
+    participants: [scrumMaster, ...developers],
+  };
+}
+
 describe('RoundResult', () => {
   let http: HttpTestingController;
   let sockets: FakeSocketFactory;
@@ -223,7 +253,7 @@ describe('RoundResult', () => {
 
       const hint = all('consensus-hint')[0];
       expect(hint.getAttribute('role')).toBe('status');
-      expect(texts('consensus-hint')).toEqual(['Konsens: Alle haben 5 gewählt.']);
+      expect(texts('consensus-hint')).toEqual(['Konsens: Alle 2 abgegebenen Stimmen zeigen 5.']);
       const confetti = all('consensus-confetti');
       expect(confetti).toHaveLength(1);
       expect(confetti[0].getAttribute('aria-hidden')).toBe('true');
@@ -341,5 +371,76 @@ describe('RoundResult', () => {
     await open(withRound(snapshot, { number: 2 }));
 
     expect(texts('round-number')).toEqual(['Runde 2']);
+  });
+
+  it.each([
+    ['scrum master', revealedScrumMaster],
+    ['developer', revealedDeveloper],
+  ])('lists the developers without a vote to the %s', async (_role, base) => {
+    await open(
+      withTeam(
+        base,
+        [developer('Ben'), developer('Cem'), developer('Dana', false)],
+        [{ name: 'Ben', card: '5' }],
+      ),
+    );
+
+    expect(texts('not-voted')).toEqual(['Nicht geschätzt: Cem, Dana (nicht verbunden)']);
+    expect(texts('not-voted-name')).toEqual(['Cem', 'Dana (nicht verbunden)']);
+    expect(texts('not-voted')[0]).not.toContain('Anna');
+    expect(texts('result-vote-name')).toEqual(['Ben']);
+    expect(all('result-empty')).toHaveLength(0);
+  });
+
+  it('shows no not voted line when every developer voted', async () => {
+    await open(
+      withTeam(
+        revealedScrumMaster,
+        [developer('Ben'), developer('Cem')],
+        [
+          { name: 'Ben', card: '5' },
+          { name: 'Cem', card: '8' },
+        ],
+      ),
+    );
+
+    expect(all('not-voted')).toHaveLength(0);
+  });
+
+  it('shows the empty state and every developer when nobody voted', async () => {
+    await open(withTeam(revealedDeveloper, [developer('Ben'), developer('Cem')], []));
+
+    expect(texts('result-empty')).toEqual(['Keine Karten abgegeben.']);
+    expect(all('result-vote')).toHaveLength(0);
+    expect(texts('not-voted')).toEqual(['Nicht geschätzt: Ben, Cem']);
+  });
+
+  it('names the number of votes and the turnout in the consensus hint', async () => {
+    const team = ['Ben', 'Cem', 'Dana', 'Eva', 'Finn'].map((name) => developer(name));
+    await open(
+      withTeam(revealedDeveloper, team, [
+        { name: 'Ben', card: '5' },
+        { name: 'Cem', card: '5' },
+        { name: 'Dana', card: '5' },
+      ]),
+    );
+
+    expect(texts('consensus-hint')).toEqual(['Konsens: Alle 3 abgegebenen Stimmen zeigen 5.']);
+    expect(texts('turnout-hint')).toEqual(['3 von 5 Entwicklern haben geschätzt.']);
+    expect(all('consensus-confetti')).toHaveLength(1);
+  });
+
+  it('shows no turnout when every developer voted for the consensus', async () => {
+    const team = ['Ben', 'Cem', 'Dana'].map((name) => developer(name));
+    await open(
+      withTeam(revealedDeveloper, team, [
+        { name: 'Ben', card: '5' },
+        { name: 'Cem', card: '5' },
+        { name: 'Dana', card: '5' },
+      ]),
+    );
+
+    expect(texts('consensus-hint')).toEqual(['Konsens: Alle 3 abgegebenen Stimmen zeigen 5.']);
+    expect(all('turnout-hint')).toHaveLength(0);
   });
 });
