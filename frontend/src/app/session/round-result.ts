@@ -29,11 +29,34 @@ export class RoundResult {
   protected readonly votes = computed(() => this.round()?.votes ?? []);
   protected readonly outliers = computed(() => outlierCards(this.votes()));
   protected readonly consensus = computed(() => consensusCard(this.votes()));
+  protected readonly developers = computed(() =>
+    (this.store.session()?.participants ?? []).filter(
+      (participant) => participant.role === 'DEVELOPER',
+    ),
+  );
+  protected readonly notVoted = computed(() => {
+    const voted = new Set(this.votes().map((vote) => vote.participantId));
+    return this.developers()
+      .filter((developer) => !voted.has(developer.id))
+      .map((developer) => ({
+        id: developer.id,
+        label: developer.connected
+          ? developer.name
+          : $localize`:@@roundResult.notConnected:${developer.name}:name: (nicht verbunden)`,
+      }));
+  });
   protected readonly consensusText = computed(() => {
     const card = this.consensus();
     return card === null
       ? null
-      : $localize`:@@roundResult.consensus:Konsens: Alle haben ${cardLabel(card)}:card: gewählt.`;
+      : $localize`:@@roundResult.consensus:Konsens: Alle ${this.votes().length}:count: abgegebenen Stimmen zeigen ${cardLabel(card)}:card:.`;
+  });
+  protected readonly turnoutText = computed(() => {
+    const total = this.developers().length;
+    const count = this.votes().length;
+    return this.notVoted().length === 0
+      ? null
+      : $localize`:@@roundResult.turnout:${count}:count: von ${total}:total: Entwicklern haben geschätzt.`;
   });
   protected readonly stats = computed(() => this.round()?.stats ?? null);
   protected readonly average = computed(() => averageText(this.stats()?.average ?? null));

@@ -63,7 +63,9 @@ test('every participant sees the consensus and the scrum master gets the card pr
   const everybody = await revealConsensus(page, browser);
 
   for (const view of everybody) {
-    await expect(view.getByTestId('consensus-hint')).toHaveText('Konsens: Alle haben 5 gewählt.');
+    await expect(view.getByTestId('consensus-hint')).toHaveText(
+      'Konsens: Alle 2 abgegebenen Stimmen zeigen 5.',
+    );
     await expect(view.getByTestId('consensus-confetti')).toBeVisible();
   }
 
@@ -86,4 +88,25 @@ test('shows the consensus without confetti under reduced motion', async ({ page,
     await expect(view.getByTestId('consensus-confetti')).toBeHidden();
   }
   await expect(everybody[2].getByTestId('consensus-confetti')).toBeVisible();
+});
+
+test('every participant sees the developer who did not vote', async ({ page, browser }) => {
+  const link = await createSession(page, '42');
+  const ben = await join(browser, link, 'Ben');
+  const cem = await join(browser, link, 'Cem');
+  const everybody = [page, ben, cem];
+  await expect(page.getByTestId('participant')).toHaveCount(3);
+  await page.getByTestId('issue-release').click();
+  await expectPhase(everybody, 'Runde läuft');
+
+  await choose(ben, '5');
+  await expect(page.getByTestId('vote-counter')).toContainText('1 von 2');
+  await page.getByTestId('round-reveal').click();
+  await expectPhase(everybody, 'Runde aufgelöst');
+
+  for (const view of everybody) {
+    await expect(view.getByTestId('not-voted')).toHaveText('Nicht geschätzt: Cem');
+    await expect(view.getByTestId('not-voted-name')).toHaveText(['Cem']);
+    await expect(view.getByTestId('result-vote-name')).toHaveText(['Ben']);
+  }
 });
