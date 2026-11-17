@@ -15,7 +15,10 @@ export interface ConfirmResultData {
   suggestedCard?: Card | null;
 }
 
-const CONFIRM_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>(['GITLAB_ERROR']);
+const CONFIRM_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
+  'GITLAB_ACCESS_DENIED',
+  'GITLAB_ERROR',
+]);
 const SUCCESS_DURATION_MS = 5000;
 
 @Component({

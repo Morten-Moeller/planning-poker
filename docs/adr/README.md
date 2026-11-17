@@ -11,3 +11,4 @@ Wann ein ADR nötig ist: `harness/policies/adr.md`. Format MADR aus `0000-templa
 | 0004 | REST für Befehle, WebSocket mit vollständigem Snapshot, Signals-Store im Frontend | accepted | 2026-11-16 |
 | 0005 | Obergrenzen und Projekt-Allowlist für die offenen Endpunkte, NOT_IMPLEMENTED entfällt | accepted | 2026-11-16 |
 | 0006 | Countdown-Timer als Sitzungseinstellung mit Frist im Snapshot und Auflösung durch den Server | accepted | 2026-11-16 |
+| 0007 | Eigener Fehlercode GITLAB_ACCESS_DENIED für 401 und 403 von GitLab | accepted | 2026-11-17 |

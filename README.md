@@ -100,7 +100,8 @@ Ablauf von `POST /api/sessions/{id}/round/confirm`:
    danach `POST …/issues/{iid}/notes` mit dem Kommentar.
 3. Erfolg: Endwert im jüngsten Protokolleintrag, Phase `LOBBY` ohne aktives Issue, Antwort 204.
    Fehler oder keine Antwort von GitLab: `confirming` wieder `false`, Phase bleibt `REVEALED`,
-   Antwort 502 `GITLAB_ERROR`; ein erneuter Versuch ist möglich. Schlägt das Gewicht fehl, wird
+   Antwort 502 `GITLAB_ACCESS_DENIED` bei 401 oder 403 von GitLab, sonst 502 `GITLAB_ERROR`; ein
+   erneuter Versuch ist möglich. Schlägt das Gewicht fehl, wird
    kein Kommentar geschrieben.
 
 ## Schnittstellen
@@ -197,11 +198,17 @@ Fehler folgen RFC 9457 als `application/problem+json`; Clients entscheiden nur a
 | `NAME_TAKEN` | 409 | Name in der Sitzung bereits vergeben |
 | `INVALID_STATE` | 409 | Aktion in dieser Phase nicht erlaubt oder Bestätigung läuft |
 | `LIMIT_REACHED` | 409 | Obergrenze der Sitzungen oder der Teilnehmer der Sitzung erreicht |
-| `GITLAB_ERROR` | 502 | GitLab nicht erreichbar oder Fehlerantwort; der GitLab-Text wird nicht weitergegeben |
+| `GITLAB_ACCESS_DENIED` | 502 | GitLab lehnt den Aufruf mit 401 oder 403 ab: der GitLab-Token des Backends ist ungültig oder hat keine Rechte im Projekt |
+| `GITLAB_ERROR` | 502 | GitLab nicht erreichbar, Zeitüberschreitung oder andere Fehlerantwort (5xx, 429); der GitLab-Text wird nicht weitergegeben |
 
 Eine unbekannte oder verfallene Sitzung antwortet 404 `SESSION_NOT_FOUND`, ein fehlendes oder
 fremdes Token für eine bestehende Sitzung 401 `UNAUTHORIZED`. Die Antworten bleiben getrennt,
 weil der offene Beitritt die Existenz einer Sitzung ohnehin mit 404 meldet (ADR 0005).
+
+Ein privates Projekt, das der GitLab-Token nicht sieht, beantwortet GitLab mit 404; das Backend
+meldet dann `ISSUE_NOT_FOUND` und nicht `GITLAB_ACCESS_DENIED` (ADR 0007). Jede Fehlerantwort und
+jede fehlende Antwort von GitLab schreibt das Backend als eine Zeile auf `WARN` ins Log, mit
+Operation, Projekt-ID, Status und Grund, ohne Token und ohne Antworttext von GitLab.
 
 ### Verbleibendes Risiko
 

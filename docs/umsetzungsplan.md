@@ -179,7 +179,7 @@ Fehlerantworten folgen RFC 9457 (`application/problem+json`) mit einem stabilen 
 { "type": "about:blank", "title": "Conflict", "status": 409, "detail": "The round is already revealed.", "errorCode": "INVALID_STATE" }
 ```
 
-Clients entscheiden nur anhand von `errorCode`, nie anhand von `detail`. Codes: `VALIDATION_ERROR` (400), `INVALID_CARD` (400), `UNAUTHORIZED` (401), `FORBIDDEN_ROLE` (403), `SESSION_NOT_FOUND` (404), `ISSUE_NOT_FOUND` (404), `NAME_TAKEN` (409), `INVALID_STATE` (409), `GITLAB_ERROR` (502). GitLab-Fehlertexte werden nicht ungefiltert weitergegeben.
+Clients entscheiden nur anhand von `errorCode`, nie anhand von `detail`. Codes: `VALIDATION_ERROR` (400), `INVALID_CARD` (400), `UNAUTHORIZED` (401), `FORBIDDEN_ROLE` (403), `SESSION_NOT_FOUND` (404), `ISSUE_NOT_FOUND` (404), `NAME_TAKEN` (409), `INVALID_STATE` (409), `GITLAB_ACCESS_DENIED` (502, 401 oder 403 von GitLab, ADR 0007), `GITLAB_ERROR` (502). GitLab-Fehlertexte werden nicht ungefiltert weitergegeben.
 
 ### 4.5 WebSocket
 
