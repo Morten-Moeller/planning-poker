@@ -84,7 +84,7 @@ change touches.
   flows comes from the fixed mappings of the GitLab double in
   `frontend/e2e/gitlab-double/mappings/` (spec 0011): project `1234` with issues 42 and 43, the
   issue search of the project (both issues), notes and weight of both issues; issue 404 answers
-  404. Issue 44 (spec 0012) has `**fett**`, a `<script>` element, an `<img onerror>` and an
+  404, issue 403 answers 403 (`issue-403.json`, spec 0021). Issue 44 (spec 0012) has `**fett**`, a `<script>` element, an `<img onerror>` and an
   image from `https://tracker.example/pixel.gif` in its description for the check of the
   Markdown sanitizing and of the Content-Security-Policy (spec 0019); it is not part of the
   issue search. The search text `kein Treffer` answers an empty list
