@@ -77,6 +77,14 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `create-issue-empty`; `PROJECT_NOT_ALLOWED`, `GITLAB_ACCESS_DENIED` and `GITLAB_ERROR` show
   their text in `create-project-search-error` and `create-issue-search-error` and clear
   `ErrorState`.
+- Issue panel filters (spec 0023, ADR 0009): above the list a `mat-button-toggle-group`
+  `issue-filter-weight` („Ohne Gewicht“ `issue-filter-weight-none`, „Mit Gewicht“
+  `issue-filter-weight-any`, „Alle“ `issue-filter-weight-all`; default „Ohne Gewicht“) and a
+  `mat-select` `issue-filter-period` „Geändert in“ (1 Woche, 1 Monat, 1 Jahr, Alle; default
+  „Alle“). Every call of `listIssues` sends `weight` and `period`; a filter change loads page 1
+  with the last submitted search text. Each entry shows `issue-result-weight` („Gewicht 5“ or
+  „ohne Gewicht“). When the phase changes from `REVEALED` to `LOBBY`, the panel loads page 1 again
+  with the current filters. The filters live only in the component.
 - Session ids from the route of the join page are taken in capital letters, like the input on
   the start page. The name rule of create and join is `api/participant-name.ts`.
 - Authentication: `authInterceptor` adds `Authorization: Bearer <token>` from the `TokenStore`
@@ -88,7 +96,7 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   from the example snapshots; tokens carry the role (`mock-scrum-master-…`, `mock-developer-…`),
   the session id is `K7P2QX9M`. The project list and the issues of every project come from fixed
   data (projects 1234 „Planning Poker“, 5678 „Poker Tools“, 9012 „Release Notes“; issues 42 and
-  43), filtered by `search`. The normal build does not contain the mock.
+  43 without weight, 46 with weight 3), filtered by `search` and, in the session, by `weight`. The normal build does not contain the mock.
 
 ## UI
 

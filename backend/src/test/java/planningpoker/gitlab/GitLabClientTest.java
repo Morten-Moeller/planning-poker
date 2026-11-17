@@ -1,6 +1,7 @@
 package planningpoker.gitlab;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.absent;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -28,6 +29,7 @@ import jakarta.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -74,31 +76,52 @@ class GitLabClientTest {
         gitlab.stubFor(get(urlPathEqualTo(ISSUES))
                 .willReturn(json(
                                 200,
-                                "[{\"iid\":7,\"title\":\"Login\",\"description\":\"Form\",\"web_url\":\"https://gitlab.example/g/p/-/issues/7\",\"state\":\"opened\"},"
-                                        + "{\"iid\":9,\"title\":\"Logout\",\"description\":null,\"web_url\":\"https://gitlab.example/g/p/-/issues/9\"}]")
+                                "[{\"iid\":7,\"title\":\"Login\",\"description\":\"Form\",\"web_url\":\"https://gitlab.example/g/p/-/issues/7\",\"state\":\"opened\",\"weight\":5},"
+                                        + "{\"iid\":9,\"title\":\"Logout\",\"description\":null,\"web_url\":\"https://gitlab.example/g/p/-/issues/9\",\"weight\":null},"
+                                        + "{\"iid\":11,\"title\":\"Free\",\"description\":null,\"web_url\":\"https://gitlab.example/g/p/-/issues/11\"},"
+                                        + "{\"iid\":12,\"title\":\"Empty\",\"description\":null,\"web_url\":\"https://gitlab.example/g/p/-/issues/12\",\"weight\":\"\"}]")
                         .withHeader("x-next-page", "2")));
 
-        IssuePage page = client.searchIssues(PROJECT, "log", 1);
+        IssuePage page = client.searchIssues(PROJECT, query("log", 1));
 
-        assertEquals(2, page.items().size());
+        assertEquals(4, page.items().size());
         assertEquals(
-                new GitLabIssue(7, "Login", "Form", "https://gitlab.example/g/p/-/issues/7"),
+                new GitLabIssue(7, "Login", "Form", "https://gitlab.example/g/p/-/issues/7", 5),
                 page.items().get(0));
         assertEquals(9, page.items().get(1).iid());
+        assertNull(page.items().get(1).weight());
+        assertNull(page.items().get(2).weight());
+        assertNull(page.items().get(3).weight());
         assertEquals(Optional.of(2), page.nextPage());
         gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES))
                 .withHeader("PRIVATE-TOKEN", equalTo(config.token()))
                 .withQueryParam("state", equalTo("opened"))
                 .withQueryParam("search", equalTo("log"))
+                .withQueryParam("order_by", equalTo("updated_at"))
+                .withQueryParam("sort", equalTo("desc"))
+                .withQueryParam("weight", absent())
+                .withQueryParam("updated_after", absent())
                 .withQueryParam("per_page", equalTo("20"))
                 .withQueryParam("page", equalTo("1")));
+    }
+
+    @Test
+    void sendsTheWeightFilterAndTheStartOfThePeriod() {
+        gitlab.stubFor(get(urlPathEqualTo(ISSUES)).willReturn(json(200, "[]")));
+
+        client.searchIssues(PROJECT, new IssueQuery(null, "None", Instant.parse("2026-11-10T12:00:00Z"), 1));
+
+        gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES))
+                .withQueryParam("search", absent())
+                .withQueryParam("weight", equalTo("None"))
+                .withQueryParam("updated_after", equalTo("2026-11-10T12:00:00Z")));
     }
 
     @Test
     void returnsAnEmptyPageWithoutNextPage() {
         gitlab.stubFor(get(urlPathEqualTo(ISSUES)).willReturn(json(200, "[]").withHeader("x-next-page", "")));
 
-        IssuePage page = client.searchIssues(PROJECT, "nothing", 1);
+        IssuePage page = client.searchIssues(PROJECT, query("nothing", 1));
 
         assertEquals(List.of(), page.items());
         assertEquals(Optional.empty(), page.nextPage());
@@ -108,7 +131,7 @@ class GitLabClientTest {
     void requestsTheSecondPage() {
         gitlab.stubFor(get(urlPathEqualTo(ISSUES)).willReturn(json(200, "[]")));
 
-        IssuePage page = client.searchIssues(PROJECT, "log", 2);
+        IssuePage page = client.searchIssues(PROJECT, query("log", 2));
 
         assertEquals(Optional.empty(), page.nextPage());
         gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES)).withQueryParam("page", equalTo("2")));
@@ -125,7 +148,7 @@ class GitLabClientTest {
 
         GitLabIssue issue = client.loadIssue(PROJECT, 7);
 
-        assertEquals(new GitLabIssue(7, "Login", "Form", "https://gitlab.example/g/p/-/issues/7"), issue);
+        assertEquals(new GitLabIssue(7, "Login", "Form", "https://gitlab.example/g/p/-/issues/7", null), issue);
         gitlab.verify(
                 getRequestedFor(urlPathEqualTo(ISSUES + "/7")).withHeader("PRIVATE-TOKEN", equalTo(config.token())));
     }
@@ -337,7 +360,7 @@ class GitLabClientTest {
 
     private void call(String operation) {
         switch (operation) {
-            case "searchIssues" -> client.searchIssues(PROJECT, "log", 1);
+            case "searchIssues" -> client.searchIssues(PROJECT, query("log", 1));
             case "loadIssue" -> client.loadIssue(PROJECT, 7);
             case "addNote" -> client.addNote(PROJECT, 7, "note");
             case "setWeight" -> client.setWeight(PROJECT, 7, 5);
@@ -369,5 +392,9 @@ class GitLabClientTest {
                 .withStatus(status)
                 .withHeader("Content-Type", "text/html")
                 .withBody(body);
+    }
+
+    private static IssueQuery query(String search, int page) {
+        return new IssueQuery(search, null, null, page);
     }
 }

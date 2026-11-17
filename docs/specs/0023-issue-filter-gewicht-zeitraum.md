@@ -1,7 +1,7 @@
 ---
 id: "0023"
 title: Issue-Liste mit Gewicht und Filtern
-status: approved
+status: Review
 risk: high
 adrs: ["0009"]
 owner: Morten Möller

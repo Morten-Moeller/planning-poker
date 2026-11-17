@@ -13,12 +13,17 @@ public record IssueListResponse(
 
     @Schema(
             description = "Issue of the project without its description.",
-            requiredProperties = {"iid", "title", "webUrl"})
+            requiredProperties = {"iid", "title", "webUrl", "weight"})
     public record IssueSummary(
             @Schema(description = "Iid of the issue inside the project.", examples = "42") long iid,
             @Schema(description = "Title of the issue.", examples = "Login page") String title,
             @Schema(
                             description = "Link to the issue in GitLab.",
                             examples = "https://gitlab.com/group/project/-/issues/42")
-                    String webUrl) {}
+                    String webUrl,
+            @Schema(
+                            description = "Weight of the issue; null without weight or when GitLab has no weight.",
+                            nullable = true,
+                            examples = "5")
+                    Integer weight) {}
 }

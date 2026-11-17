@@ -56,6 +56,14 @@ const calls: Call[] = [
     authenticated: true,
   },
   {
+    name: 'listIssues with filters',
+    call: (api) => api.listIssues(SESSION_ID, { search: 'login', weight: 'NONE', period: 'MONTH' }),
+    method: 'GET',
+    url: `${BASE}/issues?search=login&weight=NONE&period=MONTH`,
+    body: null,
+    authenticated: true,
+  },
+  {
     name: 'searchProjects',
     call: (api) => api.searchProjects({ search: 'pok', page: 2 }),
     method: 'GET',

@@ -1,0 +1,40 @@
+{
+  "priority": 3,
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/v4/projects/1234/issues",
+    "queryParameters": {
+      "weight": { "absent": true }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": [
+      {
+        "iid": 46,
+        "title": "Export as CSV",
+        "description": "As a user I want to export the history as CSV.",
+        "web_url": "https://gitlab.example/group/project/-/issues/46",
+        "labels": [],
+        "weight": 3
+      },
+      {
+        "iid": 43,
+        "title": "Password reset",
+        "description": "As a user I want to reset my password by mail.",
+        "web_url": "https://gitlab.example/group/project/-/issues/43",
+        "labels": [],
+        "weight": null
+      },
+      {
+        "iid": 42,
+        "title": "Login page",
+        "description": "As a user I want to log in with my name.",
+        "web_url": "https://gitlab.example/group/project/-/issues/42",
+        "labels": [],
+        "weight": null
+      }
+    ]
+  }
+}

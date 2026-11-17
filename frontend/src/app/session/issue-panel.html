@@ -22,6 +22,65 @@
     </button>
   </form>
 
+  <div class="filters">
+    <mat-button-toggle-group
+      i18n-aria-label="@@issuePanel.weightFilterLabel"
+      aria-label="Filter nach Gewicht"
+      data-testid="issue-filter-weight"
+      [value]="weight()"
+      (change)="changeWeight($event)"
+    >
+      <mat-button-toggle
+        value="NONE"
+        data-testid="issue-filter-weight-none"
+        i18n="@@issuePanel.weightNone"
+        >Ohne Gewicht</mat-button-toggle
+      >
+      <mat-button-toggle
+        value="ANY"
+        data-testid="issue-filter-weight-any"
+        i18n="@@issuePanel.weightAny"
+        >Mit Gewicht</mat-button-toggle
+      >
+      <mat-button-toggle
+        value="ALL"
+        data-testid="issue-filter-weight-all"
+        i18n="@@issuePanel.weightAll"
+        >Alle</mat-button-toggle
+      >
+    </mat-button-toggle-group>
+    <mat-form-field class="period" [subscriptSizing]="'dynamic'">
+      <mat-label i18n="@@issuePanel.periodLabel">Geändert in</mat-label>
+      <mat-select
+        data-testid="issue-filter-period"
+        [value]="period()"
+        (selectionChange)="changePeriod($event)"
+      >
+        <mat-option
+          value="WEEK"
+          data-testid="issue-filter-period-week"
+          i18n="@@issuePanel.periodWeek"
+          >1 Woche</mat-option
+        >
+        <mat-option
+          value="MONTH"
+          data-testid="issue-filter-period-month"
+          i18n="@@issuePanel.periodMonth"
+          >1 Monat</mat-option
+        >
+        <mat-option
+          value="YEAR"
+          data-testid="issue-filter-period-year"
+          i18n="@@issuePanel.periodYear"
+          >1 Jahr</mat-option
+        >
+        <mat-option value="ALL" data-testid="issue-filter-period-all" i18n="@@issuePanel.periodAll"
+          >Alle</mat-option
+        >
+      </mat-select>
+    </mat-form-field>
+  </div>
+
   <ul class="results">
     @for (issue of results(); track issue.iid) {
       <li>
@@ -34,6 +93,15 @@
           (click)="select(issue.iid)"
         >
           <span class="iid">#{{ issue.iid }}</span> {{ issue.title }}
+          <span class="weight" data-testid="issue-result-weight">
+            @if (issue.weight === null) {
+              <ng-container i18n="@@issuePanel.withoutWeight">ohne Gewicht</ng-container>
+            } @else {
+              <ng-container i18n="@@issuePanel.weightValue"
+                >Gewicht {{ issue.weight }}</ng-container
+              >
+            }
+          </span>
         </button>
       </li>
     } @empty {

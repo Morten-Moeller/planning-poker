@@ -114,7 +114,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Issues of the project of the session; scrum master only. */
+        /** Open issues of the project of the session, newest change first; scrum master only. */
         get: operations["listIssues"];
         put?: never;
         post?: never;
@@ -409,6 +409,12 @@ export interface components {
              * @example https://gitlab.com/group/project/-/issues/42
              */
             webUrl: string;
+            /**
+             * Format: int32
+             * @description Weight of the issue; null without weight or when GitLab has no weight.
+             * @example 5
+             */
+            weight: number | null;
         };
         /** @description The active GitLab issue. */
         IssueView: {
@@ -644,6 +650,11 @@ export interface components {
              */
             seconds: number | null;
         };
+        /**
+         * @description Period of the last change of the issues: WEEK 7 days, MONTH 30 days, YEAR 365 days, ALL without filter.
+         * @enum {string}
+         */
+        UpdatedPeriod: "WEEK" | "MONTH" | "YEAR" | "ALL";
         /** @description Chooses or changes the hidden card of the caller in the running round. */
         VoteRequest: {
             /** @description Chosen card. */
@@ -663,6 +674,11 @@ export interface components {
             name: string;
             card: components["schemas"]["Card"];
         };
+        /**
+         * @description Filter on the weight of the issues: NONE without weight, ANY with weight, ALL without filter.
+         * @enum {string}
+         */
+        WeightFilter: "NONE" | "ANY" | "ALL";
     };
     responses: never;
     parameters: never;
@@ -984,8 +1000,12 @@ export interface operations {
             query?: {
                 /** @description Page number, starting at 1. */
                 page?: number;
+                /** @description Period of the last change: WEEK 7 days, MONTH 30 days, YEAR 365 days, ALL without filter. */
+                period?: components["schemas"]["UpdatedPeriod"] & unknown;
                 /** @description Text to search in title and description. */
                 search?: string;
+                /** @description Filter on the weight: NONE without weight, ANY with weight, ALL without filter. GitLab Free ignores NONE and ANY. */
+                weight?: components["schemas"]["WeightFilter"] & unknown;
             };
             header?: never;
             path: {
@@ -1003,6 +1023,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IssueListResponse"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
             /** @description UNAUTHORIZED */

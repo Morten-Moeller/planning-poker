@@ -13,6 +13,7 @@ vorkommen sollen. Quelle: `docs/umsetzungsplan.md`, Abschnitte 4.2 bis 4.6.
 | Rolle | Scrum Master oder Entwickler; wird vom Server aus dem Token bestimmt. | `Role` | Rechte, Berechtigung |
 | Token | Zufallswert je Teilnehmer, mit dem der Server Aufrufe und die WebSocket-Verbindung dem Teilnehmer zuordnet; nur serverseitig und im `sessionStorage` des Browsers. | `Participant.token` | Passwort, Session-Cookie, API-Key |
 | Issue | GitLab-Issue des Projekts der Sitzung mit `iid`, Titel, Beschreibung (Markdown) und Link. | `Issue` | Ticket, Story, Aufgabe |
+| Gewicht | Feld `weight` eines GitLab-Issues (A-07), eine ganze Zahl oder leer; die Bestätigung setzt es mit `write-weight` auf den Endwert. Die Issue-Liste zeigt es je Eintrag und filtert nach „Ohne Gewicht“, „Mit Gewicht“ oder „Alle“ (ADR 0009); GitLab Free kennt kein Gewicht. | `IssueSummary.weight`, `WeightFilter`, `write-weight` | Punkte, Aufwand |
 | Vorausgewähltes Issue | Issue aus der Sitzungserstellung, das im Bedienfeld vorbelegt ist, aber noch nicht freigegeben. | `Session.preselectedIssueIid` | Standard-Issue |
 | Aktives Issue | Issue, das der Scrum Master freigegeben hat und das alle Teilnehmer sehen. | `Session.activeIssue` | aktuelles Ticket |
 | Freigabe | Aktion des Scrum Masters, die ein Issue aktiv macht und Runde 1 startet (Phase `LOBBY` nach `VOTING`). | `POST …/active-issue` | Start, Öffnen |

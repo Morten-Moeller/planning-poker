@@ -1,11 +1,18 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpParams, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
+import { MatSelectHarness } from '@angular/material/select/testing';
 import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { authInterceptor } from '../api/auth.interceptor';
 import { ErrorState } from '../api/error-state';
-import { lobbyScrumMaster, SessionView, votingScrumMaster } from '../api/examples';
+import {
+  lobbyScrumMaster,
+  revealedScrumMaster,
+  SessionView,
+  votingScrumMaster,
+} from '../api/examples';
 import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { TokenStore } from '../api/token-store';
@@ -16,8 +23,8 @@ const SESSION_ID = 'K7P2QX9M';
 const ISSUES_URL = `/api/sessions/${SESSION_ID}/issues`;
 const ACTIVE_ISSUE_URL = `/api/sessions/${SESSION_ID}/active-issue`;
 
-function issue(iid: number, title: string): IssueSummary {
-  return { iid, title, webUrl: `https://gitlab.example/group/project/-/issues/${iid}` };
+function issue(iid: number, title: string, weight: number | null = null): IssueSummary {
+  return { iid, title, webUrl: `https://gitlab.example/group/project/-/issues/${iid}`, weight };
 }
 
 const FIRST_PAGE = [issue(43, 'Password reset'), issue(42, 'Login page')];
@@ -62,8 +69,25 @@ describe('IssuePanel', () => {
     fixture.componentRef.setInput('sessionId', SESSION_ID);
     await fixture.whenStable();
     const request = http.expectOne((r) => r.url === ISSUES_URL);
-    expect(request.request.params.keys()).toEqual([]);
+    expect(params(request.request.params)).toEqual({ weight: 'NONE', period: 'ALL' });
     request.flush({ items: page, nextPage });
+    await fixture.whenStable();
+  }
+
+  function params(values: HttpParams): Record<string, string | null> {
+    return Object.fromEntries(values.keys().map((key) => [key, values.get(key)]));
+  }
+
+  function texts(id: string): (string | undefined)[] {
+    return all(id).map((node) => node.textContent?.replace(/\s+/g, ' ').trim());
+  }
+
+  async function searchFor(text: string): Promise<void> {
+    const input = one('issue-search-input') as HTMLInputElement;
+    input.value = text;
+    input.dispatchEvent(new Event('input'));
+    await click('issue-search-submit');
+    http.expectOne((r) => r.url === ISSUES_URL).flush({ items: FIRST_PAGE, nextPage: null });
     await fixture.whenStable();
   }
 
@@ -98,9 +122,9 @@ describe('IssuePanel', () => {
   it('loads the first page of the issues and preselects the issue of the creation', async () => {
     await open(lobbyScrumMaster);
 
-    expect(all('issue-result').map((node) => node.textContent?.trim())).toEqual([
-      '#43 Password reset',
-      '#42 Login page',
+    expect(texts('issue-result')).toEqual([
+      '#43 Password reset ohne Gewicht',
+      '#42 Login page ohne Gewicht',
     ]);
     expect(all('issue-result')[1].getAttribute('aria-pressed')).toBe('true');
     expect(one('issue-preview-iid').textContent?.trim()).toBe('#42');
@@ -267,7 +291,7 @@ describe('IssuePanel', () => {
     await fixture.whenStable();
 
     expect(all('issue-results-error')).toHaveLength(0);
-    expect(all('issue-result').map((node) => node.textContent?.trim())).toEqual(['#42 Login page']);
+    expect(texts('issue-result')).toEqual(['#42 Login page ohne Gewicht']);
   });
 
   it('shows the access denied text of GitLab in the error state and clears the banner', async () => {
@@ -321,5 +345,74 @@ describe('IssuePanel', () => {
 
     expect(all('issue-results-error')).toHaveLength(0);
     expect(all('issue-result')).toHaveLength(3);
+  });
+  it('shows the weight of every issue or the text ohne Gewicht', async () => {
+    await open(lobbyScrumMaster, [issue(46, 'Export', 5), issue(42, 'Login page')]);
+
+    expect(texts('issue-result-weight')).toEqual(['Gewicht 5', 'ohne Gewicht']);
+    expect(one('issue-filter-weight-none').getAttribute('class')).toContain(
+      'mat-button-toggle-checked',
+    );
+  });
+
+  it('loads page 1 with the weight filter Alle and keeps the search text', async () => {
+    await open(lobbyScrumMaster, FIRST_PAGE, 2);
+    await searchFor('login');
+
+    one('issue-filter-weight-all').querySelector('button')!.click();
+    await fixture.whenStable();
+
+    const request = http.expectOne((r) => r.url === ISSUES_URL);
+    expect(params(request.request.params)).toEqual({
+      search: 'login',
+      weight: 'ALL',
+      period: 'ALL',
+    });
+    request.flush({ items: [issue(46, 'Export', 3)], nextPage: null });
+    await fixture.whenStable();
+    expect(texts('issue-result')).toEqual(['#46 Export Gewicht 3']);
+  });
+
+  it('loads page 1 with the period 1 Monat and keeps the search text and the weight filter', async () => {
+    await open(lobbyScrumMaster, FIRST_PAGE, 2);
+    await searchFor('login');
+    const select = await TestbedHarnessEnvironment.loader(fixture).getHarness(MatSelectHarness);
+    expect(await select.getValueText()).toBe('Alle');
+
+    await select.open();
+    await select.clickOptions({ text: '1 Monat' });
+    await fixture.whenStable();
+
+    const request = http.expectOne((r) => r.url === ISSUES_URL);
+    expect(params(request.request.params)).toEqual({
+      search: 'login',
+      weight: 'NONE',
+      period: 'MONTH',
+    });
+    request.flush({ items: [], nextPage: null });
+  });
+
+  it('reloads the list with the current filters when the round returns from REVEALED to LOBBY', async () => {
+    await open(revealedScrumMaster);
+    one('issue-filter-weight-any').querySelector('button')!.click();
+    await fixture.whenStable();
+    http.expectOne((r) => r.url === ISSUES_URL).flush({ items: FIRST_PAGE, nextPage: null });
+    await fixture.whenStable();
+
+    await receive(lobbyScrumMaster);
+
+    const request = http.expectOne((r) => r.url === ISSUES_URL);
+    expect(params(request.request.params)).toEqual({ weight: 'ANY', period: 'ALL' });
+    request.flush({ items: [issue(42, 'Login page', 5)], nextPage: null });
+    await fixture.whenStable();
+    expect(texts('issue-result-weight')).toEqual(['Gewicht 5']);
+  });
+
+  it('does not reload the list when the round starts', async () => {
+    await open(lobbyScrumMaster);
+
+    await receive(votingScrumMaster);
+
+    http.expectNone((r) => r.url === ISSUES_URL);
   });
 });

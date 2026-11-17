@@ -17,10 +17,17 @@ export type ConfirmRequest = Schemas['ConfirmRequest'];
 export type ProjectListResponse = Schemas['ProjectListResponse'];
 export type ProjectSummary = Schemas['ProjectSummary'];
 export type IssueSummary = Schemas['IssueSummary'];
+export type WeightFilter = Schemas['WeightFilter'];
+export type UpdatedPeriod = Schemas['UpdatedPeriod'];
 
 export interface IssueQuery {
   search?: string;
   page?: number;
+}
+
+export interface IssueFilterQuery extends IssueQuery {
+  weight?: WeightFilter;
+  period?: UpdatedPeriod;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -39,7 +46,7 @@ export class ApiService {
     return this.http.get<SessionView>(sessionPath(sessionId));
   }
 
-  listIssues(sessionId: string, query: IssueQuery = {}): Observable<IssueListResponse> {
+  listIssues(sessionId: string, query: IssueFilterQuery = {}): Observable<IssueListResponse> {
     return this.http.get<IssueListResponse>(`${sessionPath(sessionId)}/issues`, {
       params: queryParams(query),
     });
@@ -81,13 +88,19 @@ export class ApiService {
   }
 }
 
-function queryParams(query: IssueQuery): HttpParams {
+function queryParams(query: IssueFilterQuery): HttpParams {
   let params = new HttpParams();
   if (query.search !== undefined) {
     params = params.set('search', query.search);
   }
   if (query.page !== undefined) {
     params = params.set('page', query.page);
+  }
+  if (query.weight !== undefined) {
+    params = params.set('weight', query.weight);
+  }
+  if (query.period !== undefined) {
+    params = params.set('period', query.period);
   }
   return params;
 }
