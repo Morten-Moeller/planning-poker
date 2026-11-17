@@ -10,12 +10,12 @@ Kommentar an das GitLab-Issue. Lösung der Coding Challenge Planning Poker
 ## Schnellstart
 
 Voraussetzungen: JDK 21 (`JAVA_HOME`), Node in der Version aus `.nvmrc`, pnpm 12, Git und ein
-GitLab Personal Access Token mit Scope `api`. Aus einem frischen Klon starten fünf Befehle die
-Anwendung; die letzten beiden laufen je in einem eigenen Terminal:
+GitLab-Token mit Scope `api` (Abschnitt GitLab, Absatz Token). Aus einem frischen Klon starten
+fünf Befehle die Anwendung; die letzten beiden laufen je in einem eigenen Terminal:
 
 ```bash
 git clone https://github.com/Morten-Moeller/planning-poker.git && cd planning-poker
-cp .env.example .env                                       # GITLAB_TOKEN eintragen
+cp .env.example .env                                       # GITLAB_TOKEN eintragen, write-weight prüfen
 make install                                               # Abhängigkeiten, Playwright-Browser
 (set -a && . ./.env && cd backend && ./mvnw quarkus:dev)   # Backend auf http://localhost:8080
 pnpm -C frontend start                                     # Frontend auf http://localhost:4200
@@ -23,8 +23,9 @@ pnpm -C frontend start                                     # Frontend auf http:/
 
 Danach `http://localhost:4200` öffnen; die Startseite zeigt, ob das Backend erreichbar ist
 (`GET /api/health`). Ohne `GITLAB_TOKEN` startet das Backend nicht und nennt den fehlenden
-Schlüssel. Eine andere GitLab-Instanz setzt `planningpoker.gitlab.base-url` (Abschnitt GitLab),
-zum Beispiel mit `./mvnw quarkus:dev -Dplanningpoker.gitlab.base-url=https://gitlab.example.com`.
+Schlüssel. `.env.example` nennt jeden Schalter des Backends als Umgebungsvariable (Abschnitt
+GitLab); eine andere GitLab-Instanz setzt zum Beispiel
+`PLANNINGPOKER_GITLAB_BASE_URL=https://gitlab.example.com` in `.env`.
 
 Das Frontend erreicht das Backend über den Dev-Proxy (`frontend/proxy.conf.mjs`, Pfade `/api`
 und `/ws`); es gibt kein CORS.
@@ -48,22 +49,38 @@ Abfragen der GitLab-API. Entscheidung: `docs/adr/0001-angular-und-quarkus-varian
 Das Backend spricht die GitLab-REST-API v4 mit dem Header `PRIVATE-TOKEN`. Basis-URL und Token
 gelten je Backend-Instanz, nicht je Sitzung.
 
-| Schlüssel | Standard | Bedeutung |
-|---|---|---|
-| `planningpoker.gitlab.base-url` | `https://gitlab.com` | Basis-URL der GitLab-Instanz |
-| `planningpoker.gitlab.token` | keiner, aus `GITLAB_TOKEN` | Personal Access Token mit Scope `api` |
-| `planningpoker.gitlab.write-weight` | `false` | Zahlenwerte zusätzlich als `weight` setzen (Premium/Ultimate) |
-| `planningpoker.gitlab.timeout` | `10s` | Verbindungs- und Lesezeit je GitLab-Aufruf |
-| `planningpoker.session.ttl` | `12h` | Verfall inaktiver Sitzungen |
-| `planningpoker.session.max-sessions` | `1000` | Obergrenze lebender Sitzungen der Instanz; abgelaufene Sitzungen zählen nicht |
-| `planningpoker.session.max-participants` | `50` | Obergrenze der Teilnehmer je Sitzung, der Scrum Master zählt mit |
-| `planningpoker.session.allowed-projects` | keiner, alle Projekte erlaubt | Projekt-Allowlist: kommagetrennte Projekt-IDs oder -Pfade, für die Sitzungen angelegt werden dürfen; ein leerer Wert gilt als nicht gesetzt |
-| `planningpoker.realtime.auth-timeout` | `5s` | Zeit bis zur ersten Nachricht `auth` einer WebSocket-Verbindung |
+Jeder Schlüssel lässt sich als Umgebungsvariable setzen, zum Beispiel in `.env`. Quarkus bildet
+den Schlüssel so ab: Großbuchstaben, `.` und `-` werden zu `_`. Ausnahme ist der Token, der aus
+`GITLAB_TOKEN` kommt.
+
+| Schlüssel | Umgebungsvariable | Standard | Bedeutung |
+|---|---|---|---|
+| `planningpoker.gitlab.base-url` | `PLANNINGPOKER_GITLAB_BASE_URL` | `https://gitlab.com` | Basis-URL der GitLab-Instanz |
+| `planningpoker.gitlab.token` | `GITLAB_TOKEN` | keiner, Pflicht | GitLab-Token mit Scope `api` (Absatz Token) |
+| `planningpoker.gitlab.write-weight` | `PLANNINGPOKER_GITLAB_WRITE_WEIGHT` | `false` | Zahlenwerte zusätzlich als `weight` setzen (Premium/Ultimate) |
+| `planningpoker.gitlab.timeout` | `PLANNINGPOKER_GITLAB_TIMEOUT` | `10s` | Verbindungs- und Lesezeit je GitLab-Aufruf |
+| `planningpoker.session.ttl` | `PLANNINGPOKER_SESSION_TTL` | `12h` | Verfall inaktiver Sitzungen |
+| `planningpoker.session.max-sessions` | `PLANNINGPOKER_SESSION_MAX_SESSIONS` | `1000` | Obergrenze lebender Sitzungen der Instanz; abgelaufene Sitzungen zählen nicht |
+| `planningpoker.session.max-participants` | `PLANNINGPOKER_SESSION_MAX_PARTICIPANTS` | `50` | Obergrenze der Teilnehmer je Sitzung, der Scrum Master zählt mit |
+| `planningpoker.session.allowed-projects` | `PLANNINGPOKER_SESSION_ALLOWED_PROJECTS` | keiner, alle Projekte erlaubt | Projekt-Allowlist: kommagetrennte Projekt-IDs oder -Pfade, für die Sitzungen angelegt werden dürfen; ein leerer Wert gilt als nicht gesetzt |
+| `planningpoker.realtime.auth-timeout` | `PLANNINGPOKER_REALTIME_AUTH_TIMEOUT` | `5s` | Zeit bis zur ersten Nachricht `auth` einer WebSocket-Verbindung |
+
+`.env.example` enthält jede Zeile der Tabelle: `GITLAB_TOKEN` leer als Pflichtzeile,
+`PLANNINGPOKER_GITLAB_WRITE_WEIGHT=true` aktiv, alle übrigen auskommentiert mit dem Standardwert,
+dazu `QUARKUS_HTTP_PORT` für den Port des Backends.
+
+Token: Ein klassischer Personal Access Token oder ein Project Access Token mit Scope `api` und
+mindestens der Rolle Developer im Projekt funktioniert. Das Backend liest damit Issues und schreibt
+Kommentar und Gewicht. Ein fine-grained Token ohne Rechte am Projekt bekommt von GitLab 403. Ein
+Project Access Token gilt nur für sein Projekt und ist deshalb die engere Wahl; ein Personal
+Access Token gilt für jedes Projekt seines Besitzers.
 
 Das bestätigte Ergebnis wird als Kommentar (Note) am Issue hinterlegt: Endwert, Rundenzahl,
 Verteilung der letzten Runde und Durchschnitt. Das funktioniert in jedem GitLab-Tarif. Mit
 `write-weight` setzt das Backend Zahlenwerte vorher zusätzlich als `weight`; bei `?` und ☕ wird
-nur kommentiert.
+nur kommentiert. Der Standard in `application.properties` ist `false`, `.env.example` schlägt
+`PLANNINGPOKER_GITLAB_WRITE_WEIGHT=true` vor. Ohne GitLab Premium oder Ultimate den Wert in `.env`
+auf `false` setzen.
 
 Vorlage des Kommentars (Karten in Kartenreihenfolge, Durchschnitt über die Zahlenkarten mit einer
 Nachkommastelle; ohne Zahlenkarte endet der Text mit `Kein Durchschnitt.`):
