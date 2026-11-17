@@ -1,9 +1,9 @@
 ---
 id: "0019"
 title: Abgabe (M13, Teil 2)
-status: in Arbeit
+status: Review
 risk: high
-adrs: []
+adrs: ["0003"]
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
@@ -98,8 +98,8 @@ Keyword-Eskalator hebt auf high, weil fünf hinzugefügte Zeilen „token“ ent
 A2 (das Token der Sitzung wird entfernt). Tests, README und `docs/` sind low.
 Gates: G0 und G1 in dieser Session, G2 über das Label `human-approved` nach der manuellen
 Checkliste, G3 über den Status `verified` aus `/verify`. Reviews: Code, Sicherheit, Architektur.
-ADR nötig: nach `harness/policies/adr.md` Bedingung 1 (high), offen siehe Offene Fragen. Es gibt
-keine neue Abhängigkeit, keinen Vertragsbruch und keine Abweichung von einer Regel.
+ADR nötig: ja, erfüllt durch 0003 (Änderung folgt dem bestehenden ADR). Es gibt keine neue
+Abhängigkeit, keinen Vertragsbruch und keine Abweichung von einer Regel.
 
 ## Umsetzung
 
@@ -183,7 +183,7 @@ Contracts zu regenerieren: keine.
 - [x] Content-Security-Policy gegen externe Bilder in Issue-Beschreibungen (Hinweis aus 0012)? → Ja, `img-src 'self' data:` als Meta-Tag. (Morten Möller, 2026-11-17)
 - [x] Trägt diese Spec `planningpoker.gitlab.timeout` (Standard `10s`) in Abschnitt 4.7 von `docs/umsetzungsplan.md` nach? → Ja, im PR von 0019. (Morten Möller, 2026-11-17)
 - [x] `risk-level.sh` meldet high statt medium (Keyword-Eskalator „token“, 5 Zeilen aus A2). Mit high weiter oder Ansatz ändern? → Mit high weiter; Grund: Keyword-Eskalator „token“ aus A2. (Morten Möller, 2026-11-17)
-- [ ] Risiko high verlangt nach `harness/policies/adr.md` Bedingung 1 ein ADR (`review-rules.sh`, Regel `adr`). Welches ADR, oder Ausnahme?
+- [x] Risiko high verlangt nach `harness/policies/adr.md` Bedingung 1 ein ADR (`review-rules.sh`, Regel `adr`). Welches ADR, oder Ausnahme? → ADR 0003 verlinken; die Änderung folgt dem bestehenden ADR. (Morten Möller, 2026-11-17)
 
 ## Verifikationsplan
 
