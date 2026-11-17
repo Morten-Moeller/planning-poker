@@ -90,7 +90,7 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   time; the phase reads „Diskussion“. The scrum master sees `round-start` („Schätzung starten“,
   `ApiService.startVoting`) and, with a timer, `round-start-timer` („Timer: 1 min“). An issue
   switch in `LOBBY` or `DISCUSSION` opens no dialog. The participant list shows the vote status
-  only in `VOTING`.
+  only in `VOTING` and `REVEALED` (spec 0028).
 - Session ids from the route of the join page are taken in capital letters, like the input on
   the start page. The name rule of create and join is `api/participant-name.ts`.
 - Authentication: `authInterceptor` adds `Authorization: Bearer <token>` from the `TokenStore`
@@ -127,10 +127,47 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   offset on `:focus-visible` (not on inputs and selects inside form fields); filled buttons add a
   ring in `--mat-sys-surface`. Components do not remove the outline.
 - Toolbar (`shell`): 56 px, `surface-container-low` with a divider, title; in the room the
-  session id (`toolbar-session-id`, mono) and „Name · Rolle“ (`toolbar-me`, hidden below 600 px)
-  from the `SessionStore`.
+  motif field (`toolbar-motif`, 20 × 28 px, left of the title), the session id
+  (`toolbar-session-id`, mono) and „Name · Rolle“ (`toolbar-me`, hidden below 600 px) from the
+  `SessionStore`.
 - Session page grid: a side column of 320 px and a main column (32/48 px padding) from 720 px;
   below that one column with the side column under the main area.
+- Design Werkbank (specs 0027 to 0030): the source is `docs/design/` (`Raum.dc.html`,
+  `Design-System.dc.html`, `Sitzungsraum.dc.html`; read as source text, deviations in
+  `docs/design/README.md`). Part A is theme and grid, B the side column and the card motif, C
+  card and table, D control panel, dialogs and banner.
+  - Card motif (part B, `session/card-motif.ts`): `motifFor(sessionId, issueIid, round)` is
+    FNV-1a of `sessionId:issueIid:round` modulo 5 (Raster, Punkte, Zeilen, Ringe, Stufen); when
+    the hash gives the motif of the previous round, the next one is taken. `LOBBY` has motif 0.
+    The session page sets `data-motif` on `.room`; `session-page.scss` sets
+    `--app-card-accent`, `--app-card-on-accent`, `--app-card-pattern` and
+    `--app-card-pattern-size` per `data-motif`, light and dark (design system, section 7).
+    Components inside the room use these variables, with a fallback where they also render
+    outside of it. The toolbar is outside the room and must not import from `session/`:
+    `app-shell.scss` repeats the five accents and patterns for `toolbar-motif` with
+    `:host:has([data-motif='n'])`; a change of a motif changes both files. The motif carries no
+    meaning; states always stand as text next to it.
+  - Side column (part B): sections with a mono label (`--app-label-section`, upper case by CSS)
+    in this order: „Timer“ (scrum master, with the hint „Gilt ab der nächsten Runde.“),
+    „Teilnehmer · n“, „Teilen“, „Fakten“ (`session-facts`: Session-ID, Phase, Deine Rolle,
+    Teilnehmer „n (m Entwickler)“), „Sitzungsprotokoll“ (`session-history`, collapsed panel).
+    A participant entry (design system, section 8) has a chip (filled with the motif after a
+    vote, dashed otherwise, none for the scrum master), the name with „(du)“ and a highlighted row
+    for the own entry, „★ Scrum Master“, a status („Moderiert, schätzt nicht mit“, „Bereit“ in
+    `LOBBY`, „Diskutiert“ in `DISCUSSION`, „✓ Hat geschätzt“ or „○ Ausstehend“ in `VOTING` and
+    `REVEALED`) and „● verbunden“ or „○ getrennt“. Symbols stand in `aria-hidden` spans outside
+    the element with the `data-testid`, so the selectors keep their text.
+  - Developer in `LOBBY` (part B): the waiting state `lobby-waiting` with a stack of three motif
+    cards, the title and „Die Seite aktualisiert sich von selbst.“; after a confirmation the
+    title reads „Das Ergebnis ist übernommen. …“ and `last-result` („Zuletzt geschätzt“, final
+    card, issue, round, cards, „✓ Als Kommentar in GitLab gespeichert“) follows until the next
+    release. The scrum master never sees it.
+  - Card and table (part C) and control panel, dialogs, snackbar and banner (part D) follow
+    their specs; they take colour and pattern of the round only from the `--app-card-*`
+    variables.
+  - Motion and focus: transitions follow the section „Fokus und Bewegung“ of the design system and
+    stop under `prefers-reduced-motion: reduce`; the focus ring of `styles.scss` stays on every
+    control; colour is never the only carrier of a state.
 - Styling: SCSS per component, templates in separate `.html` files, new control flow
   (`@if`, `@for`, `@switch`).
 - i18n: every user-facing string carries an `i18n` attribute with an id (`@@feature.key`);

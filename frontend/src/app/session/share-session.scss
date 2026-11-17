@@ -1,12 +1,65 @@
-dd {
+.share {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--app-space-s);
+}
+
+h2 {
+  margin: 0;
+  font: var(--app-label-section);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-on-surface-muted);
+}
+
+.label {
+  font: var(--mat-sys-body-small);
+  color: var(--app-on-surface-muted);
+}
+
+.field {
+  display: flex;
   align-items: center;
   gap: var(--app-space-s);
-  margin: 0 0 var(--app-space-m);
+  min-width: 0;
+  padding: var(--app-space-xs) var(--app-space-xs) var(--app-space-xs) var(--app-space-s);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-corner-control);
+  background-color: var(--mat-sys-surface);
+
+  button {
+    flex: none;
+  }
 }
 
 code {
-  font: var(--mat-sys-body-large);
-  overflow-wrap: anywhere;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link {
+  font: var(--mat-sys-body-small);
+  font-family: var(--app-font-mono);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.id {
+  font: var(--app-value-id);
+  letter-spacing: 0.06em;
+  color: var(--mat-sys-on-surface);
+}
+
+.note {
+  font: var(--mat-sys-body-small);
+
+  &.done {
+    color: var(--app-success);
+  }
+
+  &.failed {
+    color: var(--mat-sys-error);
+  }
 }

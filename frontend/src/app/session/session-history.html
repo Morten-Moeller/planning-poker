@@ -1,6 +1,6 @@
 <mat-expansion-panel class="history" data-testid="history-panel">
   <mat-expansion-panel-header data-testid="history-toggle">
-    <mat-panel-title i18n="@@history.title">Protokoll</mat-panel-title>
+    <mat-panel-title><h2 i18n="@@history.title">Sitzungsprotokoll</h2></mat-panel-title>
     <mat-panel-description
       data-testid="history-count"
       i18n="@@history.count"
@@ -13,26 +13,34 @@
   <ol class="entries">
     @for (entry of store.history(); track entry.revealedAt + entry.issueIid + entry.roundNumber) {
       <li class="entry" data-testid="history-entry">
-        <h3>
-          <span data-testid="history-issue">#{{ entry.issueIid }} {{ entry.issueTitle }}</span>
+        <h3 class="issue">
+          <span data-testid="history-issue"
+            ><span class="iid">#{{ entry.issueIid }}</span> {{ entry.issueTitle }}</span
+          >
+        </h3>
+        <p class="round">
           <span data-testid="history-round" i18n="@@history.round"
             >Runde {{ entry.roundNumber }}</span
           >
-        </h3>
-        <ul class="votes">
-          @for (vote of entry.votes; track vote.participantId) {
-            <li data-testid="history-vote">
-              <span class="name">{{ vote.name }}</span>
-              <span
-                class="card"
-                [attr.role]="name(vote.card) === null ? null : 'img'"
-                [attr.aria-label]="name(vote.card)"
-                >{{ symbol(vote.card) }}</span
+          <span aria-hidden="true"> · </span>
+          <span i18n="@@history.cards">Karten</span>&ngsp;<span class="votes" role="list">
+            @for (vote of entry.votes; track vote.participantId; let last = $last) {
+              <span class="vote" role="listitem" data-testid="history-vote"
+                ><span class="name">{{ vote.name }}</span
+                ><span
+                  class="card"
+                  [attr.role]="name(vote.card) === null ? null : 'img'"
+                  [attr.aria-label]="name(vote.card)"
+                  >{{ symbol(vote.card) }}</span
+                ></span
               >
-            </li>
-          }
-        </ul>
-        <dl class="facts">
+              @if (!last) {
+                <span class="separator" aria-hidden="true"> · </span>
+              }
+            }
+          </span>
+        </p>
+        <dl class="stats">
           <dt i18n="@@history.average">Durchschnitt</dt>
           <dd data-testid="history-average">{{ average(entry.stats.average) }}</dd>
           <dt i18n="@@history.mostFrequent">Häufigste Werte</dt>
@@ -48,19 +56,21 @@
               }
             }
           </dd>
-          <dt i18n="@@history.finalCard">Endwert</dt>
-          @if (entry.finalCard; as finalCard) {
-            <dd
+        </dl>
+        @if (entry.finalCard; as finalCard) {
+          <span class="final confirmed"
+            ><span i18n="@@history.finalCard">Endwert</span>&ngsp;<span
               data-testid="history-final-card"
               [attr.role]="name(finalCard) === null ? null : 'img'"
               [attr.aria-label]="name(finalCard)"
-            >
-              {{ symbol(finalCard) }}
-            </dd>
-          } @else {
-            <dd data-testid="history-no-final-card" i18n="@@history.noFinalCard">ohne Endwert</dd>
-          }
-        </dl>
+              >{{ symbol(finalCard) }}</span
+            ></span
+          >
+        } @else {
+          <span class="final" data-testid="history-no-final-card" i18n="@@history.noFinalCard"
+            >ohne Endwert</span
+          >
+        }
       </li>
     }
   </ol>

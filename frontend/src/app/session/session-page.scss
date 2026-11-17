@@ -1,3 +1,70 @@
+@use 'sass:map';
+
+$pattern-light: rgba(255, 255, 255, 0.3);
+$pattern-dark: rgba(29, 32, 38, 0.3);
+$motifs: (
+  0: (
+    light: #2f5fd0,
+    dark: #61afef,
+    size: auto,
+  ),
+  1: (
+    light: #0a6f8f,
+    dark: #56b6c2,
+    size: 9px 9px,
+  ),
+  2: (
+    light: #3a7a39,
+    dark: #98c379,
+    size: auto,
+  ),
+  3: (
+    light: #9a2299,
+    dark: #c678dd,
+    size: auto,
+  ),
+  4: (
+    light: #8a5f00,
+    dark: #e5c07b,
+    size: 12px 12px,
+  ),
+);
+
+@function pattern($motif, $color) {
+  @if $motif == 0 {
+    @return repeating-linear-gradient(45deg, $color 0 2px, transparent 2px 8px);
+  }
+  @if $motif == 1 {
+    @return radial-gradient($color 1.6px, transparent 1.9px);
+  }
+  @if $motif == 2 {
+    @return repeating-linear-gradient(0deg, $color 0 2px, transparent 2px 7px);
+  }
+  @if $motif == 3 {
+    @return repeating-radial-gradient(circle at 30% 30%, $color 0 1.5px, transparent 1.5px 7px);
+  }
+  @return conic-gradient($color 25%, transparent 0 50%, $color 0 75%, transparent 0);
+}
+
+@each $motif, $values in $motifs {
+  .room[data-motif='#{$motif}'] {
+    --app-card-accent: #{map.get($values, light)};
+    --app-card-on-accent: #ffffff;
+    --app-card-pattern: #{pattern($motif, $pattern-light)};
+    --app-card-pattern-size: #{map.get($values, size)};
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  @each $motif, $values in $motifs {
+    .room[data-motif='#{$motif}'] {
+      --app-card-accent: #{map.get($values, dark)};
+      --app-card-on-accent: #1d2026;
+      --app-card-pattern: #{pattern($motif, $pattern-dark)};
+    }
+  }
+}
+
 :host:has(.room) {
   flex: 1;
   display: grid;
@@ -21,7 +88,7 @@ h1 {
   grid-row: 1 / span 2;
   display: flex;
   flex-direction: column;
-  gap: var(--app-space-m);
+  gap: var(--app-space-l);
   min-width: 0;
   padding: var(--app-space-l);
   background-color: var(--mat-sys-surface-container-low);
@@ -63,14 +130,74 @@ h1 {
   }
 }
 
-.facts dd {
-  margin: 0 0 var(--app-space-s);
+.timer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-s);
+
+  h2 {
+    margin: 0;
+    font: var(--app-label-section);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--app-on-surface-muted);
+  }
 }
 
 .waiting {
-  margin: 0;
-  font: var(--mat-sys-body-large);
-  color: var(--mat-sys-on-surface-variant);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-l);
+  padding: var(--app-space-3xl) var(--app-space-l);
+  border: 1px dashed var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-large);
+  text-align: center;
+
+  &.after {
+    padding: var(--app-space-xl) var(--app-space-l);
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.stack {
+  display: flex;
+}
+
+.motif-card {
+  width: 48px;
+  height: 70px;
+  border-radius: var(--app-corner-control);
+  background-color: var(--app-card-accent);
+  background-image: var(--app-card-pattern);
+  background-size: var(--app-card-pattern-size);
+
+  & + & {
+    margin-left: -18px;
+    box-shadow: 0 0 0 2px var(--mat-sys-surface);
+  }
+
+  &:first-child {
+    transform: rotate(-8deg);
+  }
+
+  &:last-child {
+    transform: rotate(8deg);
+  }
+}
+
+.waiting-title {
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-on-surface);
+  text-wrap: balance;
+}
+
+.waiting-hint {
+  font: var(--mat-sys-body-medium);
+  color: var(--app-on-surface-muted);
 }
 
 .gone {

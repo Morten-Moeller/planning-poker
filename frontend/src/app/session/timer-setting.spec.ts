@@ -76,6 +76,15 @@ describe('TimerSetting', () => {
     ]);
   });
 
+  it('shows the hint that the timer applies from the next round', async () => {
+    await open(withTimer(60));
+
+    const hint = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="timer-setting-hint"]',
+    );
+    expect(hint?.textContent?.trim()).toBe('Gilt ab der nächsten Runde.');
+  });
+
   it.each([
     [null, 'Aus'],
     [30, '30 s'],

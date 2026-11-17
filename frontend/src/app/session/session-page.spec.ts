@@ -19,6 +19,7 @@ import {
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
+import { motifFor } from './card-motif';
 import { SessionPage } from './session-page';
 
 const SESSION_ID = 'K7P2QX9M';
@@ -95,6 +96,71 @@ describe('SessionPage', () => {
 
     expect(count('lobby-waiting')).toBe(1);
     expect(count('active-issue')).toBe(0);
+  });
+
+  function room(): HTMLElement | null {
+    return (fixture.nativeElement as HTMLElement).querySelector('.room');
+  }
+
+  it('shows the waiting text and the hint to a developer in the lobby', async () => {
+    await open(lobbyDeveloper);
+
+    expect(text('lobby-waiting-title')).toBe('Warten, bis der Scrum Master ein Issue freigibt');
+    expect(text('lobby-waiting')).toContain('Die Seite aktualisiert sich von selbst.');
+    expect(count('last-result')).toBe(0);
+  });
+
+  it('shows the last result under the waiting text after a confirmation', async () => {
+    const entry = { ...revealedDeveloper.history[0], finalCard: '8' as const };
+    await open({ ...lobbyDeveloper, history: [entry] });
+
+    expect(text('lobby-waiting-title')).toBe(
+      'Das Ergebnis ist übernommen. Warten, bis der Scrum Master das nächste Issue freigibt.',
+    );
+    expect(count('last-result')).toBe(1);
+    const nodes = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll(
+        '[data-testid="lobby-waiting"], [data-testid="last-result"]',
+      ),
+      (element) => element.getAttribute('data-testid'),
+    );
+    expect(nodes).toEqual(['lobby-waiting', 'last-result']);
+  });
+
+  it('sets motif 0 at the room in the lobby', async () => {
+    await open(lobbyDeveloper);
+
+    expect(room()?.getAttribute('data-motif')).toBe('0');
+  });
+
+  it.each([
+    ['DISCUSSION', discussionDeveloper],
+    ['VOTING', votingDeveloper],
+    ['REVEALED', revealedDeveloper],
+  ])('sets the motif of the round at the room in %s', async (_phase, snapshot) => {
+    await open(snapshot);
+
+    expect(room()?.getAttribute('data-motif')).toBe(
+      String(motifFor(SESSION_ID, snapshot.activeIssue!.iid, snapshot.round!.number)),
+    );
+  });
+
+  it('puts timer, participants, share, facts and history into the side column', async () => {
+    await open({ ...lobbyScrumMaster, history: revealedDeveloper.history });
+    http
+      .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
+      .flush({ items: [], nextPage: null });
+
+    const side = (fixture.nativeElement as HTMLElement).querySelector('.side');
+    for (const id of [
+      'timer-setting',
+      'participant-list',
+      'session-share',
+      'session-facts',
+      'history-panel',
+    ]) {
+      expect(side?.querySelector(`[data-testid="${id}"]`), id).not.toBeNull();
+    }
   });
 
   it('shows the active issue and no waiting state to a developer while voting', async () => {
