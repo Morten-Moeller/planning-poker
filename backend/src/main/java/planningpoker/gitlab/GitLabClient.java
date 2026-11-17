@@ -30,25 +30,54 @@ public class GitLabClient {
     static final String NEXT_PAGE_HEADER = "x-next-page";
 
     private final GitLabApi api;
+    private final GitLabProjectApi projectApi;
 
     public GitLabClient(GitLabConfig config) {
         long timeoutMillis = config.timeout().toMillis();
         ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        this.api = QuarkusRestClientBuilder.newBuilder()
+        this.api = builder(config, timeoutMillis, mapper).build(GitLabApi.class);
+        this.projectApi = builder(config, timeoutMillis, mapper).build(GitLabProjectApi.class);
+    }
+
+    private static QuarkusRestClientBuilder builder(GitLabConfig config, long timeoutMillis, ObjectMapper mapper) {
+        return QuarkusRestClientBuilder.newBuilder()
                 .baseUri(URI.create(config.baseUrl()))
                 .connectTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
                 .readTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
                 .register(new PrivateTokenFilter(config.token()))
-                .register(new JacksonContext(mapper))
-                .build(GitLabApi.class);
+                .register(new JacksonContext(mapper));
     }
 
-    public IssuePage searchIssues(String projectId, String search, int page) {
+    public ProjectPage searchProjects(String search, int page) {
+        return call("searchProjects", null, () -> {
+            try (Response response =
+                    projectApi.searchProjects(true, true, search, "last_activity_at", PAGE_SIZE, page)) {
+                failOnError("searchProjects", null, response);
+                List<GitLabProject> items = response.readEntity(new GenericType<List<GitLabProject>>() {});
+                return new ProjectPage(items, nextPage("searchProjects", response));
+            }
+        });
+    }
+
+    public GitLabProject loadProject(String projectId) {
+        return call("loadProject", projectId, () -> projectApi.loadProject(projectId));
+    }
+
+    public IssuePage searchIssues(String projectId, IssueQuery query) {
         return call("searchIssues", projectId, () -> {
-            try (Response response = api.searchIssues(projectId, "opened", search, PAGE_SIZE, page)) {
+            try (Response response = api.searchIssues(
+                    projectId,
+                    "opened",
+                    query.search(),
+                    query.weight(),
+                    query.updatedAfter() == null ? null : query.updatedAfter().toString(),
+                    "updated_at",
+                    "desc",
+                    PAGE_SIZE,
+                    query.page())) {
                 failOnError("searchIssues", projectId, response);
                 List<GitLabIssue> items = response.readEntity(new GenericType<List<GitLabIssue>>() {});
-                return new IssuePage(items, nextPage(response));
+                return new IssuePage(items, nextPage("searchIssues", response));
             }
         });
     }
@@ -109,7 +138,7 @@ public class GitLabClient {
                 operation, projectId == null ? "" : projectId.replaceAll("\\p{Cntrl}", "_"), status, reason);
     }
 
-    private static Optional<Integer> nextPage(Response response) {
+    private static Optional<Integer> nextPage(String operation, Response response) {
         String value = response.getHeaderString(NEXT_PAGE_HEADER);
         if (value == null || value.isBlank()) {
             return Optional.empty();
@@ -117,7 +146,7 @@ public class GitLabClient {
         try {
             return Optional.of(Integer.valueOf(value.trim()));
         } catch (NumberFormatException e) {
-            throw new GitLabException("searchIssues", "invalid header " + NEXT_PAGE_HEADER, e);
+            throw new GitLabException(operation, "invalid header " + NEXT_PAGE_HEADER, e);
         }
     }
 

@@ -1,6 +1,7 @@
 package planningpoker.gitlab;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.absent;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -28,6 +29,7 @@ import jakarta.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -51,6 +53,7 @@ class GitLabClientTest {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String PROJECT = "4711";
     private static final String ISSUES = "/api/v4/projects/" + PROJECT + "/issues";
+    private static final String PROJECTS = "/api/v4/projects";
     private static final String GITLAB_ERROR_TEXT = "401 Unauthorized - invalid token secret";
     private static final String GITLAB_ERROR_BODY = "{\"message\":\"" + GITLAB_ERROR_TEXT + "\"}";
     private static final int DELAY_ABOVE_TIMEOUT_MILLIS = (int) WireMockGitLab.TIMEOUT.toMillis() * 2 + 500;
@@ -73,31 +76,52 @@ class GitLabClientTest {
         gitlab.stubFor(get(urlPathEqualTo(ISSUES))
                 .willReturn(json(
                                 200,
-                                "[{\"iid\":7,\"title\":\"Login\",\"description\":\"Form\",\"web_url\":\"https://gitlab.example/g/p/-/issues/7\",\"state\":\"opened\"},"
-                                        + "{\"iid\":9,\"title\":\"Logout\",\"description\":null,\"web_url\":\"https://gitlab.example/g/p/-/issues/9\"}]")
+                                "[{\"iid\":7,\"title\":\"Login\",\"description\":\"Form\",\"web_url\":\"https://gitlab.example/g/p/-/issues/7\",\"state\":\"opened\",\"weight\":5},"
+                                        + "{\"iid\":9,\"title\":\"Logout\",\"description\":null,\"web_url\":\"https://gitlab.example/g/p/-/issues/9\",\"weight\":null},"
+                                        + "{\"iid\":11,\"title\":\"Free\",\"description\":null,\"web_url\":\"https://gitlab.example/g/p/-/issues/11\"},"
+                                        + "{\"iid\":12,\"title\":\"Empty\",\"description\":null,\"web_url\":\"https://gitlab.example/g/p/-/issues/12\",\"weight\":\"\"}]")
                         .withHeader("x-next-page", "2")));
 
-        IssuePage page = client.searchIssues(PROJECT, "log", 1);
+        IssuePage page = client.searchIssues(PROJECT, query("log", 1));
 
-        assertEquals(2, page.items().size());
+        assertEquals(4, page.items().size());
         assertEquals(
-                new GitLabIssue(7, "Login", "Form", "https://gitlab.example/g/p/-/issues/7"),
+                new GitLabIssue(7, "Login", "Form", "https://gitlab.example/g/p/-/issues/7", 5),
                 page.items().get(0));
         assertEquals(9, page.items().get(1).iid());
+        assertNull(page.items().get(1).weight());
+        assertNull(page.items().get(2).weight());
+        assertNull(page.items().get(3).weight());
         assertEquals(Optional.of(2), page.nextPage());
         gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES))
                 .withHeader("PRIVATE-TOKEN", equalTo(config.token()))
                 .withQueryParam("state", equalTo("opened"))
                 .withQueryParam("search", equalTo("log"))
+                .withQueryParam("order_by", equalTo("updated_at"))
+                .withQueryParam("sort", equalTo("desc"))
+                .withQueryParam("weight", absent())
+                .withQueryParam("updated_after", absent())
                 .withQueryParam("per_page", equalTo("20"))
                 .withQueryParam("page", equalTo("1")));
+    }
+
+    @Test
+    void sendsTheWeightFilterAndTheStartOfThePeriod() {
+        gitlab.stubFor(get(urlPathEqualTo(ISSUES)).willReturn(json(200, "[]")));
+
+        client.searchIssues(PROJECT, new IssueQuery(null, "None", Instant.parse("2026-11-10T12:00:00Z"), 1));
+
+        gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES))
+                .withQueryParam("search", absent())
+                .withQueryParam("weight", equalTo("None"))
+                .withQueryParam("updated_after", equalTo("2026-11-10T12:00:00Z")));
     }
 
     @Test
     void returnsAnEmptyPageWithoutNextPage() {
         gitlab.stubFor(get(urlPathEqualTo(ISSUES)).willReturn(json(200, "[]").withHeader("x-next-page", "")));
 
-        IssuePage page = client.searchIssues(PROJECT, "nothing", 1);
+        IssuePage page = client.searchIssues(PROJECT, query("nothing", 1));
 
         assertEquals(List.of(), page.items());
         assertEquals(Optional.empty(), page.nextPage());
@@ -107,7 +131,7 @@ class GitLabClientTest {
     void requestsTheSecondPage() {
         gitlab.stubFor(get(urlPathEqualTo(ISSUES)).willReturn(json(200, "[]")));
 
-        IssuePage page = client.searchIssues(PROJECT, "log", 2);
+        IssuePage page = client.searchIssues(PROJECT, query("log", 2));
 
         assertEquals(Optional.empty(), page.nextPage());
         gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES)).withQueryParam("page", equalTo("2")));
@@ -124,7 +148,7 @@ class GitLabClientTest {
 
         GitLabIssue issue = client.loadIssue(PROJECT, 7);
 
-        assertEquals(new GitLabIssue(7, "Login", "Form", "https://gitlab.example/g/p/-/issues/7"), issue);
+        assertEquals(new GitLabIssue(7, "Login", "Form", "https://gitlab.example/g/p/-/issues/7", null), issue);
         gitlab.verify(
                 getRequestedFor(urlPathEqualTo(ISSUES + "/7")).withHeader("PRIVATE-TOKEN", equalTo(config.token())));
     }
@@ -152,6 +176,57 @@ class GitLabClientTest {
                 .withRequestBody(equalToJson("{\"weight\":5}")));
     }
 
+    @Test
+    void searchesTheProjectsOfTheTokenAndReturnsNextPage() {
+        gitlab.stubFor(get(urlPathEqualTo(PROJECTS))
+                .willReturn(json(
+                                200,
+                                "[{\"id\":4711,\"name\":\"Poker\",\"path_with_namespace\":\"team/poker\",\"web_url\":\"https://gitlab.example/team/poker\",\"description\":null}]")
+                        .withHeader("x-next-page", "2")));
+
+        ProjectPage page = client.searchProjects("pok", 1);
+
+        assertEquals(
+                List.of(new GitLabProject(4711, "Poker", "team/poker", "https://gitlab.example/team/poker")),
+                page.items());
+        assertEquals(Optional.of(2), page.nextPage());
+        gitlab.verify(getRequestedFor(urlPathEqualTo(PROJECTS))
+                .withHeader("PRIVATE-TOKEN", equalTo(config.token()))
+                .withQueryParam("membership", equalTo("true"))
+                .withQueryParam("simple", equalTo("true"))
+                .withQueryParam("search", equalTo("pok"))
+                .withQueryParam("order_by", equalTo("last_activity_at"))
+                .withQueryParam("per_page", equalTo("20"))
+                .withQueryParam("page", equalTo("1")));
+    }
+
+    @Test
+    void loadsAProjectByIdOrEncodedPath() {
+        gitlab.stubFor(
+                get(urlPathEqualTo(PROJECTS + "/group%2Fapp"))
+                        .willReturn(
+                                json(
+                                        200,
+                                        "{\"id\":4711,\"name\":\"App\",\"path_with_namespace\":\"group/app\",\"web_url\":\"https://gitlab.example/group/app\"}")));
+
+        GitLabProject project = client.loadProject("group/app");
+
+        assertEquals(new GitLabProject(4711, "App", "group/app", "https://gitlab.example/group/app"), project);
+        gitlab.verify(getRequestedFor(urlPathEqualTo(PROJECTS + "/group%2Fapp"))
+                .withHeader("PRIVATE-TOKEN", equalTo(config.token())));
+    }
+
+    @Test
+    void mapsAFailingProjectSearchWithoutGitLabText() {
+        gitlab.stubFor(get(urlPathEqualTo(PROJECTS)).willReturn(json(401, GITLAB_ERROR_BODY)));
+
+        GitLabException e = assertThrows(GitLabException.class, () -> client.searchProjects("pok", 1));
+
+        assertEquals(Reason.UNAUTHORIZED, e.reason());
+        assertEquals(401, e.status());
+        assertFalse(e.getMessage().contains(GITLAB_ERROR_TEXT), e.getMessage());
+    }
+
     static Stream<Arguments> errorCases() {
         return Stream.of(
                 Arguments.of("loadIssue", 404, Reason.NOT_FOUND),
@@ -171,7 +246,12 @@ class GitLabClientTest {
                 Arguments.of("setWeight", 403, Reason.UNAUTHORIZED),
                 Arguments.of("setWeight", 404, Reason.NOT_FOUND),
                 Arguments.of("setWeight", 500, Reason.UNAVAILABLE),
-                Arguments.of("setWeight", 0, Reason.UNAVAILABLE));
+                Arguments.of("setWeight", 0, Reason.UNAVAILABLE),
+                Arguments.of("loadProject", 401, Reason.UNAUTHORIZED),
+                Arguments.of("loadProject", 403, Reason.UNAUTHORIZED),
+                Arguments.of("loadProject", 404, Reason.NOT_FOUND),
+                Arguments.of("loadProject", 500, Reason.UNAVAILABLE),
+                Arguments.of("loadProject", 0, Reason.UNAVAILABLE));
     }
 
     static Stream<Arguments> invalidResponses() {
@@ -180,7 +260,8 @@ class GitLabClientTest {
                 Arguments.of("searchIssues", html(200, "<html>maintenance</html>")),
                 Arguments.of("searchIssues", json(200, "{not json")),
                 Arguments.of("loadIssue", html(200, "<html>maintenance</html>")),
-                Arguments.of("loadIssue", json(200, "{not json")));
+                Arguments.of("loadIssue", json(200, "{not json")),
+                Arguments.of("loadProject", json(200, "{not json")));
     }
 
     @ParameterizedTest(name = "{0} with an invalid response fails with UNAVAILABLE")
@@ -279,10 +360,11 @@ class GitLabClientTest {
 
     private void call(String operation) {
         switch (operation) {
-            case "searchIssues" -> client.searchIssues(PROJECT, "log", 1);
+            case "searchIssues" -> client.searchIssues(PROJECT, query("log", 1));
             case "loadIssue" -> client.loadIssue(PROJECT, 7);
             case "addNote" -> client.addNote(PROJECT, 7, "note");
             case "setWeight" -> client.setWeight(PROJECT, 7, 5);
+            case "loadProject" -> client.loadProject(PROJECT);
             default -> throw new IllegalArgumentException(operation);
         }
     }
@@ -293,6 +375,7 @@ class GitLabClientTest {
             case "loadIssue" -> get(urlPathEqualTo(ISSUES + "/7"));
             case "addNote" -> post(urlPathEqualTo(ISSUES + "/7/notes"));
             case "setWeight" -> put(urlPathEqualTo(ISSUES + "/7"));
+            case "loadProject" -> get(urlPathEqualTo(PROJECTS + "/" + PROJECT));
             default -> throw new IllegalArgumentException(operation);
         };
     }
@@ -309,5 +392,9 @@ class GitLabClientTest {
                 .withStatus(status)
                 .withHeader("Content-Type", "text/html")
                 .withBody(body);
+    }
+
+    private static IssueQuery query(String search, int page) {
+        return new IssueQuery(search, null, null, page);
     }
 }

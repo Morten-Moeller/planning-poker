@@ -67,6 +67,24 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   the `SessionStore` and clears `ErrorState`. An issue search without results shows
   `issue-results-empty`. A failed copy to the clipboard shows a `role="status"` text to copy by
   hand.
+- Project and issue choice on the start page (spec 0022, ADR 0008): the fields `create-project`
+  and `create-issue` are `mat-autocomplete` inputs. The text goes through `valueChanges` with
+  `debounceTime(300)` and `switchMap` to `ApiService.searchProjects` and
+  `ApiService.searchProjectIssues`; a text of digits only is taken as id or iid without a search,
+  and the issue search runs only when the project field holds a numeric id. Options carry
+  `create-project-option` (name, then path and id) and `create-issue-option` (`#iid Titel`);
+  the choice writes the id or iid into the field. Empty results show `create-project-empty` and
+  `create-issue-empty`; `PROJECT_NOT_ALLOWED`, `GITLAB_ACCESS_DENIED` and `GITLAB_ERROR` show
+  their text in `create-project-search-error` and `create-issue-search-error` and clear
+  `ErrorState`.
+- Issue panel filters (spec 0023, ADR 0009): above the list a `mat-button-toggle-group`
+  `issue-filter-weight` („Ohne Gewicht“ `issue-filter-weight-none`, „Mit Gewicht“
+  `issue-filter-weight-any`, „Alle“ `issue-filter-weight-all`; default „Ohne Gewicht“) and a
+  `mat-select` `issue-filter-period` „Geändert in“ (1 Woche, 1 Monat, 1 Jahr, Alle; default
+  „Alle“). Every call of `listIssues` sends `weight` and `period`; a filter change loads page 1
+  with the last submitted search text. Each entry shows `issue-result-weight` („Gewicht 5“ or
+  „ohne Gewicht“). When the phase changes from `REVEALED` to `LOBBY`, the panel loads page 1 again
+  with the current filters. The filters live only in the component.
 - Session ids from the route of the join page are taken in capital letters, like the input on
   the start page. The name rule of create and join is `api/participant-name.ts`.
 - Authentication: `authInterceptor` adds `Authorization: Bearer <token>` from the `TokenStore`
@@ -76,7 +94,9 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   (`angular.json`, `fileReplacements` of `backend.providers.ts` by `backend.providers.mock.ts`).
   The mock answers REST through an `HttpInterceptorFn` and the WebSocket through a fake socket
   from the example snapshots; tokens carry the role (`mock-scrum-master-…`, `mock-developer-…`),
-  the session id is `K7P2QX9M`. The normal build does not contain the mock.
+  the session id is `K7P2QX9M`. The project list and the issues of every project come from fixed
+  data (projects 1234 „Planning Poker“, 5678 „Poker Tools“, 9012 „Release Notes“; issues 42 and
+  43 without weight, 46 with weight 3), filtered by `search` and, in the session, by `weight`. The normal build does not contain the mock.
 
 ## UI
 

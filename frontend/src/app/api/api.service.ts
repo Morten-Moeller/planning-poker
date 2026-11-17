@@ -14,10 +14,20 @@ export type SelectIssueRequest = Schemas['SelectIssueRequest'];
 export type VoteRequest = Schemas['VoteRequest'];
 export type TimerRequest = Schemas['TimerRequest'];
 export type ConfirmRequest = Schemas['ConfirmRequest'];
+export type ProjectListResponse = Schemas['ProjectListResponse'];
+export type ProjectSummary = Schemas['ProjectSummary'];
+export type IssueSummary = Schemas['IssueSummary'];
+export type WeightFilter = Schemas['WeightFilter'];
+export type UpdatedPeriod = Schemas['UpdatedPeriod'];
 
 export interface IssueQuery {
   search?: string;
   page?: number;
+}
+
+export interface IssueFilterQuery extends IssueQuery {
+  weight?: WeightFilter;
+  period?: UpdatedPeriod;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -36,15 +46,21 @@ export class ApiService {
     return this.http.get<SessionView>(sessionPath(sessionId));
   }
 
-  listIssues(sessionId: string, query: IssueQuery = {}): Observable<IssueListResponse> {
-    let params = new HttpParams();
-    if (query.search !== undefined) {
-      params = params.set('search', query.search);
-    }
-    if (query.page !== undefined) {
-      params = params.set('page', query.page);
-    }
-    return this.http.get<IssueListResponse>(`${sessionPath(sessionId)}/issues`, { params });
+  listIssues(sessionId: string, query: IssueFilterQuery = {}): Observable<IssueListResponse> {
+    return this.http.get<IssueListResponse>(`${sessionPath(sessionId)}/issues`, {
+      params: queryParams(query),
+    });
+  }
+
+  searchProjects(query: IssueQuery = {}): Observable<ProjectListResponse> {
+    return this.http.get<ProjectListResponse>('/api/projects', { params: queryParams(query) });
+  }
+
+  searchProjectIssues(projectId: string, query: IssueQuery = {}): Observable<IssueListResponse> {
+    return this.http.get<IssueListResponse>(
+      `/api/projects/${encodeURIComponent(projectId)}/issues`,
+      { params: queryParams(query) },
+    );
   }
 
   selectIssue(sessionId: string, request: SelectIssueRequest): Observable<void> {
@@ -70,6 +86,23 @@ export class ApiService {
   confirmRound(sessionId: string, request: ConfirmRequest): Observable<void> {
     return this.http.post<void>(`${sessionPath(sessionId)}/round/confirm`, request);
   }
+}
+
+function queryParams(query: IssueFilterQuery): HttpParams {
+  let params = new HttpParams();
+  if (query.search !== undefined) {
+    params = params.set('search', query.search);
+  }
+  if (query.page !== undefined) {
+    params = params.set('page', query.page);
+  }
+  if (query.weight !== undefined) {
+    params = params.set('weight', query.weight);
+  }
+  if (query.period !== undefined) {
+    params = params.set('period', query.period);
+  }
+  return params;
 }
 
 function sessionPath(sessionId: string): string {

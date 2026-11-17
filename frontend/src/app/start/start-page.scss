@@ -22,3 +22,13 @@
   color: var(--mat-sys-error);
   font: var(--mat-sys-body-medium);
 }
+
+.pick-title {
+  display: block;
+}
+
+.pick-detail {
+  display: block;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}

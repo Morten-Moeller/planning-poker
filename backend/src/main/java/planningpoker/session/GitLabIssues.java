@@ -1,21 +1,28 @@
 package planningpoker.session;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import java.time.Clock;
+import java.time.temporal.ChronoUnit;
 import planningpoker.gitlab.GitLabClient;
 import planningpoker.gitlab.GitLabException;
 import planningpoker.gitlab.GitLabIssue;
 import planningpoker.gitlab.IssuePage;
+import planningpoker.gitlab.IssueQuery;
 import planningpoker.platform.ApiException;
 import planningpoker.platform.ErrorCode;
 import planningpoker.session.api.IssueListResponse;
+import planningpoker.session.api.UpdatedPeriod;
+import planningpoker.session.api.WeightFilter;
 
 @ApplicationScoped
 public class GitLabIssues {
 
     private final GitLabClient client;
+    private final Clock clock;
 
-    public GitLabIssues(GitLabClient client) {
+    public GitLabIssues(GitLabClient client, Clock clock) {
         this.client = client;
+        this.clock = clock;
     }
 
     public Issue loadIssue(String projectId, long iid) {
@@ -32,17 +39,38 @@ public class GitLabIssues {
     }
 
     public IssueListResponse search(String projectId, String search, int page) {
+        return search(projectId, search, page, WeightFilter.ALL, UpdatedPeriod.ALL);
+    }
+
+    public IssueListResponse search(
+            String projectId, String search, int page, WeightFilter weight, UpdatedPeriod period) {
+        IssueQuery query = new IssueQuery(
+                search == null || search.isBlank() ? null : search,
+                gitLabWeight(weight),
+                period.length()
+                        .map(length ->
+                                clock.instant().truncatedTo(ChronoUnit.SECONDS).minus(length))
+                        .orElse(null),
+                page);
         try {
-            IssuePage result = client.searchIssues(projectId, search == null || search.isBlank() ? null : search, page);
+            IssuePage result = client.searchIssues(projectId, query);
             return new IssueListResponse(
                     result.items().stream()
-                            .map(issue ->
-                                    new IssueListResponse.IssueSummary(issue.iid(), issue.title(), issue.webUrl()))
+                            .map(issue -> new IssueListResponse.IssueSummary(
+                                    issue.iid(), issue.title(), issue.webUrl(), issue.weight()))
                             .toList(),
                     result.nextPage().orElse(null));
         } catch (GitLabException e) {
             throw gitLabError(e);
         }
+    }
+
+    private static String gitLabWeight(WeightFilter weight) {
+        return switch (weight) {
+            case NONE -> "None";
+            case ANY -> "Any";
+            case ALL -> null;
+        };
     }
 
     static ApiException gitLabError(GitLabException e) {

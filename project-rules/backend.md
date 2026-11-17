@@ -136,23 +136,47 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   never leave the domain: `Participant.token` has no view field.
 - `SessionException` reaches the client through `SessionExceptionMapper` as
   `application/problem+json` with its `errorCode` and status.
+- Issue filters (ADR 0009): `GitLabClient.searchIssues` takes an `IssueQuery` (search, GitLab
+  weight, `updated_after`, page) and always sends `state=opened`, `order_by=updated_at` and
+  `sort=desc`. `GitLabIssues.search` maps `WeightFilter` (`NONE` to `weight=None`, `ANY` to
+  `weight=Any`, `ALL` without parameter) and `UpdatedPeriod` (now from the `Clock`, truncated to
+  seconds, minus 7, 30 or 365 days; `ALL` without parameter); the start page searches with `ALL`
+  and `ALL`. Both enums parse query values with `fromString` and answer an unknown value with 400
+  `VALIDATION_ERROR`. `IssueSummary.weight` is the GitLab `weight` or `null`.
 - GitLab at the boundary: `GitLabIssues` (`planningpoker.session`) loads and searches issues
   through `GitLabClient` and maps `GitLabException` to `ApiException` (`NOT_FOUND` of a single
   issue to `ISSUE_NOT_FOUND`, `UNAUTHORIZED` (GitLab 401 or 403) to `GITLAB_ACCESS_DENIED`,
   everything else to `GITLAB_ERROR`, each with a fixed detail text, never the GitLab message;
   ADR 0007). `ResultPublisher` uses the same mapping for the comment and the weight.
   `GitLabClient` writes one line on `WARN` per error response and per missing or unreadable
-  response: operation (`loadIssue`, `searchIssues`, `addNote`, `setWeight`), project id (control
+  response: operation (`loadIssue`, `searchIssues`, `addNote`, `setWeight`, `searchProjects`,
+  `loadProject`), project id (empty for `searchProjects`; control
   characters replaced), status (0 without a response) and reason; never the token, a header or
   the GitLab response body. The resource loads the issue before `SessionRegistry.update` (ADR 0002,
   no GitLab call inside the lock) and hands the finished `Issue` to `Session.selectIssue`.
+- Project choice before a session (ADR 0008): `ProjectResource` (`/api/projects`, open, read only,
+  no `@Authenticated`) lists projects through `GitLabProjects` and open issues through
+  `GitLabIssues.search`. `GitLabClient` reads projects through `GitLabProjectApi`
+  (`GET /api/v4/projects?membership=true&simple=true&order_by=last_activity_at`, 20 per page, and
+  `GET /api/v4/projects/{id}`). With the project allowlist `GitLabProjects` loads every entry with
+  `loadProject`, filters name and path case-insensitively, answers without `nextPage` and answers
+  an empty list without a GitLab call for `page>1`; an entry that GitLab rejects with 403 or 404
+  is left out (the `WARN` line of `GitLabClient` names it), 401 and other errors map like the
+  issues. `ProjectAllowlist` (`planningpoker.session`) holds the trimmed entries of
+  `SessionConfig.allowedProjects` and the check `requireAllowed`, used by `createSession` and
+  `listProjectIssues` before any GitLab call.
 - Accepted risk (plan, A-01, A-08, A-14): creating a session needs no login, and the backend
   reads the named project with its own GitLab token. Whoever creates a session can read title,
   description and link of the issues of every project that token sees. The project id is
   URL-encoded in the GitLab path (a `/` becomes `%2F`, tested). Limits (ADR 0005):
   `planningpoker.session.allowed-projects`, when set, restricts creation to the listed project
-  ids (exact match after trimming); `SessionResource.createSession` checks it before the GitLab
-  call and answers 403 `PROJECT_NOT_ALLOWED`. `planningpoker.session.max-sessions` (default 1000,
+  ids (exact match after trimming); `SessionResource.createSession` and
+  `ProjectResource.listProjectIssues` check it through `ProjectAllowlist` before the GitLab call
+  and answer 403 `PROJECT_NOT_ALLOWED`. The project choice (ADR 0008) lists, without allowlist,
+  names and paths of every project with membership of the token to whoever reaches the backend;
+  set the allowlist for an instance that more than a trusted group reaches. The choice sets the
+  numeric project id, so an entry given only as path cannot be chosen (`PROJECT_NOT_ALLOWED`);
+  use numeric ids in the allowlist. `planningpoker.session.max-sessions` (default 1000,
   expired sessions do not count, checked in `SessionRegistry.create`) and
   `planningpoker.session.max-participants` (default 50, the scrum master counts, checked first in
   `Session.join`) answer 409 `LIMIT_REACHED`. No rate limit per client IP and no limit for

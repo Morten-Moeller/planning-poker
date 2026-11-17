@@ -22,6 +22,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Projects for a new session: the project allowlist when set, otherwise the projects of the GitLab token. */
+        get: operations["listProjects"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{projectId}/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open issues of a project for a new session. */
+        get: operations["listProjectIssues"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions": {
         parameters: {
             query?: never;
@@ -80,7 +114,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Issues of the project of the session; scrum master only. */
+        /** Open issues of the project of the session, newest change first; scrum master only. */
         get: operations["listIssues"];
         put?: never;
         post?: never;
@@ -375,6 +409,12 @@ export interface components {
              * @example https://gitlab.com/group/project/-/issues/42
              */
             webUrl: string;
+            /**
+             * Format: int32
+             * @description Weight of the issue; null without weight or when GitLab has no weight.
+             * @example 5
+             */
+            weight: number | null;
         };
         /** @description The active GitLab issue. */
         IssueView: {
@@ -483,6 +523,41 @@ export interface components {
             detail: string;
             errorCode: components["schemas"]["ErrorCode"];
         };
+        /** @description One page of the GitLab projects that a session can use. */
+        ProjectListResponse: {
+            /** @description Projects of this page. */
+            items: components["schemas"]["ProjectSummary"][];
+            /**
+             * Format: int32
+             * @description Number of the next page; null on the last page.
+             * @example 2
+             */
+            nextPage: number | null;
+        };
+        /** @description GitLab project with name, path and link. */
+        ProjectSummary: {
+            /**
+             * Format: int64
+             * @description Numeric id of the project in GitLab.
+             * @example 1234
+             */
+            id: number;
+            /**
+             * @description Name of the project.
+             * @example Planning Poker
+             */
+            name: string;
+            /**
+             * @description Path of the project with its group.
+             * @example group/planning-poker
+             */
+            pathWithNamespace: string;
+            /**
+             * @description Link to the project in GitLab.
+             * @example https://gitlab.com/group/planning-poker
+             */
+            webUrl: string;
+        };
         /**
          * @description Role of a participant. The server takes it from the token.
          * @enum {string}
@@ -575,6 +650,11 @@ export interface components {
              */
             seconds: number | null;
         };
+        /**
+         * @description Period of the last change of the issues: WEEK 7 days, MONTH 30 days, YEAR 365 days, ALL without filter.
+         * @enum {string}
+         */
+        UpdatedPeriod: "WEEK" | "MONTH" | "YEAR" | "ALL";
         /** @description Chooses or changes the hidden card of the caller in the running round. */
         VoteRequest: {
             /** @description Chosen card. */
@@ -594,6 +674,11 @@ export interface components {
             name: string;
             card: components["schemas"]["Card"];
         };
+        /**
+         * @description Filter on the weight of the issues: NONE without weight, ANY with weight, ALL without filter.
+         * @enum {string}
+         */
+        WeightFilter: "NONE" | "ANY" | "ALL";
     };
     responses: never;
     parameters: never;
@@ -619,6 +704,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthStatus"];
+                };
+            };
+        };
+    };
+    listProjects: {
+        parameters: {
+            query?: {
+                /** @description Page number, starting at 1. */
+                page?: number;
+                /** @description Text to search in name and path. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page of projects. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectListResponse"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description GITLAB_ACCESS_DENIED, GITLAB_ERROR */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    listProjectIssues: {
+        parameters: {
+            query?: {
+                /** @description Page number, starting at 1. */
+                page?: number;
+                /** @description Text to search in title and description. */
+                search?: string;
+            };
+            header?: never;
+            path: {
+                /** @description Id or path of the GitLab project. */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page of open issues. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueListResponse"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description PROJECT_NOT_ALLOWED */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description GITLAB_ACCESS_DENIED, GITLAB_ERROR */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
         };
@@ -817,8 +1000,12 @@ export interface operations {
             query?: {
                 /** @description Page number, starting at 1. */
                 page?: number;
+                /** @description Period of the last change: WEEK 7 days, MONTH 30 days, YEAR 365 days, ALL without filter. */
+                period?: components["schemas"]["UpdatedPeriod"] & unknown;
                 /** @description Text to search in title and description. */
                 search?: string;
+                /** @description Filter on the weight: NONE without weight, ANY with weight, ALL without filter. GitLab Free ignores NONE and ANY. */
+                weight?: components["schemas"]["WeightFilter"] & unknown;
             };
             header?: never;
             path: {
@@ -836,6 +1023,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IssueListResponse"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
             /** @description UNAUTHORIZED */

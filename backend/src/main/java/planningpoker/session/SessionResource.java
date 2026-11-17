@@ -28,9 +28,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import planningpoker.platform.ApiException;
 import planningpoker.platform.Authenticated;
-import planningpoker.platform.ErrorCode;
 import planningpoker.platform.ProblemDetail;
 import planningpoker.session.api.ConfirmRequest;
 import planningpoker.session.api.CreateSessionRequest;
@@ -41,7 +39,9 @@ import planningpoker.session.api.JoinSessionResponse;
 import planningpoker.session.api.SelectIssueRequest;
 import planningpoker.session.api.SessionView;
 import planningpoker.session.api.TimerRequest;
+import planningpoker.session.api.UpdatedPeriod;
 import planningpoker.session.api.VoteRequest;
+import planningpoker.session.api.WeightFilter;
 
 @Path("/api/sessions")
 @Tag(name = "sessions", description = "Sessions, participants and the commands of a round.")
@@ -74,7 +74,7 @@ public class SessionResource {
     Event<RoundCompleted> roundCompleted;
 
     @Inject
-    SessionConfig config;
+    ProjectAllowlist allowlist;
 
     @Inject
     Clock clock;
@@ -110,7 +110,7 @@ public class SessionResource {
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response createSession(@NotNull @Valid CreateSessionRequest request) {
         String projectId = request.gitlabProjectId().strip();
-        requireAllowedProject(projectId);
+        allowlist.requireAllowed(projectId);
         gitLabIssues.loadIssue(projectId, request.issueIid());
         SessionRegistry.Created created = registry.create(projectId, request.issueIid(), request.name());
         return Response.status(Response.Status.CREATED)
@@ -179,11 +179,17 @@ public class SessionResource {
     @SecurityRequirement(name = BEARER_TOKEN)
     @Authenticated
     @RequiresRole(Role.SCRUM_MASTER)
-    @Operation(operationId = "listIssues", summary = "Issues of the project of the session; scrum master only.")
+    @Operation(
+            operationId = "listIssues",
+            summary = "Open issues of the project of the session, newest change first; scrum master only.")
     @APIResponse(
             responseCode = "200",
             description = "One page of issues.",
             content = @Content(schema = @Schema(implementation = IssueListResponse.class)))
+    @APIResponse(
+            responseCode = "400",
+            description = "VALIDATION_ERROR",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     @APIResponse(
             responseCode = "401",
             description = "UNAUTHORIZED",
@@ -204,9 +210,22 @@ public class SessionResource {
             @PathParam("id") @Parameter(description = SESSION_ID) String id,
             @QueryParam("search") @Parameter(description = "Text to search in title and description.") String search,
             @QueryParam("page") @DefaultValue("1") @Min(1) @Parameter(description = "Page number, starting at 1.")
-                    int page) {
+                    int page,
+            @QueryParam("weight")
+                    @DefaultValue("ALL")
+                    @Parameter(
+                            description =
+                                    "Filter on the weight: NONE without weight, ANY with weight, ALL without filter. GitLab Free ignores NONE and ANY.")
+                    WeightFilter weight,
+            @QueryParam("period")
+                    @DefaultValue("ALL")
+                    @Parameter(
+                            description =
+                                    "Period of the last change: WEEK 7 days, MONTH 30 days, YEAR 365 days, ALL without filter.")
+                    UpdatedPeriod period) {
         String projectId = registry.read(id, Session::gitlabProjectId);
-        return Response.ok(gitLabIssues.search(projectId, search, page)).build();
+        return Response.ok(gitLabIssues.search(projectId, search, page, weight, period))
+                .build();
     }
 
     @POST
@@ -461,14 +480,5 @@ public class SessionResource {
             return null;
         });
         return Response.noContent().build();
-    }
-
-    private void requireAllowedProject(String projectId) {
-        boolean allowed = config.allowedProjects()
-                .map(projects -> projects.stream().map(String::strip).anyMatch(projectId::equals))
-                .orElse(true);
-        if (!allowed) {
-            throw new ApiException(ErrorCode.PROJECT_NOT_ALLOWED, "Sessions for this GitLab project are not allowed.");
-        }
     }
 }

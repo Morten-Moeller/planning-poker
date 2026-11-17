@@ -14,13 +14,57 @@ import {
   CreateSessionResponse,
   IssueListResponse,
   JoinSessionRequest,
+  IssueSummary,
   JoinSessionResponse,
+  ProjectListResponse,
+  ProjectSummary,
 } from '../api.service';
 import { MOCK_SESSION_ID, issueToken, roleOfToken, snapshotFor } from './mock-session';
 
 const MOCK_MISSING_ISSUE_IID = 404;
 const MOCK_TAKEN_NAME = 'Ben';
 const SESSION_PATH = /^\/api\/sessions\/([^/?]+)(\/[^?]*)?/;
+const PROJECT_ISSUES_PATH = /^\/api\/projects\/[^/?]+\/issues$/;
+const MOCK_PROJECTS: ProjectSummary[] = [
+  {
+    id: 1234,
+    name: 'Planning Poker',
+    pathWithNamespace: 'group/planning-poker',
+    webUrl: 'https://gitlab.com/group/planning-poker',
+  },
+  {
+    id: 5678,
+    name: 'Poker Tools',
+    pathWithNamespace: 'group/poker-tools',
+    webUrl: 'https://gitlab.com/group/poker-tools',
+  },
+  {
+    id: 9012,
+    name: 'Release Notes',
+    pathWithNamespace: 'group/release-notes',
+    webUrl: 'https://gitlab.com/group/release-notes',
+  },
+];
+const MOCK_ISSUES: IssueSummary[] = [
+  {
+    iid: 42,
+    title: 'Login page',
+    webUrl: 'https://gitlab.com/group/project/-/issues/42',
+    weight: null,
+  },
+  {
+    iid: 43,
+    title: 'Password reset',
+    webUrl: 'https://gitlab.com/group/project/-/issues/43',
+    weight: null,
+  },
+  {
+    iid: 46,
+    title: 'Export as CSV',
+    webUrl: 'https://gitlab.com/group/project/-/issues/46',
+    weight: 3,
+  },
+];
 
 export const mockBackendInterceptor: HttpInterceptorFn = (request) => answer(request);
 
@@ -28,6 +72,26 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
   const path = request.url.split('?')[0];
   if (path === '/api/health') {
     return ok({ status: 'UP' });
+  }
+  if (path === '/api/projects') {
+    const search = searchText(request);
+    const projects: ProjectListResponse = {
+      items: MOCK_PROJECTS.filter(
+        (project) =>
+          project.name.toLowerCase().includes(search) ||
+          project.pathWithNamespace.toLowerCase().includes(search),
+      ),
+      nextPage: null,
+    };
+    return ok(projects);
+  }
+  if (PROJECT_ISSUES_PATH.test(path)) {
+    const search = searchText(request);
+    const issues: IssueListResponse = {
+      items: MOCK_ISSUES.filter((issue) => issue.title.toLowerCase().includes(search)),
+      nextPage: null,
+    };
+    return ok(issues);
   }
   if (path === '/api/sessions' && request.method === 'POST') {
     if ((request.body as CreateSessionRequest | null)?.issueIid === MOCK_MISSING_ISSUE_IID) {
@@ -67,19 +131,24 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
     return ok(snapshotFor(role));
   }
   if (subPath === '/issues') {
+    const search = searchText(request);
+    const weight = request.params.get('weight');
     const issues: IssueListResponse = {
-      items: [
-        {
-          iid: 42,
-          title: 'Login page',
-          webUrl: 'https://gitlab.com/group/project/-/issues/42',
-        },
-      ],
+      items: MOCK_ISSUES.filter(
+        (issue) =>
+          issue.title.toLowerCase().includes(search) &&
+          (weight !== 'NONE' || issue.weight === null) &&
+          (weight !== 'ANY' || issue.weight !== null),
+      ),
       nextPage: null,
     };
     return ok(issues);
   }
   return of(new HttpResponse<void>({ status: 204 }));
+}
+
+function searchText(request: HttpRequest<unknown>): string {
+  return (request.params.get('search') ?? '').trim().toLowerCase();
 }
 
 function bearerToken(request: HttpRequest<unknown>): string | null {
