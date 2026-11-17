@@ -12,6 +12,7 @@ import {
   combineLatest,
   debounceTime,
   distinctUntilChanged,
+  filter,
   map,
   of,
   skip,
@@ -155,9 +156,11 @@ export class StartPage {
     searchable: (query: SearchQuery) => boolean,
     request: (query: SearchQuery) => Observable<{ items: T[] }>,
   ): (queries: Observable<SearchQuery>) => Observable<SearchResult<T>> {
-    return (queries) =>
-      queries.pipe(
+    return (queries) => {
+      let latest: SearchQuery | null = null;
+      return queries.pipe(
         tap((query) => {
+          latest = query;
           if (!searchable(query)) {
             result.set(idle());
           }
@@ -172,11 +175,13 @@ export class StartPage {
                   error: null,
                 })),
                 catchError((error: unknown) => of(this.searchFailure<T>(error))),
+                filter(() => latest === query),
               )
             : of(idle<T>()),
         ),
         tap((next) => result.set(next)),
       );
+    };
   }
 
   private searchFailure<T>(error: unknown): SearchResult<T> {

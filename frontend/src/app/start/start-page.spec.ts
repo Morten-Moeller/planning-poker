@@ -388,6 +388,29 @@ describe('StartPage project and issue choice', () => {
       fixture.detectChanges();
     }
 
+    it('drops a late project result after the field holds an id', async () => {
+      typeInto('create-project', 'pok');
+      await wait(300);
+      const pending = http.expectOne('/api/projects?search=pok');
+      typeInto('create-project', '1234');
+      pending.flush({
+        items: [
+          {
+            id: 1234,
+            name: 'Planning Poker',
+            pathWithNamespace: 'group/planning-poker',
+            webUrl: 'https://gitlab.example/group/planning-poker',
+          },
+        ],
+        nextPage: null,
+      });
+      fixture.detectChanges();
+
+      expect(overlay('create-project-option')).toHaveLength(0);
+      await wait(300);
+      http.expectOne('/api/projects/1234/issues').flush({ items: [], nextPage: null });
+    });
+
     it.each(searchErrors)(
       'shows %s of the project search at the field and keeps the banner empty',
       async (code, status, message) => {
