@@ -1,14 +1,14 @@
 ---
 id: "0029"
 title: Design Werkbank, Teil C, Tisch und Karten
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#30"
+note: alle Kriterien erfüllt
 ---
 
 # Design Werkbank, Teil C, Tisch und Karten
