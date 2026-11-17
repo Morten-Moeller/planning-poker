@@ -1,14 +1,14 @@
 ---
 id: "0033"
 title: Issue beim Anlegen optional
-status: Review
+status: done
 risk: high
 adrs: ["0011"]
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#33"
+note: alle Kriterien erfüllt; Browser gegen Projekt 88998176 nicht geprüft (kein GitLab-Token)
 ---
 
 # Issue beim Anlegen optional
