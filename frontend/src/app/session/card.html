@@ -1,0 +1,55 @@
+@if (size() === 'seat') {
+  <span class="marker">
+    @if (outlier()) {
+      <span class="outlier-label" data-testid="result-vote-outlier" i18n="@@card.outlier"
+        >Ausreißer</span
+      >
+    }
+  </span>
+}
+@if (interactive()) {
+  <button
+    type="button"
+    class="card"
+    [class]="state()"
+    [attr.data-testid]="testId()"
+    [attr.aria-label]="label()"
+    [attr.aria-pressed]="state() === 'chosen'"
+    [attr.aria-disabled]="disabled() ? 'true' : null"
+    (click)="pick()"
+  >
+    <ng-container [ngTemplateOutlet]="face" />
+  </button>
+} @else {
+  <div
+    class="card"
+    [class]="state()"
+    [class.outlier]="outlier()"
+    [class.flip]="flip()"
+    [style.animation-delay.ms]="flipDelay()"
+    [attr.data-testid]="testId()"
+    [attr.role]="state() === 'pending' ? null : 'img'"
+    [attr.aria-label]="state() === 'pending' ? null : label()"
+  >
+    <ng-container [ngTemplateOutlet]="face" />
+  </div>
+}
+
+<ng-template #face>
+  @if (state() === 'chosen') {
+    <span class="chosen-label" aria-hidden="true"
+      >✓<span class="chosen-word" i18n="@@card.chosen"> GEWÄHLT</span></span
+    >
+  } @else if (state() === 'open' || state() === 'revealed') {
+    <span class="band" aria-hidden="true"></span>
+  }
+  @if (showsValue()) {
+    @if (glyph(); as svg) {
+      <span class="glyph" aria-hidden="true" [innerHTML]="svg"></span>
+    } @else {
+      <span class="value" aria-hidden="true">{{ symbol() }}</span>
+    }
+  } @else if (state() === 'pending') {
+    <span class="pending-text">{{ pendingText() }}</span>
+  }
+</ng-template>

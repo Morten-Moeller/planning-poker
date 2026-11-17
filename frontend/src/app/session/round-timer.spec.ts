@@ -8,7 +8,7 @@ import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
-import { RoundTimer, formatRemaining, remainingSeconds } from './round-timer';
+import { RoundTimer, announces, formatRemaining, remainingSeconds } from './round-timer';
 
 const SESSION_ID = 'K7P2QX9M';
 const SERVER_TIME = '2026-11-16T09:15:00Z';
@@ -38,6 +38,20 @@ describe('remainingSeconds and formatRemaining', () => {
     [3600, '60:00'],
   ])('formats %i s as %s', (seconds, text) => {
     expect(formatRemaining(seconds)).toBe(text);
+  });
+
+  it.each([
+    [60, true],
+    [45, true],
+    [44, false],
+    [16, false],
+    [15, true],
+    [11, false],
+    [10, true],
+    [1, true],
+    [0, true],
+  ])('announces %i s: %s', (seconds, expected) => {
+    expect(announces(seconds)).toBe(expected);
   });
 });
 
@@ -94,23 +108,23 @@ describe('RoundTimer', () => {
     await open(withDeadline('2026-11-16T09:15:42Z'));
 
     expect(timer()?.getAttribute('role')).toBe('timer');
-    expect(timer()?.textContent?.trim()).toBe('Noch 0:42');
+    expect(timer()?.textContent?.trim()).toBe('◷ Noch 0:42');
   });
 
   it('counts down every second and shows the end at 0', async () => {
     await open(withDeadline('2026-11-16T09:15:42Z'));
 
     await tick(1000);
-    expect(timer()?.textContent?.trim()).toBe('Noch 0:41');
+    expect(timer()?.textContent?.trim()).toBe('◷ Noch 0:41');
 
     await tick(40_000);
-    expect(timer()?.textContent?.trim()).toBe('Noch 0:01');
+    expect(timer()?.textContent?.trim()).toBe('◷ Noch 0:01');
 
     await tick(1000);
-    expect(timer()?.textContent?.trim()).toBe('Zeit abgelaufen');
+    expect(timer()?.textContent?.trim()).toBe('⏱ Zeit abgelaufen');
 
     await tick(5000);
-    expect(timer()?.textContent?.trim()).toBe('Zeit abgelaufen');
+    expect(timer()?.textContent?.trim()).toBe('⏱ Zeit abgelaufen');
   });
 
   it('takes the offset of every new snapshot', async () => {
@@ -122,18 +136,61 @@ describe('RoundTimer', () => {
     });
     await tick(0);
 
-    expect(timer()?.textContent?.trim()).toBe('Noch 0:12');
+    expect(timer()?.textContent?.trim()).toBe('◷ Noch 0:12');
   });
 
   it('shows minutes for a long deadline', async () => {
     await open(withDeadline('2026-11-16T09:20:00Z'));
 
-    expect(timer()?.textContent?.trim()).toBe('Noch 5:00');
+    expect(timer()?.textContent?.trim()).toBe('◷ Noch 5:00');
   });
 
   it('shows nothing without a deadline', async () => {
     await open(withDeadline(null));
 
     expect(timer()).toBeNull();
+    expect(live()).toBeNull();
+  });
+
+  function live(): HTMLElement | null {
+    return (fixture.nativeElement as HTMLElement).querySelector('[data-testid="round-timer-live"]');
+  }
+
+  it('changes the live text only every 15 s and in the last 10 s', async () => {
+    await open(withDeadline('2026-11-16T09:15:42Z'));
+    expect(live()?.getAttribute('aria-live')).toBe('polite');
+    expect(timer()?.getAttribute('aria-live')).toBeNull();
+
+    const seen: string[] = [live()?.textContent?.trim() ?? ''];
+    for (let second = 0; second < 42; second++) {
+      await tick(1000);
+      const text = live()?.textContent?.trim() ?? '';
+      if (text !== seen[seen.length - 1]) {
+        seen.push(text);
+      }
+    }
+
+    expect(seen).toEqual([
+      'Noch 0:42',
+      'Noch 0:30',
+      'Noch 0:15',
+      ...Array.from(
+        { length: 10 },
+        (_, index) => `Noch 0:${(10 - index).toString().padStart(2, '0')}`,
+      ),
+      'Zeit abgelaufen',
+    ]);
+  });
+
+  it('marks the last 10 s with a border and the end with the error surface', async () => {
+    await open(withDeadline('2026-11-16T09:15:11Z'));
+    expect(timer()?.classList).not.toContain('final');
+
+    await tick(1000);
+    expect(timer()?.classList).toContain('final');
+
+    await tick(10_000);
+    expect(timer()?.classList).toContain('expired');
+    expect(timer()?.classList).not.toContain('final');
   });
 });

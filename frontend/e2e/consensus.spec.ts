@@ -85,11 +85,20 @@ test('shows the consensus without confetti under reduced motion', async ({ page,
   const everybody = await revealConsensus(page, browser);
   await everybody[1].emulateMedia({ reducedMotion: 'reduce' });
 
+  await everybody[1].reload();
   for (const view of [page, everybody[1]]) {
     await expect(view.getByTestId('consensus-hint')).toBeVisible();
-    await expect(view.getByTestId('consensus-confetti')).toBeHidden();
+    await expect(view.getByTestId('consensus-confetti')).toHaveCount(0);
+    await expect(view.getByTestId('result-vote-card')).toHaveCount(2);
+    for (const card of await view.getByTestId('result-vote-card').all()) {
+      await expect(card).toHaveCSS('animation-name', 'none');
+    }
   }
   await expect(everybody[2].getByTestId('consensus-confetti')).toBeVisible();
+  await expect(everybody[2].getByTestId('result-vote-card').first()).not.toHaveCSS(
+    'animation-name',
+    'none',
+  );
 });
 
 test('every participant sees the developer who did not vote', async ({ page, browser }) => {

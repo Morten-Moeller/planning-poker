@@ -21,7 +21,14 @@ export function cardSymbol(card: Card): string {
 }
 
 export function cardName(card: Card): string | null {
-  return card === 'COFFEE' ? $localize`:@@card.coffee:Kaffeepause` : null;
+  switch (card) {
+    case 'COFFEE':
+      return $localize`:@@card.coffee:Kaffeepause`;
+    case '?':
+      return $localize`:@@card.unclear:Unklar`;
+    default:
+      return null;
+  }
 }
 
 export function cardLabel(card: Card): string {

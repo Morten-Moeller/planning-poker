@@ -1,7 +1,7 @@
 ---
 id: "0029"
 title: Design Werkbank, Teil C, Tisch und Karten
-status: approved
+status: in Arbeit
 risk: medium
 adrs: []
 owner: Morten Möller
@@ -142,6 +142,11 @@ Dateien:
 - `frontend/src/app/session/cards.ts`: ändern, Label „Unklar“ für ?
 - `frontend/e2e/voting-round.spec.ts`: ändern, A6 und A7 als neue Fälle
 - `frontend/e2e/consensus.spec.ts`: ändern, A5
+- `frontend/src/app/session/reduced-motion.ts`: neu, Abfrage von `prefers-reduced-motion` für Konfetti und Aufdecken
+- `frontend/src/app/session/session-page.html`: ändern nach dem Merge von 0028, Timer-Chip in der Phasenleiste, Reihenfolge nach Design
+- `frontend/src/app/session/session-page.ts`: ändern nach dem Merge von 0028, falls Imports sich ändern
+- `frontend/src/app/session/session-page.scss`: ändern nach dem Merge von 0028, falls die Reihenfolge es braucht
+- `frontend/e2e/result-round.spec.ts`: ändern, Erwartung an die Verteilung ohne „:“ (Datei von 0030; ist dessen PR noch offen, löst der Zweite den Konflikt beim Merge)
 
 Schritte:
 
@@ -170,7 +175,11 @@ Contracts zu regenerieren: keine.
 
 ## Offene Fragen
 
-keine
+Beantwortet von Morten Möller am 2026-11-17:
+
+1. **„Kartensatz: Ringe“:** Der Name des Motivs kommt aus `card-motif.ts` von Teil B (0028). Antwort: Auf Teil B warten. Nach dem Merge von 0028 wird origin/main nachgezogen, und der Name kommt aus `card-motif.ts`.
+2. **Anordnung der Seite:** `session-page.html` gehört zu 0028. Antwort: Teil C ändert `session-page.html` selbst (Timer-Chip in der Phasenleiste, Reihenfolge nach Design), nach dem Merge von 0028 und damit ohne Konflikt. Die Datei steht in der Dateiliste.
+3. **Versteckte Texte in der aufgedeckten Ansicht:** Antwort: „(Orientierung)“ bleibt als Text für Screenreader an Durchschnitt und Häufigste Werte. Das unsichtbare „:“ in der Verteilung entfällt; die Erwartung in `frontend/e2e/result-round.spec.ts` (Datei von 0030) wird an den neuen Text angepasst.
 
 ## Verifikationsplan
 

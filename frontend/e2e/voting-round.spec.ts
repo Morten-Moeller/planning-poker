@@ -52,8 +52,13 @@ async function createSession(page: Page): Promise<{ scrumMaster: View; link: str
   return { scrumMaster, link };
 }
 
-async function join(browser: Browser, link: string, name: string): Promise<View> {
-  const view = watch(await (await browser.newContext()).newPage());
+async function join(
+  browser: Browser,
+  link: string,
+  name: string,
+  viewport?: { width: number; height: number },
+): Promise<View> {
+  const view = watch(await (await browser.newContext({ viewport })).newPage());
   await view.page.goto(link);
   await view.page.getByTestId('join-name').fill(name);
   await view.page.getByTestId('join-submit').click();
@@ -121,7 +126,7 @@ test('a developer chooses and changes a hidden card and the scrum master reveals
   expect(await cards.evaluateAll((nodes) => nodes.map((node) => node.dataset['testid']))).toEqual(
     CARD_IDS,
   );
-  await expect(card(ben, 'COFFEE')).toHaveAccessibleName('Kaffeepause');
+  await expect(card(ben, 'COFFEE')).toHaveAccessibleName('Karte Kaffeepause');
   await expect(scrumMaster.page.getByTestId('card-deck')).toHaveCount(0);
   await expect(scrumMaster.page.getByTestId('round-reveal')).toBeVisible();
   for (const developer of [ben, cem]) {
@@ -228,4 +233,77 @@ test('a disconnected developer without a vote does not block the hint', async ({
   await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('2 von 2');
   await expect(scrumMaster.page.getByTestId('all-voted-hint')).toBeVisible();
   expectNoForeignCards([scrumMaster, ben, cem]);
+});
+
+function seat(view: View, name: string): Locator {
+  return view.page
+    .getByTestId('seat-table')
+    .getByRole('listitem')
+    .filter({ has: view.page.getByText(name, { exact: true }) });
+}
+
+test('a developer chooses a card with the keyboard and the table shows it hidden until the reveal', async ({
+  page,
+  browser,
+}) => {
+  const { scrumMaster, link } = await createSession(page);
+  const ben = await join(browser, link, 'Ben');
+  const cem = await join(browser, link, 'Cem');
+  await release(scrumMaster, [ben, cem]);
+
+  await expect(seat(scrumMaster, 'Ben').getByTestId('seat-status')).toHaveText('ausstehend');
+  await card(ben, '5').focus();
+  await ben.page.keyboard.press('ArrowRight');
+  await expect(card(ben, '8')).toBeFocused();
+  ben.chosen.add('8');
+  await ben.page.keyboard.press('Enter');
+  await expect(card(ben, '8')).toHaveAttribute('aria-pressed', 'true');
+
+  for (const view of [scrumMaster, cem]) {
+    await expect(view.page.getByTestId('seat-table')).toContainText('AM TISCH · VERDECKT');
+    await expect(seat(view, 'Ben').getByTestId('seat-status')).toHaveText('✓ geschätzt');
+    await expect(seat(view, 'Ben').getByTestId('seat-card')).toHaveAccessibleName('Karte verdeckt');
+    await expect(view.page.getByTestId('seat-table')).not.toContainText('8');
+  }
+  await choose(cem, '13');
+  expectNoForeignCards([scrumMaster, ben, cem]);
+
+  await scrumMaster.page.getByTestId('round-reveal').click();
+
+  for (const view of [scrumMaster, ben, cem]) {
+    await expect(view.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
+    await expect(view.page.getByTestId('seat-table')).toContainText('AUFGEDECKT');
+    await expect(view.page.getByTestId('result-vote-name')).toHaveText(['Ben', 'Cem']);
+    await expect(view.page.getByTestId('result-vote-card')).toHaveText(['8', '13']);
+  }
+});
+
+test('the card deck has six columns of at least 44 px and no horizontal scrolling at 375 px', async ({
+  page,
+  browser,
+}) => {
+  const { scrumMaster, link } = await createSession(page);
+  const ben = await join(browser, link, 'Ben', { width: 375, height: 800 });
+  await release(scrumMaster, [ben]);
+
+  const group = ben.page.getByTestId('card-deck').getByRole('group', { name: 'Deine Karte' });
+  await expect(group).toBeVisible();
+  const columns = await group.evaluate(
+    (node) => getComputedStyle(node).gridTemplateColumns.split(' ').length,
+  );
+  expect(columns).toBe(6);
+  const boxes = await ben.page
+    .getByTestId('card-deck')
+    .locator('button')
+    .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect()));
+  expect(boxes).toHaveLength(11);
+  for (const box of boxes) {
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+  }
+  expect(
+    await ben.page.evaluate(
+      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
 });

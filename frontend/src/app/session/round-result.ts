@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, DOCUMENT, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { ApiService } from '../api/api.service';
@@ -8,11 +8,13 @@ import { Confetti } from './confetti';
 import { ConfirmResultData, ConfirmResultDialog } from './confirm-result-dialog';
 import { consensusCard } from './consensus';
 import { outlierCards } from './outliers';
+import { prefersReducedMotion } from './reduced-motion';
 import { averageText } from './round-stats';
+import { SeatTable } from './seat-table';
 
 @Component({
   selector: 'app-round-result',
-  imports: [MatButtonModule, Confetti],
+  imports: [MatButtonModule, Confetti, SeatTable],
   templateUrl: './round-result.html',
   styleUrl: './round-result.scss',
 })
@@ -58,7 +60,24 @@ export class RoundResult {
       ? null
       : $localize`:@@roundResult.turnout:${count}:count: von ${total}:total: Entwicklern haben geschätzt.`;
   });
+  protected readonly absentText = computed(() => {
+    const voted = new Set(this.votes().map((vote) => vote.participantId));
+    const absent = this.developers()
+      .filter((developer) => !developer.connected && !voted.has(developer.id))
+      .map((developer) => developer.name);
+    if (absent.length === 0) {
+      return null;
+    }
+    const names = absent.join(', ');
+    return absent.length === 1
+      ? $localize`:@@roundResult.absentOne:${names}:names: war getrennt`
+      : $localize`:@@roundResult.absentMany:${names}:names: waren getrennt`;
+  });
+  protected readonly confetti = !prefersReducedMotion(inject(DOCUMENT));
   protected readonly stats = computed(() => this.round()?.stats ?? null);
+  protected readonly maxCount = computed(() =>
+    Math.max(1, ...(this.stats()?.distribution ?? []).map((entry) => entry.count)),
+  );
   protected readonly average = computed(() => averageText(this.stats()?.average ?? null));
   protected readonly confirming = computed(() => this.round()?.confirming === true);
   protected readonly restarting = signal(false);

@@ -1,20 +1,33 @@
-<section class="deck" data-testid="card-deck">
-  <h2 i18n="@@cardDeck.title">Karte wählen</h2>
-  <div class="cards">
+<section class="deck" [attr.data-testid]="locked() ? 'card-deck-locked' : 'card-deck'">
+  <div class="head">
+    @if (locked()) {
+      <h2 i18n="@@cardDeck.titleLocked">Deine Karte · gesperrt</h2>
+      <p class="hint" role="status" data-testid="discussion-hint" i18n="@@roundStatus.discussion">
+        Diskussion: Die Karten werden geöffnet, wenn der Scrum Master die Schätzung startet.
+      </p>
+    } @else {
+      <h2 i18n="@@cardDeck.title">Deine Karte</h2>
+      <p class="hint" data-testid="card-deck-hint" i18n="@@cardDeck.hint">
+        Du kannst sie ändern, bis aufgelöst wird.
+      </p>
+    }
+  </div>
+  <div
+    class="cards"
+    role="group"
+    aria-label="Deine Karte"
+    i18n-aria-label="@@cardDeck.groupLabel"
+    (keydown)="onKeydown($event)"
+    (keyup)="onKeyup($event)"
+  >
     @for (card of cards; track card) {
-      <button
-        type="button"
-        class="card"
-        [matButton]="card === myVote() ? 'filled' : 'outlined'"
-        [attr.data-testid]="'card-' + card"
-        [attr.aria-pressed]="card === myVote()"
-        [attr.aria-label]="name(card)"
-        [disabled]="sending()"
-        disabledInteractive
-        (click)="choose(card)"
-      >
-        {{ symbol(card) }}
-      </button>
+      <app-card
+        [card]="card"
+        [state]="stateOf(card)"
+        [busy]="sending()"
+        [testId]="'card-' + card"
+        (picked)="choose($event)"
+      />
     }
   </div>
 </section>

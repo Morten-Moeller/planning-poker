@@ -1,0 +1,57 @@
+<section
+  class="table"
+  data-testid="seat-table"
+  aria-label="Karten am Tisch"
+  i18n-aria-label="@@seatTable.label"
+>
+  <h3 class="title" data-testid="seat-table-title">
+    @if (revealed()) {
+      <ng-container i18n="@@seatTable.revealed">AUFGEDECKT</ng-container>
+    } @else {
+      <ng-container i18n="@@seatTable.hidden">AM TISCH · VERDECKT</ng-container>
+    }
+  </h3>
+  <ul class="seats">
+    @for (seat of seats(); track seat.id) {
+      <li class="seat" [attr.data-testid]="seat.status === 'revealed' ? 'result-vote' : 'seat'">
+        <span
+          class="name"
+          [attr.data-testid]="seat.status === 'revealed' ? 'result-vote-name' : 'seat-name'"
+          >{{ seat.name }}</span
+        >
+        <app-card
+          [size]="'seat'"
+          [card]="seat.card"
+          [state]="seat.state"
+          [outlier]="seat.outlier"
+          [flip]="motion && seat.state === 'revealed'"
+          [flipDelay]="seat.flipIndex * flipStep"
+          [pendingText]="seat.status === 'disconnected' ? disconnectedCard : '…'"
+          [testId]="seat.status === 'revealed' ? 'result-vote-card' : 'seat-card'"
+        />
+        @switch (seat.status) {
+          @case ('voted') {
+            <span class="status voted" data-testid="seat-status" i18n="@@seatTable.voted"
+              >✓ geschätzt</span
+            >
+          }
+          @case ('pending') {
+            <span class="status" data-testid="seat-status" i18n="@@seatTable.pending"
+              >ausstehend</span
+            >
+          }
+          @case ('disconnected') {
+            <span class="status" data-testid="seat-status" i18n="@@seatTable.disconnected"
+              >getrennt</span
+            >
+          }
+          @case ('notVoted') {
+            <span class="status" data-testid="seat-status" i18n="@@seatTable.notVoted"
+              >nicht geschätzt</span
+            >
+          }
+        }
+      </li>
+    }
+  </ul>
+</section>

@@ -1,21 +1,42 @@
 .deck {
   display: flex;
   flex-direction: column;
-  gap: var(--app-space-s);
+  gap: var(--app-space-m);
+  padding-top: var(--app-space-s);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--app-space-s) var(--app-space-m);
 }
 
 h2 {
   margin: 0;
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+}
+
+.hint {
+  margin: 0;
+  font: var(--mat-sys-label-large);
+  font-weight: 400;
+  color: var(--app-on-surface-muted);
 }
 
 .cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--app-space-s);
+  display: grid;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+  align-items: end;
+  gap: 10px;
+  padding-top: 14px;
 }
 
-.card {
-  min-width: 3.5rem;
-  min-height: 4.5rem;
-  font: var(--mat-sys-title-large);
+@media (max-width: 599px) {
+  .cards {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--app-space-s);
+  }
 }

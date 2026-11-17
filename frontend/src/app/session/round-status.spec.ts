@@ -179,6 +179,11 @@ describe('RoundStatus', () => {
 
   it('shows the hint without counter and start button to a developer in DISCUSSION', async () => {
     await open(discussionDeveloper);
+    expect(all('card-deck-locked')).toHaveLength(1);
+    expect(all('card-deck')).toHaveLength(0);
+    expect(text('round-phase')).toBe('Diskussion');
+    expect(text('round-number')).toBe('Runde 1');
+    expect(text('discussion-timer')).toBe('◷ 1:00 · startet mit der Schätzung');
 
     expect(text('discussion-hint')).toBe(
       'Diskussion: Die Karten werden geöffnet, wenn der Scrum Master die Schätzung startet.',
@@ -190,6 +195,11 @@ describe('RoundStatus', () => {
 
   it('shows the start button with the timer to the scrum master and sends the start', async () => {
     await open(discussionScrumMaster);
+    expect(text('discussion-hint')).toBe('Das Team diskutiert das Issue.');
+    expect(all('discussion-hint')[0].parentElement?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      'Das Team diskutiert das Issue. Die Karten sind gesperrt, bis du die Schätzung startest. Timer: 1 min.',
+    );
+    expect(all('card-deck-locked')).toHaveLength(0);
     const start = all('round-start')[0] as HTMLButtonElement;
     expect(text('round-start')).toBe('Schätzung starten');
     expect(text('round-start-timer')).toBe('Timer: 1 min');
@@ -215,6 +225,7 @@ describe('RoundStatus', () => {
     expect(all('round-start')).toHaveLength(1);
     if (expected === null) {
       expect(all('round-start-timer')).toHaveLength(0);
+      expect(all('discussion-timer')).toHaveLength(0);
     } else {
       expect(text('round-start-timer')).toBe(expected);
     }
@@ -227,5 +238,59 @@ describe('RoundStatus', () => {
     await open({ ...snapshot, round: { ...snapshot.round!, number: 2 } });
 
     expect(text('round-number')).toBe('Runde 2');
+  });
+
+  it.each([
+    [[developer('Ben', true, false), developer('Cem', true, false)], '0', '0'],
+    [[developer('Ben', true, true), developer('Cem', true, false)], '1', '50'],
+    [[developer('Ben', true, true), developer('Cem', true, true)], '2', '100'],
+  ])('fills the progress bar to %#', async (developers, now, width) => {
+    await open(withParticipants(votingDeveloper, developers));
+
+    const bar = all('vote-progress')[0];
+    expect(bar.getAttribute('role')).toBe('progressbar');
+    expect(bar.getAttribute('aria-valuenow')).toBe(now);
+    expect(bar.getAttribute('aria-valuemax')).toBe('2');
+    expect((bar.firstElementChild as HTMLElement).style.width).toBe(`${width}%`);
+  });
+
+  it('shows the table with the seats while the round runs', async () => {
+    await open(votingDeveloper);
+
+    expect(all('seat-table')).toHaveLength(1);
+    expect(all('card-deck')).toHaveLength(0);
+  });
+
+  it.each([
+    [[developer('Ben', true, true), developer('Cem', true, false)], 'Noch 1 Schätzung ausstehend.'],
+    [
+      [developer('Ben', true, false), developer('Cem', true, false), developer('Dan', true, false)],
+      'Noch 3 Schätzungen ausstehend.',
+    ],
+  ])('names the open votes to the scrum master %#', async (developers, expected) => {
+    await open(withParticipants(votingScrumMaster, developers));
+
+    expect(text('pending-hint')).toBe(`${expected} Du kannst auch vorher auflösen.`);
+    expect(all('pending-hint')[0].getAttribute('role')).toBe('status');
+  });
+
+  it.each([
+    [
+      [developer('Ben', true, true), developer('Finn', false, false)],
+      'Finn ist getrennt und wird nicht abgewartet.',
+    ],
+    [
+      [
+        developer('Ben', true, true),
+        developer('Finn', false, false),
+        developer('Gus', false, false),
+      ],
+      'Finn, Gus sind getrennt und werden nicht abgewartet.',
+    ],
+  ])('names the disconnected developers when all others voted %#', async (developers, absent) => {
+    await open(withParticipants(votingScrumMaster, developers, true));
+
+    expect(text('all-voted-hint')).toBe(`✓ Alle verbundenen Entwickler haben geschätzt. ${absent}`);
+    expect(all('pending-hint')).toHaveLength(0);
   });
 });
