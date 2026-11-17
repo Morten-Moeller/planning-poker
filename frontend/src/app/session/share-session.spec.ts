@@ -36,6 +36,18 @@ describe('ShareSession', () => {
     return (fixture.nativeElement as HTMLElement).querySelector(`[data-testid="${id}"]`);
   }
 
+  function normalized(node: Element | null | undefined): string {
+    return node?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+  }
+
+  it.each([
+    ['copy-link', 'Link kopieren'],
+    ['copy-session-id', 'Session-ID kopieren'],
+  ])('labels the button %s and shows Kopieren', (id, label) => {
+    expect(element(id)?.getAttribute('aria-label')).toBe(label);
+    expect(normalized(element(id))).toBe('⧉ Kopieren');
+  });
+
   it('shows the join link from the origin of the page and the session id', () => {
     expect(element('share-link')?.textContent).toBe(
       `${location.origin}/session/${SESSION_ID}/join`,
@@ -49,6 +61,7 @@ describe('ShareSession', () => {
 
     expect(written).toEqual([`${location.origin}/session/${SESSION_ID}/join`]);
     expect(element('copy-link-done')?.textContent?.trim()).toBe('Kopiert');
+    expect(normalized(element('copy-link-done')?.parentElement)).toBe('✓ Kopiert');
     expect(element('copy-session-id-done')).toBeNull();
   });
 
@@ -72,9 +85,12 @@ describe('ShareSession', () => {
 
     expect(written).toEqual([]);
     expect(element(failed)?.textContent?.trim()).toBe(
-      'Kopieren nicht möglich, bitte von Hand kopieren.',
+      'Kopieren nicht möglich, bitte von Hand kopieren',
     );
     expect(element(failed)?.getAttribute('role')).toBe('status');
+    expect(normalized(element(failed)?.parentElement)).toBe(
+      '⚠ Kopieren nicht möglich, bitte von Hand kopieren',
+    );
     expect(element(done)).toBeNull();
   });
 });

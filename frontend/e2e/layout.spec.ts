@@ -13,6 +13,15 @@ async function expectNoHorizontalScroll(page: Page): Promise<void> {
   expect(size.scrollWidth, JSON.stringify(size)).toBeLessThanOrEqual(size.clientWidth);
 }
 
+async function expectSideUnderMain(page: Page): Promise<void> {
+  const main = await page.locator('app-session-page .main').boundingBox();
+  const side = await page.locator('app-session-page .side').boundingBox();
+  expect(main).not.toBeNull();
+  expect(side).not.toBeNull();
+  expect(side!.y).toBeGreaterThanOrEqual(main!.y + main!.height - 1);
+  expect(side!.width).toBeLessThanOrEqual(VIEWPORT.width);
+}
+
 test.afterEach(async ({ browser, context: own }) => {
   for (const context of browser.contexts().filter((context) => context !== own)) {
     await context.close();
@@ -40,6 +49,7 @@ test('the session page has no horizontal scroll bar at 375 px in every phase', a
   await expect(anna.getByTestId('issue-result')).toHaveCount(2);
   for (const page of everybody) {
     await expect(page.getByTestId('session-phase')).toHaveText('Wartet auf ein Issue');
+    await expectSideUnderMain(page);
     await expectNoHorizontalScroll(page);
   }
 
