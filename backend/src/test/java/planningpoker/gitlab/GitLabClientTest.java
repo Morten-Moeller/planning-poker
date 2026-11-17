@@ -12,6 +12,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -251,7 +252,7 @@ class GitLabClientTest {
         assertFalse(line.contains(config.token()), line);
         assertFalse(line.contains(GITLAB_ERROR_TEXT), line);
         assertFalse(line.contains("invalid token"), line);
-        assertEquals(null, record.getThrown(), line);
+        assertNull(record.getThrown(), line);
     }
 
     @Test
