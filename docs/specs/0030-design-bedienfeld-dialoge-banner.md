@@ -1,14 +1,14 @@
 ---
 id: "0030"
 title: Design Werkbank, Teil D, Bedienfeld, Dialoge und Verbindungsbanner
-status: Review
+status: done
 risk: high
 adrs: ["0004", "0008"]
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#28"
+note: alle Kriterien erfüllt; echtes Projekt 88998176 nicht geprüft (Token aus .env nicht gelesen)
 ---
 
 # Design Werkbank, Teil D, Bedienfeld, Dialoge und Verbindungsbanner
