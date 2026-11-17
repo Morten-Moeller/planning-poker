@@ -2,7 +2,8 @@
 # test, typecheck, lint and e2e run both projects. sast, deps, drift, check, setup and help come
 # from harness/gates.mk. e2e starts backend and frontend itself (Playwright webServer) under
 # harness/scripts/app-lock.sh, so only one worktree runs the application at a time.
-# backend and frontend read .env in their own subshell; no other target loads it.
+# backend and frontend read .env in their own subshell; no other target loads it. frontend passes
+# only the two ports to its process, never the GitLab token.
 
 include harness/gates.mk
 
@@ -58,7 +59,7 @@ backend: ## Start the backend in dev mode on BACKEND_PORT from .env (default 808
 	@set -a; [ -f .env ] && . ./.env; set +a; cd backend && exec ./mvnw quarkus:dev -Dquarkus.http.port=$${BACKEND_PORT:-8080}
 
 frontend: ## Start the frontend on FRONTEND_PORT from .env (default 4200), proxy to BACKEND_PORT
-	@set -a; [ -f .env ] && . ./.env; set +a; BACKEND_PORT=$${BACKEND_PORT:-8080} exec pnpm -C frontend exec ng serve --port $${FRONTEND_PORT:-4200}
+	@[ -f .env ] && . ./.env; BACKEND_PORT=$${BACKEND_PORT:-8080} exec pnpm -C frontend start --port $${FRONTEND_PORT:-4200}
 
 e2e: gitlab-double ## End-to-end tests; starts the GitLab double, backend (profile e2e) and frontend under the application lock
 	@harness/scripts/app-lock.sh acquire --owner "$(E2E_OWNER)" --wait 900

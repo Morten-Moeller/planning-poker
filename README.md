@@ -22,7 +22,10 @@ make frontend           # Frontend auf http://localhost:4200 (FRONTEND_PORT)
 ```
 
 `make backend` und `make frontend` lesen `.env` je in ihrer eigenen Shell und geben keine Werte
-daraus aus; kein anderes Make-Ziel lädt `.env`.
+daraus aus; kein anderes Make-Ziel lädt `.env`. Nur das Backend bekommt alle Werte, das Frontend
+nur `BACKEND_PORT` und `FRONTEND_PORT`. Die Shell liest `.env` als Skript: Werte mit Leerzeichen,
+`$` oder `;` stehen in einfachen Anführungszeichen. `QUARKUS_HTTP_PORT` gilt für `make backend`
+nicht mehr; der Port kommt aus `BACKEND_PORT`.
 
 Danach `http://localhost:4200` öffnen; die Startseite zeigt, ob das Backend erreichbar ist
 (`GET /api/health`). Ohne `GITLAB_TOKEN` startet das Backend nicht und nennt den fehlenden
