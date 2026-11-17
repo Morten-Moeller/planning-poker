@@ -1,7 +1,24 @@
-<mat-toolbar color="primary" data-testid="toolbar">
-  <span i18n="@@shell.title">Planning Poker</span>
+<mat-toolbar data-testid="toolbar">
+  <span class="title" i18n="@@shell.title">Planning Poker</span>
+  @if (session(); as session) {
+    <span class="session-id" data-testid="toolbar-session-id">{{ session.sessionId }}</span>
+    <span class="spacer"></span>
+    @if (myName(); as name) {
+      <span class="me" data-testid="toolbar-me">
+        {{ name }} ·
+        @switch (session.me.role) {
+          @case ('SCRUM_MASTER') {
+            <ng-container i18n="@@shell.role.SCRUM_MASTER">Scrum Master</ng-container>
+          }
+          @case ('DEVELOPER') {
+            <ng-container i18n="@@shell.role.DEVELOPER">Entwickler</ng-container>
+          }
+        }
+      </span>
+    }
+  }
 </mat-toolbar>
 <app-error-banner />
-<main class="content">
+<main class="content" [class.room]="session() !== null">
   <router-outlet />
 </main>

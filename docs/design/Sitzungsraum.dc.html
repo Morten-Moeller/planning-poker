@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#16181d;}a{color:#61afef;}a:hover{color:#8cc4f5;}*{box-sizing:border-box;}</style>
+</helmet>
+<div style="padding:64px;background:#16181d;width:3064px;display:flex;flex-direction:column;gap:72px;font-family:'IBM Plex Sans',sans-serif;color:#abb2bf;">
+<header style="display:flex;flex-direction:column;gap:12px;max-width:960px;">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.08em;color:#9da5b4;">PLANNING POKER · WERKBANK · SITZUNGSRAUM</span>
+<h1 style="margin:0;font-size:40px;font-weight:600;color:#e6e9ef;">Sitzungsraum: alle Phasen, beide Rollen</h1>
+<p style="margin:0;font-size:17px;line-height:1.6;text-wrap:pretty;">Jeder Screen ist dieselbe Komponente mit anderen Zuständen. Hell/Dunkel über die Tweaks umschalten (auch nebeneinander). Das Kartenmotiv wechselt je Runde; hier zeigen die Screens absichtlich verschiedene Motive. Kartenfächer der Entwickler-Screens ist klickbar. Tokens und Komponenten: <a href="Design-System.dc.html">Design-System</a> · Einstieg: <a href="Start &amp; Beitritt.dc.html">Start &amp; Beitritt</a></p>
+</header>
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="5">
+<section style="display:flex;flex-direction:column;gap:28px;">
+<div style="display:flex;align-items:baseline;gap:16px;border-bottom:1px solid #2c313a;padding-bottom:14px;">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#9da5b4;">{{ g.no }}</span>
+<h2 style="margin:0;font-size:28px;font-weight:600;color:#e6e9ef;">{{ g.title }}</h2>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;">
+<sc-for list="{{ g.screens }}" as="s" hint-placeholder-count="2">
+<div id="{{ s.id }}" style="display:flex;flex-direction:column;gap:14px;">
+<div style="display:flex;align-items:baseline;gap:12px;">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;background:#3e4451;color:#e6e9ef;padding:3px 8px;border-radius:4px;">{{ s.id }}</span>
+<span style="font-size:18px;font-weight:600;color:#e6e9ef;">{{ s.title }}</span>
+<span style="font-size:14px;color:#9da5b4;">{{ s.note }}</span>
+</div>
+<div style="display:flex;gap:40px;align-items:flex-start;">
+<sc-for list="{{ s.frames }}" as="f" hint-placeholder-count="1">
+<div style="width:{{ f.w }};min-height:{{ f.h }};border-radius:12px;overflow:hidden;border:1px solid #0f1115;display:flex;flex-direction:column;">
+<dc-import name="Raum" theme="{{ f.theme }}" role="{{ s.role }}" phase="{{ s.phase }}" variant="{{ s.variant }}" dialog="{{ s.dialog }}" all-voted="{{ s.all }}" time-up="{{ s.timeUp }}" banner="{{ s.banner }}" snackbar="{{ s.snack }}" mobile="{{ s.mobile }}" motif="{{ s.motif }}" copy="{{ s.copy }}" style="flex:1;display:flex;flex-direction:column;" hint-size="100%,960px"></dc-import>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;,&quot;both&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'|'both'&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const mode = this.props.mode ?? 'dark';
+    const themes = mode === 'both' ? ['dark','light'] : [mode];
+    const S = (id, title, note, o) => {
+      const mobile = !!o.mobile;
+      return { id, title, note, role: o.role ?? 'dev', phase: o.phase ?? 'voting', variant: o.variant ?? '', dialog: o.dialog ?? 'none', all: !!o.all, timeUp: !!o.timeUp, banner: !!o.banner, snack: !!o.snack, mobile, motif: o.motif ?? 0, copy: o.copy ?? 'none',
+        frames: themes.map(th => ({ theme: o.forceTheme ?? th, w: mobile ? '375px' : '1440px', h: mobile ? '812px' : '960px' })) };
+    };
+    const groups = [
+      { no: '01', title: 'Phase „Wartet auf ein Issue“', screens: [
+        S('W-SM', 'Scrum Master: Issue auswählen', 'Suche, Filter, Auswahl hervorgehoben', { role:'sm', phase:'waiting', copy:'ok', motif:0 }),
+        S('W-DEV', 'Entwickler', 'Wartehinweis', { phase:'waiting', motif:0, copy:'err' }),
+        S('W-DEV-NACH', 'Entwickler nach übernommenem Ergebnis', 'letzte Schätzung bleibt sichtbar, bis das nächste Issue kommt', { phase:'waiting', variant:'after', motif:2 }),
+        S('W-SM-LEER', 'Scrum Master: Leerzustand', 'Keine Issues gefunden', { role:'sm', phase:'waiting', variant:'empty', motif:0 }),
+        S('W-SM-FEHLER', 'Scrum Master: Fehler', 'mit „Erneut versuchen“', { role:'sm', phase:'waiting', variant:'error', motif:0 })
+      ]},
+      { no: '02', title: 'Phase „Besprechung“ (nach „Freigeben“)', screens: [
+        S('B-SM', 'Scrum Master', 'Issue freigegeben, Karten gesperrt, „Timer starten“', { role:'sm', phase:'discussing', motif:0 }),
+        S('B-DEV', 'Entwickler', 'Issue lesen, Kartenfächer gesperrt', { phase:'discussing', motif:0 })
+      ]},
+      { no: '03', title: 'Phase „Runde läuft“ (nach „Timer starten“)', screens: [
+        S('R-DEV', 'Entwickler', 'Karte 5 gewählt, Timer läuft', { motif:0 }),
+        S('R-SM', 'Scrum Master', '3 von 5, Auflösen normal', { role:'sm', motif:0 }),
+        S('R-SM-ALLE', 'Scrum Master: alle haben geschätzt', 'Auflösen hervorgehoben, Zeit abgelaufen', { role:'sm', all:true, timeUp:true, motif:0 }),
+        S('R-SM-WECHSEL', 'Scrum Master: Issue wechseln', 'Bestätigungsdialog', { role:'sm', dialog:'switch', motif:0 }),
+        S('R-DEV-BANNER', 'Entwickler: Verbindungsfehler', 'globales Fehlerbanner, Motiv „Punkte“', { banner:true, motif:1 })
+      ]},
+      { no: '04', title: 'Phase „Runde aufgelöst“', screens: [
+        S('A-SM-AUSR', 'Scrum Master: Ausreißer', '3 und 13 markiert, Motiv „Ringe“', { role:'sm', phase:'revealed', variant:'outliers', motif:3 }),
+        S('A-DEV-AUSR', 'Entwickler: Ausreißer', '', { phase:'revealed', variant:'outliers', motif:3 }),
+        S('A-SM-KONS', 'Scrum Master: Konsens', 'mit Konfetti, Motiv „Zeilen“', { role:'sm', phase:'revealed', variant:'consensus', motif:2 }),
+        S('A-DEV-KONS', 'Entwickler: Konsens', '', { phase:'revealed', variant:'consensus', motif:2 })
+      ]},
+      { no: '05', title: 'Dialog „Ergebnis übernehmen“', screens: [
+        S('D-OFFEN', 'Endwert wählen', 'bei Konsens vorausgewählt', { role:'sm', phase:'revealed', variant:'consensus', dialog:'result', motif:2 }),
+        S('D-OHNE-KONSENS', 'Endwert wählen ohne Konsens', 'häufigster Wert hervorgehoben, nichts vorausgewählt', { role:'sm', phase:'revealed', variant:'outliers', dialog:'result', motif:3 }),
+        S('D-SCHREIBT', 'Zwischenzustand', 'wird nach GitLab geschrieben', { role:'sm', phase:'revealed', variant:'consensus', dialog:'writing', motif:2 }),
+        S('D-FEHLER', 'Fehler im Dialog', '', { role:'sm', phase:'revealed', variant:'consensus', dialog:'error', motif:2 }),
+        S('D-ERFOLG', 'Erfolg', 'Snackbar', { role:'sm', phase:'revealed', variant:'consensus', snack:true, motif:2 })
+      ]},
+      { no: '06', title: 'Sonderzustände', screens: [
+        S('S-LADEN', 'Sitzung wird geladen', '', { phase:'loading' }),
+        S('S-ABGELAUFEN', 'Sitzung abgelaufen', 'mit Link zur Startseite', { phase:'expired' })
+      ]},
+      { no: '07', title: 'Mobil (375 px)', screens: [
+        S('M-DEV-BESPR', 'Entwickler: Besprechung', 'Karten gesperrt', { mobile:true, phase:'discussing', motif:4 }),
+        S('M-SM-BESPR', 'Scrum Master: Besprechung', '', { mobile:true, role:'sm', phase:'discussing', motif:4 }),
+        S('M-DEV-RUNDE', 'Entwickler: Runde läuft', '', { mobile:true, motif:4 }),
+        S('M-SM-RUNDE', 'Scrum Master: alle geschätzt', '', { mobile:true, role:'sm', all:true, motif:4 }),
+        S('M-SM-WARTET', 'Scrum Master: Issue auswählen', '', { mobile:true, role:'sm', phase:'waiting' }),
+        S('M-DEV-NACH', 'Entwickler nach übernommenem Ergebnis', '', { mobile:true, phase:'waiting', variant:'after', motif:2 }),
+        S('M-DEV-AUSR', 'Entwickler: Ausreißer', '', { mobile:true, phase:'revealed', variant:'outliers', motif:3 }),
+        S('M-SM-KONS', 'Scrum Master: Konsens', '', { mobile:true, role:'sm', phase:'revealed', variant:'consensus', motif:2 }),
+        S('M-DIALOG', 'Ergebnis übernehmen', '', { mobile:true, role:'sm', phase:'revealed', variant:'consensus', dialog:'result', motif:2 })
+      ]}
+    ];
+    return { groups };
+  }
+}
+</script>
+</body>
+</html>
