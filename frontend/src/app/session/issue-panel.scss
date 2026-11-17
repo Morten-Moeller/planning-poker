@@ -17,6 +17,13 @@ h3 {
   gap: var(--app-space-s);
 }
 
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--app-space-s);
+}
+
 .results {
   list-style: none;
   margin: 0;
@@ -49,6 +56,16 @@ h3 {
 .iid {
   margin-inline-end: var(--app-space-s);
   color: var(--mat-sys-on-surface-variant);
+}
+
+.weight {
+  display: block;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.result.selected .weight {
+  color: var(--mat-sys-on-primary-container);
 }
 
 .preview {

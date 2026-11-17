@@ -8,6 +8,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
 
 final class GitLabStubs {
 
@@ -32,6 +33,11 @@ final class GitLabStubs {
         return "{\"iid\":" + iid + ",\"title\":\"" + title + "\",\"description\":"
                 + (description == null ? "null" : "\"" + description + "\"")
                 + ",\"web_url\":\"https://gitlab.example/g/p/-/issues/" + iid + "\",\"labels\":[]}";
+    }
+
+    static String weightedIssueJson(long iid, String title, String weightJson) {
+        return "{\"iid\":" + iid + ",\"title\":\"" + title + "\",\"description\":\"\""
+                + ",\"web_url\":\"https://gitlab.example/g/p/-/issues/" + iid + "\",\"weight\":" + weightJson + "}";
     }
 
     static void defaultIssue(WireMockServer server) {
@@ -64,6 +70,12 @@ final class GitLabStubs {
             response = response.withHeader("x-next-page", nextPage);
         }
         server.stubFor(get(urlPathEqualTo(issuesPath(projectId))).willReturn(response));
+    }
+
+    static void searchWithWeight(WireMockServer server, String projectId, String gitLabWeight, String body) {
+        server.stubFor(get(urlPathEqualTo(issuesPath(projectId)))
+                .withQueryParam("weight", WireMock.equalTo(gitLabWeight))
+                .willReturn(json(200, body)));
     }
 
     static void searchFailing(WireMockServer server, String projectId, int status) {

@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
@@ -14,8 +15,17 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.QuarkusTestProfile;
+import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Alternative;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Singleton;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -29,7 +39,29 @@ import planningpoker.gitlab.WireMockGitLab;
 
 @QuarkusTest
 @WithTestResource(WireMockGitLab.class)
+@TestProfile(IssueSelectionTest.FixedClock.class)
 class IssueSelectionTest {
+
+    static final TestClock CLOCK = new TestClock(Instant.parse("2026-11-17T12:00:00Z"));
+
+    public static class FixedClock implements QuarkusTestProfile {
+
+        @Override
+        public Set<Class<?>> getEnabledAlternatives() {
+            return Set.of(FixedClockProducer.class);
+        }
+    }
+
+    @Alternative
+    @ApplicationScoped
+    public static class FixedClockProducer {
+
+        @Produces
+        @Singleton
+        Clock clock() {
+            return CLOCK;
+        }
+    }
 
     private static final String PROBLEM = "application/problem+json";
     private static final String ISSUES = GitLabStubs.issuesPath(GitLabStubs.PROJECT);
@@ -120,6 +152,90 @@ class IssueSelectionTest {
         gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES))
                 .withQueryParam("search", absent())
                 .withQueryParam("page", WireMock.equalTo("1")));
+    }
+
+    @ParameterizedTest(name = "weight {0} sends {1}")
+    @CsvSource({"?weight=NONE, None", "?weight=ANY, Any", "?weight=ALL, ", "'', "})
+    void translatesTheWeightFilterAndSortsByLastChange(String query, String gitLabWeight) {
+        GitLabStubs.search(gitlab, GitLabStubs.PROJECT, "[]", null);
+
+        asScrumMaster().when().get(session + "/issues" + query).then().statusCode(200);
+
+        gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES))
+                .withQueryParam("weight", gitLabWeight == null ? absent() : WireMock.equalTo(gitLabWeight))
+                .withQueryParam("order_by", WireMock.equalTo("updated_at"))
+                .withQueryParam("sort", WireMock.equalTo("desc")));
+    }
+
+    @ParameterizedTest(name = "period {0} sends {1}")
+    @CsvSource({
+        "?period=WEEK, 2026-11-10T12:00:00Z",
+        "?period=MONTH, 2026-10-18T12:00:00Z",
+        "?period=YEAR, 2025-11-17T12:00:00Z",
+        "?period=ALL, ",
+        "'', "
+    })
+    void sendsTheStartOfThePeriodFromTheClock(String query, String updatedAfter) {
+        GitLabStubs.search(gitlab, GitLabStubs.PROJECT, "[]", null);
+
+        asScrumMaster().when().get(session + "/issues" + query).then().statusCode(200);
+
+        gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES))
+                .withQueryParam("updated_after", updatedAfter == null ? absent() : WireMock.equalTo(updatedAfter)));
+    }
+
+    @ParameterizedTest(name = "{0} answers VALIDATION_ERROR")
+    @CsvSource({"weight=SOME", "weight=none", "period=DAY", "period=week"})
+    void refusesAnUnknownFilterValue(String query) {
+        GitLabStubs.search(gitlab, GitLabStubs.PROJECT, "[]", null);
+
+        asScrumMaster()
+                .when()
+                .get(session + "/issues?" + query)
+                .then()
+                .statusCode(400)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("VALIDATION_ERROR"));
+        gitlab.verify(0, getRequestedFor(urlPathEqualTo(ISSUES)));
+    }
+
+    @Test
+    void listsTheWeightOrNullForEveryIssue() {
+        GitLabStubs.searchWithWeight(
+                gitlab,
+                GitLabStubs.PROJECT,
+                "Any",
+                "[" + GitLabStubs.weightedIssueJson(7, "Login", "5") + ","
+                        + GitLabStubs.weightedIssueJson(8, "Logout", "null") + ","
+                        + GitLabStubs.issueJson(9, "Search", null) + ","
+                        + GitLabStubs.weightedIssueJson(10, "Export", "\"\"") + "]");
+
+        asScrumMaster()
+                .when()
+                .get(session + "/issues?weight=ANY")
+                .then()
+                .statusCode(200)
+                .body("items", hasSize(4))
+                .body("items[0].weight", equalTo(5))
+                .body("items[1].weight", nullValue())
+                .body("items[2]", hasKey("weight"))
+                .body("items[2].weight", nullValue())
+                .body("items[3].weight", nullValue());
+    }
+
+    @Test
+    void listsTheWeightForTheStartPageWithoutFilter() {
+        GitLabStubs.search(
+                gitlab, GitLabStubs.PROJECT, "[" + GitLabStubs.weightedIssueJson(7, "Login", "3") + "]", null);
+
+        given().when()
+                .get("/api/projects/" + GitLabStubs.PROJECT + "/issues")
+                .then()
+                .statusCode(200)
+                .body("items[0].weight", equalTo(3));
+        gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES))
+                .withQueryParam("weight", absent())
+                .withQueryParam("updated_after", absent()));
     }
 
     static Stream<Arguments> gitLabFailures() {
