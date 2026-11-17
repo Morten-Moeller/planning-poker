@@ -23,9 +23,9 @@ import {
   tap,
   timer,
 } from 'rxjs';
-import type { ErrorCode } from '../api/api-error';
+import { ApiError, type ErrorCode } from '../api/api-error';
 import { ApiService, IssueSummary, ProjectSummary } from '../api/api.service';
-import { formErrorMessage } from '../api/error-messages';
+import { errorMessage, formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
 import { participantNameValidators } from '../api/participant-name';
 import { TokenStore } from '../api/token-store';
@@ -34,7 +34,8 @@ import { HealthApi } from './health-api';
 const SESSION_ID_PATTERN = /^[A-Z2-9]{8}$/;
 const NOT_BLANK = /\S/;
 const WHOLE_NUMBER = /^\d+$/;
-const ISSUE_NUMBER = /^\s*\d+\s*$/;
+const ISSUE_NUMBER = /^\s*\d*\s*$/;
+const PROJECT_NOT_FOUND = 'notFound';
 const SEARCH_DELAY_MS = 300;
 const CREATE_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
   'ISSUE_NOT_FOUND',
@@ -120,7 +121,7 @@ export class StartPage {
     }),
     issueIid: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.min(1), Validators.pattern(ISSUE_NUMBER)],
+      validators: [Validators.min(1), Validators.pattern(ISSUE_NUMBER)],
     }),
   });
 
@@ -137,6 +138,7 @@ export class StartPage {
   );
 
   protected readonly createError = signal<string | null>(null);
+  protected readonly projectNotFound = errorMessage('PROJECT_NOT_FOUND');
   protected readonly creating = signal(false);
   protected readonly projects = signal(idle<ProjectSummary>());
   protected readonly issues = signal(idle<IssueSummary>());
@@ -244,12 +246,13 @@ export class StartPage {
       return;
     }
     const { name, gitlabProjectId, issueIid } = this.createForm.getRawValue();
+    const issue = issueIid.trim();
     this.creating.set(true);
     this.api
       .createSession({
         name: name.trim(),
         gitlabProjectId: gitlabProjectId.trim(),
-        issueIid: Number(issueIid.trim()),
+        ...(issue === '' ? {} : { issueIid: Number(issue) }),
       })
       .subscribe({
         next: ({ sessionId, participantId, token }) => {
@@ -258,6 +261,13 @@ export class StartPage {
         },
         error: (error: unknown) => {
           this.creating.set(false);
+          if (error instanceof ApiError && error.errorCode === 'PROJECT_NOT_FOUND') {
+            this.errorState.clear();
+            const project = this.createForm.controls.gitlabProjectId;
+            project.setErrors({ [PROJECT_NOT_FOUND]: true });
+            project.markAsTouched();
+            return;
+          }
           const message = formErrorMessage(error, CREATE_FORM_ERRORS);
           if (message !== null) {
             this.errorState.clear();

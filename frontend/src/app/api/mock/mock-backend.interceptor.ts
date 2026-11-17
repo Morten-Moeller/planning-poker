@@ -31,6 +31,7 @@ import {
 } from './mock-session';
 
 const MOCK_MISSING_ISSUE_IID = 404;
+const MOCK_MISSING_PROJECT_ID = '404';
 const MOCK_TAKEN_NAME = 'Ben';
 const SESSION_PATH = /^\/api\/sessions\/([^/?]+)(\/[^?]*)?/;
 const PROJECT_ISSUES_PATH = /^\/api\/projects\/[^/?]+\/issues$/;
@@ -106,8 +107,12 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
     return ok(issueList(MOCK_ISSUES.filter((issue) => issue.title.toLowerCase().includes(search))));
   }
   if (path === '/api/sessions' && request.method === 'POST') {
-    if ((request.body as CreateSessionRequest | null)?.issueIid === MOCK_MISSING_ISSUE_IID) {
+    const body = request.body as CreateSessionRequest | null;
+    if (body?.issueIid === MOCK_MISSING_ISSUE_IID) {
       return problem(404, 'Not Found', 'ISSUE_NOT_FOUND', 'Unknown issue.');
+    }
+    if (body?.issueIid === undefined && body?.gitlabProjectId === MOCK_MISSING_PROJECT_ID) {
+      return problem(404, 'Not Found', 'PROJECT_NOT_FOUND', 'Unknown project.');
     }
     const created: CreateSessionResponse = {
       sessionId: MOCK_SESSION_ID,

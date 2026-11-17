@@ -9,6 +9,8 @@ import planningpoker.gitlab.GitLabClient;
 import planningpoker.gitlab.GitLabException;
 import planningpoker.gitlab.GitLabProject;
 import planningpoker.gitlab.ProjectPage;
+import planningpoker.platform.ApiException;
+import planningpoker.platform.ErrorCode;
 import planningpoker.session.api.ProjectListResponse;
 import planningpoker.session.api.ProjectListResponse.ProjectSummary;
 
@@ -36,12 +38,25 @@ public class GitLabProjects {
 
     public Optional<Project> loadForSession(String projectId) {
         try {
-            GitLabProject project = client.loadProject(projectId);
-            return Optional.of(
-                    new Project(project.id(), project.name(), project.pathWithNamespace(), project.webUrl()));
+            return Optional.of(project(client.loadProject(projectId)));
         } catch (GitLabException e) {
             return Optional.empty();
         }
+    }
+
+    public Project loadRequired(String projectId) {
+        try {
+            return project(client.loadProject(projectId));
+        } catch (GitLabException e) {
+            if (e.reason() == GitLabException.Reason.NOT_FOUND) {
+                throw new ApiException(ErrorCode.PROJECT_NOT_FOUND, "The project does not exist in GitLab.");
+            }
+            throw GitLabIssues.gitLabError(e);
+        }
+    }
+
+    private static Project project(GitLabProject project) {
+        return new Project(project.id(), project.name(), project.pathWithNamespace(), project.webUrl());
     }
 
     private ProjectListResponse fromMembership(String query, int page) {

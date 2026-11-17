@@ -47,8 +47,8 @@ const invalidCases: InvalidCase[] = [
     text: 'Bitte die GitLab-Projekt-ID eingeben',
   },
   {
-    name: 'an empty issue number',
-    values: { ...VALID, issue: '' },
+    name: 'issue number abc',
+    values: { ...VALID, issue: 'abc' },
     errorId: 'create-issue-error',
     text: 'Bitte eine Issue-Nummer ab 1 eingeben',
   },
@@ -190,6 +190,62 @@ describe('StartPage', () => {
       token: 'token-anna',
     });
     expect(router.url).toBe('/session/K7P2QX9M');
+  });
+
+  it.each(['', '   '])(
+    'creates the session without issueIid when the issue field holds "%s"',
+    async (issue) => {
+      answerHealth();
+      fillCreateForm({ name: 'Anna', project: '1234', issue });
+
+      await submitCreate();
+      const request = http.expectOne('/api/sessions');
+      expect(request.request.body).toEqual({ name: 'Anna', gitlabProjectId: '1234' });
+      request.flush(
+        { sessionId: 'K7P2QX9M', participantId: 'p-anna', token: 'token-anna' },
+        { status: 201, statusText: 'Created' },
+      );
+      await fixture.whenStable();
+
+      expect(router.url).toBe('/session/K7P2QX9M');
+    },
+  );
+
+  it('labels the issue field as optional with a hint', async () => {
+    answerHealth();
+    await fixture.whenStable();
+
+    const form = element('create-form');
+    expect(form?.textContent).toContain('Issue (optional)');
+    expect(form?.textContent).toContain('Optional: Issue, mit dem die Sitzung startet');
+  });
+
+  it('shows PROJECT_NOT_FOUND at the project field and clears it after a change', async () => {
+    answerHealth();
+    fillCreateForm({ name: 'Anna', project: '999999', issue: '' });
+
+    await submitCreate();
+    http.expectOne('/api/sessions').flush(
+      {
+        type: 'about:blank',
+        title: 'Not Found',
+        status: 404,
+        detail: 'detail',
+        errorCode: 'PROJECT_NOT_FOUND',
+      },
+      { status: 404, statusText: 'Not Found' },
+    );
+    await fixture.whenStable();
+
+    expect(text('create-project-error')).toBe('Das GitLab-Projekt wurde nicht gefunden.');
+    expect(element('create-error')).toBeNull();
+    expect(TestBed.inject(ErrorState).error()).toBeNull();
+    expect(router.url).toBe('/');
+
+    type('create-project', '1234');
+    await fixture.whenStable();
+
+    expect(element('create-project-error')).toBeNull();
   });
 
   it.each(formErrors)(

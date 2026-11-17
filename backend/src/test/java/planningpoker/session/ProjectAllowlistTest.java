@@ -57,6 +57,20 @@ class ProjectAllowlistTest {
     }
 
     @Test
+    void rejectsAProjectOutsideTheAllowlistWithoutIssueBeforeAskingGitLab() {
+        given().contentType(ContentType.JSON)
+                .body("{\"name\":\"Anna\",\"gitlabProjectId\":\"5678\"}")
+                .when()
+                .post("/api/sessions")
+                .then()
+                .statusCode(403)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("PROJECT_NOT_ALLOWED"));
+
+        gitlab.verify(0, anyRequestedFor(anyUrl()));
+    }
+
+    @Test
     void comparesTheProjectIdExactlyAfterTrimming() {
         create("12345").statusCode(403).body("errorCode", equalTo("PROJECT_NOT_ALLOWED"));
         create("group/App").statusCode(403).body("errorCode", equalTo("PROJECT_NOT_ALLOWED"));

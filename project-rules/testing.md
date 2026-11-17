@@ -138,7 +138,8 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   `issue-filter.spec.ts` checks the project name and „von N Issues“, `result-round.spec.ts` the
   error text in the confirm dialog (spec 0030); `create-and-join.spec.ts` checks the start and
   join page at 375 px light and dark and the state `join-not-found` (spec 0031);
-  `project-picker.spec.ts` opens the project list with a click into the empty field (spec 0032);
+  `project-picker.spec.ts` opens the project list with a click into the empty field (spec 0032)
+  and creates a session with the project alone, then releases issue 43 in the room (spec 0033);
   `session-room.spec.ts` compares the size of `active-issue-iid` with the title (spec 0032).
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.
