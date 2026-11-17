@@ -1,14 +1,14 @@
 ---
 id: "0024"
 title: Ports für Backend und Frontend aus .env
-status: Review
+status: done
 risk: high
 adrs: ["0001"]
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#25"
+note: alle Kriterien erfüllt
 ---
 
 # Ports für Backend und Frontend aus .env
