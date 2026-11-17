@@ -1,14 +1,14 @@
 ---
 id: "0032"
 title: Projektliste beim Fokus und Nachträge zum Design-Rework
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#32"
+note: alle Kriterien erfüllt
 ---
 
 # Projektliste beim Fokus und Nachträge zum Design-Rework
