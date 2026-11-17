@@ -8,5 +8,9 @@ import { SessionStore } from '../api/session-store';
 })
 export class ParticipantList {
   protected readonly store = inject(SessionStore);
-  protected readonly voting = computed(() => this.store.phase() === 'VOTING');
+  protected readonly myId = computed(() => this.store.me()?.participantId ?? null);
+  protected readonly round = computed(() => {
+    const phase = this.store.phase();
+    return phase === 'VOTING' || phase === 'REVEALED';
+  });
 }

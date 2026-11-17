@@ -1,0 +1,45 @@
+@if (store.session(); as session) {
+  <section class="facts" data-testid="session-facts">
+    <h2 i18n="@@facts.title">Fakten</h2>
+    <dl>
+      <dt i18n="@@session.idLabel">Session-ID</dt>
+      <dd class="id" data-testid="session-id">{{ session.sessionId }}</dd>
+      <dt i18n="@@session.phaseLabel">Phase</dt>
+      <dd data-testid="session-phase">
+        @switch (session.phase) {
+          @case ('LOBBY') {
+            <ng-container i18n="@@session.phase.LOBBY">Wartet auf ein Issue</ng-container>
+          }
+          @case ('DISCUSSION') {
+            <ng-container i18n="@@session.phase.DISCUSSION">Diskussion</ng-container>
+          }
+          @case ('VOTING') {
+            <ng-container i18n="@@session.phase.VOTING">Runde läuft</ng-container>
+          }
+          @case ('REVEALED') {
+            <ng-container i18n="@@session.phase.REVEALED">Runde aufgelöst</ng-container>
+          }
+        }
+      </dd>
+      <dt i18n="@@session.roleLabel">Deine Rolle</dt>
+      <dd data-testid="session-role">
+        @switch (session.me.role) {
+          @case ('SCRUM_MASTER') {
+            <ng-container i18n="@@session.role.SCRUM_MASTER">Scrum Master</ng-container>
+          }
+          @case ('DEVELOPER') {
+            <ng-container i18n="@@session.role.DEVELOPER">Entwickler</ng-container>
+          }
+        }
+      </dd>
+      <dt i18n="@@session.participantsLabel">Teilnehmer</dt>
+      <dd data-testid="session-participants">
+        <span data-testid="session-participant-count">{{ session.participants.length }}</span
+        >&ngsp;
+        <span data-testid="session-developer-count" i18n="@@facts.developers"
+          >({{ developers() }} Entwickler)</span
+        >
+      </dd>
+    </dl>
+  </section>
+}

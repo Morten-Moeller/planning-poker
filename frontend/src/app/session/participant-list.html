@@ -1,40 +1,86 @@
 <section class="participants">
-  <h2 i18n="@@participants.title">Teilnehmer</h2>
+  <h2 data-testid="participant-title" i18n="@@participants.title">
+    Teilnehmer · {{ store.participants().length }}
+  </h2>
   <ul data-testid="participant-list">
     @for (participant of store.participants(); track participant.id) {
-      <li data-testid="participant" [class.disconnected]="!participant.connected">
-        <span class="name" data-testid="participant-name">{{ participant.name }}</span>
-        @if (participant.role === 'SCRUM_MASTER') {
-          <span class="role" data-testid="participant-role" i18n="@@participants.scrumMaster"
-            >Scrum Master</span
-          >
-        }
-        <span class="status">
-          @if (participant.connected) {
-            <span class="symbol" aria-hidden="true">●</span>
-            <span data-testid="participant-status" i18n="@@participants.connected">verbunden</span>
+      @let scrumMaster = participant.role === 'SCRUM_MASTER';
+      @let voted = round() && !scrumMaster && participant.hasVoted;
+      <li
+        data-testid="participant"
+        [class.me]="participant.id === myId()"
+        [class.disconnected]="!participant.connected"
+      >
+        <span
+          class="chip"
+          data-testid="participant-chip"
+          aria-hidden="true"
+          [class.none]="scrumMaster"
+          [class.filled]="voted"
+          [class.empty]="!scrumMaster && !voted"
+        ></span>
+        <span class="body">
+          <span class="head">
+            <span class="name" data-testid="participant-name">{{ participant.name }}</span>
+            @if (participant.id === myId()) {
+              <span class="you" data-testid="participant-me" i18n="@@participants.me">(du)</span>
+            }
+            @if (scrumMaster) {
+              <span class="role"
+                ><span aria-hidden="true">★ </span
+                ><span data-testid="participant-role" i18n="@@participants.scrumMaster"
+                  >Scrum Master</span
+                ></span
+              >
+            }
+          </span>
+          @if (scrumMaster) {
+            <span
+              class="activity"
+              data-testid="participant-activity"
+              i18n="@@participants.moderates"
+              >Moderiert, schätzt nicht mit</span
+            >
+          } @else if (round()) {
+            @if (participant.hasVoted) {
+              <span class="activity voted"
+                ><span aria-hidden="true">✓ </span
+                ><span data-testid="participant-vote-status" i18n="@@participants.voted"
+                  >Hat geschätzt</span
+                ></span
+              >
+            } @else {
+              <span class="activity pending"
+                ><span aria-hidden="true">○ </span
+                ><span data-testid="participant-vote-status" i18n="@@participants.pending"
+                  >Ausstehend</span
+                ></span
+              >
+            }
+          } @else if (store.phase() === 'DISCUSSION') {
+            <span
+              class="activity"
+              data-testid="participant-activity"
+              i18n="@@participants.discussing"
+              >Diskutiert</span
+            >
           } @else {
-            <span class="symbol" aria-hidden="true">○</span>
-            <span data-testid="participant-status" i18n="@@participants.disconnected"
+            <span class="activity" data-testid="participant-activity" i18n="@@participants.ready"
+              >Bereit</span
+            >
+          }
+        </span>
+        <span class="connection">
+          @if (participant.connected) {
+            <span aria-hidden="true">● </span
+            ><span data-testid="participant-status" i18n="@@participants.connected">verbunden</span>
+          } @else {
+            <span aria-hidden="true">○ </span
+            ><span data-testid="participant-status" i18n="@@participants.disconnected"
               >getrennt</span
             >
           }
         </span>
-        @if (voting() && participant.role === 'DEVELOPER') {
-          <span class="vote">
-            @if (participant.hasVoted) {
-              <span class="symbol" aria-hidden="true">✓</span>
-              <span data-testid="participant-vote-status" i18n="@@participants.voted"
-                >Hat geschätzt</span
-              >
-            } @else {
-              <span class="symbol" aria-hidden="true">…</span>
-              <span data-testid="participant-vote-status" i18n="@@participants.pending"
-                >Ausstehend</span
-              >
-            }
-          </span>
-        }
       </li>
     }
   </ul>

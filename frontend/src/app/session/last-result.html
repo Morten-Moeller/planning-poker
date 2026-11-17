@@ -1,0 +1,51 @@
+@if (entry(); as entry) {
+  <section class="last-result" data-testid="last-result">
+    <h2 i18n="@@lastResult.title">Zuletzt geschätzt</h2>
+    <div class="content">
+      @if (entry.finalCard; as finalCard) {
+        <div class="final">
+          <span class="final-label" i18n="@@lastResult.finalCard">Endwert</span>
+          <span
+            class="final-value"
+            data-testid="last-result-final-card"
+            [attr.role]="name(finalCard) === null ? null : 'img'"
+            [attr.aria-label]="name(finalCard)"
+            >{{ symbol(finalCard) }}</span
+          >
+        </div>
+      }
+      <div class="facts">
+        <span class="issue" data-testid="last-result-issue"
+          ><span class="iid">#{{ entry.issueIid }}</span> {{ entry.issueTitle }}</span
+        >
+        <span class="round">
+          <span data-testid="last-result-round" i18n="@@lastResult.round"
+            >Runde {{ entry.roundNumber }}</span
+          >
+          <span aria-hidden="true"> · </span>
+          <span i18n="@@lastResult.cards">Karten</span>&ngsp;<span
+            class="cards"
+            data-testid="last-result-cards"
+          >
+            @for (vote of entry.votes; track vote.participantId; let last = $last) {
+              <span
+                [attr.role]="name(vote.card) === null ? null : 'img'"
+                [attr.aria-label]="name(vote.card)"
+                >{{ symbol(vote.card) }}</span
+              >
+              @if (!last) {
+                <span aria-hidden="true"> · </span>
+              }
+            }
+          </span>
+        </span>
+        <span class="saved"
+          ><span aria-hidden="true">✓ </span
+          ><span data-testid="last-result-saved" i18n="@@lastResult.saved"
+            >Als Kommentar in GitLab gespeichert</span
+          ></span
+        >
+      </div>
+    </div>
+  </section>
+}

@@ -44,9 +44,9 @@ change touches.
 | `backend/src/main/java/planningpoker/realtime/` | `backend/src/test/java/planningpoker/realtime/` (from spec 0009) | `frontend/e2e/create-and-join.spec.ts` |
 | `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/project-picker.spec.ts` |
 | `frontend/src/app/api/` | `frontend/src/app/api/*.spec.ts` (from spec 0005) | – |
-| `frontend/src/app/shell/`, `frontend/src/styles.scss`, `frontend/src/index.html` | `frontend/src/app/shell/*.spec.ts` | `frontend/e2e/theme.spec.ts`, `frontend/e2e/layout.spec.ts` |
+| `frontend/src/app/shell/`, `frontend/src/styles.scss`, `frontend/src/index.html` | `frontend/src/app/shell/*.spec.ts` | `frontend/e2e/theme.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/design-sidebar.spec.ts` |
 | `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/full-flow.spec.ts` |
-| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/issue-filter.spec.ts`, `frontend/e2e/theme.spec.ts` |
+| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/issue-filter.spec.ts`, `frontend/e2e/theme.spec.ts`, `frontend/e2e/design-sidebar.spec.ts` |
 
 ## End-to-end
 
@@ -123,7 +123,11 @@ change touches.
   `layout.spec.ts` (spec 0019) joins one developer at a viewport of 375×800 and checks the
   320 px side column at 1440×900 (spec 0027); `theme.spec.ts` (spec 0027) reads the theme
   CSS variables under `emulateMedia({ colorScheme })`, the fonts and the keyboard focus on the start
-  page and joins two developers (`Ben`, and `Cem` at 375×800) for the toolbar.
+  page and joins two developers (`Ben`, and `Cem` at 375×800) for the toolbar;
+  `layout.spec.ts` also checks at 375×800 that the side column stands under the main area (spec
+  0028); `design-sidebar.spec.ts` (spec 0028) joins `Ben` on issue 42, compares `data-motif` of
+  both roles before and after „Neue Runde“, confirms the result `5` (notes mapping of issue 42)
+  and checks `last-result` until the release of issue 43.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.
 
