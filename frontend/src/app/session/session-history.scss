@@ -1,8 +1,12 @@
+@use '@angular/material' as mat;
+
 .history {
-  background: transparent;
-  box-shadow: none;
-  --mat-expansion-header-text-color: var(--mat-sys-on-surface);
-  --mat-expansion-container-background-color: transparent;
+  @include mat.expansion-overrides(
+    (
+      container-background-color: transparent,
+      container-elevation-shadow: none,
+    )
+  );
 }
 
 mat-expansion-panel-header {
