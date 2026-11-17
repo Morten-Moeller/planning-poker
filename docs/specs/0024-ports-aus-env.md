@@ -1,7 +1,7 @@
 ---
 id: "0024"
 title: Ports für Backend und Frontend aus .env
-status: approved
+status: Review
 risk: high
 adrs: ["0001"]
 owner: Morten Möller

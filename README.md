@@ -15,11 +15,14 @@ fünf Befehle die Anwendung; die letzten beiden laufen je in einem eigenen Termi
 
 ```bash
 git clone https://github.com/Morten-Moeller/planning-poker.git && cd planning-poker
-cp .env.example .env                                       # GITLAB_TOKEN eintragen, write-weight prüfen
-make install                                               # Abhängigkeiten, Playwright-Browser
-(set -a && . ./.env && cd backend && ./mvnw quarkus:dev)   # Backend auf http://localhost:8080
-pnpm -C frontend start                                     # Frontend auf http://localhost:4200
+cp .env.example .env    # GITLAB_TOKEN eintragen, write-weight prüfen
+make install            # Abhängigkeiten, Playwright-Browser
+make backend            # Backend auf http://localhost:8080 (BACKEND_PORT)
+make frontend           # Frontend auf http://localhost:4200 (FRONTEND_PORT)
 ```
+
+`make backend` und `make frontend` lesen `.env` je in ihrer eigenen Shell und geben keine Werte
+daraus aus; kein anderes Make-Ziel lädt `.env`.
 
 Danach `http://localhost:4200` öffnen; die Startseite zeigt, ob das Backend erreichbar ist
 (`GET /api/health`). Ohne `GITLAB_TOKEN` startet das Backend nicht und nennt den fehlenden
@@ -30,10 +33,11 @@ GitLab); eine andere GitLab-Instanz setzt zum Beispiel
 Das Frontend erreicht das Backend über den Dev-Proxy (`frontend/proxy.conf.mjs`, Pfade `/api`
 und `/ws`); es gibt kein CORS.
 
-Ist Port 8080 oder 4200 belegt: Backend mit `./mvnw quarkus:dev -Dquarkus.http.port=18080`,
-Frontend mit `BACKEND_PORT=18080 pnpm -C frontend start --port 14200`. `make e2e` nimmt
-dieselben Variablen `BACKEND_PORT` und `FRONTEND_PORT`, dazu `GITLAB_DOUBLE_PORT` für das
-GitLab-Double.
+Ist Port 8080 oder 4200 belegt: in `.env` zum Beispiel `BACKEND_PORT=18080` und
+`FRONTEND_PORT=14200` setzen. `make backend` startet das Backend auf `BACKEND_PORT`,
+`make frontend` das Frontend auf `FRONTEND_PORT` und richtet den Dev-Proxy auf `BACKEND_PORT`.
+`make e2e` liest `.env` nicht; es nimmt dieselben Variablen `BACKEND_PORT` und `FRONTEND_PORT`,
+dazu `GITLAB_DOUBLE_PORT` für das GitLab-Double, aus der Umgebung des Aufrufs.
 
 ## Variante
 
@@ -67,7 +71,7 @@ den Schlüssel so ab: Großbuchstaben, `.` und `-` werden zu `_`. Ausnahme ist d
 
 `.env.example` enthält jede Zeile der Tabelle: `GITLAB_TOKEN` leer als Pflichtzeile,
 `PLANNINGPOKER_GITLAB_WRITE_WEIGHT=true` aktiv, alle übrigen auskommentiert mit dem Standardwert,
-dazu `QUARKUS_HTTP_PORT` für den Port des Backends.
+dazu `BACKEND_PORT` und `FRONTEND_PORT` für die Ports von `make backend` und `make frontend`.
 
 Token: Ein klassischer Personal Access Token oder ein Project Access Token mit Scope `api` und
 mindestens der Rolle Developer im Projekt funktioniert. Das Backend liest damit Issues und schreibt
@@ -270,6 +274,7 @@ Dieses Repository verwendet den AI Development Harness. Einstieg: `AGENTS.md` un
 | Ich will | Befehl |
 |---|---|
 | Git-Hooks einrichten (einmal je Klon) | `make setup` |
+| Anwendung lokal starten | `make backend`, `make frontend` (je ein Terminal; Ports aus `.env`) |
 | alle Gates laufen lassen | `make check` (test, typecheck, lint, sast, deps, drift) |
 | End-to-End-Tests | `make e2e` (startet Backend und Frontend selbst; Ports über `BACKEND_PORT`, `FRONTEND_PORT`) |
 | Formatierer anwenden | `make format` |
