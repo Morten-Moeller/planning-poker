@@ -1,7 +1,7 @@
 ---
 id: "0029"
 title: Design Werkbank, Teil C, Tisch und Karten
-status: in Arbeit
+status: Review
 risk: medium
 adrs: []
 owner: Morten Möller
@@ -78,16 +78,16 @@ keine neuen
 
 ## Akzeptanzkriterien
 
-| Nr | Kriterium | Prüfung |
-|---|---|---|
-| A1 | `app-card` setzt je Zustand die passenden Attribute: gewählt mit `aria-pressed="true"` und „✓ GEWÄHLT“, gesperrt mit `aria-disabled="true"`, Ausreißer mit dem Text „Ausreißer“. `aria-label` ist „Karte 5“, „Karte Unklar“ bzw. „Karte Kaffeepause“. Die SVG-Glyphen sind `aria-hidden` und enthalten kein `<metadata>`. | Unit `frontend/src/app/session/card.spec.ts` |
-| A2 | Im Kartenfächer bewegt Pfeil rechts den Fokus zur nächsten Karte, und Enter wählt sie. In `DISCUSSION` sendet kein Klick eine Stimme. | Unit `frontend/src/app/session/card-deck.spec.ts` |
-| A3 | Die Phasenleiste zeigt „Runde 2“, den Zähler, den Fortschrittsbalken mit passendem `aria-valuenow` und die Timer-Zustände. Der Live-Text ändert sich nur alle 15 s und in den letzten 10 s. | Unit `frontend/src/app/session/round-status.spec.ts`, `round-timer.spec.ts` |
-| A4 | Der Tisch zeigt je Entwickler den Platz mit „✓ geschätzt“, „ausstehend“ oder „getrennt“. In `VOTING` ist kein Kartenwert eines anderen Teilnehmers im DOM, nach der Auflösung sind es alle Werte. | Unit `frontend/src/app/session/seat-table.spec.ts` |
-| A5 | Die aufgedeckte Ansicht zeigt Verteilung, Orientierung, Ausreißer, Konsens und „Nicht geschätzt“. Unter reduzierter Bewegung ist kein Konfetti im DOM, und die Karten erscheinen ohne Drehung. | Unit `frontend/src/app/session/round-result.spec.ts`; End-to-End `frontend/e2e/consensus.spec.ts` |
-| A6 | Im Browser: Ein Entwickler wählt per Tastatur eine Karte, der Tisch des Scrum Masters zeigt „✓ geschätzt“ ohne Wert. Nach der Auflösung sehen beide die Karten am Tisch. | End-to-End `frontend/e2e/voting-round.spec.ts` (neuer Fall) |
-| A7 | Bei 375 px hat der Fächer 6 Spalten, jede Karte ist mindestens 44 px hoch und breit, und es gibt keinen horizontalen Scrollbalken. | End-to-End `frontend/e2e/voting-round.spec.ts` (neuer Fall) |
-| A8 | `make check` und `make e2e` sind grün, alle bestehenden `data-testid` von `card-deck`, `round-status` und `round-result` bleiben. | Aufruf `make check`, `make e2e` |
+| Nr  | Kriterium                                                                                                                                                                                                                                                                                                                 | Prüfung                                                                                           |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| A1  | `app-card` setzt je Zustand die passenden Attribute: gewählt mit `aria-pressed="true"` und „✓ GEWÄHLT“, gesperrt mit `aria-disabled="true"`, Ausreißer mit dem Text „Ausreißer“. `aria-label` ist „Karte 5“, „Karte Unklar“ bzw. „Karte Kaffeepause“. Die SVG-Glyphen sind `aria-hidden` und enthalten kein `<metadata>`. | Unit `frontend/src/app/session/card.spec.ts`                                                      |
+| A2  | Im Kartenfächer bewegt Pfeil rechts den Fokus zur nächsten Karte, und Enter wählt sie. In `DISCUSSION` sendet kein Klick eine Stimme.                                                                                                                                                                                     | Unit `frontend/src/app/session/card-deck.spec.ts`                                                 |
+| A3  | Die Phasenleiste zeigt „Runde 2“, den Zähler, den Fortschrittsbalken mit passendem `aria-valuenow` und die Timer-Zustände. Der Live-Text ändert sich nur alle 15 s und in den letzten 10 s.                                                                                                                               | Unit `frontend/src/app/session/round-status.spec.ts`, `round-timer.spec.ts`                       |
+| A4  | Der Tisch zeigt je Entwickler den Platz mit „✓ geschätzt“, „ausstehend“ oder „getrennt“. In `VOTING` ist kein Kartenwert eines anderen Teilnehmers im DOM, nach der Auflösung sind es alle Werte.                                                                                                                         | Unit `frontend/src/app/session/seat-table.spec.ts`                                                |
+| A5  | Die aufgedeckte Ansicht zeigt Verteilung, Orientierung, Ausreißer, Konsens und „Nicht geschätzt“. Unter reduzierter Bewegung ist kein Konfetti im DOM, und die Karten erscheinen ohne Drehung.                                                                                                                            | Unit `frontend/src/app/session/round-result.spec.ts`; End-to-End `frontend/e2e/consensus.spec.ts` |
+| A6  | Im Browser: Ein Entwickler wählt per Tastatur eine Karte, der Tisch des Scrum Masters zeigt „✓ geschätzt“ ohne Wert. Nach der Auflösung sehen beide die Karten am Tisch.                                                                                                                                                  | End-to-End `frontend/e2e/voting-round.spec.ts` (neuer Fall)                                       |
+| A7  | Bei 375 px hat der Fächer 6 Spalten, jede Karte ist mindestens 44 px hoch und breit, und es gibt keinen horizontalen Scrollbalken.                                                                                                                                                                                        | End-to-End `frontend/e2e/voting-round.spec.ts` (neuer Fall)                                       |
+| A8  | `make check` und `make e2e` sind grün, alle bestehenden `data-testid` von `card-deck`, `round-status` und `round-result` bleiben.                                                                                                                                                                                         | Aufruf `make check`, `make e2e`                                                                   |
 
 ## Contracts
 
@@ -146,7 +146,9 @@ Dateien:
 - `frontend/src/app/session/session-page.html`: ändern nach dem Merge von 0028, Timer-Chip in der Phasenleiste, Reihenfolge nach Design
 - `frontend/src/app/session/session-page.ts`: ändern nach dem Merge von 0028, falls Imports sich ändern
 - `frontend/src/app/session/session-page.scss`: ändern nach dem Merge von 0028, falls die Reihenfolge es braucht
-- `frontend/e2e/result-round.spec.ts`: ändern, Erwartung an die Verteilung ohne „:“ (Datei von 0030; ist dessen PR noch offen, löst der Zweite den Konflikt beim Merge)
+- `frontend/src/app/session/motif-name.ts`: neu, Name des Motivs für „Kartensatz: <Name>“
+- `project-rules/frontend.md`: ändern, gesperrter Fächer in `DISCUSSION`, Karte und Tisch (Teil C), Ausnahme für die Glyphen
+- `frontend/e2e/result-round.spec.ts`: ändern, Erwartung an die Verteilung ohne „:“ über `result-count-card` und `result-count-votes` (Datei von 0030; ist dessen PR noch offen, löst der Zweite den Konflikt beim Merge)
 
 Schritte:
 
@@ -158,16 +160,16 @@ Schritte:
 
 Tests:
 
-| Kriterium | Test |
-|---|---|
-| A1 | `card.spec.ts` |
-| A2 | `card-deck.spec.ts` |
-| A3 | `round-status.spec.ts`, `round-timer.spec.ts` mit Fake-Timern |
-| A4 | `seat-table.spec.ts` |
-| A5 | `round-result.spec.ts`, `consensus.spec.ts` |
-| A6 | `voting-round.spec.ts` |
-| A7 | `voting-round.spec.ts` |
-| A8 | `make check`, `make e2e` |
+| Kriterium | Test                                                          |
+| --------- | ------------------------------------------------------------- |
+| A1        | `card.spec.ts`                                                |
+| A2        | `card-deck.spec.ts`                                           |
+| A3        | `round-status.spec.ts`, `round-timer.spec.ts` mit Fake-Timern |
+| A4        | `seat-table.spec.ts`                                          |
+| A5        | `round-result.spec.ts`, `consensus.spec.ts`                   |
+| A6        | `voting-round.spec.ts`                                        |
+| A7        | `voting-round.spec.ts`                                        |
+| A8        | `make check`, `make e2e`                                      |
 
 Testdaten: Sitzung über die Startseite, Issue 42 des GitLab-Doubles.
 

@@ -45,6 +45,24 @@
   color: var(--mat-sys-on-surface);
 }
 
+.motif {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font: var(--mat-sys-body-small);
+  color: var(--app-on-surface-muted);
+}
+
+.swatch {
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  background-color: var(--app-card-accent, var(--mat-sys-primary));
+  background-image: var(--app-card-pattern, none);
+  background-size: var(--app-card-pattern-size, auto);
+}
+
 .hint {
   margin: 0;
   padding: 12px var(--app-space-m);
@@ -215,6 +233,10 @@
 }
 
 @media (max-width: 599px) {
+  .motif {
+    display: none;
+  }
+
   .stats {
     grid-template-columns: minmax(0, 1fr);
   }

@@ -86,8 +86,9 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   „ohne Gewicht“). When the phase changes from `REVEALED` to `LOBBY`, the panel loads page 1 again
   with the current filters. The filters live only in the component.
 - Discussion (spec 0026, ADR 0010): in `DISCUSSION` the session page shows the active issue and
-  `RoundStatus` with `discussion-hint` to both roles, no card deck, no counter and no remaining
-  time; the phase reads „Diskussion“. The scrum master sees `round-start` („Schätzung starten“,
+  `RoundStatus` with `discussion-hint` to both roles, no counter and no remaining time; the
+  developer sees the locked card deck `card-deck-locked` (spec 0029), which sends no vote, and
+  `card-deck` exists only in `VOTING`; the phase reads „Diskussion“. The scrum master sees `round-start` („Schätzung starten“,
   `ApiService.startVoting`) and, with a timer, `round-start-timer` („Timer: 1 min“). An issue
   switch in `LOBBY` or `DISCUSSION` opens no dialog. The participant list shows the vote status
   only in `VOTING` and `REVEALED` (spec 0028).
@@ -162,9 +163,19 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
     title reads „Das Ergebnis ist übernommen. …“ and `last-result` („Zuletzt geschätzt“, final
     card, issue, round, cards, „✓ Als Kommentar in GitLab gespeichert“) follows until the next
     release. The scrum master never sees it.
-  - Card and table (part C) and control panel, dialogs, snackbar and banner (part D) follow
-    their specs; they take colour and pattern of the round only from the `--app-card-*`
-    variables.
+  - Card and table (part C, spec 0029): `app-card` (`session/card.ts`) is the only card view,
+    with the states open, chosen, locked, hidden, pending and revealed and the `aria-label`
+    „Karte <Wert>“. The deck is a `role="group"` „Deine Karte“ with arrow keys, Home and End;
+    `RoundStatus` holds the phase bar (round, counter, progress bar, `round-timer`, „Kartensatz:
+    <Name>“ from `motif-name.ts`), projects the active issue below the bar and shows
+    `seat-table` in `VOTING`; `RoundResult` does the same in `REVEALED`. The glyphs of ? and ☕
+    come from `public/question-mark.svg` and `public/coffee-break.svg` through `card-glyphs.ts`
+    (`fetch`, parse, remove metadata, scripts, event and link attributes, then
+    `bypassSecurityTrustHtml`); this is the only use of `bypassSecurityTrust…`. Confetti and the
+    flip of the revealed cards are not rendered under `prefers-reduced-motion: reduce`
+    (`reduced-motion.ts`).
+  - Control panel, dialogs, snackbar and banner (part D) follow their spec; they take colour and
+    pattern of the round only from the `--app-card-*` variables.
   - Motion and focus: transitions follow the section „Fokus und Bewegung“ of the design system and
     stop under `prefers-reduced-motion: reduce`; the focus ring of `styles.scss` stays on every
     control; colour is never the only carrier of a state.
@@ -174,7 +185,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   source locale `de` (geprüft: eslint `@angular-eslint/template/i18n`). Error texts come from the
   `errorCode`, never from the API message.
 - Markdown from GitLab goes through `marked` and `[innerHTML]` with Angular's built-in
-  sanitizer; never `bypassSecurityTrust…`.
+  sanitizer; never `bypassSecurityTrust…` (the only exception are the two own card glyphs of
+  part C).
 - Accessibility: keyboard reachable, labelled controls, contrast checked (geprüft: eslint
   `angular.configs.templateAccessibility`). Findings on colour values are reported, not fixed.
 - Controls that developers must not use are not rendered (not only hidden); the backend enforces

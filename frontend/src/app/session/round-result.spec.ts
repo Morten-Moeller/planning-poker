@@ -167,7 +167,8 @@ describe('RoundResult', () => {
   it('shows the count per card in deck order, the average with a comma and the most frequent cards', async () => {
     await open(numbers);
 
-    expect(texts('result-count')).toEqual(['2: 2 Stimmen', '3: 1 Stimme', '13: 1 Stimme']);
+    expect(texts('result-count-card')).toEqual(['2', '3', '13']);
+    expect(texts('result-count-votes')).toEqual(['2 Stimmen', '1 Stimme', '1 Stimme']);
     expect(texts('result-average')).toEqual(['5,0']);
     expect(texts('result-most-frequent')).toEqual(['2']);
   });
@@ -183,7 +184,8 @@ describe('RoundResult', () => {
     await open(coffeeAndQuestion);
 
     expect(texts('result-average')).toEqual(['kein Durchschnitt']);
-    expect(texts('result-count')).toEqual(['?: 1 Stimme', '☕: 2 Stimmen']);
+    expect(texts('result-count-card')).toEqual(['?', '☕']);
+    expect(texts('result-count-votes')).toEqual(['1 Stimme', '2 Stimmen']);
     const coffee = all('result-vote-card')[0];
     expect(coffee.textContent?.trim()).toBe('☕');
     expect(coffee.getAttribute('role')).toBe('img');

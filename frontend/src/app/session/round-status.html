@@ -39,8 +39,18 @@
       >
         <div class="progress-value" [style.width.%]="percent()"></div>
       </div>
+      @if (store.deadline()) {
+        <app-round-timer />
+      }
+    }
+    @if (motifLabel(); as name) {
+      <span class="motif" data-testid="motif-name"
+        ><span class="swatch" aria-hidden="true"></span
+        ><ng-container i18n="@@roundStatus.motif">Kartensatz: {{ name }}</ng-container></span
+      >
     }
   </div>
+  <ng-content />
 
   @if (discussion()) {
     @if (store.isScrumMaster()) {

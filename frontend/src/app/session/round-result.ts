@@ -8,6 +8,7 @@ import { Confetti } from './confetti';
 import { ConfirmResultData, ConfirmResultDialog } from './confirm-result-dialog';
 import { consensusCard } from './consensus';
 import { outlierCards } from './outliers';
+import { motifName } from './motif-name';
 import { prefersReducedMotion } from './reduced-motion';
 import { averageText } from './round-stats';
 import { SeatTable } from './seat-table';
@@ -24,6 +25,7 @@ export class RoundResult {
   protected readonly store = inject(SessionStore);
 
   readonly sessionId = input.required<string>();
+  readonly motif = input<number | null>(null);
 
   protected readonly symbol = cardSymbol;
   protected readonly name = cardName;
@@ -72,6 +74,10 @@ export class RoundResult {
     return absent.length === 1
       ? $localize`:@@roundResult.absentOne:${names}:names: war getrennt`
       : $localize`:@@roundResult.absentMany:${names}:names: waren getrennt`;
+  });
+  protected readonly motifLabel = computed(() => {
+    const motif = this.motif();
+    return motif === null ? null : motifName(motif);
   });
   protected readonly confetti = !prefersReducedMotion(inject(DOCUMENT));
   protected readonly stats = computed(() => this.round()?.stats ?? null);

@@ -293,4 +293,20 @@ describe('RoundStatus', () => {
     expect(text('all-voted-hint')).toBe(`✓ Alle verbundenen Entwickler haben geschätzt. ${absent}`);
     expect(all('pending-hint')).toHaveLength(0);
   });
+
+  it('shows the name of the motif and the timer in the phase bar', async () => {
+    await open(votingDeveloper);
+    fixture.componentRef.setInput('motif', 3);
+    await fixture.whenStable();
+
+    const bar = (fixture.nativeElement as HTMLElement).querySelector('.bar')!;
+    expect(text('motif-name')).toBe('Kartensatz: Ringe');
+    expect(bar.querySelector('[data-testid="round-timer"]')?.getAttribute('role')).toBe('timer');
+  });
+
+  it('shows no motif name without a motif', async () => {
+    await open(votingDeveloper);
+
+    expect(all('motif-name')).toHaveLength(0);
+  });
 });

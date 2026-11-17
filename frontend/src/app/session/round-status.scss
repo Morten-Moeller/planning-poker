@@ -41,6 +41,30 @@
   transition: width 200ms ease-out;
 }
 
+.motif {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font: var(--mat-sys-body-small);
+  color: var(--app-on-surface-muted);
+}
+
+.swatch {
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  background-color: var(--app-card-accent, var(--mat-sys-primary));
+  background-image: var(--app-card-pattern, none);
+  background-size: var(--app-card-pattern-size, auto);
+}
+
+@media (max-width: 599px) {
+  .motif {
+    display: none;
+  }
+}
+
 .discussion-timer {
   padding: 3px 10px;
   font: 600 14px / 20px var(--app-font-mono);

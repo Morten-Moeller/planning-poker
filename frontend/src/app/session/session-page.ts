@@ -11,7 +11,6 @@ import { LastResult, lastConfirmed } from './last-result';
 import { ParticipantList } from './participant-list';
 import { RoundResult } from './round-result';
 import { RoundStatus } from './round-status';
-import { RoundTimer } from './round-timer';
 import { SessionFacts } from './session-facts';
 import { SessionHistory } from './session-history';
 import { ShareSession } from './share-session';
@@ -26,7 +25,6 @@ import { TimerSetting } from './timer-setting';
     IssuePanel,
     TimerSetting,
     ActiveIssue,
-    RoundTimer,
     RoundStatus,
     CardDeck,
     RoundResult,

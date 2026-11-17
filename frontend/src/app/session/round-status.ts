@@ -3,13 +3,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { ApiService } from '../api/api.service';
 import { SessionStore } from '../api/session-store';
 import { CardDeck } from './card-deck';
-import { formatRemaining } from './round-timer';
+import { motifName } from './motif-name';
+import { RoundTimer, formatRemaining } from './round-timer';
 import { SeatTable } from './seat-table';
 import { TIMER_OPTIONS } from './timer-setting';
 
 @Component({
   selector: 'app-round-status',
-  imports: [MatButtonModule, CardDeck, SeatTable],
+  imports: [MatButtonModule, CardDeck, SeatTable, RoundTimer],
   templateUrl: './round-status.html',
   styleUrl: './round-status.scss',
 })
@@ -18,6 +19,7 @@ export class RoundStatus {
   protected readonly store = inject(SessionStore);
 
   readonly sessionId = input.required<string>();
+  readonly motif = input<number | null>(null);
 
   private readonly developers = computed(() =>
     this.store.participants().filter((participant) => participant.role === 'DEVELOPER'),
@@ -45,6 +47,10 @@ export class RoundStatus {
     return absent.length === 1
       ? $localize`:@@roundStatus.absentOne:${names}:names: ist getrennt und wird nicht abgewartet.`
       : $localize`:@@roundStatus.absentMany:${names}:names: sind getrennt und werden nicht abgewartet.`;
+  });
+  protected readonly motifLabel = computed(() => {
+    const motif = this.motif();
+    return motif === null ? null : motifName(motif);
   });
   protected readonly revealing = signal(false);
   protected readonly starting = signal(false);

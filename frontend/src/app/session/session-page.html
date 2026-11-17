@@ -49,23 +49,23 @@
         </div>
         <app-last-result />
       }
-      @if (store.activeIssue(); as issue) {
-        <app-active-issue [issue]="issue" />
-      }
-      @if (session.phase === 'DISCUSSION') {
-        <app-round-status [sessionId]="session.sessionId" />
-      }
-      @if (session.phase === 'VOTING') {
-        @if (session.round?.deadline) {
-          <app-round-timer />
-        }
-        <app-round-status [sessionId]="session.sessionId" />
-        @if (!store.isScrumMaster()) {
+      @if (session.phase === 'DISCUSSION' || session.phase === 'VOTING') {
+        <app-round-status [sessionId]="session.sessionId" [motif]="motif()">
+          @if (store.activeIssue(); as issue) {
+            <app-active-issue [issue]="issue" />
+          }
+        </app-round-status>
+        @if (session.phase === 'VOTING' && !store.isScrumMaster()) {
           <app-card-deck [sessionId]="session.sessionId" />
         }
-      }
-      @if (session.phase === 'REVEALED') {
-        <app-round-result [sessionId]="session.sessionId" />
+      } @else if (session.phase === 'REVEALED') {
+        <app-round-result [sessionId]="session.sessionId" [motif]="motif()">
+          @if (store.activeIssue(); as issue) {
+            <app-active-issue [issue]="issue" />
+          }
+        </app-round-result>
+      } @else if (store.activeIssue(); as issue) {
+        <app-active-issue [issue]="issue" />
       }
     </div>
   </div>
