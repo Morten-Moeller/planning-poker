@@ -3,6 +3,7 @@ import { Browser, Page, expect, test } from '@playwright/test';
 const PROJECT = '1234';
 const ISSUE = '42';
 const MISSING_ISSUE = '404';
+const FORBIDDEN_ISSUE = '403';
 const SESSION_ID = /^[A-HJ-KM-NP-Z2-9]{8}$/;
 
 async function createSession(page: Page, name = 'Anna', issue = ISSUE): Promise<void> {
@@ -117,6 +118,17 @@ test('an unknown issue shows the message at the form and creates no session', as
       Object.keys(sessionStorage).filter((key) => key.startsWith('planningpoker.session.')),
     ),
   ).toEqual([]);
+});
+
+test('an issue that GitLab refuses shows the access denied text at the form', async ({ page }) => {
+  await createSession(page, 'Anna', FORBIDDEN_ISSUE);
+
+  await expect(page.getByTestId('create-error')).toHaveText(
+    'GitLab verweigert den Zugriff. Der GitLab-Token des Backends braucht Scope api und Rechte im Projekt.',
+  );
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByTestId('create-issue')).toHaveValue(FORBIDDEN_ISSUE);
+  await expect(page.getByTestId('error-banner')).toHaveCount(0);
 });
 
 test('a taken name shows the message on the join page', async ({ page, browser }) => {

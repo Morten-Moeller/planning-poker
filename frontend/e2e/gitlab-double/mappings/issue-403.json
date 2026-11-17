@@ -1,0 +1,11 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/v4/projects/1234/issues/403"
+  },
+  "response": {
+    "status": 403,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": { "message": "403 Forbidden" }
+  }
+}

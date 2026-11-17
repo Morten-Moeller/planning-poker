@@ -253,7 +253,9 @@ describe('IssuePanel', () => {
       );
     await fixture.whenStable();
 
-    expect(one('issue-results-error').textContent).toContain('GitLab ist nicht erreichbar.');
+    expect(one('issue-results-error-message').textContent?.trim()).toBe(
+      'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.',
+    );
     expect(one('issue-results-retry').textContent?.trim()).toBe('Erneut versuchen');
     expect(all('issue-results-empty')).toHaveLength(0);
     expect(TestBed.inject(ErrorState).error()).toBeNull();
@@ -266,6 +268,29 @@ describe('IssuePanel', () => {
 
     expect(all('issue-results-error')).toHaveLength(0);
     expect(all('issue-result').map((node) => node.textContent?.trim())).toEqual(['#42 Login page']);
+  });
+
+  it('shows the access denied text of GitLab in the error state and clears the banner', async () => {
+    await open(lobbyScrumMaster);
+
+    await click('issue-search-submit');
+    http
+      .expectOne((r) => r.url === ISSUES_URL)
+      .flush(
+        { errorCode: 'GITLAB_ACCESS_DENIED', title: 'Bad Gateway', status: 502 },
+        {
+          status: 502,
+          statusText: 'Bad Gateway',
+          headers: { 'Content-Type': 'application/problem+json' },
+        },
+      );
+    await fixture.whenStable();
+
+    expect(one('issue-results-error-message').textContent?.trim()).toBe(
+      'GitLab verweigert den Zugriff. Der GitLab-Token des Backends braucht Scope api und Rechte im Projekt.',
+    );
+    expect(one('issue-results-retry').textContent?.trim()).toBe('Erneut versuchen');
+    expect(TestBed.inject(ErrorState).error()).toBeNull();
   });
 
   it('keeps the loaded issues and appends the next page after a failed load more is retried', async () => {

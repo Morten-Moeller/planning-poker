@@ -116,6 +116,21 @@ describe('ConfirmResultDialog', () => {
     expect(text('confirm-success')).toBe('Das Ergebnis wurde in GitLab übernommen.');
   });
 
+  it('shows the access denied text of GitLab in the dialog and clears the banner', async () => {
+    await choose('COFFEE');
+    await send();
+
+    http.expectOne(CONFIRM_URL).flush(...problem('GITLAB_ACCESS_DENIED', 502));
+    await stable();
+
+    expect(text('confirm-error')).toBe(
+      'GitLab verweigert den Zugriff. Der GitLab-Token des Backends braucht Scope api und Rechte im Projekt.',
+    );
+    expect(TestBed.inject(ErrorState).error()).toBeNull();
+    expect(all('confirm-dialog')).toHaveLength(1);
+    expect(closedWith).toBeNull();
+  });
+
   it('shows a GitLab error in the dialog, keeps the card, clears the banner and retries', async () => {
     await choose('COFFEE');
     await send();
@@ -123,7 +138,9 @@ describe('ConfirmResultDialog', () => {
     http.expectOne(CONFIRM_URL).flush(...problem('GITLAB_ERROR', 502));
     await stable();
 
-    expect(text('confirm-error')).toBe('GitLab hat nicht geantwortet.');
+    expect(text('confirm-error')).toBe(
+      'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.',
+    );
     expect(all('confirm-error')[0].getAttribute('role')).toBe('alert');
     expect(TestBed.inject(ErrorState).error()).toBeNull();
     expect(all('confirm-dialog')).toHaveLength(1);

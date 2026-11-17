@@ -12,7 +12,8 @@ function messagesByCode(): Record<ErrorCode, string> {
     NAME_TAKEN: $localize`:@@error.NAME_TAKEN:Der Name ist in dieser Sitzung schon vergeben.`,
     INVALID_STATE: $localize`:@@error.INVALID_STATE:Die Aktion passt nicht zum aktuellen Stand der Sitzung.`,
     LIMIT_REACHED: $localize`:@@error.LIMIT_REACHED:Die Höchstzahl ist erreicht. Bitte später erneut versuchen.`,
-    GITLAB_ERROR: $localize`:@@error.GITLAB_ERROR:GitLab hat nicht geantwortet.`,
+    GITLAB_ACCESS_DENIED: $localize`:@@error.GITLAB_ACCESS_DENIED:GitLab verweigert den Zugriff. Der GitLab-Token des Backends braucht Scope api und Rechte im Projekt.`,
+    GITLAB_ERROR: $localize`:@@error.GITLAB_ERROR:GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.`,
   };
 }
 

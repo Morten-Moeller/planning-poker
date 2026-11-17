@@ -180,6 +180,7 @@ class ContractTest {
                         "NAME_TAKEN",
                         "INVALID_STATE",
                         "LIMIT_REACHED",
+                        "GITLAB_ACCESS_DENIED",
                         "GITLAB_ERROR"),
                 codes);
         assertEquals(
@@ -189,7 +190,7 @@ class ContractTest {
 
     @Test
     void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
-        assertEquals("2.1.0", contract.at("/info/version").asText());
+        assertEquals("2.2.0", contract.at("/info/version").asText());
         assertEquals(
                 "PROJECT_NOT_ALLOWED",
                 contract.at("/paths/~1api~1sessions/post/responses/403/description")
@@ -202,6 +203,23 @@ class ContractTest {
                 "NAME_TAKEN, LIMIT_REACHED",
                 contract.at("/paths/~1api~1sessions~1{id}~1participants/post/responses/409/description")
                         .asText());
+    }
+
+    @ParameterizedTest(name = "{0} {1}")
+    @MethodSource("gitLabEndpoints")
+    void namesBothGitLabCodesOnEveryGitLabCall(String method, String path) {
+        assertEquals(
+                "GITLAB_ACCESS_DENIED, GITLAB_ERROR",
+                contract.at("/paths/" + escape(path) + "/" + method + "/responses/502/description")
+                        .asText());
+    }
+
+    static Stream<Arguments> gitLabEndpoints() {
+        return Stream.of(
+                Arguments.of("post", "/api/sessions"),
+                Arguments.of("get", "/api/sessions/{id}/issues"),
+                Arguments.of("post", "/api/sessions/{id}/active-issue"),
+                Arguments.of("post", "/api/sessions/{id}/round/confirm"));
     }
 
     @Test

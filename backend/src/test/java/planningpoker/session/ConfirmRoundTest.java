@@ -126,20 +126,24 @@ class ConfirmRoundTest {
     }
 
     static Stream<Arguments> gitLabFailures() {
-        return Stream.of(Arguments.of(401), Arguments.of(404), Arguments.of(500));
+        return Stream.of(
+                Arguments.of(401, "GITLAB_ACCESS_DENIED", "GitLab denied access with the token of the backend."),
+                Arguments.of(403, "GITLAB_ACCESS_DENIED", "GitLab denied access with the token of the backend."),
+                Arguments.of(404, "GITLAB_ERROR", "GitLab rejected the request."),
+                Arguments.of(500, "GITLAB_ERROR", "GitLab rejected the request."));
     }
 
-    @ParameterizedTest(name = "GitLab {0}")
+    @ParameterizedTest(name = "GitLab {0} answers {1}")
     @MethodSource("gitLabFailures")
-    void keepsTheRevealedRoundWhenTheCommentFailsAndAllowsARetry(int status) {
+    void keepsTheRevealedRoundWhenTheCommentFailsAndAllowsARetry(int status, String errorCode, String detail) {
         GitLabStubs.noteFailing(gitlab, GitLabStubs.PROJECT, GitLabStubs.ISSUE, status);
         flow.revealedRound("5", "8");
 
         flow.confirm("5")
                 .statusCode(502)
                 .contentType(PROBLEM)
-                .body("errorCode", equalTo("GITLAB_ERROR"))
-                .body("detail", equalTo("GitLab rejected the request."))
+                .body("errorCode", equalTo(errorCode))
+                .body("detail", equalTo(detail))
                 .body("detail", not(containsString("gitlab failure text")));
 
         flow.snapshotOf(flow.asScrumMaster())

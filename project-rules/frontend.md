@@ -54,10 +54,12 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   same way and ends the connection without a reconnect. Components branch on `errorCode` only.
 - Form errors: a page with a form catches the `ApiError` of its own call and shows the text of
   `formErrorMessage` (`api/error-messages.ts`) at the form for the codes the form names (create:
-  `ISSUE_NOT_FOUND`, `PROJECT_NOT_ALLOWED`, `LIMIT_REACHED`, `GITLAB_ERROR`, `VALIDATION_ERROR`;
+  `ISSUE_NOT_FOUND`, `PROJECT_NOT_ALLOWED`, `LIMIT_REACHED`, `GITLAB_ACCESS_DENIED`,
+  `GITLAB_ERROR`, `VALIDATION_ERROR`; confirm dialog: `GITLAB_ACCESS_DENIED`, `GITLAB_ERROR`;
   join: `SESSION_NOT_FOUND`, `NAME_TAKEN`, `LIMIT_REACHED`, `VALIDATION_ERROR`), then clears
   `ErrorState`; every other code stays in the banner (specs 0011, 0015). The issue search shows
-  `GITLAB_ERROR` in the panel as `issue-results-error` with the button `issue-results-retry`,
+  `GITLAB_ACCESS_DENIED` and `GITLAB_ERROR` in the panel as `issue-results-error` with the text
+  of the code (`issue-results-error-message`) and the button `issue-results-retry`,
   which repeats the last query, and clears `ErrorState` (spec 0019).
 - Error and empty states of the session page (spec 0019): `SESSION_NOT_FOUND` from `GET` or
   from the WebSocket shows `session-gone` with a link to the start page instead of

@@ -42,9 +42,9 @@
       }
     }
   </ul>
-  @if (failed()) {
+  @if (failure(); as message) {
     <div class="search-error" role="alert" data-testid="issue-results-error">
-      <p i18n="@@issuePanel.gitlabError">GitLab ist nicht erreichbar.</p>
+      <p data-testid="issue-results-error-message">{{ message }}</p>
       <button
         mat-stroked-button
         type="button"

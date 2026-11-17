@@ -15,6 +15,7 @@ public enum ErrorCode {
     NAME_TAKEN(409),
     INVALID_STATE(409),
     LIMIT_REACHED(409),
+    GITLAB_ACCESS_DENIED(502),
     GITLAB_ERROR(502);
 
     private final int status;

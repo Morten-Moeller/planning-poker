@@ -45,7 +45,11 @@ public class GitLabIssues {
         }
     }
 
-    private static ApiException gitLabError(GitLabException e) {
+    static ApiException gitLabError(GitLabException e) {
+        if (e.reason() == GitLabException.Reason.UNAUTHORIZED) {
+            return new ApiException(
+                    ErrorCode.GITLAB_ACCESS_DENIED, "GitLab denied access with the token of the backend.");
+        }
         String detail = e.status() == 0 ? "GitLab did not answer." : "GitLab rejected the request.";
         return new ApiException(ErrorCode.GITLAB_ERROR, detail);
     }

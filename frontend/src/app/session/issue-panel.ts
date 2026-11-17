@@ -14,7 +14,10 @@ import { SwitchIssueDialog } from './switch-issue-dialog';
 
 export type IssueSummary = IssueListResponse['items'][number];
 
-const SEARCH_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>(['GITLAB_ERROR']);
+const SEARCH_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
+  'GITLAB_ACCESS_DENIED',
+  'GITLAB_ERROR',
+]);
 
 @Component({
   selector: 'app-issue-panel',
@@ -37,7 +40,8 @@ export class IssuePanel implements OnInit {
   protected readonly results = signal<IssueSummary[]>([]);
   protected readonly nextPage = signal<number | null>(null);
   protected readonly loading = signal(false);
-  protected readonly failed = signal(false);
+  protected readonly failure = signal<string | null>(null);
+  protected readonly failed = computed(() => this.failure() !== null);
   protected readonly releasing = signal(false);
   private search: string | undefined;
   private listing: Subscription | null = null;
@@ -122,7 +126,7 @@ export class IssuePanel implements OnInit {
     this.listing?.unsubscribe();
     this.lastLoad = { query, append };
     this.loading.set(true);
-    this.failed.set(false);
+    this.failure.set(null);
     this.listing = this.api.listIssues(this.sessionId(), query).subscribe({
       next: (response) => {
         this.results.update((current) =>
@@ -133,9 +137,10 @@ export class IssuePanel implements OnInit {
       },
       error: (error: unknown) => {
         this.loading.set(false);
-        if (formErrorMessage(error, SEARCH_ERRORS) !== null) {
+        const message = formErrorMessage(error, SEARCH_ERRORS);
+        if (message !== null) {
           this.errorState.clear();
-          this.failed.set(true);
+          this.failure.set(message);
         }
       },
     });

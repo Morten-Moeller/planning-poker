@@ -19,6 +19,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import planningpoker.gitlab.WireMockGitLab;
 
@@ -76,11 +77,12 @@ class ConfirmRoundWriteWeightTest {
         gitlab.verify(1, postRequestedFor(urlPathEqualTo(NOTES)));
     }
 
-    @Test
-    void sendsNoCommentWhenTheWeightFailsAndAllowsARetry() {
-        GitLabStubs.weightFailing(gitlab, GitLabStubs.PROJECT, GitLabStubs.ISSUE, 500);
+    @ParameterizedTest(name = "GitLab {0} answers {1}")
+    @CsvSource({"500, GITLAB_ERROR", "403, GITLAB_ACCESS_DENIED"})
+    void sendsNoCommentWhenTheWeightFailsAndAllowsARetry(int status, String errorCode) {
+        GitLabStubs.weightFailing(gitlab, GitLabStubs.PROJECT, GitLabStubs.ISSUE, status);
 
-        flow.confirm("5").statusCode(502).contentType(PROBLEM).body("errorCode", equalTo("GITLAB_ERROR"));
+        flow.confirm("5").statusCode(502).contentType(PROBLEM).body("errorCode", equalTo(errorCode));
 
         gitlab.verify(0, postRequestedFor(urlPathEqualTo(NOTES)));
         flow.snapshotOf(flow.asScrumMaster())

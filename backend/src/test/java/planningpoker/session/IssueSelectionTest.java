@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import planningpoker.gitlab.WireMockGitLab;
 
@@ -122,12 +123,15 @@ class IssueSelectionTest {
     }
 
     static Stream<Arguments> gitLabFailures() {
-        return Stream.of(Arguments.of(401), Arguments.of(403), Arguments.of(500));
+        return Stream.of(
+                Arguments.of(401, "GITLAB_ACCESS_DENIED"),
+                Arguments.of(403, "GITLAB_ACCESS_DENIED"),
+                Arguments.of(500, "GITLAB_ERROR"));
     }
 
-    @ParameterizedTest(name = "GitLab {0}")
+    @ParameterizedTest(name = "GitLab {0} answers {1}")
     @MethodSource("gitLabFailures")
-    void answersGitlabErrorWhenTheSearchFails(int status) {
+    void answersAGitlabCodeWhenTheSearchFails(int status, String errorCode) {
         GitLabStubs.searchFailing(gitlab, GitLabStubs.PROJECT, status);
 
         asScrumMaster()
@@ -136,7 +140,7 @@ class IssueSelectionTest {
                 .then()
                 .statusCode(502)
                 .contentType(PROBLEM)
-                .body("errorCode", equalTo("GITLAB_ERROR"))
+                .body("errorCode", equalTo(errorCode))
                 .body("detail", not(containsGitLabText()));
     }
 
@@ -169,9 +173,25 @@ class IssueSelectionTest {
         gitlab.verify(getRequestedFor(urlPathEqualTo(GitLabStubs.issuePath(GitLabStubs.PROJECT, 404))));
     }
 
+    @ParameterizedTest(name = "GitLab {0} answers {1}")
+    @MethodSource("gitLabFailures")
+    void refusesToCreateASessionWhenGitlabFails(int status, String errorCode) {
+        GitLabStubs.issueFailing(gitlab, GitLabStubs.PROJECT, 500, status);
+
+        given().contentType(ContentType.JSON)
+                .body("{\"name\":\"Anna\",\"gitlabProjectId\":\"1234\",\"issueIid\":500}")
+                .when()
+                .post("/api/sessions")
+                .then()
+                .statusCode(502)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo(errorCode))
+                .body("detail", not(containsGitLabText()));
+    }
+
     @Test
-    void refusesToCreateASessionWhenGitlabFails() {
-        GitLabStubs.issueFailing(gitlab, GitLabStubs.PROJECT, 500, 500);
+    void refusesToCreateASessionWhenGitlabTimesOut() {
+        GitLabStubs.issueDelayed(gitlab, GitLabStubs.PROJECT, 500, DELAY_ABOVE_TIMEOUT_MILLIS);
 
         given().contentType(ContentType.JSON)
                 .body("{\"name\":\"Anna\",\"gitlabProjectId\":\"1234\",\"issueIid\":500}")
@@ -181,7 +201,7 @@ class IssueSelectionTest {
                 .statusCode(502)
                 .contentType(PROBLEM)
                 .body("errorCode", equalTo("GITLAB_ERROR"))
-                .body("detail", not(containsGitLabText()));
+                .body("detail", equalTo("GitLab did not answer."));
     }
 
     @Test
@@ -252,9 +272,10 @@ class IssueSelectionTest {
                 .body("phase", equalTo("VOTING"));
     }
 
-    @Test
-    void keepsTheStateWhenGitlabFailsOnTheSwitch() {
-        GitLabStubs.issueFailing(gitlab, GitLabStubs.PROJECT, 500, 503);
+    @ParameterizedTest(name = "GitLab {0} answers {1}")
+    @CsvSource({"503, GITLAB_ERROR", "403, GITLAB_ACCESS_DENIED"})
+    void keepsTheStateWhenGitlabFailsOnTheSwitch(int status, String errorCode) {
+        GitLabStubs.issueFailing(gitlab, GitLabStubs.PROJECT, 500, status);
         selectIssue(GitLabStubs.ISSUE, 204);
 
         asScrumMaster()
@@ -265,7 +286,7 @@ class IssueSelectionTest {
                 .then()
                 .statusCode(502)
                 .contentType(PROBLEM)
-                .body("errorCode", equalTo("GITLAB_ERROR"));
+                .body("errorCode", equalTo(errorCode));
         asScrumMaster().when().get(session).then().body("activeIssue.iid", equalTo(42));
     }
 

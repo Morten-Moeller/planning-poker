@@ -17,10 +17,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import org.jboss.logging.Logger;
 
 @Startup
 @ApplicationScoped
 public class GitLabClient {
+
+    private static final Logger LOG = Logger.getLogger(GitLabClient.class);
 
     static final int PAGE_SIZE = 20;
     static final String TOKEN_HEADER = "PRIVATE-TOKEN";
@@ -41,9 +44,9 @@ public class GitLabClient {
     }
 
     public IssuePage searchIssues(String projectId, String search, int page) {
-        return call("searchIssues", () -> {
+        return call("searchIssues", projectId, () -> {
             try (Response response = api.searchIssues(projectId, "opened", search, PAGE_SIZE, page)) {
-                failOnError("searchIssues", response);
+                failOnError("searchIssues", projectId, response);
                 List<GitLabIssue> items = response.readEntity(new GenericType<List<GitLabIssue>>() {});
                 return new IssuePage(items, nextPage(response));
             }
@@ -51,51 +54,59 @@ public class GitLabClient {
     }
 
     public GitLabIssue loadIssue(String projectId, long iid) {
-        return call("loadIssue", () -> api.loadIssue(projectId, iid));
+        return call("loadIssue", projectId, () -> api.loadIssue(projectId, iid));
     }
 
     public void addNote(String projectId, long iid, String body) {
-        call("addNote", () -> {
+        call("addNote", projectId, () -> {
             try (Response response = api.addNote(projectId, iid, new NoteRequest(body))) {
-                failOnError("addNote", response);
+                failOnError("addNote", projectId, response);
                 return null;
             }
         });
     }
 
     public void setWeight(String projectId, long iid, int weight) {
-        call("setWeight", () -> {
+        call("setWeight", projectId, () -> {
             try (Response response = api.setWeight(projectId, iid, new WeightRequest(weight))) {
-                failOnError("setWeight", response);
+                failOnError("setWeight", projectId, response);
                 return null;
             }
         });
     }
 
-    private static <T> T call(String operation, Supplier<T> request) {
+    private static <T> T call(String operation, String projectId, Supplier<T> request) {
         try {
             return request.get();
         } catch (WebApplicationException e) {
-            throw fromStatus(operation, e.getResponse().getStatus());
+            throw fromStatus(operation, projectId, e.getResponse().getStatus());
         } catch (ProcessingException e) {
+            logFailure(operation, projectId, 0, GitLabException.Reason.UNAVAILABLE);
             throw new GitLabException(operation, "no response or unreadable response", e);
         }
     }
 
-    private static void failOnError(String operation, Response response) {
+    private static void failOnError(String operation, String projectId, Response response) {
         if (response.getStatus() >= 400) {
-            throw fromStatus(operation, response.getStatus());
+            throw fromStatus(operation, projectId, response.getStatus());
         }
     }
 
-    private static GitLabException fromStatus(String operation, int status) {
+    private static GitLabException fromStatus(String operation, String projectId, int status) {
         GitLabException.Reason reason =
                 switch (status) {
                     case 401, 403 -> GitLabException.Reason.UNAUTHORIZED;
                     case 404 -> GitLabException.Reason.NOT_FOUND;
                     default -> GitLabException.Reason.UNAVAILABLE;
                 };
+        logFailure(operation, projectId, status, reason);
         return new GitLabException(operation, status, reason);
+    }
+
+    private static void logFailure(String operation, String projectId, int status, GitLabException.Reason reason) {
+        LOG.warnf(
+                "GitLab call failed: operation=%s projectId=%s status=%d reason=%s",
+                operation, projectId == null ? "" : projectId.replaceAll("\\p{Cntrl}", "_"), status, reason);
     }
 
     private static Optional<Integer> nextPage(Response response) {

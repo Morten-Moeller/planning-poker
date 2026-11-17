@@ -308,7 +308,7 @@ export interface components {
          * @description Stable error code. Clients branch on it, never on the detail text.
          * @enum {string}
          */
-        ErrorCode: "VALIDATION_ERROR" | "INVALID_CARD" | "UNAUTHORIZED" | "FORBIDDEN_ROLE" | "PROJECT_NOT_ALLOWED" | "SESSION_NOT_FOUND" | "ISSUE_NOT_FOUND" | "NAME_TAKEN" | "INVALID_STATE" | "LIMIT_REACHED" | "GITLAB_ERROR";
+        ErrorCode: "VALIDATION_ERROR" | "INVALID_CARD" | "UNAUTHORIZED" | "FORBIDDEN_ROLE" | "PROJECT_NOT_ALLOWED" | "SESSION_NOT_FOUND" | "ISSUE_NOT_FOUND" | "NAME_TAKEN" | "INVALID_STATE" | "LIMIT_REACHED" | "GITLAB_ACCESS_DENIED" | "GITLAB_ERROR";
         /** @description Health of the backend. */
         HealthStatus: {
             /**
@@ -681,7 +681,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description GITLAB_ERROR */
+            /** @description GITLAB_ACCESS_DENIED, GITLAB_ERROR */
             502: {
                 headers: {
                     [name: string]: unknown;
@@ -801,7 +801,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description GITLAB_ERROR */
+            /** @description GITLAB_ACCESS_DENIED, GITLAB_ERROR */
             502: {
                 headers: {
                     [name: string]: unknown;
@@ -865,7 +865,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description GITLAB_ERROR */
+            /** @description GITLAB_ACCESS_DENIED, GITLAB_ERROR */
             502: {
                 headers: {
                     [name: string]: unknown;
@@ -998,7 +998,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description GITLAB_ERROR */
+            /** @description GITLAB_ACCESS_DENIED, GITLAB_ERROR */
             502: {
                 headers: {
                     [name: string]: unknown;
