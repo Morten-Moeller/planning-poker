@@ -1,7 +1,7 @@
 ---
 id: "0022"
 title: Projekt- und Issue-Auswahl beim Anlegen
-status: approved
+status: Review
 risk: high
 adrs: ["0008"]
 owner: Morten Möller
@@ -28,7 +28,7 @@ von ID und iid von Hand bleibt möglich.
 ### Enthalten
 
 - **`GET /api/projects?search=&page=`** (offen, ohne Token): liefert `{ items: [{ id, name, pathWithNamespace, webUrl }], nextPage }`.
-  - Mit Allowlist: nur deren Einträge. Jeder wird mit `GET /projects/{id}` geladen, die Suche filtert Name und Pfad ohne Rücksicht auf Groß- und Kleinschreibung, und es gibt keine Folgeseite. Ein Eintrag, den GitLab mit 404 oder 403 ablehnt, fehlt in der Liste und erzeugt eine Logzeile.
+  - Mit Allowlist: nur deren Einträge. Jeder wird mit `GET /projects/{id}` geladen, die Suche filtert Name und Pfad ohne Rücksicht auf Groß- und Kleinschreibung, und es gibt keine Folgeseite. Ein Eintrag, den GitLab mit 404 oder 403 ablehnt, fehlt in der Liste und erzeugt eine Logzeile. Ein 401 ergibt 502 `GITLAB_ACCESS_DENIED` für die ganze Liste, `page>1` liefert eine leere Liste ohne GitLab-Aufruf. Ein Pfad-Eintrag der Allowlist erscheint mit seiner numerischen ID; die Auswahl endet dann mit `PROJECT_NOT_ALLOWED` (dokumentierte Einschränkung).
   - Ohne Allowlist: `GET /projects?membership=true&simple=true&search=&order_by=last_activity_at&per_page=20&page=`.
 - **`GET /api/projects/{projectId}/issues?search=&page=`** (offen): liefert offene Issues wie `GET /api/sessions/{id}/issues` (`IssueListResponse`).
   - Ist das Projekt nicht in der Allowlist, antwortet der Endpunkt 403 `PROJECT_NOT_ALLOWED`, ohne GitLab zu fragen.
@@ -61,7 +61,7 @@ von ID und iid von Hand bleibt möglich.
 | Nr | Kriterium | Prüfung |
 |---|---|---|
 | A1 | Ohne Allowlist ruft `GET /api/projects?search=poker` GitLab mit `membership=true`, `simple=true`, `search=poker` und `per_page=20` auf. Die Antwort ist 200 mit `id`, `name`, `pathWithNamespace` und `webUrl`, und `nextPage` stammt aus `X-Next-Page`. | Test `backend/src/test/java/planningpoker/session/ProjectCatalogTest.java` |
-| A2 | Mit `allowed-projects=1234,5678` liefert `GET /api/projects` genau diese Projekte, mit Namen aus `GET /projects/{id}`. `search` filtert nach Name und Pfad ohne Rücksicht auf Groß- und Kleinschreibung. Lehnt GitLab `5678` mit 404 ab, fehlt das Projekt, und das Backend schreibt eine Logzeile. Ein Aufruf an `GET /projects?membership` findet nicht statt. | Test `backend/src/test/java/planningpoker/session/ProjectCatalogAllowlistTest.java` |
+| A2 | Mit `allowed-projects=1234,5678` liefert `GET /api/projects` genau diese Projekte, mit Namen aus `GET /projects/{id}`. `search` filtert nach Name und Pfad ohne Rücksicht auf Groß- und Kleinschreibung. Lehnt GitLab `5678` mit 404 oder 403 ab, fehlt das Projekt, und das Backend schreibt eine Logzeile. Ein 401 für einen Eintrag ergibt 502 `GITLAB_ACCESS_DENIED`. `page=2` liefert eine leere Liste ohne GitLab-Aufruf. Ein Aufruf an `GET /projects?membership` findet nicht statt. | Test `backend/src/test/java/planningpoker/session/ProjectCatalogAllowlistTest.java` |
 | A3 | `GET /api/projects/1234/issues?search=login` liefert offene Issues wie die Suche im Sitzungsraum. Mit Allowlist ohne `1234` antwortet der Endpunkt 403 `PROJECT_NOT_ALLOWED`, und WireMock hat keinen Aufruf erhalten. | Tests `ProjectCatalogTest`, `ProjectCatalogAllowlistTest` |
 | A4 | Ein 403 von GitLab ergibt 502 `GITLAB_ACCESS_DENIED`, ein 500 ergibt 502 `GITLAB_ERROR`, `page=0` ergibt 400. Beide Endpunkte brauchen keinen `Authorization`-Header. | Test `ProjectCatalogTest` |
 | A5 | Der Vertrag enthält beide Endpunkte mit Schemas und Fehlerantworten. `info.version` ist `2.3.0`, und `make drift` ist grün. | Test `backend/src/test/java/planningpoker/session/api/ContractTest.java`; Aufruf `make drift` |
@@ -149,7 +149,7 @@ Tests:
 | Kriterium | Test |
 |---|---|
 | A1 | `ProjectCatalogTest`: WireMock prüft Query-Parameter, Antwortfelder und `nextPage` |
-| A2 | `ProjectCatalogAllowlistTest`: zwei Einträge, Suche, 404 für einen, kein `membership`-Aufruf |
+| A2 | `ProjectCatalogAllowlistTest`: zwei Einträge, Suche, 404 und 403 für einen, 401 ergibt 502, `page=2` leer ohne Aufruf, kein `membership`-Aufruf |
 | A3 | `ProjectCatalogTest`: Issue-Suche; `ProjectCatalogAllowlistTest`: 403 ohne GitLab-Aufruf |
 | A4 | `ProjectCatalogTest`: 403 und 500 von GitLab, `page=0`, ohne Header |
 | A5 | `ContractTest`, `make drift` |
@@ -169,6 +169,8 @@ Contracts zu regenerieren: `make contracts` (`contracts/api/openapi.yaml`,
 
 - [x] Welche Projekte darf der offene Endpunkt auflisten? → Die Allowlist, wenn gesetzt, sonst die Projekte mit Mitgliedschaft des Tokens. (Morten Möller, 2026-11-17)
 - [x] Soll auch das Issue beim Anlegen aus einer Liste gewählt werden? → Ja. (Morten Möller, 2026-11-17)
+- [x] Was gilt für Pfad-Einträge der Allowlist, wenn die Auswahl die numerische ID setzt? → Umsetzen wie geplant und die Einschränkung in README, `project-rules/backend.md` und Glossar dokumentieren: Für die Auswahl braucht die Allowlist numerische IDs; ein Pfad-Eintrag erscheint in der Liste, die Auswahl endet mit `PROJECT_NOT_ALLOWED`. (Morten Möller, 2026-11-17)
+- [x] Was liefert die Liste mit Allowlist für `page>1`, und was gilt bei einem GitLab-401 für einen Eintrag? → `page>1` liefert eine leere Liste ohne GitLab-Aufruf. Ein 401 ergibt 502 `GITLAB_ACCESS_DENIED` für die ganze Liste; nur 403 und 404 lassen den Eintrag weg. (Morten Möller, 2026-11-17)
 
 ## Verifikationsplan
 

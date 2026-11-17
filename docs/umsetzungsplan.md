@@ -158,10 +158,12 @@ Solange `confirming` gesetzt ist, lehnt der Server jede Steuerungsaktion mit `40
 
 ### 4.4 REST-API
 
-Alle Pfade liegen unter `/api`, das Format ist JSON. Außer beim Erstellen und Beitreten trägt jeder Aufruf `Authorization: Bearer <token>`. Befehle antworten ohne Zustand; der neue Zustand kommt über den WebSocket.
+Alle Pfade liegen unter `/api`, das Format ist JSON. Außer beim Erstellen, beim Beitreten und bei der Projekt- und Issue-Auswahl vor dem Erstellen trägt jeder Aufruf `Authorization: Bearer <token>`. Befehle antworten ohne Zustand; der neue Zustand kommt über den WebSocket.
 
 | Methode und Pfad | Rolle | Request | Erfolg | Fehler |
 | --- | --- | --- | --- | --- |
+| `GET /api/projects?search=&page=` | offen | keiner | 200 `{ items: [{ id, name, pathWithNamespace, webUrl }], nextPage }`: die Projekt-Allowlist, sonst die Projekte mit Mitgliedschaft des Tokens (ADR 0008) | 400, 502 |
+| `GET /api/projects/{projectId}/issues?search=&page=` | offen | keiner | 200 `{ items, nextPage }`, offene Issues | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
 | `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid }` | 201 `{ sessionId, participantId, token }` | 400, 404 `ISSUE_NOT_FOUND`, 502 |
 | `POST /api/sessions/{id}/participants` | offen | `{ name }` | 201 `{ participantId, token }` | 400, 404, 409 `NAME_TAKEN` |
 | `GET /api/sessions/{id}` | beide | keiner | 200 SessionView | 401, 404 |

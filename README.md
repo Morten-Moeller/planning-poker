@@ -62,7 +62,7 @@ den Schlüssel so ab: Großbuchstaben, `.` und `-` werden zu `_`. Ausnahme ist d
 | `planningpoker.session.ttl` | `PLANNINGPOKER_SESSION_TTL` | `12h` | Verfall inaktiver Sitzungen |
 | `planningpoker.session.max-sessions` | `PLANNINGPOKER_SESSION_MAX_SESSIONS` | `1000` | Obergrenze lebender Sitzungen der Instanz; abgelaufene Sitzungen zählen nicht |
 | `planningpoker.session.max-participants` | `PLANNINGPOKER_SESSION_MAX_PARTICIPANTS` | `50` | Obergrenze der Teilnehmer je Sitzung, der Scrum Master zählt mit |
-| `planningpoker.session.allowed-projects` | `PLANNINGPOKER_SESSION_ALLOWED_PROJECTS` | keiner, alle Projekte erlaubt | Projekt-Allowlist: kommagetrennte Projekt-IDs oder -Pfade, für die Sitzungen angelegt werden dürfen; ein leerer Wert gilt als nicht gesetzt |
+| `planningpoker.session.allowed-projects` | `PLANNINGPOKER_SESSION_ALLOWED_PROJECTS` | keiner, alle Projekte erlaubt | Projekt-Allowlist: kommagetrennte Projekt-IDs oder -Pfade, für die Sitzungen angelegt werden dürfen; ein leerer Wert gilt als nicht gesetzt. Die Projektauswahl der Startseite zeigt dann genau diese Projekte; für die Auswahl braucht die Liste numerische IDs, weil die Auswahl die ID setzt und ein reiner Pfad-Eintrag sie mit `PROJECT_NOT_ALLOWED` ablehnt |
 | `planningpoker.realtime.auth-timeout` | `PLANNINGPOKER_REALTIME_AUTH_TIMEOUT` | `5s` | Zeit bis zur ersten Nachricht `auth` einer WebSocket-Verbindung |
 
 `.env.example` enthält jede Zeile der Tabelle: `GITLAB_TOKEN` leer als Pflichtzeile,
@@ -112,9 +112,15 @@ und `backend/src/main/resources/META-INF/openapi.yaml`); `make contracts` schrei
 TypeScript-Typen `frontend/src/app/api/schema.d.ts`, `make drift` meldet einen veralteten Stand.
 Im Dev-Modus zeigt `http://localhost:8080/q/swagger-ui` den Vertrag. Sechs Beispiel-Snapshots je
 Phase und Rolle liegen unter `contracts/api/examples/`; Backend-Test und Frontend-Typen prüfen sie.
-Version des Vertrags: `2.1.0` (ADR 0005, ADR 0006).
+Version des Vertrags: `2.3.0` (ADR 0005 bis ADR 0008).
 
 ### Ablauf
+
+Auf der Startseite wählt der Scrum Master das GitLab-Projekt per Name (`GET /api/projects`) und
+danach das Issue per Titel aus den offenen Issues des Projekts (`GET /api/projects/{id}/issues`).
+Beide Felder suchen 300 ms nach der letzten Eingabe und nehmen weiter eine getippte ID oder iid
+an. Ist die Projekt-Allowlist gesetzt, zeigt die Liste genau deren Projekte; sonst die Projekte,
+in denen der GitLab-Token Mitglied ist (ADR 0008).
 
 Befehle gehen per REST an `/api` und antworten ohne Zustand (204 oder 201 mit den neuen IDs).
 Nach jeder Änderung sendet der Server jedem verbundenen Teilnehmer per WebSocket den
@@ -145,11 +151,14 @@ zu `serverTime`.
 
 ### REST-Endpunkte
 
-Außer beim Erstellen und Beitreten trägt jeder Aufruf `Authorization: Bearer <token>`.
+Außer beim Erstellen, beim Beitreten und bei der Projekt- und Issue-Auswahl vor dem Erstellen
+trägt jeder Aufruf `Authorization: Bearer <token>`.
 
 | Methode und Pfad | Rolle | Request | Erfolg | Fehler |
 |---|---|---|---|---|
 | `GET /api/health` | offen | – | 200 `{ status }` | – |
+| `GET /api/projects?search=&page=` | offen | – | 200 `{ items: [{ id, name, pathWithNamespace, webUrl }], nextPage }` | 400, 502 |
+| `GET /api/projects/{projectId}/issues?search=&page=` | offen | – | 200 `{ items, nextPage }` (offene Issues) | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
 | `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid }` | 201 `{ sessionId, participantId, token }` | 400, 403 `PROJECT_NOT_ALLOWED`, 404 `ISSUE_NOT_FOUND`, 409 `LIMIT_REACHED`, 502 |
 | `POST /api/sessions/{id}/participants` | offen | `{ name }` | 201 `{ participantId, token }` | 400, 404, 409 `NAME_TAKEN`, `LIMIT_REACHED` |
 | `GET /api/sessions/{id}` | beide | – | 200 `SessionView` | 401, 404 |
@@ -214,7 +223,10 @@ Operation, Projekt-ID, Status und Grund, ohne Token und ohne Antworttext von Git
 
 Erstellen und Beitreten brauchen kein Login (ADR 0003). Das Backend liest jedes Projekt, das der
 GitLab-Token der Instanz sieht; ohne Projekt-Allowlist kann jeder, der das Backend erreicht,
-Titel, Beschreibung und Link der Issues dieser Projekte lesen. Die Obergrenzen begrenzen den
+Titel, Beschreibung und Link der Issues dieser Projekte lesen. Die Projektauswahl
+(`GET /api/projects`, ADR 0008) zeigt ohne Allowlist zusätzlich Namen und Pfade aller Projekte,
+in denen der Token Mitglied ist, und jede Suche ruft GitLab auf. Für eine Instanz, die mehr als
+ein vertrauter Kreis erreicht, deshalb die Projekt-Allowlist setzen. Die Obergrenzen begrenzen den
 Speicherbedarf, nicht die Zahl der Aufrufe: es gibt kein Rate-Limit je Client-IP, und
 WebSocket-Verbindungen vor `auth` sind nur durch `planningpoker.realtime.auth-timeout` begrenzt,
 nicht in ihrer Zahl. Ein Aufrufer kann die Obergrenze der Sitzungen ausschöpfen und so bis zum

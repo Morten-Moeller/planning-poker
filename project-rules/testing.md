@@ -39,10 +39,10 @@ change touches.
 | Source path | Unit and integration | End-to-end |
 |---|---|---|
 | `backend/src/main/java/planningpoker/platform/` | `backend/src/test/java/planningpoker/platform/` | `frontend/e2e/health.spec.ts` |
-| `backend/src/main/java/planningpoker/session/` | `backend/src/test/java/planningpoker/session/` (contract and stub tests from spec 0002, domain from spec 0004) | `frontend/e2e/create-and-join.spec.ts` |
+| `backend/src/main/java/planningpoker/session/` | `backend/src/test/java/planningpoker/session/` (contract and stub tests from spec 0002, domain from spec 0004) | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/project-picker.spec.ts` |
 | `backend/src/main/java/planningpoker/gitlab/` | `backend/src/test/java/planningpoker/gitlab/` (from spec 0003) | – |
 | `backend/src/main/java/planningpoker/realtime/` | `backend/src/test/java/planningpoker/realtime/` (from spec 0009) | `frontend/e2e/create-and-join.spec.ts` |
-| `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts` |
+| `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/project-picker.spec.ts` |
 | `frontend/src/app/api/` | `frontend/src/app/api/*.spec.ts` (from spec 0005) | – |
 | `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/full-flow.spec.ts` |
 | `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts` |
@@ -77,14 +77,16 @@ change touches.
   (`POST /api/sessions`, `POST /api/sessions/{id}/participants`); the end-to-end flows create
   them in their setup. Backend tests of the session area run with the test resource
   `WireMockGitLab` and stub GitLab through `backend/src/test/java/planningpoker/session/GitLabStubs.java`
-  (issue 42 of project 1234 by default, searches, failures, delays); every test resets the stubs
+  (issue 42 of project 1234 by default, searches, projects, failures, delays); every test resets the stubs
   in its `@BeforeEach`. Tests of the realtime area use the same test resource with
   `backend/src/test/java/planningpoker/realtime/RestCalls.java` (REST flow and the stub of issue
   42) and `SocketClient.java` (WebSocket client with timeouts). GitLab data of the end-to-end
   flows comes from the fixed mappings of the GitLab double in
   `frontend/e2e/gitlab-double/mappings/` (spec 0011): project `1234` with issues 42 and 43, the
   issue search of the project (both issues), notes and weight of both issues; issue 404 answers
-  404, issue 403 answers 403 (`issue-403.json`, spec 0021). Issue 44 (spec 0012) has `**fett**`, a `<script>` element, an `<img onerror>` and an
+  404, issue 403 answers 403 (`issue-403.json`, spec 0021). The project search
+  (`projects-search.json`) and project `1234` (`project-1234.json`) answer the project
+  „Planning Poker Test“ with path `group/project` (spec 0022). Issue 44 (spec 0012) has `**fett**`, a `<script>` element, an `<img onerror>` and an
   image from `https://tracker.example/pixel.gif` in its description for the check of the
   Markdown sanitizing and of the Content-Security-Policy (spec 0019); it is not part of the
   issue search. The search text `kein Treffer` answers an empty list
