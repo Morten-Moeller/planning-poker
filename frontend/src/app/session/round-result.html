@@ -13,31 +13,52 @@
   @if (consensusText(); as text) {
     <app-confetti data-testid="consensus-confetti" />
     <p class="consensus-hint" role="status" data-testid="consensus-hint">{{ text }}</p>
+    @if (turnoutText(); as turnout) {
+      <p class="turnout-hint" data-testid="turnout-hint">{{ turnout }}</p>
+    }
   }
   @if (outliers().size > 0) {
     <p class="outlier-hint" data-testid="outlier-hint" i18n="@@roundResult.outlierHint">
       Niedrigste und höchste Schätzung liegen weit auseinander.
     </p>
   }
-  <ul class="votes">
-    @for (vote of votes(); track vote.participantId) {
-      <li class="vote" [class.outlier]="outliers().has(vote.card)" data-testid="result-vote">
-        <span class="name" data-testid="result-vote-name">{{ vote.name }}</span>
-        <span
-          class="card"
-          data-testid="result-vote-card"
-          [attr.role]="name(vote.card) === null ? null : 'img'"
-          [attr.aria-label]="name(vote.card)"
-          >{{ symbol(vote.card) }}</span
-        >
-        @if (outliers().has(vote.card)) {
-          <span class="outlier-label" data-testid="result-vote-outlier" i18n="@@roundResult.outlier"
-            >Ausreißer</span
+  @if (votes().length === 0) {
+    <p class="empty" data-testid="result-empty" i18n="@@roundResult.empty">
+      Keine Karten abgegeben.
+    </p>
+  } @else {
+    <ul class="votes">
+      @for (vote of votes(); track vote.participantId) {
+        <li class="vote" [class.outlier]="outliers().has(vote.card)" data-testid="result-vote">
+          <span class="name" data-testid="result-vote-name">{{ vote.name }}</span>
+          <span
+            class="card"
+            data-testid="result-vote-card"
+            [attr.role]="name(vote.card) === null ? null : 'img'"
+            [attr.aria-label]="name(vote.card)"
+            >{{ symbol(vote.card) }}</span
           >
-        }
-      </li>
-    }
-  </ul>
+          @if (outliers().has(vote.card)) {
+            <span
+              class="outlier-label"
+              data-testid="result-vote-outlier"
+              i18n="@@roundResult.outlier"
+              >Ausreißer</span
+            >
+          }
+        </li>
+      }
+    </ul>
+  }
+  @if (notVoted().length > 0) {
+    <p class="not-voted" data-testid="not-voted">
+      <span i18n="@@roundResult.notVoted">Nicht geschätzt:</span>{{ ' ' }}
+      @for (developer of notVoted(); track developer.id; let last = $last) {
+        <span data-testid="not-voted-name">{{ developer.label }}</span
+        >{{ last ? '' : ',' }}
+      }
+    </p>
+  }
 
   @if (stats(); as stats) {
     <h3 i18n="@@roundResult.statsTitle">Auswertung</h3>
