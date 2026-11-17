@@ -65,6 +65,11 @@
       }
     </div>
   </div>
+} @else if (gone()) {
+  <div class="gone" role="alert" data-testid="session-gone">
+    <p i18n="@@session.gone">Diese Sitzung ist abgelaufen oder existiert nicht.</p>
+    <a routerLink="/" data-testid="session-gone-home" i18n="@@session.goneHome">Zur Startseite</a>
+  </div>
 } @else {
   <p data-testid="session-loading" i18n="@@session.loading">Sitzung wird geladen</p>
 }

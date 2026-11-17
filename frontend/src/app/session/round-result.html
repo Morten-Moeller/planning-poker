@@ -1,5 +1,10 @@
 <section class="result" data-testid="round-result">
   <h2 i18n="@@roundResult.title">Aufgedeckte Karten</h2>
+  @if (round(); as round) {
+    <p class="round-number" data-testid="round-number" i18n="@@roundResult.number">
+      Runde {{ round.number }}
+    </p>
+  }
   @if (confirming()) {
     <p class="hint" role="status" data-testid="confirming-hint" i18n="@@roundResult.confirming">
       Das Ergebnis wird nach GitLab geschrieben.

@@ -21,6 +21,7 @@ export class ShareSession {
   );
   protected readonly canCopy = this.clipboard !== null;
   protected readonly copied = signal<ShareTarget | null>(null);
+  protected readonly failed = signal<ShareTarget | null>(null);
 
   protected copy(target: ShareTarget): void {
     if (this.clipboard === null) {
@@ -28,8 +29,14 @@ export class ShareSession {
     }
     const value = target === 'link' ? this.link() : this.sessionId();
     this.clipboard.writeText(value).then(
-      () => this.copied.set(target),
-      () => this.copied.set(null),
+      () => {
+        this.failed.set(null);
+        this.copied.set(target);
+      },
+      () => {
+        this.copied.set(null);
+        this.failed.set(target);
+      },
     );
   }
 }

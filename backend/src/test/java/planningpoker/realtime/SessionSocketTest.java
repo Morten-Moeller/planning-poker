@@ -295,6 +295,7 @@ class SessionSocketTest {
         benClient.untilPong();
         SocketClient rejected = open();
         rejected.auth("unknown-" + suffix);
+        rejected.await(WsMessage.ERROR);
         rejected.awaitClose();
 
         List<JsonNode> messages = new ArrayList<>();

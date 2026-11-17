@@ -1,4 +1,9 @@
 <section class="round-status" data-testid="round-status">
+  @if (store.round(); as round) {
+    <p class="round-number" data-testid="round-number" i18n="@@roundStatus.number">
+      Runde {{ round.number }}
+    </p>
+  }
   <p class="counter" data-testid="vote-counter" i18n="@@roundStatus.counter">
     {{ voted() }} von {{ total() }} haben geschätzt
   </p>

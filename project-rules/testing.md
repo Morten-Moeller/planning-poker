@@ -44,8 +44,8 @@ change touches.
 | `backend/src/main/java/planningpoker/realtime/` | `backend/src/test/java/planningpoker/realtime/` (from spec 0009) | `frontend/e2e/create-and-join.spec.ts` |
 | `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts` |
 | `frontend/src/app/api/` | `frontend/src/app/api/*.spec.ts` (from spec 0005) | – |
-| `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts` |
-| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts` |
+| `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/full-flow.spec.ts` |
+| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts` |
 
 ## End-to-end
 
@@ -84,12 +84,17 @@ change touches.
   flows comes from the fixed mappings of the GitLab double in
   `frontend/e2e/gitlab-double/mappings/` (spec 0011): project `1234` with issues 42 and 43, the
   issue search of the project (both issues), notes and weight of both issues; issue 404 answers
-  404. Issue 44 (spec 0012) has `**fett**`, a `<script>` element and an `<img onerror>` in its
-  description for the check of the Markdown sanitizing; it is not part of the issue search.
-  Issue 45 (spec 0014, "Export report") is not part of the issue search either; its notes run as
-  the WireMock scenario `issue-45-notes`: the first note answers 500, every later note 201, for
-  the GitLab error with a second attempt. A flow that needs other GitLab data adds a mapping
-  there.
+  404. Issue 44 (spec 0012) has `**fett**`, a `<script>` element, an `<img onerror>` and an
+  image from `https://tracker.example/pixel.gif` in its description for the check of the
+  Markdown sanitizing and of the Content-Security-Policy (spec 0019); it is not part of the
+  issue search. The search text `kein Treffer` answers an empty list
+  (`issues-search-empty.json`, spec 0019). A flow that needs GitLab data with state adds it at
+  run time through the admin API of the double with `frontend/e2e/gitlab-double.ts`:
+  `stubIssueWithFailingFirstNote` stubs an issue with a unique iid (`uniqueIssueIid`) whose
+  first note answers 500 and every later note 201, `removeStubs` removes the stubs after the
+  test, `countNotes` counts the notes of an issue. The iid is unique per test, so repeated and
+  parallel runs share no WireMock scenario (spec 0019). A flow that needs other fixed GitLab
+  data adds a mapping there.
 - Environment check: `make e2e` starts everything; for a manual check start backend and frontend
   as in `README.md`.
 - Named states: none yet; a state the flows need goes into the spec that introduces it. The
@@ -97,11 +102,15 @@ change touches.
   start page (issue 42, issue 44 for the sanitizing check) and join through the join page in a
   second browser context; `voting-round.spec.ts` (spec 0013) joins two or three developers the
   same way; `result-round.spec.ts` (spec 0014) joins two developers for the result and the
-  new round and uses issue 45 for the GitLab error; `round-timer.spec.ts` (spec 0016) joins one
+  new round and stubs its own issue for the GitLab error (`gitlab-double.ts`); `round-timer.spec.ts` (spec 0016) joins one
   developer, sets the timer to 15 s and waits the real duration for the reveal by the server;
   `outliers.spec.ts` (spec 0017) joins two developers on issue 42;
   `consensus.spec.ts` (spec 0018) joins two developers on issue 42, both vote `5`, and runs one
-  flow under `reducedMotion: 'reduce'`.
+  flow under `reducedMotion: 'reduce'`; `full-flow.spec.ts` (spec 0019) runs the whole flow with
+  a scrum master and two developers (one joins through the link, one through the session id on
+  the start page, both in small letters) on issues 42 and 43, confirms issue 43 and counts its
+  notes in the double, and opens an unknown session id with a stored token;
+  `layout.spec.ts` (spec 0019) joins one developer at a viewport of 375×800.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.
 
@@ -110,7 +119,7 @@ change touches.
 - Automated: `make check` and the tests of the touched areas (table Areas), `make e2e` for
   changes under `frontend/src/app/` or at an endpoint.
 - Browser checks: `http://localhost:4200/` with backend and frontend running
-  (`README.md`, Einrichtung und Start); no login; test data as the spec names it.
+  (`README.md`, Schnellstart); no login; test data as the spec names it.
 - Browser checks without backend: `pnpm -C frontend start:mock` serves the frontend with the
   mock backend (`project-rules/frontend.md`, Mock backend) on port 4200, under the application
   lock like `make e2e`. The mock session is `K7P2QX9M`; a token in `sessionStorage` under

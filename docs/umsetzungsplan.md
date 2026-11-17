@@ -252,6 +252,7 @@ Konfiguration:
 | `planningpoker.gitlab.base-url` | `https://gitlab.com` | Basis-URL der GitLab-Instanz |
 | `planningpoker.gitlab.token` | keiner, aus `GITLAB_TOKEN` | Personal Access Token mit Scope `api`; fehlt er, startet das Backend nicht (A-14) |
 | `planningpoker.gitlab.write-weight` | `false` | Zahlenwerte zusätzlich als `weight` setzen, vor dem Kommentar (A-07) |
+| `planningpoker.gitlab.timeout` | `10s` | Verbindungs- und Lesezeit je GitLab-Aufruf; danach gilt GitLab als nicht erreichbar (Spec 0003) |
 | `planningpoker.session.ttl` | `12h` | Verfall inaktiver Sitzungen |
 
 Vorlage für den Kommentar:

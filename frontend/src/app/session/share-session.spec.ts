@@ -6,13 +6,18 @@ const SESSION_ID = 'K7P2QX9M';
 describe('ShareSession', () => {
   let fixture: ComponentFixture<ShareSession>;
   let written: string[];
+  let rejects: boolean;
 
   beforeEach(async () => {
     written = [];
+    rejects = false;
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: {
         writeText: (value: string) => {
+          if (rejects) {
+            return Promise.reject(new DOMException('denied', 'NotAllowedError'));
+          }
           written.push(value);
           return Promise.resolve();
         },
@@ -54,5 +59,22 @@ describe('ShareSession', () => {
     expect(written).toEqual([SESSION_ID]);
     expect(element('copy-session-id-done')?.textContent?.trim()).toBe('Kopiert');
     expect(element('copy-link-done')).toBeNull();
+  });
+
+  it.each([
+    ['copy-link', 'copy-link-failed', 'copy-link-done'],
+    ['copy-session-id', 'copy-session-id-failed', 'copy-session-id-done'],
+  ])('shows a status to copy by hand when %s fails', async (button, failed, done) => {
+    rejects = true;
+
+    element(button)?.click();
+    await fixture.whenStable();
+
+    expect(written).toEqual([]);
+    expect(element(failed)?.textContent?.trim()).toBe(
+      'Kopieren nicht möglich, bitte von Hand kopieren.',
+    );
+    expect(element(failed)?.getAttribute('role')).toBe('status');
+    expect(element(done)).toBeNull();
   });
 });

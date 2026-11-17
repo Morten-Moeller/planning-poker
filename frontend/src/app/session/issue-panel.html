@@ -37,12 +37,27 @@
         </button>
       </li>
     } @empty {
-      @if (!loading()) {
+      @if (!loading() && !failed()) {
         <li data-testid="issue-results-empty" i18n="@@issuePanel.empty">Keine Issues gefunden</li>
       }
     }
   </ul>
-  @if (nextPage() !== null) {
+  @if (failed()) {
+    <div class="search-error" role="alert" data-testid="issue-results-error">
+      <p i18n="@@issuePanel.gitlabError">GitLab ist nicht erreichbar.</p>
+      <button
+        mat-stroked-button
+        type="button"
+        data-testid="issue-results-retry"
+        [disabled]="loading()"
+        (click)="retry()"
+        i18n="@@issuePanel.retry"
+      >
+        Erneut versuchen
+      </button>
+    </div>
+  }
+  @if (nextPage() !== null && !failed()) {
     <button
       mat-stroked-button
       type="button"

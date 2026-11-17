@@ -56,7 +56,17 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `formErrorMessage` (`api/error-messages.ts`) at the form for the codes the form names (create:
   `ISSUE_NOT_FOUND`, `PROJECT_NOT_ALLOWED`, `LIMIT_REACHED`, `GITLAB_ERROR`, `VALIDATION_ERROR`;
   join: `SESSION_NOT_FOUND`, `NAME_TAKEN`, `LIMIT_REACHED`, `VALIDATION_ERROR`), then clears
-  `ErrorState`; every other code stays in the banner (specs 0011, 0015). The name rule of create and join is `api/participant-name.ts`.
+  `ErrorState`; every other code stays in the banner (specs 0011, 0015). The issue search shows
+  `GITLAB_ERROR` in the panel as `issue-results-error` with the button `issue-results-retry`,
+  which repeats the last query, and clears `ErrorState` (spec 0019).
+- Error and empty states of the session page (spec 0019): `SESSION_NOT_FOUND` from `GET` or
+  from the WebSocket shows `session-gone` with a link to the start page instead of
+  `session-loading`; the page removes the token of the session from the `TokenStore`, leaves
+  the `SessionStore` and clears `ErrorState`. An issue search without results shows
+  `issue-results-empty`. A failed copy to the clipboard shows a `role="status"` text to copy by
+  hand.
+- Session ids from the route of the join page are taken in capital letters, like the input on
+  the start page. The name rule of create and join is `api/participant-name.ts`.
 - Authentication: `authInterceptor` adds `Authorization: Bearer <token>` from the `TokenStore`
   (`sessionStorage`, key `planningpoker.session.<id>`, value `{ participantId, token }`) to
   every call under `/api/sessions/{id}` except the join (`POST …/participants`).
