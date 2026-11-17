@@ -23,9 +23,8 @@ import {
   tap,
   timer,
 } from 'rxjs';
-import type { ErrorCode } from '../api/api-error';
+import { ApiError, type ErrorCode } from '../api/api-error';
 import { ApiService, IssueSummary, ProjectSummary } from '../api/api.service';
-import { ApiError } from '../api/api-error';
 import { errorMessage, formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
 import { participantNameValidators } from '../api/participant-name';
