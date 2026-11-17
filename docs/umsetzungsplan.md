@@ -129,7 +129,7 @@ Der Server ist die einzige Quelle der Wahrheit: Befehle gehen per REST an das Ba
 
 | Objekt | Felder |
 | --- | --- |
-| Session | `id` (A-17), `gitlabProjectId`, `phase`, `participants`, `preselectedIssueIid`, `activeIssue`, `round`, `history`, `lastActivityAt` |
+| Session | `id` (A-17), `gitlabProjectId`, `project` (Name, Pfad und Link aus GitLab beim Anlegen, oder leer), `writeWeight`, `phase`, `participants`, `preselectedIssueIid`, `activeIssue`, `round`, `history`, `lastActivityAt` |
 | Participant | `id` (UUIDv7), `name`, `role` (`SCRUM_MASTER` oder `DEVELOPER`), `token` (nur serverseitig), `connected` |
 | Issue | `iid`, `title`, `description` (Markdown), `webUrl` |
 | Round | `number` (ab 1 je Issue), `votes` (Teilnehmer-ID zu Karte), `revealed`, `confirming` (Ergebnis wird gerade nach GitLab geschrieben) |
@@ -165,11 +165,11 @@ Alle Pfade liegen unter `/api`, das Format ist JSON. Außer beim Erstellen, beim
 | Methode und Pfad | Rolle | Request | Erfolg | Fehler |
 | --- | --- | --- | --- | --- |
 | `GET /api/projects?search=&page=` | offen | keiner | 200 `{ items: [{ id, name, pathWithNamespace, webUrl }], nextPage }`: die Projekt-Allowlist, sonst die Projekte mit Mitgliedschaft des Tokens (ADR 0008) | 400, 502 |
-| `GET /api/projects/{projectId}/issues?search=&page=` | offen | keiner | 200 `{ items, nextPage }`, offene Issues mit `iid`, `title`, `webUrl`, `weight` | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
-| `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid }` | 201 `{ sessionId, participantId, token }` | 400, 404 `ISSUE_NOT_FOUND`, 502 |
+| `GET /api/projects/{projectId}/issues?search=&page=` | offen | keiner | 200 `{ items, nextPage, total }`, offene Issues mit `iid`, `title`, `webUrl`, `weight` | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
+| `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid }` | 201 `{ sessionId, participantId, token }`; lädt nach dem Issue das Projekt (`GET /projects/{id}`), ein Fehler dort bricht das Anlegen nicht ab | 400, 404 `ISSUE_NOT_FOUND`, 502 |
 | `POST /api/sessions/{id}/participants` | offen | `{ name }` | 201 `{ participantId, token }` | 400, 404, 409 `NAME_TAKEN` |
 | `GET /api/sessions/{id}` | beide | keiner | 200 SessionView | 401, 404 |
-| `GET /api/sessions/{id}/issues?search=&page=&weight=&period=` | Scrum Master | keiner | 200 `{ items, nextPage }` mit `iid`, `title`, `webUrl`, `weight` (Zahl oder `null`) je Eintrag, nach letzter Änderung absteigend; `weight` `NONE`, `ANY` oder `ALL` und `period` `WEEK`, `MONTH`, `YEAR` oder `ALL`, beide Standard `ALL` (ADR 0009) | 400 `VALIDATION_ERROR`, 403, 502 |
+| `GET /api/sessions/{id}/issues?search=&page=&weight=&period=` | Scrum Master | keiner | 200 `{ items, nextPage, total }` mit `iid`, `title`, `webUrl`, `weight` (Zahl oder `null`) je Eintrag, nach letzter Änderung absteigend; `total` aus dem GitLab-Header `X-Total` oder `null`; `weight` `NONE`, `ANY` oder `ALL` und `period` `WEEK`, `MONTH`, `YEAR` oder `ALL`, beide Standard `ALL` (ADR 0009) | 400 `VALIDATION_ERROR`, 403, 502 |
 | `POST /api/sessions/{id}/active-issue` | Scrum Master | `{ issueIid }` | 204 | 403, 404, 409, 502 |
 | `PUT /api/sessions/{id}/timer` | Scrum Master | `{ seconds }` (5 bis 3600 oder `null`) | 204 | 400 `VALIDATION_ERROR`, 401, 403, 404 |
 | `PUT /api/sessions/{id}/vote` | Entwickler | `{ card }` | 204 | 400 `INVALID_CARD`, 403, 409 |
@@ -208,6 +208,8 @@ Der Snapshot ist je Empfänger gefiltert. Beispiel für einen Entwickler in der 
 {
   "sessionId": "K7P2QX9M",
   "gitlabProjectId": "1234",
+  "project": { "id": 1234, "name": "Frontend", "pathWithNamespace": "webshop/frontend", "webUrl": "https://gitlab.com/webshop/frontend" },
+  "writeWeight": false,
   "phase": "VOTING",
   "me": { "participantId": "01973f5e-2a4c-7d2e-9f30-4b5c6d7e8f90", "role": "DEVELOPER" },
   "participants": [

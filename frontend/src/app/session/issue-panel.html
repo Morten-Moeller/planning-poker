@@ -1,7 +1,19 @@
 <section class="panel" data-testid="issue-panel">
-  <h2 i18n="@@issuePanel.title">Issue auswählen</h2>
+  <div class="head">
+    <h2 i18n="@@issuePanel.title">Issue auswählen</h2>
+    <span class="project" data-testid="issue-panel-project">
+      @if (project(); as known) {
+        <ng-container i18n="@@issuePanel.project"
+          >Projekt: {{ known.name }} · {{ known.id }}</ng-container
+        >
+      } @else {
+        <ng-container i18n="@@issuePanel.projectId">Projekt: {{ projectId() }}</ng-container>
+      }
+    </span>
+  </div>
+
   <form class="search" [formGroup]="searchForm" (ngSubmit)="submitSearch()">
-    <mat-form-field>
+    <mat-form-field [subscriptSizing]="'dynamic'">
       <mat-label i18n="@@issuePanel.searchLabel">Issues suchen</mat-label>
       <input
         matInput
@@ -81,96 +93,132 @@
     </mat-form-field>
   </div>
 
-  <ul class="results">
-    @for (issue of results(); track issue.iid) {
-      <li>
-        <button
-          type="button"
-          class="result"
-          data-testid="issue-result"
-          [class.selected]="issue.iid === selectedIid()"
-          [attr.aria-pressed]="issue.iid === selectedIid()"
-          (click)="select(issue.iid)"
-        >
-          <span class="iid">#{{ issue.iid }}</span> {{ issue.title }}
-          <span class="weight" data-testid="issue-result-weight">
-            @if (issue.weight === null) {
-              <ng-container i18n="@@issuePanel.withoutWeight">ohne Gewicht</ng-container>
-            } @else {
-              <ng-container i18n="@@issuePanel.weightValue"
-                >Gewicht {{ issue.weight }}</ng-container
-              >
-            }
-          </span>
-        </button>
-      </li>
-    } @empty {
-      @if (!loading() && !failed()) {
-        <li data-testid="issue-results-empty" i18n="@@issuePanel.empty">Keine Issues gefunden</li>
-      }
-    }
-  </ul>
   @if (failure(); as message) {
     <div class="search-error" role="alert" data-testid="issue-results-error">
-      <p data-testid="issue-results-error-message">{{ message }}</p>
+      <span class="error-mark" aria-hidden="true">⚠</span>
+      <div class="error-text">
+        <strong i18n="@@issuePanel.errorTitle">Die Issues konnten nicht geladen werden.</strong>
+        <span data-testid="issue-results-error-message">{{ message }}</span>
+      </div>
       <button
         mat-stroked-button
         type="button"
+        class="on-error"
         data-testid="issue-results-retry"
         [disabled]="loading()"
         (click)="retry()"
-        i18n="@@issuePanel.retry"
       >
-        Erneut versuchen
+        <span aria-hidden="true">↻ </span
+        ><ng-container i18n="@@issuePanel.retry">Erneut versuchen</ng-container>
       </button>
     </div>
   }
-  @if (nextPage() !== null && !failed()) {
-    <button
-      mat-stroked-button
-      type="button"
-      data-testid="issue-load-more"
-      [disabled]="loading()"
-      (click)="loadMore()"
-      i18n="@@issuePanel.loadMore"
-    >
-      Mehr laden
-    </button>
-  }
 
-  @if (selected(); as issue) {
-    <div class="preview" data-testid="issue-preview">
-      <h3 i18n="@@issuePanel.previewTitle">Vorschau</h3>
-      <p>
-        <span class="iid" data-testid="issue-preview-iid">#{{ issue.iid }}</span>
-        @if (issue.title !== null) {
-          <span data-testid="issue-preview-title">{{ issue.title }}</span>
-        }
-      </p>
-      @if (issue.webUrl !== null) {
-        <a
-          data-testid="issue-preview-link"
-          [href]="issue.webUrl"
-          target="_blank"
-          [rel]="'noopener'"
-          i18n="@@issuePanel.openInGitLab"
-          >In GitLab öffnen</a
-        >
+  @if (results().length > 0) {
+    <ul class="results">
+      @for (issue of results(); track issue.iid) {
+        <li>
+          <button
+            type="button"
+            class="result"
+            data-testid="issue-result"
+            [class.selected]="issue.iid === selectedIid()"
+            [attr.aria-pressed]="issue.iid === selectedIid()"
+            (click)="select(issue.iid)"
+          >
+            <span class="check" aria-hidden="true">{{
+              issue.iid === selectedIid() ? '✓' : ''
+            }}</span>
+            &ngsp;<span class="iid">#{{ issue.iid }}</span
+            >&ngsp;<span class="title">{{ issue.title }}</span
+            >&ngsp;<span class="weight" data-testid="issue-result-weight">
+              @if (issue.weight === null) {
+                <ng-container i18n="@@issuePanel.withoutWeight">ohne Gewicht</ng-container>
+              } @else {
+                <ng-container i18n="@@issuePanel.weightValue"
+                  >Gewicht {{ issue.weight }}</ng-container
+                >
+              }
+            </span>
+          </button>
+        </li>
       }
+    </ul>
+  } @else if (!loading() && !failed()) {
+    <div class="empty" role="status">
+      <strong data-testid="issue-results-empty" i18n="@@issuePanel.empty"
+        >Keine Issues gefunden</strong
+      >
+      <button
+        mat-button
+        type="button"
+        data-testid="issue-filter-reset"
+        i18n="@@issuePanel.resetFilters"
+        (click)="resetFilters()"
+      >
+        Filter zurücksetzen
+      </button>
     </div>
   }
 
-  <button
-    mat-flat-button
-    type="button"
-    data-testid="issue-release"
-    [disabled]="releaseDisabled()"
-    (click)="release()"
-  >
-    @if (inLobby()) {
-      <ng-container i18n="@@issuePanel.release">Freigeben</ng-container>
-    } @else {
-      <ng-container i18n="@@issuePanel.switch">Issue wechseln</ng-container>
+  <div class="footer">
+    @if (nextPage() !== null && !failed()) {
+      <button
+        mat-stroked-button
+        type="button"
+        data-testid="issue-load-more"
+        [disabled]="loading()"
+        (click)="loadMore()"
+        i18n="@@issuePanel.loadMore"
+      >
+        Mehr laden
+      </button>
     }
-  </button>
+    @if (results().length > 0) {
+      <span class="count" data-testid="issue-count">
+        @if (total(); as count) {
+          <ng-container i18n="@@issuePanel.countOfTotal"
+            >{{ results().length }} von {{ count }} Issues</ng-container
+          >
+        } @else {
+          <ng-container i18n="@@issuePanel.count">{results().length, plural,
+            =1 {1 Issue}
+            other {{{ results().length }} Issues}
+          }</ng-container>
+        }
+      </span>
+    }
+    <span class="spacer"></span>
+    @if (selected(); as issue) {
+      <span class="selection" data-testid="issue-preview">
+        <ng-container i18n="@@issuePanel.selected">Ausgewählt:</ng-container>&ngsp;<strong
+          class="iid"
+          data-testid="issue-preview-iid"
+          >#{{ issue.iid }}</strong
+        >&ngsp;
+        @if (issue.title !== null && issue.webUrl !== null) {
+          <a
+            data-testid="issue-preview-link"
+            [href]="issue.webUrl"
+            target="_blank"
+            [rel]="'noopener'"
+            ><span data-testid="issue-preview-title">{{ issue.title }}</span></a
+          >
+        }
+      </span>
+    }
+    <button
+      mat-flat-button
+      type="button"
+      data-testid="issue-release"
+      [disabled]="releaseDisabled()"
+      (click)="release()"
+    >
+      @if (inLobby()) {
+        <ng-container i18n="@@issuePanel.release">Freigeben</ng-container>
+      } @else {
+        <ng-container i18n="@@issuePanel.switch">Issue wechseln</ng-container>
+      }
+    </button>
+  </div>
 </section>

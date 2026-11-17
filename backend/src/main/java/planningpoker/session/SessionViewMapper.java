@@ -15,6 +15,8 @@ public final class SessionViewMapper {
         return new SessionView(
                 session.id(),
                 session.gitlabProjectId(),
+                session.project().map(SessionViewMapper::projectView).orElse(null),
+                session.writeWeight(),
                 session.phase(),
                 new SessionView.Me(receiver.id(), receiver.role()),
                 session.participants().stream()
@@ -35,6 +37,10 @@ public final class SessionViewMapper {
                 session.round().map(round -> round.hasVoted(participant.id())).orElse(false);
         return new SessionView.ParticipantView(
                 participant.id(), participant.name(), participant.role(), participant.connected(), hasVoted);
+    }
+
+    private static SessionView.ProjectView projectView(Project project) {
+        return new SessionView.ProjectView(project.id(), project.name(), project.pathWithNamespace(), project.webUrl());
     }
 
     private static SessionView.IssueView issueView(Issue issue) {

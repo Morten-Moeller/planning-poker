@@ -13,6 +13,8 @@ import planningpoker.session.Role;
         requiredProperties = {
             "sessionId",
             "gitlabProjectId",
+            "project",
+            "writeWeight",
             "phase",
             "me",
             "participants",
@@ -26,6 +28,11 @@ import planningpoker.session.Role;
 public record SessionView(
         @Schema(description = "Session id, 8 characters.", examples = "K7P2QX9M") String sessionId,
         @Schema(description = "Id or path of the GitLab project.", examples = "1234") String gitlabProjectId,
+        @Schema(nullable = true) ProjectView project,
+        @Schema(
+                        description =
+                                "Whether the confirmation also sets a number card as weight of the GitLab issue (setting planningpoker.gitlab.write-weight).")
+                boolean writeWeight,
         Phase phase,
         Me me,
         @Schema(description = "Every participant of the session, including disconnected ones.")
@@ -49,6 +56,18 @@ public record SessionView(
                                 "Time of the server when the snapshot was built, RFC 3339 with offset. Clients compute the remaining time of the round from it.",
                         examples = "2026-11-16T09:15:00Z")
                 OffsetDateTime serverTime) {
+
+    @Schema(
+            description =
+                    "The GitLab project of the session, loaded once at creation; null when GitLab did not answer with the project.",
+            requiredProperties = {"id", "name", "pathWithNamespace", "webUrl"})
+    public record ProjectView(
+            @Schema(description = "Numeric id of the project.", examples = "1234") long id,
+            @Schema(description = "Name of the project.", examples = "Frontend") String name,
+            @Schema(description = "Path of the project with its namespace.", examples = "webshop/frontend")
+                    String pathWithNamespace,
+            @Schema(description = "Link to the project in GitLab.", examples = "https://gitlab.com/webshop/frontend")
+                    String webUrl) {}
 
     @Schema(
             description = "Identity of the receiver of the snapshot.",

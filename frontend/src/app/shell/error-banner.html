@@ -1,3 +1,30 @@
+@if (connectionLost()) {
+  <div class="banner" role="alert" data-testid="connection-banner">
+    <span class="title" i18n="@@connection.lost">⚠ Verbindung zum Server unterbrochen.</span>
+    <span data-testid="connection-retry">
+      @if (secondsLeft() !== null) {
+        <ng-container i18n="@@connection.retryIn"
+          >Neuer Versuch in {{ secondsLeft() }} s. Deine Karte bleibt erhalten.</ng-container
+        >
+      } @else {
+        <ng-container i18n="@@connection.connecting"
+          >Verbindung wird aufgebaut … Deine Karte bleibt erhalten.</ng-container
+        >
+      }
+    </span>
+    <span class="spacer"></span>
+    <button
+      mat-stroked-button
+      type="button"
+      class="on-error"
+      data-testid="connection-reconnect"
+      i18n="@@connection.reconnect"
+      (click)="reconnect()"
+    >
+      Jetzt verbinden
+    </button>
+  </div>
+}
 @if (message(); as text) {
   <div class="banner" role="alert" data-testid="error-banner">
     <span data-testid="error-message">{{ text }}</span>

@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import planningpoker.gitlab.GitLabClient;
 import planningpoker.gitlab.GitLabException;
 import planningpoker.gitlab.GitLabProject;
@@ -31,6 +32,16 @@ public class GitLabProjects {
                 .projects()
                 .map(projects -> fromAllowlist(projects, query, page))
                 .orElseGet(() -> fromMembership(query, page));
+    }
+
+    public Optional<Project> loadForSession(String projectId) {
+        try {
+            GitLabProject project = client.loadProject(projectId);
+            return Optional.of(
+                    new Project(project.id(), project.name(), project.pathWithNamespace(), project.webUrl()));
+        } catch (GitLabException e) {
+            return Optional.empty();
+        }
     }
 
     private ProjectListResponse fromMembership(String query, int page) {

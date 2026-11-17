@@ -28,6 +28,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import planningpoker.gitlab.GitLabConfig;
 import planningpoker.platform.Authenticated;
 import planningpoker.platform.ProblemDetail;
 import planningpoker.session.api.ConfirmRequest;
@@ -77,6 +78,12 @@ public class SessionResource {
     ProjectAllowlist allowlist;
 
     @Inject
+    GitLabProjects gitLabProjects;
+
+    @Inject
+    GitLabConfig gitLabConfig;
+
+    @Inject
     Clock clock;
 
     private record VoteOutcome(boolean completed, int roundNumber) {}
@@ -112,7 +119,9 @@ public class SessionResource {
         String projectId = request.gitlabProjectId().strip();
         allowlist.requireAllowed(projectId);
         gitLabIssues.loadIssue(projectId, request.issueIid());
-        SessionRegistry.Created created = registry.create(projectId, request.issueIid(), request.name());
+        Project project = gitLabProjects.loadForSession(projectId).orElse(null);
+        SessionRegistry.Created created =
+                registry.create(projectId, request.issueIid(), request.name(), project, gitLabConfig.writeWeight());
         return Response.status(Response.Status.CREATED)
                 .entity(new CreateSessionResponse(
                         created.session().id(),

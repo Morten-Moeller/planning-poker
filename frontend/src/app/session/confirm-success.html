@@ -1,3 +1,17 @@
-<span matSnackBarLabel data-testid="confirm-success" i18n="@@confirmResult.success">
-  Das Ergebnis wurde in GitLab übernommen.
-</span>
+<span matSnackBarLabel data-testid="confirm-success" i18n="@@confirmResult.success"
+  >✓ Endwert {{ value }} in GitLab-Issue #{{ data.issueIid }} gespeichert.</span
+>
+@if (data.webUrl !== null) {
+  <div matSnackBarActions>
+    <a
+      matSnackBarAction
+      class="open"
+      data-testid="confirm-success-open"
+      [href]="data.webUrl"
+      target="_blank"
+      [rel]="'noopener'"
+      i18n="@@confirmResult.successOpen"
+      >Öffnen</a
+    >
+  </div>
+}

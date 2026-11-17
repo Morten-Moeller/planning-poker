@@ -1,8 +1,23 @@
 <div data-testid="switch-dialog">
   <h2 mat-dialog-title i18n="@@switchIssue.title">Issue wechseln?</h2>
   <mat-dialog-content>
-    <p i18n="@@switchIssue.text">
-      Die laufende Runde wird verworfen. Die bisherigen Karten gehen verloren.
+    <p data-testid="switch-text">
+      @if (data.revealed) {
+        <ng-container i18n="@@switchIssue.textRevealed"
+          >Runde {{ data.roundNumber }} zu #{{ data.issueIid }} ist aufgedeckt und hat keinen
+          Endwert. Beim Wechsel bleibt sie ohne Endwert im Protokoll.</ng-container
+        >
+      } @else {
+        <ng-container i18n="@@switchIssue.textRunning"
+          >Runde {{ data.roundNumber }} zu #{{ data.issueIid }} läuft noch. Beim Wechsel endet sie
+          ohne Ergebnis,
+          {data.votes, plural,
+            =0 {es gibt noch keine abgegebene Schätzung.}
+            =1 {die 1 abgegebene Schätzung wird verworfen.}
+            other {die {{ data.votes }} abgegebenen Schätzungen werden verworfen.}
+          }</ng-container
+        >
+      }
     </p>
   </mat-dialog-content>
   <mat-dialog-actions [align]="'end'">
@@ -22,7 +37,7 @@
       [mat-dialog-close]="true"
       i18n="@@switchIssue.confirm"
     >
-      Wechseln
+      Issue wechseln
     </button>
   </mat-dialog-actions>
 </div>

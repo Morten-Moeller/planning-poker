@@ -211,7 +211,7 @@ class ContractTest {
 
     @Test
     void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
-        assertEquals("3.0.0", contract.at("/info/version").asText());
+        assertEquals("3.1.0", contract.at("/info/version").asText());
         assertEquals(
                 "PROJECT_NOT_ALLOWED",
                 contract.at("/paths/~1api~1sessions/post/responses/403/description")
@@ -272,6 +272,19 @@ class ContractTest {
         JsonNode summary = contract.at("/components/schemas/IssueSummary");
         assertTrue(texts(summary.get("required")).contains("weight"));
         assertEquals(List.of("integer", "null"), texts(summary.at("/properties/weight/type")));
+    }
+
+    @Test
+    void describesTheProjectTheWeightSettingAndTheTotal() {
+        JsonNode view = contract.at("/components/schemas/SessionView");
+        assertTrue(texts(view.get("required")).containsAll(List.of("project", "writeWeight")));
+        assertEquals("boolean", view.at("/properties/writeWeight/type").asText());
+        assertEquals(
+                List.of("id", "name", "pathWithNamespace", "webUrl"),
+                texts(contract.at("/components/schemas/ProjectView/required")));
+        JsonNode list = contract.at("/components/schemas/IssueListResponse");
+        assertEquals(List.of("items", "nextPage", "total"), texts(list.get("required")));
+        assertEquals(List.of("integer", "null"), texts(list.at("/properties/total/type")));
     }
 
     private void assertFilter(JsonNode parameters, String name, String schema, List<String> values) {

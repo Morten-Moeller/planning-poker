@@ -407,6 +407,12 @@ export interface components {
              * @example 2
              */
             nextPage: number | null;
+            /**
+             * Format: int32
+             * @description Number of issues that match the query, from the GitLab header X-Total; null when GitLab omits it for large results.
+             * @example 23
+             */
+            total: number | null;
         };
         /** @description Issue of the project without its description. */
         IssueSummary: {
@@ -575,6 +581,30 @@ export interface components {
              */
             webUrl: string;
         };
+        /** @description The GitLab project of the session, loaded once at creation; null when GitLab did not answer with the project. */
+        ProjectView: {
+            /**
+             * Format: int64
+             * @description Numeric id of the project.
+             * @example 1234
+             */
+            id: number;
+            /**
+             * @description Name of the project.
+             * @example Frontend
+             */
+            name: string;
+            /**
+             * @description Path of the project with its namespace.
+             * @example webshop/frontend
+             */
+            pathWithNamespace: string;
+            /**
+             * @description Link to the project in GitLab.
+             * @example https://gitlab.com/webshop/frontend
+             */
+            webUrl: string;
+        };
         /**
          * @description Role of a participant. The server takes it from the token.
          * @enum {string}
@@ -632,6 +662,9 @@ export interface components {
              * @example 1234
              */
             gitlabProjectId: string;
+            project: components["schemas"]["ProjectView"] | null;
+            /** @description Whether the confirmation also sets a number card as weight of the GitLab issue (setting planningpoker.gitlab.write-weight). */
+            writeWeight: boolean;
             phase: components["schemas"]["Phase"];
             me: components["schemas"]["Me"];
             /** @description Every participant of the session, including disconnected ones. */

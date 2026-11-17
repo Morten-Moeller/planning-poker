@@ -1,6 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Subscription } from 'rxjs';
 import { ApiError } from '../api/api-error';
 import { ErrorState } from '../api/error-state';
+import { lobbyDeveloper } from '../api/examples';
+import { RealtimeService } from '../api/realtime.service';
+import { FakeSocketFactory } from '../api/testing/fake-web-socket';
+import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
 import { ErrorBanner } from './error-banner';
 
 const DETAIL = 'Internal detail text of the API.';
@@ -28,7 +33,13 @@ describe('ErrorBanner', () => {
   let fixture: ComponentFixture<ErrorBanner>;
   let errorState: ErrorState;
 
+  let sockets: FakeSocketFactory;
+
   beforeEach(async () => {
+    sockets = new FakeSocketFactory();
+    TestBed.configureTestingModule({
+      providers: [{ provide: WEB_SOCKET_FACTORY, useValue: sockets.create }],
+    });
     fixture = TestBed.createComponent(ErrorBanner);
     errorState = TestBed.inject(ErrorState);
     await fixture.whenStable();
@@ -59,5 +70,64 @@ describe('ErrorBanner', () => {
 
     expect(element('error-banner')).toBeNull();
     expect(errorState.error()).toBeNull();
+  });
+
+  describe('lost connection', () => {
+    let connection: Subscription;
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      connection = TestBed.inject(RealtimeService).connect('K7P2QX9M', 'token').subscribe();
+      sockets.last().receive({ type: 'session.state', payload: lobbyDeveloper });
+    });
+
+    afterEach(() => {
+      connection.unsubscribe();
+      vi.useRealTimers();
+    });
+
+    async function render(): Promise<void> {
+      await vi.advanceTimersByTimeAsync(0);
+      fixture.detectChanges();
+    }
+
+    it('counts down to the next attempt and keeps other errors with their text', async () => {
+      sockets.last().drop();
+      vi.advanceTimersByTime(1_000);
+      sockets.last().drop();
+      errorState.report(new ApiError('INVALID_STATE', 409, DETAIL));
+      await render();
+
+      const banner = element('connection-banner');
+      expect(banner?.getAttribute('role')).toBe('alert');
+      expect(banner?.textContent).toContain('⚠ Verbindung zum Server unterbrochen.');
+      expect(element('connection-retry')?.textContent?.trim()).toBe(
+        'Neuer Versuch in 2 s. Deine Karte bleibt erhalten.',
+      );
+      expect(element('error-message')?.textContent).toBe(
+        'Die Aktion passt nicht zum aktuellen Stand der Sitzung.',
+      );
+
+      await vi.advanceTimersByTimeAsync(1_000);
+      fixture.detectChanges();
+      expect(element('connection-retry')?.textContent?.trim()).toBe(
+        'Neuer Versuch in 1 s. Deine Karte bleibt erhalten.',
+      );
+    });
+
+    it('connects at once on „Jetzt verbinden“ and hides the banner with the next snapshot', async () => {
+      sockets.last().drop();
+      await render();
+      expect(sockets.sockets).toHaveLength(1);
+
+      element('connection-reconnect')?.click();
+      await render();
+
+      expect(sockets.sockets).toHaveLength(2);
+      expect(element('connection-banner')).not.toBeNull();
+      sockets.last().receive({ type: 'session.state', payload: lobbyDeveloper });
+      await render();
+      expect(element('connection-banner')).toBeNull();
+    });
   });
 });
