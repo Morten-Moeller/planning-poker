@@ -1,14 +1,14 @@
 ---
 id: "0020"
 title: Umgebungsvariablen in .env.example
-status: Review
+status: done
 risk: high
 adrs: ["0001"]
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#20"
+note: alle Kriterien erfüllt
 ---
 
 # Umgebungsvariablen in .env.example
