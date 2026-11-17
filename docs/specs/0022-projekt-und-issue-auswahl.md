@@ -1,14 +1,14 @@
 ---
 id: "0022"
 title: Projekt- und Issue-Auswahl beim Anlegen
-status: Review
+status: done
 risk: high
 adrs: ["0008"]
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#22"
+note: alle Kriterien erfüllt; Browser gegen das echte Projekt 88998176 nicht geprüft (kein Token in der Session)
 ---
 
 # Projekt- und Issue-Auswahl beim Anlegen
