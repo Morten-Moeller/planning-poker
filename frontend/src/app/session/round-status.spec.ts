@@ -3,7 +3,13 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { authInterceptor } from '../api/auth.interceptor';
-import { SessionView, votingDeveloper, votingScrumMaster } from '../api/examples';
+import {
+  discussionDeveloper,
+  discussionScrumMaster,
+  SessionView,
+  votingDeveloper,
+  votingScrumMaster,
+} from '../api/examples';
 import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { TokenStore } from '../api/token-store';
@@ -12,6 +18,7 @@ import { RoundStatus } from './round-status';
 
 const SESSION_ID = 'K7P2QX9M';
 const REVEAL_URL = `/api/sessions/${SESSION_ID}/round/reveal`;
+const START_URL = `/api/sessions/${SESSION_ID}/round/start`;
 
 type Participant = SessionView['participants'][number];
 
@@ -168,6 +175,49 @@ describe('RoundStatus', () => {
     await fixture.whenStable();
 
     expect(revealButton().disabled).toBe(false);
+  });
+
+  it('shows the hint without counter and start button to a developer in DISCUSSION', async () => {
+    await open(discussionDeveloper);
+
+    expect(text('discussion-hint')).toBe(
+      'Diskussion: Die Karten werden geöffnet, wenn der Scrum Master die Schätzung startet.',
+    );
+    expect(all('round-start')).toHaveLength(0);
+    expect(all('vote-counter')).toHaveLength(0);
+    expect(all('round-reveal')).toHaveLength(0);
+  });
+
+  it('shows the start button with the timer to the scrum master and sends the start', async () => {
+    await open(discussionScrumMaster);
+    const start = all('round-start')[0] as HTMLButtonElement;
+    expect(text('round-start')).toBe('Schätzung starten');
+    expect(text('round-start-timer')).toBe('Timer: 1 min');
+    expect(all('round-reveal')).toHaveLength(0);
+
+    start.click();
+    await fixture.whenStable();
+
+    const request = http.expectOne(START_URL);
+    expect(request.request.method).toBe('POST');
+    expect(start.disabled).toBe(true);
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await fixture.whenStable();
+    expect(start.disabled).toBe(false);
+  });
+
+  it.each([
+    ['no timer', null, null],
+    ['a timer outside the options', 45, 'Timer: 45 s'],
+  ])('shows the start button with %s', async (_case, seconds, expected) => {
+    await open({ ...discussionScrumMaster, timerSeconds: seconds });
+
+    expect(all('round-start')).toHaveLength(1);
+    if (expected === null) {
+      expect(all('round-start-timer')).toHaveLength(0);
+    } else {
+      expect(text('round-start-timer')).toBe(expected);
+    }
   });
 
   it.each([

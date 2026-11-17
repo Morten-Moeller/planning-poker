@@ -50,6 +50,10 @@ final class ConfirmRoundFlow {
                 .then();
     }
 
+    ValidatableResponse startVoting() {
+        return asScrumMaster().when().post(session + "/round/start").then();
+    }
+
     void vote(int developer, String card) {
         asDeveloper(developer)
                 .contentType(ContentType.JSON)
@@ -85,6 +89,7 @@ final class ConfirmRoundFlow {
     }
 
     void playRound(String... cards) {
+        startVoting().statusCode(204);
         for (int i = 0; i < cards.length; i++) {
             vote(i, cards[i]);
         }

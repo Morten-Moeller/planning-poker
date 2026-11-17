@@ -13,6 +13,9 @@
             @case ('LOBBY') {
               <ng-container i18n="@@session.phase.LOBBY">Wartet auf ein Issue</ng-container>
             }
+            @case ('DISCUSSION') {
+              <ng-container i18n="@@session.phase.DISCUSSION">Diskussion</ng-container>
+            }
             @case ('VOTING') {
               <ng-container i18n="@@session.phase.VOTING">Runde läuft</ng-container>
             }
@@ -47,6 +50,9 @@
       }
       @if (store.activeIssue(); as issue) {
         <app-active-issue [issue]="issue" />
+      }
+      @if (session.phase === 'DISCUSSION') {
+        <app-round-status [sessionId]="session.sessionId" />
       }
       @if (session.phase === 'VOTING') {
         @if (session.round?.deadline) {

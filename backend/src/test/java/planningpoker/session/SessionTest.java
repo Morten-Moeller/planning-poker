@@ -30,15 +30,40 @@ class SessionTest {
     class Transitions {
 
         @Test
-        void releasing_an_issue_in_lobby_starts_round_one() {
+        void releasing_an_issue_in_lobby_starts_round_one_in_discussion() {
             Session session = session().build();
 
-            session.selectIssue(master(session).id(), ISSUE, SessionBuilder.CREATED_AT);
+            session.selectIssue(master(session).id(), ISSUE);
+
+            assertEquals(Phase.DISCUSSION, session.phase());
+            assertEquals(Optional.of(ISSUE), session.activeIssue());
+            assertEquals(1, session.round().orElseThrow().number());
+            assertTrue(session.round().orElseThrow().votes().isEmpty());
+            assertEquals(Optional.empty(), session.round().orElseThrow().deadline());
+        }
+
+        @Test
+        void starting_the_voting_opens_the_cards_of_the_same_round() {
+            Session session = session().discussion().build();
+
+            session.startVoting(master(session).id(), SessionBuilder.CREATED_AT);
 
             assertEquals(Phase.VOTING, session.phase());
             assertEquals(Optional.of(ISSUE), session.activeIssue());
             assertEquals(1, session.round().orElseThrow().number());
             assertTrue(session.round().orElseThrow().votes().isEmpty());
+        }
+
+        @Test
+        void switching_the_issue_in_discussion_stays_in_discussion() {
+            Session session = session().discussion().build();
+
+            session.selectIssue(master(session).id(), OTHER_ISSUE);
+
+            assertEquals(Phase.DISCUSSION, session.phase());
+            assertEquals(Optional.of(OTHER_ISSUE), session.activeIssue());
+            assertEquals(1, session.round().orElseThrow().number());
+            assertTrue(session.history().isEmpty());
         }
 
         @Test
@@ -86,9 +111,9 @@ class SessionTest {
             Session session = session().voting().build();
             session.vote(developer(session, 0).id(), Card.FIVE);
 
-            session.selectIssue(master(session).id(), OTHER_ISSUE, SessionBuilder.CREATED_AT);
+            session.selectIssue(master(session).id(), OTHER_ISSUE);
 
-            assertEquals(Phase.VOTING, session.phase());
+            assertEquals(Phase.DISCUSSION, session.phase());
             assertEquals(Optional.of(OTHER_ISSUE), session.activeIssue());
             assertEquals(1, session.round().orElseThrow().number());
             assertTrue(session.round().orElseThrow().votes().isEmpty());
@@ -99,9 +124,9 @@ class SessionTest {
         void switching_the_issue_after_the_reveal_keeps_the_entry_without_final_card() {
             Session session = session().revealed().build();
 
-            session.selectIssue(master(session).id(), OTHER_ISSUE, SessionBuilder.CREATED_AT);
+            session.selectIssue(master(session).id(), OTHER_ISSUE);
 
-            assertEquals(Phase.VOTING, session.phase());
+            assertEquals(Phase.DISCUSSION, session.phase());
             assertEquals(Optional.of(OTHER_ISSUE), session.activeIssue());
             assertEquals(1, session.round().orElseThrow().number());
             assertEquals(1, session.history().size());
@@ -113,14 +138,15 @@ class SessionTest {
         void a_new_round_raises_the_number_and_clears_the_cards() {
             Session session = session().revealed().build();
 
-            session.restart(master(session).id(), SessionBuilder.CREATED_AT);
+            session.restart(master(session).id());
 
             Round round = session.round().orElseThrow();
-            assertEquals(Phase.VOTING, session.phase());
+            assertEquals(Phase.DISCUSSION, session.phase());
             assertEquals(2, round.number());
             assertTrue(round.votes().isEmpty());
             assertFalse(round.revealed());
             assertEquals(Optional.empty(), round.stats());
+            assertEquals(Optional.empty(), round.deadline());
         }
 
         @Test
@@ -241,15 +267,39 @@ class SessionTest {
                 invalid(
                         "new round in LOBBY",
                         session().build(),
-                        s -> s.restart(master(s).id(), SessionBuilder.CREATED_AT)),
+                        s -> s.restart(master(s).id())),
                 invalid(
                         "confirm in LOBBY",
                         session().build(),
                         s -> s.beginConfirm(master(s).id(), Card.FIVE)),
                 invalid(
+                        "start voting in LOBBY",
+                        session().build(),
+                        s -> s.startVoting(master(s).id(), SessionBuilder.CREATED_AT)),
+                invalid(
+                        "card in DISCUSSION",
+                        session().discussion().build(),
+                        s -> s.vote(developer(s, 0).id(), Card.FIVE)),
+                invalid(
+                        "reveal in DISCUSSION",
+                        session().discussion().build(),
+                        s -> s.reveal(master(s).id())),
+                invalid(
+                        "new round in DISCUSSION",
+                        session().discussion().build(),
+                        s -> s.restart(master(s).id())),
+                invalid(
+                        "confirm in DISCUSSION",
+                        session().discussion().build(),
+                        s -> s.beginConfirm(master(s).id(), Card.FIVE)),
+                invalid(
+                        "start voting in VOTING",
+                        session().voting().build(),
+                        s -> s.startVoting(master(s).id(), SessionBuilder.CREATED_AT)),
+                invalid(
                         "new round in VOTING",
                         session().voting().build(),
-                        s -> s.restart(master(s).id(), SessionBuilder.CREATED_AT)),
+                        s -> s.restart(master(s).id())),
                 invalid(
                         "confirm in VOTING",
                         session().voting().build(),
@@ -263,6 +313,10 @@ class SessionTest {
                         session().revealed().build(),
                         s -> s.reveal(master(s).id())),
                 invalid(
+                        "start voting in REVEALED",
+                        session().revealed().build(),
+                        s -> s.startVoting(master(s).id(), SessionBuilder.CREATED_AT)),
+                invalid(
                         "finish confirm without confirming",
                         session().revealed().build(),
                         s -> s.finishConfirm(Card.FIVE)),
@@ -270,7 +324,7 @@ class SessionTest {
                 invalid(
                         "select issue while confirming",
                         session().confirming().build(),
-                        s -> s.selectIssue(master(s).id(), OTHER_ISSUE, SessionBuilder.CREATED_AT)),
+                        s -> s.selectIssue(master(s).id(), OTHER_ISSUE)),
                 invalid(
                         "card while confirming",
                         session().confirming().build(),
@@ -282,7 +336,11 @@ class SessionTest {
                 invalid(
                         "new round while confirming",
                         session().confirming().build(),
-                        s -> s.restart(master(s).id(), SessionBuilder.CREATED_AT)),
+                        s -> s.restart(master(s).id())),
+                invalid(
+                        "start voting while confirming",
+                        session().confirming().build(),
+                        s -> s.startVoting(master(s).id(), SessionBuilder.CREATED_AT)),
                 invalid(
                         "confirm while confirming",
                         session().confirming().build(),
@@ -294,7 +352,11 @@ class SessionTest {
                 invalid(
                         "developer releases an issue",
                         session().build(),
-                        s -> s.selectIssue(developer(s, 0).id(), ISSUE, SessionBuilder.CREATED_AT)),
+                        s -> s.selectIssue(developer(s, 0).id(), ISSUE)),
+                invalid(
+                        "developer starts the voting",
+                        session().discussion().build(),
+                        s -> s.startVoting(developer(s, 0).id(), SessionBuilder.CREATED_AT)),
                 invalid(
                         "scrum master chooses a card",
                         session().voting().build(),
@@ -306,7 +368,7 @@ class SessionTest {
                 invalid(
                         "developer starts a new round",
                         session().revealed().build(),
-                        s -> s.restart(developer(s, 0).id(), SessionBuilder.CREATED_AT)),
+                        s -> s.restart(developer(s, 0).id())),
                 invalid(
                         "developer confirms",
                         session().revealed().build(),
@@ -495,10 +557,19 @@ class SessionTest {
         }
 
         @Test
-        void releasing_an_issue_sets_the_deadline_from_the_start() {
+        void releasing_an_issue_sets_no_deadline() {
             Session session = session().timer(30).build();
 
-            session.selectIssue(master(session).id(), ISSUE, START);
+            session.selectIssue(master(session).id(), ISSUE);
+
+            assertEquals(Optional.empty(), session.round().orElseThrow().deadline());
+        }
+
+        @Test
+        void starting_the_voting_sets_the_deadline_from_the_start() {
+            Session session = session().timer(30).discussion().build();
+
+            session.startVoting(master(session).id(), START);
 
             assertEquals(
                     Optional.of(START.plusSeconds(30)),
@@ -506,24 +577,36 @@ class SessionTest {
         }
 
         @Test
-        void switching_the_issue_sets_a_new_deadline() {
+        void switching_the_issue_while_voting_drops_the_deadline() {
             Session session = session().timer(30).voting().build();
 
-            session.selectIssue(master(session).id(), OTHER_ISSUE, START);
+            session.selectIssue(master(session).id(), OTHER_ISSUE);
 
+            assertEquals(Optional.empty(), session.round().orElseThrow().deadline());
+        }
+
+        @Test
+        void a_new_round_has_no_deadline_until_the_voting_starts() {
+            Session session = session().timer(30).revealed().build();
+
+            session.restart(master(session).id());
+            assertEquals(Optional.empty(), session.round().orElseThrow().deadline());
+
+            session.startVoting(master(session).id(), START);
             assertEquals(
                     Optional.of(START.plusSeconds(30)),
                     session.round().orElseThrow().deadline());
         }
 
         @Test
-        void a_new_round_sets_the_deadline_from_its_start() {
-            Session session = session().timer(30).revealed().build();
+        void a_change_in_discussion_applies_to_the_following_start() {
+            Session session = session().timer(30).discussion().build();
 
-            session.restart(master(session).id(), START);
+            session.setTimer(master(session).id(), 120);
+            session.startVoting(master(session).id(), START);
 
             assertEquals(
-                    Optional.of(START.plusSeconds(30)),
+                    Optional.of(START.plusSeconds(120)),
                     session.round().orElseThrow().deadline());
         }
 
@@ -545,7 +628,8 @@ class SessionTest {
             Session session = session().timer(30).revealed().build();
 
             session.setTimer(master(session).id(), null);
-            session.restart(master(session).id(), START);
+            session.restart(master(session).id());
+            session.startVoting(master(session).id(), START);
 
             assertEquals(Optional.empty(), session.round().orElseThrow().deadline());
         }
@@ -597,6 +681,15 @@ class SessionTest {
             assertEquals(1, session.history().size());
             assertEquals(deadline, session.history().get(0).revealedAt());
             assertTrue(session.history().get(0).votes().isEmpty());
+        }
+
+        @Test
+        void a_round_in_discussion_is_never_due() {
+            Session session = session().timer(30).discussion().build();
+
+            assertFalse(session.revealIfDue(Instant.MAX));
+            assertEquals(Phase.DISCUSSION, session.phase());
+            assertTrue(session.history().isEmpty());
         }
 
         @Test

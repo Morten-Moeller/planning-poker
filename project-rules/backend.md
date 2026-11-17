@@ -54,7 +54,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   lock, without an event. A command or read on a missing session throws
   `SessionException(SESSION_NOT_FOUND)`. A rejected command leaves `lastActivityAt` unchanged.
 - `Session` is the aggregate; only its methods change the state (A1.4): `join`, `connect`,
-  `disconnect`, `setTimer`, `selectIssue`, `vote`, `reveal`, `revealIfDue`, `restart`, `beginConfirm`, `finishConfirm`,
+  `disconnect`, `setTimer`, `selectIssue`, `startVoting`, `vote`, `reveal`, `revealIfDue`, `restart`, `beginConfirm`, `finishConfirm`,
   `failConfirm`. Role and phase checks live inside these methods and throw `SessionException`
   with the `ErrorCode` from `platform` (`FORBIDDEN_ROLE`, `INVALID_STATE`, `NAME_TAKEN`,
   `VALIDATION_ERROR`, `UNAUTHORIZED`). The rules are listed in `docs/domain/invariants.md`.
@@ -75,9 +75,10 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   `allowedProjects` (`Optional<List<String>>`; an empty value counts as not set). `find` and `update` remove an expired session on access; a Vert.x timer in
   `SessionRegistryProducer` (every 10 minutes) calls `expire(now)` for the rest. No
   `quarkus-scheduler`.
-- Deadline (ADR 0006): `Session.timerSeconds` (null or 5 to 3600, `Session.setTimer`) sets
-  `Round.deadline` at every round start (`selectIssue` and `restart` take the start time from the
-  `Clock`). A second Vert.x timer in `SessionRegistryProducer` (every 250 ms) calls
+- Deadline (ADR 0010, replaces ADR 0006): `selectIssue` and `restart` start a round in
+  `DISCUSSION` without a deadline; `Session.startVoting` (`POST …/round/start`, start time from the
+  `Clock`) moves it to `VOTING` and sets `Round.deadline` from `Session.timerSeconds` (null or 5 to
+  3600, `Session.setTimer`). A second Vert.x timer in `SessionRegistryProducer` (every 250 ms) calls
   `SessionRegistry.revealDue(now)`: under the lock of each live session `Session.revealIfDue`
   reveals a round in `VOTING` whose deadline is reached, the same way as `reveal`; only then
   `lastActivityAt` is set and `SessionChanged` fires. The mapper takes the snapshot time

@@ -99,7 +99,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Make an issue active and start round 1; scrum master only. A running round is dropped. */
+        /** Make an issue active and start round 1 in DISCUSSION without a deadline; scrum master only. A running round is dropped. */
         post: operations["selectIssue"];
         delete?: never;
         options?: never;
@@ -167,7 +167,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Start a new round for the active issue; scrum master only. */
+        /** Start a new round for the active issue in DISCUSSION without a deadline; scrum master only. */
         post: operations["restartRound"];
         delete?: never;
         options?: never;
@@ -192,6 +192,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sessions/{id}/round/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open the cards of the round in DISCUSSION and set the deadline from the timer; scrum master only. */
+        post: operations["startVoting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sessions/{id}/timer": {
         parameters: {
             query?: never;
@@ -200,7 +217,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Set or switch off the timer for every round that starts from now on; scrum master only. A running round keeps its deadline. */
+        /** Set or switch off the timer for every voting that starts from now on; scrum master only. A running voting keeps its deadline. */
         put: operations["setTimer"];
         post?: never;
         delete?: never;
@@ -494,10 +511,10 @@ export interface components {
             hasVoted: boolean;
         };
         /**
-         * @description Phase of the session: LOBBY without an active issue, VOTING while a round runs, REVEALED after the reveal.
+         * @description Phase of the session: LOBBY without an active issue, DISCUSSION while the team discusses the active issue and the cards are locked, VOTING while the cards are open, REVEALED after the reveal.
          * @enum {string}
          */
-        Phase: "LOBBY" | "VOTING" | "REVEALED";
+        Phase: "LOBBY" | "DISCUSSION" | "VOTING" | "REVEALED";
         /** @description Error response after RFC 9457. Clients branch on errorCode only. */
         ProblemDetail: {
             /**
@@ -1275,6 +1292,63 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Round revealed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description UNAUTHORIZED */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description FORBIDDEN_ROLE */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description SESSION_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description INVALID_STATE */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    startVoting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Session id, 8 characters. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Voting started. */
             204: {
                 headers: {
                     [name: string]: unknown;

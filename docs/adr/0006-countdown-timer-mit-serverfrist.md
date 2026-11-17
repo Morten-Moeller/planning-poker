@@ -1,6 +1,6 @@
 # 0006: Countdown-Timer als Sitzungseinstellung mit Frist im Snapshot und Auflösung durch den Server
 
-Status: accepted
+Status: superseded by 0010
 Datum: 2026-11-16
 Spec: docs/specs/0016-countdown-timer.md
 Ersetzt Grundregeln: keine

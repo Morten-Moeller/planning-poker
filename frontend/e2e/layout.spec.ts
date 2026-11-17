@@ -1,4 +1,5 @@
 import { Page, expect, test } from '@playwright/test';
+import { startVoting } from './helpers';
 
 const VIEWPORT = { width: 375, height: 800 };
 
@@ -44,8 +45,18 @@ test('the session page has no horizontal scroll bar at 375 px in every phase', a
 
   await anna.getByTestId('issue-release').click();
   for (const page of everybody) {
-    await expect(page.getByTestId('session-phase')).toHaveText('Runde läuft');
+    await expect(page.getByTestId('session-phase')).toHaveText('Diskussion');
     await expect(page.getByTestId('active-issue-title')).toHaveText('Login page');
+  }
+  await expect(ben.getByTestId('discussion-hint')).toBeVisible();
+  await expect(anna.getByTestId('round-start')).toBeVisible();
+  for (const page of everybody) {
+    await expectNoHorizontalScroll(page);
+  }
+
+  await startVoting(anna);
+  for (const page of everybody) {
+    await expect(page.getByTestId('session-phase')).toHaveText('Runde läuft');
   }
   await expect(ben.getByTestId('card-deck')).toBeVisible();
   for (const page of everybody) {

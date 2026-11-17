@@ -3,6 +3,7 @@ package planningpoker.realtime;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -107,9 +108,16 @@ class RoundTimerSocketTest {
     void bothDevelopersGetTheSameDeadlineAndTheRevealWithoutTheScrumMaster() {
         List<SocketClient> sockets = developers.stream().map(this::connectAs).toList();
         setTimer(30);
+        RestCalls.releaseIssue(sessionId, scrumMaster);
+        for (SocketClient socket : sockets) {
+            JsonNode discussion = socket.awaitState(
+                    view -> "DISCUSSION".equals(view.path("phase").asText()), "phase DISCUSSION");
+            assertTrue(discussion.path("round").path("deadline").isNull());
+        }
+        CLOCK.advance(Duration.ofSeconds(60));
         Instant released = CLOCK.instant();
 
-        RestCalls.releaseIssue(sessionId, scrumMaster);
+        RestCalls.startVoting(sessionId, scrumMaster);
 
         List<String> deadlines = new ArrayList<>();
         for (SocketClient socket : sockets) {

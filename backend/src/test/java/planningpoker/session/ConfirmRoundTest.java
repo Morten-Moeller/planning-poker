@@ -105,6 +105,7 @@ class ConfirmRoundTest {
         flow.confirm("5").statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
 
         flow.selectIssue(GitLabStubs.ISSUE).statusCode(204);
+        flow.startVoting().statusCode(204);
         flow.vote(0, "5");
 
         flow.confirm("5").statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));

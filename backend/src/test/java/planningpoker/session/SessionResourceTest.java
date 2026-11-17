@@ -60,6 +60,7 @@ class SessionResourceTest {
                 Arguments.of("GET", "/issues?search=login&page=1", null, Role.SCRUM_MASTER),
                 Arguments.of("POST", "/active-issue", "{\"issueIid\":42}", Role.SCRUM_MASTER),
                 Arguments.of("PUT", "/vote", "{\"card\":\"5\"}", Role.DEVELOPER),
+                Arguments.of("POST", "/round/start", null, Role.SCRUM_MASTER),
                 Arguments.of("POST", "/round/reveal", null, Role.SCRUM_MASTER),
                 Arguments.of("POST", "/round/restart", null, Role.SCRUM_MASTER),
                 Arguments.of("POST", "/round/confirm", "{\"card\":\"COFFEE\"}", Role.SCRUM_MASTER));

@@ -40,6 +40,8 @@ class ContractExamplesTest {
         return Stream.of(
                 Arguments.of("lobby-scrum-master.json", Phase.LOBBY, Role.SCRUM_MASTER),
                 Arguments.of("lobby-developer.json", Phase.LOBBY, Role.DEVELOPER),
+                Arguments.of("discussion-scrum-master.json", Phase.DISCUSSION, Role.SCRUM_MASTER),
+                Arguments.of("discussion-developer.json", Phase.DISCUSSION, Role.DEVELOPER),
                 Arguments.of("voting-scrum-master.json", Phase.VOTING, Role.SCRUM_MASTER),
                 Arguments.of("voting-developer.json", Phase.VOTING, Role.DEVELOPER),
                 Arguments.of("revealed-scrum-master.json", Phase.REVEALED, Role.SCRUM_MASTER),
@@ -78,6 +80,16 @@ class ContractExamplesTest {
         }
         assertNotNull(view.activeIssue());
         assertNotNull(view.round());
+        if (phase == Phase.DISCUSSION) {
+            assertNull(view.round().myVote(), "no vote in DISCUSSION");
+            assertNull(view.round().votes(), "no votes in DISCUSSION");
+            assertNull(view.round().stats(), "no stats in DISCUSSION");
+            assertNull(view.round().deadline(), "no deadline in DISCUSSION");
+            assertTrue(
+                    view.participants().stream().noneMatch(SessionView.ParticipantView::hasVoted),
+                    "nobody has voted in DISCUSSION");
+            return;
+        }
         if (phase == Phase.VOTING) {
             assertNull(view.round().votes(), "votes are hidden until the reveal");
             assertNull(view.round().stats(), "stats are hidden until the reveal");

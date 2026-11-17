@@ -108,6 +108,15 @@ class RoundTimerTest {
                 .statusCode(204);
     }
 
+    private void startVoting() {
+        asScrumMaster().when().post(session + "/round/start").then().statusCode(204);
+    }
+
+    private void openVoting(long iid) {
+        releaseIssue(iid);
+        startVoting();
+    }
+
     private ValidatableResponse snapshot() {
         return asDeveloper().when().get(session).then().statusCode(200);
     }
@@ -177,48 +186,80 @@ class RoundTimerTest {
 
     @Test
     void withoutTimerTheRoundHasNoDeadline() {
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
 
         snapshot().body("phase", equalTo("VOTING")).body("round.deadline", nullValue());
     }
 
     @Test
-    void releaseSwitchAndNewRoundEachGetTheDeadlineFromTheirStart() {
+    void releaseSwitchAndNewRoundHaveNoDeadlineUntilTheVotingStarts() {
         setTimer(asScrumMaster(), "30").statusCode(204);
 
-        Instant released = CLOCK.instant();
         releaseIssue(GitLabStubs.ISSUE);
-        assertEquals(at(released.plusSeconds(30)), deadline());
+        snapshot().body("phase", equalTo("DISCUSSION")).body("round.deadline", nullValue());
 
         CLOCK.advance(Duration.ofSeconds(10));
-        Instant switched = CLOCK.instant();
-        releaseIssue(43);
-        assertEquals(at(switched.plusSeconds(30)), deadline());
+        Instant started = CLOCK.instant();
+        startVoting();
+        snapshot().body("phase", equalTo("VOTING"));
+        assertEquals(at(started.plusSeconds(30)), deadline());
 
+        releaseIssue(43);
+        snapshot().body("phase", equalTo("DISCUSSION")).body("round.deadline", nullValue());
+
+        startVoting();
         asScrumMaster().when().post(session + "/round/reveal").then().statusCode(204);
+        asScrumMaster().when().post(session + "/round/restart").then().statusCode(204);
+        snapshot()
+                .body("phase", equalTo("DISCUSSION"))
+                .body("round.number", equalTo(2))
+                .body("round.deadline", nullValue());
+
         CLOCK.advance(Duration.ofSeconds(10));
         Instant restarted = CLOCK.instant();
-        asScrumMaster().when().post(session + "/round/restart").then().statusCode(204);
-        snapshot().body("round.number", equalTo(2));
+        startVoting();
         assertEquals(at(restarted.plusSeconds(30)), deadline());
+    }
+
+    @Test
+    void aChangeInDiscussionAppliesToTheFollowingStart() {
+        setTimer(asScrumMaster(), "30").statusCode(204);
+        releaseIssue(GitLabStubs.ISSUE);
+
+        setTimer(asScrumMaster(), "120").statusCode(204);
+        Instant started = CLOCK.instant();
+        startVoting();
+
+        assertEquals(at(started.plusSeconds(120)), deadline());
     }
 
     @Test
     void aChangeWhileVotingKeepsTheRunningDeadline() {
         setTimer(asScrumMaster(), "30").statusCode(204);
-        Instant released = CLOCK.instant();
-        releaseIssue(GitLabStubs.ISSUE);
+        Instant started = CLOCK.instant();
+        openVoting(GitLabStubs.ISSUE);
 
         setTimer(asScrumMaster(), "300").statusCode(204);
 
         snapshot().body("timerSeconds", equalTo(300));
-        assertEquals(at(released.plusSeconds(30)), deadline());
+        assertEquals(at(started.plusSeconds(30)), deadline());
+    }
+
+    @Test
+    void aRoundInDiscussionIsNeverRevealedByTheServer() {
+        setTimer(asScrumMaster(), "30").statusCode(204);
+        releaseIssue(GitLabStubs.ISSUE);
+
+        CLOCK.advance(Duration.ofSeconds(60));
+        registry.revealDue(CLOCK.instant());
+
+        snapshot().body("phase", equalTo("DISCUSSION")).body("history", hasSize(0));
     }
 
     @Test
     void theServerRevealsTheRoundAtTheDeadlineWithoutVotes() throws InterruptedException {
         setTimer(asScrumMaster(), "30").statusCode(204);
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
 
         CLOCK.advance(Duration.ofSeconds(30));
 
@@ -232,7 +273,7 @@ class RoundTimerTest {
     @Test
     void aRoundRevealedByHandIsNotRevealedASecondTime() {
         setTimer(asScrumMaster(), "30").statusCode(204);
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         asScrumMaster().when().post(session + "/round/reveal").then().statusCode(204);
 
         CLOCK.advance(Duration.ofSeconds(31));
@@ -244,10 +285,11 @@ class RoundTimerTest {
     @Test
     void aRestartedRoundIsRevealedAtItsOwnDeadline() throws InterruptedException {
         setTimer(asScrumMaster(), "30").statusCode(204);
-        releaseIssue(GitLabStubs.ISSUE);
+        openVoting(GitLabStubs.ISSUE);
         asScrumMaster().when().post(session + "/round/reveal").then().statusCode(204);
         CLOCK.advance(Duration.ofSeconds(20));
         asScrumMaster().when().post(session + "/round/restart").then().statusCode(204);
+        startVoting();
 
         CLOCK.advance(Duration.ofSeconds(15));
         registry.revealDue(CLOCK.instant());

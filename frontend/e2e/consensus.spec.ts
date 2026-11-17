@@ -1,4 +1,5 @@
 import { Browser, Page, expect, test } from '@playwright/test';
+import { startVoting } from './helpers';
 
 const PROJECT = '1234';
 
@@ -46,6 +47,7 @@ async function revealConsensus(page: Page, browser: Browser): Promise<Page[]> {
   const everybody = [page, ben, cem];
   await expect(page.getByTestId('participant')).toHaveCount(3);
   await page.getByTestId('issue-release').click();
+  await startVoting(page);
   await expectPhase(everybody, 'Runde läuft');
 
   await choose(ben, '5');
@@ -97,6 +99,7 @@ test('every participant sees the developer who did not vote', async ({ page, bro
   const everybody = [page, ben, cem];
   await expect(page.getByTestId('participant')).toHaveCount(3);
   await page.getByTestId('issue-release').click();
+  await startVoting(page);
   await expectPhase(everybody, 'Runde läuft');
 
   await choose(ben, '5');

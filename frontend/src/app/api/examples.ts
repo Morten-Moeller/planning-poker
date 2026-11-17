@@ -1,3 +1,5 @@
+import discussionDeveloperJson from '../../../../contracts/api/examples/discussion-developer.json';
+import discussionScrumMasterJson from '../../../../contracts/api/examples/discussion-scrum-master.json';
 import lobbyDeveloperJson from '../../../../contracts/api/examples/lobby-developer.json';
 import lobbyScrumMasterJson from '../../../../contracts/api/examples/lobby-scrum-master.json';
 import revealedDeveloperJson from '../../../../contracts/api/examples/revealed-developer.json';
@@ -48,6 +50,14 @@ export const lobbyScrumMaster = lobbyScrumMasterJson satisfies Exact<
 > as SessionView;
 export const lobbyDeveloper = lobbyDeveloperJson satisfies Exact<
   typeof lobbyDeveloperJson,
+  SessionView
+> as SessionView;
+export const discussionScrumMaster = discussionScrumMasterJson satisfies Exact<
+  typeof discussionScrumMasterJson,
+  SessionView
+> as SessionView;
+export const discussionDeveloper = discussionDeveloperJson satisfies Exact<
+  typeof discussionDeveloperJson,
   SessionView
 > as SessionView;
 export const votingScrumMaster = votingScrumMasterJson satisfies Exact<

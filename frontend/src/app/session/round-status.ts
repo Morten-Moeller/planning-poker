@@ -2,6 +2,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { ApiService } from '../api/api.service';
 import { SessionStore } from '../api/session-store';
+import { TIMER_OPTIONS } from './timer-setting';
 
 @Component({
   selector: 'app-round-status',
@@ -26,6 +27,29 @@ export class RoundStatus {
   );
   protected readonly allVoted = computed(() => this.store.round()?.allVoted === true);
   protected readonly revealing = signal(false);
+  protected readonly starting = signal(false);
+  protected readonly discussion = computed(() => this.store.phase() === 'DISCUSSION');
+  protected readonly timerLabel = computed(() => {
+    const seconds = this.store.timerSeconds();
+    if (seconds === null || seconds === undefined) {
+      return null;
+    }
+    return (
+      TIMER_OPTIONS.find((option) => option.seconds === seconds)?.label ??
+      $localize`:@@roundStatus.timerSeconds:${seconds}:seconds: s`
+    );
+  });
+
+  protected startVoting(): void {
+    if (this.starting()) {
+      return;
+    }
+    this.starting.set(true);
+    this.api.startVoting(this.sessionId()).subscribe({
+      next: () => this.starting.set(false),
+      error: () => this.starting.set(false),
+    });
+  }
 
   protected reveal(): void {
     if (this.revealing()) {

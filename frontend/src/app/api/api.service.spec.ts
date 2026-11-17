@@ -112,6 +112,14 @@ const calls: Call[] = [
     authenticated: true,
   },
   {
+    name: 'startVoting',
+    call: (api) => api.startVoting(SESSION_ID),
+    method: 'POST',
+    url: `${BASE}/round/start`,
+    body: null,
+    authenticated: true,
+  },
+  {
     name: 'revealRound',
     call: (api) => api.revealRound(SESSION_ID),
     method: 'POST',

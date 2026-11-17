@@ -1,4 +1,5 @@
 import { Browser, Locator, Page, expect, test } from '@playwright/test';
+import { startVoting } from './helpers';
 
 const PROJECT = '1234';
 const CARD_IDS = [
@@ -63,6 +64,7 @@ async function join(browser: Browser, link: string, name: string): Promise<View>
 async function release(scrumMaster: View, developers: View[]): Promise<void> {
   await expect(scrumMaster.page.getByTestId('participant')).toHaveCount(developers.length + 1);
   await scrumMaster.page.getByTestId('issue-release').click();
+  await startVoting(scrumMaster.page);
   for (const view of [scrumMaster, ...developers]) {
     await expect(view.page.getByTestId('session-phase')).toHaveText('Runde läuft');
   }

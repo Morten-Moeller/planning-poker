@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Planning Poker API
-  version: 2.4.0
+  version: 3.0.0
   description: |
     Commands go over REST under /api and answer without state. The state reaches every participant
     over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
@@ -450,11 +450,13 @@ components:
           description: Whether the participant has chosen a card in the running round;
             without the value.
     Phase:
-      description: "Phase of the session: LOBBY without an active issue, VOTING while\
-        \ a round runs, REVEALED after the reveal."
+      description: "Phase of the session: LOBBY without an active issue, DISCUSSION\
+        \ while the team discusses the active issue and the cards are locked, VOTING\
+        \ while the cards are open, REVEALED after the reveal."
       type: string
       enum:
       - LOBBY
+      - DISCUSSION
       - VOTING
       - REVEALED
     ProblemDetail:
@@ -980,8 +982,8 @@ paths:
       - bearerToken: []
   /api/sessions/{id}/active-issue:
     post:
-      summary: Make an issue active and start round 1; scrum master only. A running
-        round is dropped.
+      summary: Make an issue active and start round 1 in DISCUSSION without a deadline;
+        scrum master only. A running round is dropped.
       operationId: selectIssue
       tags:
       - sessions
@@ -1228,7 +1230,8 @@ paths:
       - bearerToken: []
   /api/sessions/{id}/round/restart:
     post:
-      summary: Start a new round for the active issue; scrum master only.
+      summary: Start a new round for the active issue in DISCUSSION without a deadline;
+        scrum master only.
       operationId: restartRound
       tags:
       - sessions
@@ -1310,10 +1313,53 @@ paths:
                 $ref: "#/components/schemas/ProblemDetail"
       security:
       - bearerToken: []
+  /api/sessions/{id}/round/start:
+    post:
+      summary: Open the cards of the round in DISCUSSION and set the deadline from
+        the timer; scrum master only.
+      operationId: startVoting
+      tags:
+      - sessions
+      parameters:
+      - description: "Session id, 8 characters."
+        name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Voting started.
+        "401":
+          description: UNAUTHORIZED
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: FORBIDDEN_ROLE
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: SESSION_NOT_FOUND
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: INVALID_STATE
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerToken: []
   /api/sessions/{id}/timer:
     put:
-      summary: Set or switch off the timer for every round that starts from now on;
-        scrum master only. A running round keeps its deadline.
+      summary: Set or switch off the timer for every voting that starts from now on;
+        scrum master only. A running voting keeps its deadline.
       operationId: setTimer
       tags:
       - sessions

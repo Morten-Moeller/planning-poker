@@ -64,6 +64,14 @@ final class RestCalls {
                 .statusCode(204);
     }
 
+    static void startVoting(String sessionId, Participant scrumMaster) {
+        given().header("Authorization", "Bearer " + scrumMaster.token())
+                .when()
+                .post("/api/sessions/" + sessionId + "/round/start")
+                .then()
+                .statusCode(204);
+    }
+
     static void vote(String sessionId, Participant developer, String card) {
         given().header("Authorization", "Bearer " + developer.token())
                 .contentType(ContentType.JSON)

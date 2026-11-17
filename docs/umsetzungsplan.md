@@ -139,20 +139,22 @@ Der Server ist die einzige Quelle der Wahrheit: Befehle gehen per REST an das Ba
 
 ### 4.3 Zustandsautomat der Sitzung
 
-Die Sitzung kennt drei Phasen: `LOBBY` (kein freigegebenes Issue), `VOTING` und `REVEALED`. Jede nicht aufgeführte Kombination wird mit `409 INVALID_STATE` abgelehnt.
+Die Sitzung kennt vier Phasen: `LOBBY` (kein freigegebenes Issue), `DISCUSSION` (Issue sichtbar, Karten gesperrt), `VOTING` und `REVEALED` (ADR 0010). Jede nicht aufgeführte Kombination wird mit `409 INVALID_STATE` abgelehnt, in `DISCUSSION` also Karte wählen, Auflösen und Ergebnis bestätigen.
 
 | Phase | Aktion | Wer | Folgephase | Wirkung |
 | --- | --- | --- | --- | --- |
-| LOBBY | Issue freigeben | Scrum Master | VOTING | Issue wird aus GitLab geladen und aktiv, Runde 1 startet |
+| LOBBY | Issue freigeben | Scrum Master | DISCUSSION | Issue wird aus GitLab geladen und aktiv, Runde 1 ohne Frist |
+| DISCUSSION | Schätzung starten | Scrum Master | VOTING | Karten werden geöffnet; mit Timer gilt die Frist Start plus Timer (ADR 0010) |
+| DISCUSSION | Issue wechseln | Scrum Master | DISCUSSION | Runde 1 für das neue Issue, ohne Frist |
 | VOTING | Karte wählen oder ändern | Entwickler | VOTING | `hasVoted` wird wahr; hat der letzte verbundene Entwickler gewählt, geht der Hinweis an den Scrum Master |
 | VOTING | Auflösen | Scrum Master | REVEALED | Auswertung wird berechnet, Protokolleintrag entsteht |
-| VOTING | Frist erreicht | Server | REVEALED | Wie Auflösen, auch ohne Stimmen und ohne verbundenen Scrum Master; Prüfung alle 250 ms (ADR 0006) |
-| VOTING | Issue wechseln | Scrum Master | VOTING | Laufende Runde wird verworfen, Runde 1 für das neue Issue |
-| REVEALED | Neue Runde | Scrum Master | VOTING | Rundennummer plus 1, alle Karten gelöscht |
+| VOTING | Frist erreicht | Server | REVEALED | Wie Auflösen, auch ohne Stimmen und ohne verbundenen Scrum Master; Prüfung alle 250 ms (ADR 0010) |
+| VOTING | Issue wechseln | Scrum Master | DISCUSSION | Laufende Runde wird verworfen, Runde 1 für das neue Issue, ohne Frist |
+| REVEALED | Neue Runde | Scrum Master | DISCUSSION | Rundennummer plus 1, alle Karten gelöscht, ohne Frist |
 | REVEALED | Ergebnis bestätigen | Scrum Master | LOBBY | `confirming` wird gesetzt, dann Schreiben nach GitLab; bei Erfolg `finalCard` im Protokoll und Phase LOBBY. Bei GitLab-Fehler wird `confirming` zurückgesetzt, die Phase bleibt REVEALED, Antwort 502. |
-| REVEALED | Issue wechseln | Scrum Master | VOTING | Runde bleibt ohne Endwert im Protokoll |
+| REVEALED | Issue wechseln | Scrum Master | DISCUSSION | Runde bleibt ohne Endwert im Protokoll |
 | jede | Beitreten, Verbinden, Trennen | alle | unverändert | Teilnehmerliste und `connected` werden aktualisiert |
-| jede | Timer setzen | Scrum Master | unverändert | `timerSeconds` gilt ab dem nächsten Rundenstart; jede startende Runde bekommt die Frist Start plus Timer, eine laufende Runde behält ihre Frist |
+| jede | Timer setzen | Scrum Master | unverändert | `timerSeconds` gilt ab dem nächsten „Schätzung starten“; erst dieser Start setzt die Frist Start plus Timer, eine laufende Schätzung behält ihre Frist |
 
 Solange `confirming` gesetzt ist, lehnt der Server jede Steuerungsaktion mit `409 INVALID_STATE` ab. GitLab-Aufrufe laufen nie unter der Sperre der Sitzung: Beim Freigeben und Wechseln wird das Issue vorher geladen und der Zustand danach unter der Sperre erneut geprüft; die Bestätigung schützt sich über `confirming`.
 
@@ -171,6 +173,7 @@ Alle Pfade liegen unter `/api`, das Format ist JSON. Außer beim Erstellen, beim
 | `POST /api/sessions/{id}/active-issue` | Scrum Master | `{ issueIid }` | 204 | 403, 404, 409, 502 |
 | `PUT /api/sessions/{id}/timer` | Scrum Master | `{ seconds }` (5 bis 3600 oder `null`) | 204 | 400 `VALIDATION_ERROR`, 401, 403, 404 |
 | `PUT /api/sessions/{id}/vote` | Entwickler | `{ card }` | 204 | 400 `INVALID_CARD`, 403, 409 |
+| `POST /api/sessions/{id}/round/start` | Scrum Master | keiner | 204 | 403, 409 |
 | `POST /api/sessions/{id}/round/reveal` | Scrum Master | keiner | 204 | 403, 409 |
 | `POST /api/sessions/{id}/round/restart` | Scrum Master | keiner | 204 | 403, 409 |
 | `POST /api/sessions/{id}/round/confirm` | Scrum Master | `{ card }` | 204 | 400 `INVALID_CARD`, 403, 409, 502 |
@@ -233,8 +236,9 @@ Filterregeln:
 - `round.myVote` enthält nur die eigene Karte.
 - `preselectedIssueIid` erscheint nur im Snapshot des Scrum Masters.
 - In der Phase `LOBBY` sind `activeIssue` und `round` `null`.
+- In der Phase `DISCUSSION` ist `activeIssue` gesetzt; `round` hat `number`, `myVote` `null`, `allVoted` `false`, `votes`, `stats` und `deadline` `null` (ADR 0010).
 - `history` enthält die HistoryEntry-Objekte aus 4.2, neueste zuerst.
-- `timerSeconds`, `serverTime` und `round.deadline` sind für beide Rollen gleich; `round.deadline` ist ohne Timer `null` (ADR 0006).
+- `timerSeconds`, `serverTime` und `round.deadline` sind für beide Rollen gleich; `round.deadline` ist ohne Timer und vor „Schätzung starten“ `null` (ADR 0010).
 
 ### 4.7 GitLab-Integration
 
@@ -324,7 +328,7 @@ Arbeitspakete:
 Akzeptanzkriterien:
 
 - Jede Zeile des Zustandsautomaten (4.3) hat einen Endpunkt in `contracts/api/openapi.yaml`.
-- Für `LOBBY`, `VOTING` und `REVEALED` existiert je ein Beispiel-Snapshot für beide Rollen.
+- Für `LOBBY`, `DISCUSSION`, `VOTING` und `REVEALED` existiert je ein Beispiel-Snapshot für beide Rollen.
 - Ein Backend-Test liest jedes Beispiel in die DTOs ein; unbekannte Felder lassen ihn fehlschlagen. Das Frontend bindet die Beispiele typisiert gegen die generierten Typen ein, `make typecheck` prüft sie.
 - Eine DTO-Änderung ohne `make contracts` lässt `make drift` fehlschlagen.
 
@@ -557,7 +561,7 @@ Ziel: Die drei optionalen Punkte der Challenge, jeweils einzeln lieferbar.
 
 Arbeitspakete:
 
-- O-01 Timer (ADR 0006, Spec 0016): Der Scrum Master stellt den Timer der Sitzung ein (`PUT …/timer`); jede danach startende Runde bekommt eine Frist. Die Frist liegt im Snapshot als Zeitstempel (RFC 3339) neben `serverTime`; der Server löst nach Ablauf automatisch auf. Der Vertrag ändert sich additiv (2.1.0).
+- O-01 Timer (ADR 0006, Spec 0016; ADR 0010, Spec 0026): Der Scrum Master stellt den Timer der Sitzung ein (`PUT …/timer`); die Frist entsteht mit „Schätzung starten“ (`POST …/round/start`), nicht schon mit der Freigabe. Seit Spec 0026 bricht der Vertrag (3.0.0). Die Frist liegt im Snapshot als Zeitstempel (RFC 3339) neben `serverTime`; der Server löst nach Ablauf automatisch auf. Der Vertrag ändert sich additiv (2.1.0).
 - O-02 Ausreißer: Nach der Auflösung werden niedrigste und höchste Zahlenkarte markiert, wenn sie mehr als zwei Positionen im Kartensatz auseinanderliegen. Das Frontend berechnet die Markierung aus dem Snapshot.
 - O-03 Konsens: Haben alle abgegebenen Karten denselben Wert, zeigt die Oberfläche eine Bestätigung mit Konfetti und schlägt den Wert für die Übernahme vor. Das Frontend berechnet den Konsens aus dem Snapshot; das Konfetti ist eine CSS-Animation ohne zusätzliche Bibliothek.
 

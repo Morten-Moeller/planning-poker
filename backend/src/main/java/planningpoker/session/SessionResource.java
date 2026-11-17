@@ -236,7 +236,8 @@ public class SessionResource {
     @RequiresRole(Role.SCRUM_MASTER)
     @Operation(
             operationId = "selectIssue",
-            summary = "Make an issue active and start round 1; scrum master only. A running round is dropped.")
+            summary =
+                    "Make an issue active and start round 1 in DISCUSSION without a deadline; scrum master only. A running round is dropped.")
     @APIResponse(responseCode = "204", description = "Issue active.")
     @APIResponse(
             responseCode = "400",
@@ -270,7 +271,7 @@ public class SessionResource {
         String projectId = registry.read(id, Session::gitlabProjectId);
         Issue issue = gitLabIssues.loadIssue(projectId, request.issueIid());
         registry.update(id, session -> {
-            session.selectIssue(actor.participantId(), issue, clock.instant());
+            session.selectIssue(actor.participantId(), issue);
             return null;
         });
         return Response.noContent().build();
@@ -285,7 +286,7 @@ public class SessionResource {
     @Operation(
             operationId = "setTimer",
             summary =
-                    "Set or switch off the timer for every round that starts from now on; scrum master only. A running round keeps its deadline.")
+                    "Set or switch off the timer for every voting that starts from now on; scrum master only. A running voting keeps its deadline.")
     @APIResponse(responseCode = "204", description = "Timer set.")
     @APIResponse(
             responseCode = "400",
@@ -359,6 +360,42 @@ public class SessionResource {
     }
 
     @POST
+    @Path("/{id}/round/start")
+    @SecurityRequirement(name = BEARER_TOKEN)
+    @Authenticated
+    @RequiresRole(Role.SCRUM_MASTER)
+    @Operation(
+            operationId = "startVoting",
+            summary =
+                    "Open the cards of the round in DISCUSSION and set the deadline from the timer; scrum master only.")
+    @APIResponse(responseCode = "204", description = "Voting started.")
+    @APIResponse(
+            responseCode = "401",
+            description = "UNAUTHORIZED",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "403",
+            description = "FORBIDDEN_ROLE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "404",
+            description = "SESSION_NOT_FOUND",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "409",
+            description = "INVALID_STATE",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    public Response startVoting(
+            @PathParam("id") @Parameter(description = SESSION_ID) String id, @Context ContainerRequestContext context) {
+        Actor actor = ActorFilter.actorOf(context);
+        registry.update(id, session -> {
+            session.startVoting(actor.participantId(), clock.instant());
+            return null;
+        });
+        return Response.noContent().build();
+    }
+
+    @POST
     @Path("/{id}/round/reveal")
     @SecurityRequirement(name = BEARER_TOKEN)
     @Authenticated
@@ -396,7 +433,9 @@ public class SessionResource {
     @SecurityRequirement(name = BEARER_TOKEN)
     @Authenticated
     @RequiresRole(Role.SCRUM_MASTER)
-    @Operation(operationId = "restartRound", summary = "Start a new round for the active issue; scrum master only.")
+    @Operation(
+            operationId = "restartRound",
+            summary = "Start a new round for the active issue in DISCUSSION without a deadline; scrum master only.")
     @APIResponse(responseCode = "204", description = "New round started.")
     @APIResponse(
             responseCode = "401",
@@ -418,7 +457,7 @@ public class SessionResource {
             @PathParam("id") @Parameter(description = SESSION_ID) String id, @Context ContainerRequestContext context) {
         Actor actor = ActorFilter.actorOf(context);
         registry.update(id, session -> {
-            session.restart(actor.participantId(), clock.instant());
+            session.restart(actor.participantId());
             return null;
         });
         return Response.noContent().build();

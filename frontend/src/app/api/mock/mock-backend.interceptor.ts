@@ -19,7 +19,15 @@ import {
   ProjectListResponse,
   ProjectSummary,
 } from '../api.service';
-import { MOCK_SESSION_ID, issueToken, roleOfToken, snapshotFor } from './mock-session';
+import {
+  MOCK_SESSION_ID,
+  Phase,
+  changeMockPhase,
+  currentMockPhase,
+  issueToken,
+  roleOfToken,
+  snapshotFor,
+} from './mock-session';
 
 const MOCK_MISSING_ISSUE_IID = 404;
 const MOCK_TAKEN_NAME = 'Ben';
@@ -45,6 +53,14 @@ const MOCK_PROJECTS: ProjectSummary[] = [
     webUrl: 'https://gitlab.com/group/release-notes',
   },
 ];
+const PHASE_COMMANDS: Record<string, { from: Phase[] | null; to: Phase }> = {
+  'POST /active-issue': { from: null, to: 'DISCUSSION' },
+  'POST /round/start': { from: ['DISCUSSION'], to: 'VOTING' },
+  'POST /round/reveal': { from: ['VOTING'], to: 'REVEALED' },
+  'POST /round/restart': { from: ['REVEALED'], to: 'DISCUSSION' },
+  'POST /round/confirm': { from: ['REVEALED'], to: 'LOBBY' },
+  'PUT /vote': { from: ['VOTING'], to: 'VOTING' },
+};
 const MOCK_ISSUES: IssueSummary[] = [
   {
     iid: 42,
@@ -143,6 +159,15 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
       nextPage: null,
     };
     return ok(issues);
+  }
+  const command = PHASE_COMMANDS[`${request.method} ${subPath}`];
+  if (command !== undefined) {
+    if (command.from !== null && !command.from.includes(currentMockPhase())) {
+      return problem(409, 'Conflict', 'INVALID_STATE', 'Not possible in this phase.');
+    }
+    if (command.to !== currentMockPhase()) {
+      changeMockPhase(command.to);
+    }
   }
   return of(new HttpResponse<void>({ status: 204 }));
 }

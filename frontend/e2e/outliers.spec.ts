@@ -1,4 +1,5 @@
 import { Browser, Locator, Page, expect, test } from '@playwright/test';
+import { startVoting } from './helpers';
 
 const PROJECT = '1234';
 
@@ -53,6 +54,7 @@ test('every participant sees the same outliers after the reveal', async ({ page,
   const everybody = [page, ben, cem];
   await expect(page.getByTestId('participant')).toHaveCount(3);
   await page.getByTestId('issue-release').click();
+  await startVoting(page);
   await expectPhase(everybody, 'Runde läuft');
 
   await choose(ben, '1');

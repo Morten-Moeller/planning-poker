@@ -137,11 +137,18 @@ public final class Session {
         timerSeconds = seconds;
     }
 
-    public void selectIssue(String actorId, Issue issue, Instant now) {
+    public void selectIssue(String actorId, Issue issue) {
         requireRole(actorId, Role.SCRUM_MASTER);
         requireNotConfirming();
         activeIssue = issue;
-        round = new Round(1, deadlineFrom(now));
+        round = new Round(1);
+        phase = Phase.DISCUSSION;
+    }
+
+    public void startVoting(String actorId, Instant now) {
+        requireRole(actorId, Role.SCRUM_MASTER);
+        requirePhase(Phase.DISCUSSION, "Only a round in discussion can start the voting.");
+        round.start(deadlineFrom(now));
         phase = Phase.VOTING;
     }
 
@@ -186,12 +193,12 @@ public final class Session {
         phase = Phase.REVEALED;
     }
 
-    public void restart(String actorId, Instant now) {
+    public void restart(String actorId) {
         requireRole(actorId, Role.SCRUM_MASTER);
         requireNotConfirming();
         requirePhase(Phase.REVEALED, "A new round needs a revealed round.");
-        round = new Round(round.number() + 1, deadlineFrom(now));
-        phase = Phase.VOTING;
+        round = new Round(round.number() + 1);
+        phase = Phase.DISCUSSION;
     }
 
     private Instant deadlineFrom(Instant start) {

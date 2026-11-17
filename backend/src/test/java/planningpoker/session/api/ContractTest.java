@@ -96,6 +96,13 @@ class ContractTest {
                                 List.of("400", "401", "403", "404", "409")),
                         new Endpoint(
                                 "post",
+                                "/api/sessions/{id}/round/start",
+                                null,
+                                "204",
+                                null,
+                                List.of("401", "403", "404", "409")),
+                        new Endpoint(
+                                "post",
                                 "/api/sessions/{id}/round/reveal",
                                 null,
                                 "204",
@@ -204,7 +211,7 @@ class ContractTest {
 
     @Test
     void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
-        assertEquals("2.4.0", contract.at("/info/version").asText());
+        assertEquals("3.0.0", contract.at("/info/version").asText());
         assertEquals(
                 "PROJECT_NOT_ALLOWED",
                 contract.at("/paths/~1api~1sessions/post/responses/403/description")
@@ -216,6 +223,21 @@ class ContractTest {
         assertEquals(
                 "NAME_TAKEN, LIMIT_REACHED",
                 contract.at("/paths/~1api~1sessions~1{id}~1participants/post/responses/409/description")
+                        .asText());
+    }
+
+    @Test
+    void namesTheDiscussionPhaseAndTheStartOfTheVoting() {
+        assertEquals(
+                List.of("LOBBY", "DISCUSSION", "VOTING", "REVEALED"),
+                texts(contract.at("/components/schemas/Phase/enum")));
+        assertEquals(
+                "INVALID_STATE",
+                contract.at("/paths/~1api~1sessions~1{id}~1round~1start/post/responses/409/description")
+                        .asText());
+        assertEquals(
+                "FORBIDDEN_ROLE",
+                contract.at("/paths/~1api~1sessions~1{id}~1round~1start/post/responses/403/description")
                         .asText());
     }
 
