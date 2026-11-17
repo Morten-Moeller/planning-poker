@@ -23,11 +23,15 @@ export function uniqueIssueIid(): number {
   return 100_000 + Math.floor(Math.random() * 900_000);
 }
 
-export async function stubIssueWithFailingFirstNote(iid: number, title: string): Promise<string[]> {
+export async function stubIssueWithFailingFirstNote(
+  iid: number,
+  title: string,
+  ids: string[],
+): Promise<void> {
   const issuePath = `${PROJECT_PATH}/${iid}`;
   const scenarioName = `issue-${iid}-notes`;
-  return Promise.all([
-    addStub({
+  const stubs = [
+    {
       request: { method: 'GET', urlPath: issuePath },
       response: {
         status: 200,
@@ -40,8 +44,8 @@ export async function stubIssueWithFailingFirstNote(iid: number, title: string):
           labels: [],
         },
       },
-    }),
-    addStub({
+    },
+    {
       scenarioName,
       requiredScenarioState: 'Started',
       newScenarioState: 'first-note-failed',
@@ -51,8 +55,8 @@ export async function stubIssueWithFailingFirstNote(iid: number, title: string):
         headers: { 'Content-Type': 'application/json' },
         jsonBody: { message: '500 Internal Server Error' },
       },
-    }),
-    addStub({
+    },
+    {
       scenarioName,
       requiredScenarioState: 'first-note-failed',
       request: { method: 'POST', urlPath: `${issuePath}/notes` },
@@ -61,8 +65,11 @@ export async function stubIssueWithFailingFirstNote(iid: number, title: string):
         headers: { 'Content-Type': 'application/json' },
         jsonBody: { id: 2, body: 'Planning Poker' },
       },
-    }),
-  ]);
+    },
+  ];
+  for (const stub of stubs) {
+    ids.push(await addStub(stub));
+  }
 }
 
 export async function removeStubs(ids: string[]): Promise<void> {

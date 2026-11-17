@@ -196,7 +196,7 @@ test('a GitLab error stays in the dialog and the second attempt confirms the res
   browser,
 }) => {
   const iid = uniqueIssueIid();
-  stubs = await stubIssueWithFailingFirstNote(iid, 'Export report');
+  await stubIssueWithFailingFirstNote(iid, 'Export report', stubs);
   const { anna, link } = await createSession(page, String(iid));
   const ben = await join(browser, link, 'Ben');
   await expect(anna.page.getByTestId('participant')).toHaveCount(2);

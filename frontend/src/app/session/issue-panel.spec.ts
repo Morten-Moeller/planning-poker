@@ -267,4 +267,34 @@ describe('IssuePanel', () => {
     expect(all('issue-results-error')).toHaveLength(0);
     expect(all('issue-result').map((node) => node.textContent?.trim())).toEqual(['#42 Login page']);
   });
+
+  it('keeps the loaded issues and appends the next page after a failed load more is retried', async () => {
+    await open(lobbyScrumMaster, FIRST_PAGE, 2);
+
+    await click('issue-load-more');
+    http
+      .expectOne((r) => r.url === ISSUES_URL)
+      .flush(
+        { errorCode: 'GITLAB_ERROR', title: 'Bad Gateway', status: 502 },
+        {
+          status: 502,
+          statusText: 'Bad Gateway',
+          headers: { 'Content-Type': 'application/problem+json' },
+        },
+      );
+    await fixture.whenStable();
+
+    expect(all('issue-results-error')).toHaveLength(1);
+    expect(all('issue-result')).toHaveLength(2);
+    expect(all('issue-load-more')).toHaveLength(0);
+
+    await click('issue-results-retry');
+    const retry = http.expectOne((r) => r.url === ISSUES_URL);
+    expect(retry.request.params.get('page')).toBe('2');
+    retry.flush({ items: SECOND_PAGE, nextPage: null });
+    await fixture.whenStable();
+
+    expect(all('issue-results-error')).toHaveLength(0);
+    expect(all('issue-result')).toHaveLength(3);
+  });
 });
