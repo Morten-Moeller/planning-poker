@@ -1,14 +1,14 @@
 ---
 id: "0021"
 title: GitLab-Zugriff verweigert (403)
-status: Review
+status: done
 risk: high
 adrs: ["0007"]
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#21"
+note: alle Kriterien erfüllt
 ---
 
 # GitLab-Zugriff verweigert (403)
