@@ -36,7 +36,7 @@ public final class Session {
     public Session(
             String id,
             String gitlabProjectId,
-            long preselectedIssueIid,
+            Long preselectedIssueIid,
             Instant now,
             int maxParticipants,
             Project project,

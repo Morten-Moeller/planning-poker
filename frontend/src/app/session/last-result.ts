@@ -23,6 +23,13 @@ export class LastResult {
   private readonly store = inject(SessionStore);
 
   protected readonly entry = computed(() => lastConfirmed(this.store.session()));
+  protected readonly issueUrl = computed(() => {
+    const entry = this.entry();
+    const project = this.store.session()?.project ?? null;
+    return entry === null || project === null
+      ? null
+      : `${project.webUrl}/-/issues/${entry.issueIid}`;
+  });
   protected readonly symbol = cardSymbol;
   protected readonly name = cardName;
 }

@@ -107,7 +107,8 @@ class SessionResourceTest {
                         "{\"name\":\"" + "x".repeat(31) + "\",\"gitlabProjectId\":\"1234\",\"issueIid\":42}",
                         "name"),
                 Arguments.of("missing project id", "{\"name\":\"Anna\",\"issueIid\":42}", "gitlabProjectId"),
-                Arguments.of("missing issue", "{\"name\":\"Anna\",\"gitlabProjectId\":\"1234\"}", "issueIid"));
+                Arguments.of(
+                        "issue zero", "{\"name\":\"Anna\",\"gitlabProjectId\":\"1234\",\"issueIid\":0}", "issueIid"));
     }
 
     @ParameterizedTest(name = "{0}")

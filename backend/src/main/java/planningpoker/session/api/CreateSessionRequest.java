@@ -1,7 +1,6 @@
 package planningpoker.session.api;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -17,7 +16,12 @@ public record CreateSessionRequest(
                         maxLength = 30)
                 String name,
         @NotBlank @Schema(description = "Id or path of the GitLab project.", examples = "1234") String gitlabProjectId,
-        @NotNull @Positive @Schema(description = "Iid of the preselected issue.", examples = "42") Long issueIid) {
+        @Positive
+                @Schema(
+                        description =
+                                "Iid of the preselected issue. Without it the session starts without a preselection.",
+                        examples = "42")
+                Long issueIid) {
 
     public CreateSessionRequest {
         name = name == null ? null : name.strip();

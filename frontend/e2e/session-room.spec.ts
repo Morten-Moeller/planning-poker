@@ -197,3 +197,37 @@ test('an external image of an issue description sends no request to its host', a
   await expect.poll(() => outcomes.length).toBe(2);
   expect(outcomes).toEqual(['csp', 'csp']);
 });
+
+test('the issue number in the head of the active issue is as large as the title, grey and not bold', async ({
+  page,
+  browser,
+}) => {
+  const { scrumMaster, developer } = await openRoom(page, browser);
+  await scrumMaster.getByTestId('issue-release').click();
+  await expect(developer.getByTestId('active-issue-iid')).toHaveText('#42');
+
+  const styles = await developer.getByTestId('active-issue').evaluate((node) => {
+    const iid = getComputedStyle(node.querySelector('[data-testid="active-issue-iid"]')!);
+    const title = getComputedStyle(node.querySelector('h2')!);
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--app-on-surface-muted)';
+    node.appendChild(probe);
+    const muted = getComputedStyle(probe).color;
+    probe.remove();
+    return {
+      iidSize: iid.fontSize,
+      titleSize: title.fontSize,
+      iidLineHeight: iid.lineHeight,
+      titleLineHeight: title.lineHeight,
+      iidWeight: iid.fontWeight,
+      iidColor: iid.color,
+      iidFont: iid.fontFamily,
+      muted,
+    };
+  });
+  expect(styles.iidSize).toBe(styles.titleSize);
+  expect(styles.iidLineHeight).toBe(styles.titleLineHeight);
+  expect(styles.iidWeight).toBe('400');
+  expect(styles.iidColor).toBe(styles.muted);
+  expect(styles.iidFont).toContain('IBM Plex Mono');
+});

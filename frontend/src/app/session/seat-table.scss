@@ -14,7 +14,7 @@
 .seats {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: var(--app-space-m) 20px;
   margin: 0;
   padding: 0;

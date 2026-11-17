@@ -31,7 +31,7 @@ Die IDs sind stabil und dienen der Nachverfolgung in Specs und Tests. FE = Front
 
 | ID | Anforderung | Quelle |
 | --- | --- | --- |
-| R-01 | Der Scrum Master legt eine Sitzung an und gibt GitLab-Projekt-ID und das zu schätzende Issue an. Der Ersteller erhält automatisch die Scrum-Master-Rolle. | FE, BE |
+| R-01 | Der Scrum Master legt eine Sitzung an und gibt GitLab-Projekt-ID und das zu schätzende Issue an. Der Ersteller erhält automatisch die Scrum-Master-Rolle. Das Issue ist beim Anlegen optional (A-18). | FE, BE |
 | R-02 | Teilnehmer treten über einen generierten Link oder eine Session-ID bei. | FE |
 | R-03 | Beim Beitreten gibt jeder einen Namen ein, der während der Sitzung sichtbar bleibt. | FE, BE |
 | R-04 | Es gibt zwei Rollen: Scrum Master und Entwickler. Die Scrum-Master-Rolle ist für alle sichtbar gekennzeichnet. | FE |
@@ -84,6 +84,7 @@ Die READMEs lassen 17 Punkte offen; die folgenden Festlegungen gelten als verbin
 | A-15 | Sprache | Oberfläche auf Deutsch; Code, API, Fehlertexte der API und Commits auf Englisch. Die Oberfläche zeigt je `errorCode` einen eigenen deutschen Text, nie den Fehlertext der API. |
 | A-16 | Nach der Bestätigung | Die Sitzung kehrt in den Zustand ohne aktives Issue zurück. Der Scrum Master wählt das nächste Issue aus demselben Projekt. |
 | A-17 | Session-ID | 8 Zeichen aus Großbuchstaben und Ziffern ohne verwechselbare Zeichen (0, O, 1, I, L), weil Teilnehmer sie abtippen (R-02). Teilnehmer-IDs sind UUIDv7. |
+| A-18 | Issue beim Anlegen | Das Issue beim Anlegen ist optional; R-01 ist mit angegebenem Issue erfüllt. Ohne Issue prüft das Backend, dass es das Projekt gibt (ADR 0011). |
 
 **Offene Fragen**
 
@@ -166,7 +167,7 @@ Alle Pfade liegen unter `/api`, das Format ist JSON. Außer beim Erstellen, beim
 | --- | --- | --- | --- | --- |
 | `GET /api/projects?search=&page=` | offen | keiner | 200 `{ items: [{ id, name, pathWithNamespace, webUrl }], nextPage }`: die Projekt-Allowlist, sonst die Projekte mit Mitgliedschaft des Tokens (ADR 0008) | 400, 502 |
 | `GET /api/projects/{projectId}/issues?search=&page=` | offen | keiner | 200 `{ items, nextPage, total }`, offene Issues mit `iid`, `title`, `webUrl`, `weight` | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
-| `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid }` | 201 `{ sessionId, participantId, token }`; lädt nach dem Issue das Projekt (`GET /projects/{id}`), ein Fehler dort bricht das Anlegen nicht ab | 400, 404 `ISSUE_NOT_FOUND`, 502 |
+| `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid? }` | 201 `{ sessionId, participantId, token }`; mit `issueIid` lädt es nach dem Issue das Projekt (`GET /projects/{id}`), ein Fehler dort bricht das Anlegen nicht ab; ohne `issueIid` lädt es nur das Projekt, und ein Fehler dort bricht das Anlegen ab (A-18) | 400, 404 `ISSUE_NOT_FOUND` oder `PROJECT_NOT_FOUND`, 502 |
 | `POST /api/sessions/{id}/participants` | offen | `{ name }` | 201 `{ participantId, token }` | 400, 404, 409 `NAME_TAKEN` |
 | `GET /api/sessions/{id}` | beide | keiner | 200 SessionView | 401, 404 |
 | `GET /api/sessions/{id}/issues?search=&page=&weight=&period=` | Scrum Master | keiner | 200 `{ items, nextPage, total }` mit `iid`, `title`, `webUrl`, `weight` (Zahl oder `null`) je Eintrag, nach letzter Änderung absteigend; `total` aus dem GitLab-Header `X-Total` oder `null`; `weight` `NONE`, `ANY` oder `ALL` und `period` `WEEK`, `MONTH`, `YEAR` oder `ALL`, beide Standard `ALL` (ADR 0009) | 400 `VALIDATION_ERROR`, 403, 502 |
@@ -184,7 +185,7 @@ Fehlerantworten folgen RFC 9457 (`application/problem+json`) mit einem stabilen 
 { "type": "about:blank", "title": "Conflict", "status": 409, "detail": "The round is already revealed.", "errorCode": "INVALID_STATE" }
 ```
 
-Clients entscheiden nur anhand von `errorCode`, nie anhand von `detail`. Codes: `VALIDATION_ERROR` (400), `INVALID_CARD` (400), `UNAUTHORIZED` (401), `FORBIDDEN_ROLE` (403), `SESSION_NOT_FOUND` (404), `ISSUE_NOT_FOUND` (404), `NAME_TAKEN` (409), `INVALID_STATE` (409), `GITLAB_ACCESS_DENIED` (502, 401 oder 403 von GitLab, ADR 0007), `GITLAB_ERROR` (502). GitLab-Fehlertexte werden nicht ungefiltert weitergegeben.
+Clients entscheiden nur anhand von `errorCode`, nie anhand von `detail`. Codes: `VALIDATION_ERROR` (400), `INVALID_CARD` (400), `UNAUTHORIZED` (401), `FORBIDDEN_ROLE` (403), `SESSION_NOT_FOUND` (404), `ISSUE_NOT_FOUND` (404), `PROJECT_NOT_FOUND` (404, Anlegen ohne Issue, ADR 0011), `NAME_TAKEN` (409), `INVALID_STATE` (409), `GITLAB_ACCESS_DENIED` (502, 401 oder 403 von GitLab, ADR 0007), `GITLAB_ERROR` (502). GitLab-Fehlertexte werden nicht ungefiltert weitergegeben.
 
 ### 4.5 WebSocket
 

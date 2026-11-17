@@ -50,11 +50,6 @@ Zeichnung ist gleich.
   `--mat-sys-outline-variant`, damit keine Farbe außerhalb der Tokens entsteht.
 - **Hell und dunkel:** Es gilt die Systemeinstellung; einen Schalter in der Oberfläche gibt es
   nicht.
-- **Issue beim Anlegen (Teil E):** Der Entwurf nennt das Issue „Optional: Issue, mit dem die
-  Sitzung startet“. Die Anwendung verlangt das Issue beim Anlegen weiterhin (R-01, Spec 0031).
 - **Höchstzahl (Teil E):** Der Entwurf nennt die Zahl laufender Sitzungen („Es laufen bereits 20
   Sitzungen“). Das Backend liefert diese Zahl nicht; die Anwendung zeigt den bestehenden Text zu
   `LIMIT_REACHED`.
-- **Kartenrücken der Beitrittsseite (Teil E):** Die Reihe der fünf Kartenrücken über dem Titel
-  entfällt. Die Farben der Motive stehen nur im Sitzungsraum und in der Kopfzeile; eine dritte
-  Kopie entsteht dafür nicht.

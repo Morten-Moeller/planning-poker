@@ -48,7 +48,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   change runs through `SessionRegistry.update(sessionId, command)`: lock per session
   (`ReentrantLock`), `lastActivityAt` from the `Clock` bean, command, change event
   `SessionChanged(sessionId)` after the lock is released (ADR 0002 replaces A4.1, A4.3, A4.4).
-  `create(gitlabProjectId, issueIid, creatorName)` returns the session with its scrum master;
+  `create(gitlabProjectId, issueIid, creatorName)` (`issueIid` may be `null`) returns the session with its scrum master;
   `find(sessionId)` answers empty for an unknown or expired session; a read of the state (the
   mapper to `SessionView`, from spec 0006) goes through `read(sessionId, query)` under the same
   lock, without an event. A command or read on a missing session throws
@@ -93,7 +93,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
 
 - Errors: `planningpoker.platform.ErrorCode` holds every stable `errorCode` with its HTTP status
   (`VALIDATION_ERROR`, `INVALID_CARD`, `UNAUTHORIZED`, `FORBIDDEN_ROLE`, `SESSION_NOT_FOUND`,
-  `ISSUE_NOT_FOUND`, `PROJECT_NOT_ALLOWED`, `NAME_TAKEN`, `INVALID_STATE`, `LIMIT_REACHED`,
+  `ISSUE_NOT_FOUND`, `PROJECT_NOT_FOUND`, `PROJECT_NOT_ALLOWED`, `NAME_TAKEN`, `INVALID_STATE`, `LIMIT_REACHED`,
   `GITLAB_ACCESS_DENIED`, `GITLAB_ERROR`). Code throws `ApiException(ErrorCode, detail)`; `ApiExceptionMapper`
   writes RFC 9457 `application/problem+json` (`ProblemDetail`) and unwraps an `ApiException`
   that Jackson wrapped while reading a body (unknown card). `ValidationExceptionMapper` maps
@@ -165,7 +165,11 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   is left out (the `WARN` line of `GitLabClient` names it), 401 and other errors map like the
   issues. `SessionResource.createSession` loads the project once after the allowlist and the
   issue with `GitLabProjects.loadForSession`; a failure leaves `Session.project` empty, the
-  creation succeeds, and the `WARN` line of `GitLabClient` is the only trace. The snapshot carries
+  creation succeeds, and the `WARN` line of `GitLabClient` is the only trace. Without `issueIid`
+  (ADR 0011, spec 0033) it loads the project after the allowlist with
+  `GitLabProjects.loadRequired` instead and loads no issue: GitLab 404 answers 404
+  `PROJECT_NOT_FOUND`, 401 and 403 `GITLAB_ACCESS_DENIED`, everything else `GITLAB_ERROR`, and
+  no session is created; `preselectedIssueIid` of the session is then `null`. The snapshot carries
   it as `project` and the setting `write-weight` as `writeWeight`. `GitLabClient.searchIssues`
   reads `X-Total` into `IssuePage.total`; both issue lists answer it as `total` or `null`. `ProjectAllowlist` (`planningpoker.session`) holds the trimmed entries of
   `SessionConfig.allowedProjects` and the check `requireAllowed`, used by `createSession` and

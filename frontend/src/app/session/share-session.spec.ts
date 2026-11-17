@@ -74,6 +74,64 @@ describe('ShareSession', () => {
     expect(element('copy-link-done')).toBeNull();
   });
 
+  describe('with fake timers', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    async function after(millis: number): Promise<void> {
+      await vi.advanceTimersByTimeAsync(millis);
+      fixture.detectChanges();
+    }
+
+    it('hides Kopiert 3 s after the copy', async () => {
+      element('copy-link')?.click();
+      await after(0);
+      expect(element('copy-link-done')).not.toBeNull();
+
+      await after(2999);
+      expect(element('copy-link-done')).not.toBeNull();
+
+      await after(1);
+      expect(element('copy-link-done')).toBeNull();
+      expect(normalized(element('copy-link'))).toBe('⧉ Kopieren');
+    });
+
+    it('starts the 3 s again with a second click', async () => {
+      element('copy-session-id')?.click();
+      await after(2000);
+      element('copy-session-id')?.click();
+      await after(0);
+
+      await after(2999);
+      expect(element('copy-session-id-done')).not.toBeNull();
+
+      await after(1);
+      expect(element('copy-session-id-done')).toBeNull();
+    });
+
+    it('keeps the failure status', async () => {
+      rejects = true;
+      element('copy-link')?.click();
+      await after(10000);
+
+      expect(element('copy-link-failed')).not.toBeNull();
+    });
+
+    it('clears the timer when the component is destroyed', async () => {
+      element('copy-link')?.click();
+      await after(0);
+      expect(vi.getTimerCount()).toBe(1);
+
+      fixture.destroy();
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
   it.each([
     ['copy-link', 'copy-link-failed', 'copy-link-done'],
     ['copy-session-id', 'copy-session-id-failed', 'copy-session-id-done'],

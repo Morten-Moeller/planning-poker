@@ -21,6 +21,7 @@ class SessionBuilder {
     private Integer timerSeconds;
     private Project project;
     private boolean writeWeight;
+    private Long preselectedIssueIid = ISSUE.iid();
 
     static SessionBuilder session() {
         return new SessionBuilder();
@@ -33,6 +34,11 @@ class SessionBuilder {
 
     SessionBuilder project(Project project) {
         this.project = project;
+        return this;
+    }
+
+    SessionBuilder withoutPreselection() {
+        this.preselectedIssueIid = null;
         return this;
     }
 
@@ -70,8 +76,8 @@ class SessionBuilder {
 
     Session build() {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
-        Session session =
-                new Session("K7P2QX9M", "4711", ISSUE.iid(), CREATED_AT, MAX_PARTICIPANTS, project, writeWeight);
+        Session session = new Session(
+                "K7P2QX9M", "4711", preselectedIssueIid, CREATED_AT, MAX_PARTICIPANTS, project, writeWeight);
         Participant master = session.join("Master " + suffix);
         session.connect(master.id());
         for (int i = 1; i <= developers; i++) {

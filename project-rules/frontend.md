@@ -71,12 +71,24 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   and `create-issue` are `mat-autocomplete` inputs. The text goes through `valueChanges` with
   `debounceTime(300)` and `switchMap` to `ApiService.searchProjects` and
   `ApiService.searchProjectIssues`; a text of digits only is taken as id or iid without a search,
-  and the issue search runs only when the project field holds a numeric id. Options carry
+  and the issue search runs only when the project field holds a numeric id. The focus on the
+  empty project field loads the first page of `searchProjects` without `search` at once and opens
+  the autocomplete (spec 0032); after a choice, a focus on the emptied field loads the list
+  again. Options carry
   `create-project-option` (name, then path and id) and `create-issue-option` (`#iid Titel`);
   the choice writes the id or iid into the field. Empty results show `create-project-empty` and
   `create-issue-empty`; `PROJECT_NOT_ALLOWED`, `GITLAB_ACCESS_DENIED` and `GITLAB_ERROR` show
   their text in `create-project-search-error` and `create-issue-search-error` and clear
   `ErrorState`.
+- Issue field optional (spec 0033, ADR 0011): `create-issue` is labelled „Issue (optional)“ with
+  the hint „Optional: Issue, mit dem die Sitzung startet“. An empty field (or spaces) is valid and
+  the request has no `issueIid`; a value that is not a whole number from 1 shows
+  `create-issue-error`. `PROJECT_NOT_FOUND` sets the error `notFound` on the project control and
+  shows its text in `create-project-error`, not in `create-error`; a change of the field clears it.
+- Start and join page (spec 0031): an unreachable backend shows `health-down` with the button
+  `health-retry`; the join page shows `join-role-hint` and, for `SESSION_NOT_FOUND`,
+  `join-not-found` with the link `join-not-found-home` instead of the form. Above the title of the
+  join page stands the row of the five card backs `join-card-backs` (`aria-hidden`, spec 0032).
 - Issue panel filters (spec 0023, ADR 0009): above the list a `mat-button-toggle-group`
   `issue-filter-weight` („Ohne Gewicht“ `issue-filter-weight-none`, „Mit Gewicht“
   `issue-filter-weight-any`, „Alle“ `issue-filter-weight-all`; default „Ohne Gewicht“) and a
@@ -106,7 +118,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   43 without weight, 46 with weight 3), filtered by `search` and, in the session, by `weight`. The
   mock keeps one phase (`mock-session.ts`, start `LOBBY`): release, `round/start`, reveal, restart
   and confirm change it like the server, answer 409 `INVALID_STATE` in a wrong phase and send the
-  example snapshot of the new phase to every mock socket. The normal build does not contain the mock.
+  example snapshot of the new phase to every mock socket. The snapshots carry `project` and
+  `writeWeight`, the issue lists `total` (spec 0030). The normal build does not contain the mock.
 
 ## UI
 
@@ -140,13 +153,14 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   - Card motif (part B, `session/card-motif.ts`): `motifFor(sessionId, issueIid, round)` is
     FNV-1a of `sessionId:issueIid:round` modulo 5 (Raster, Punkte, Zeilen, Ringe, Stufen); when
     the hash gives the motif of the previous round, the next one is taken. `LOBBY` has motif 0.
-    The session page sets `data-motif` on `.room`; `session-page.scss` sets
-    `--app-card-accent`, `--app-card-on-accent`, `--app-card-pattern` and
-    `--app-card-pattern-size` per `data-motif`, light and dark (design system, section 7).
-    Components inside the room use these variables, with a fallback where they also render
-    outside of it. The toolbar is outside the room and must not import from `session/`:
-    `app-shell.scss` repeats the five accents and patterns for `toolbar-motif` with
-    `:host:has([data-motif='n'])`; a change of a motif changes both files. The motif carries no
+    The session page sets `data-motif` on `.room`. The table of the five motifs (accent light
+    and dark, pattern, pattern size; design system, section 7) stands only in
+    `frontend/src/styles/_motifs.scss` (spec 0032); its mixin `card-variables($motif, $scheme)`
+    sets `--app-card-accent`, `--app-card-on-accent`, `--app-card-pattern` and
+    `--app-card-pattern-size`. `session-page.scss` uses it per `data-motif` of `.room`,
+    `app-shell.scss` for `toolbar-motif` with `:host:has([data-motif='n'])` and
+    `join-page.scss` for the card backs. Components inside the room use these variables, with a
+    fallback where they also render outside of it. The motif carries no
     meaning; states always stand as text next to it.
   - Side column (part B): sections with a mono label (`--app-label-section`, upper case by CSS)
     in this order: „Timer“ (scrum master, with the hint „Gilt ab der nächsten Runde.“),
@@ -155,20 +169,30 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
     A participant entry (design system, section 8) has a chip (filled with the motif after a
     vote, dashed otherwise, none for the scrum master), the name with „(du)“ and a highlighted row
     for the own entry, „★ Scrum Master“, a status („Moderiert, schätzt nicht mit“, „Bereit“ in
-    `LOBBY`, „Diskutiert“ in `DISCUSSION`, „✓ Hat geschätzt“ or „○ Ausstehend“ in `VOTING` and
-    `REVEALED`) and „● verbunden“ or „○ getrennt“. Symbols stand in `aria-hidden` spans outside
+    `LOBBY`, „Diskutiert“ in `DISCUSSION`, „✓ Hat geschätzt“ in `VOTING` and `REVEALED`,
+    „○ Ausstehend“ in `VOTING`, „Nicht geschätzt“ (muted) in `REVEALED`, spec 0032) and „● verbunden“ or „○ getrennt“. Symbols stand in `aria-hidden` spans outside
     the element with the `data-testid`, so the selectors keep their text.
   - Developer in `LOBBY` (part B): the waiting state `lobby-waiting` with a stack of three motif
     cards, the title and „Die Seite aktualisiert sich von selbst.“; after a confirmation the
     title reads „Das Ergebnis ist übernommen. …“ and `last-result` („Zuletzt geschätzt“, final
     card, issue, round, cards, „✓ Als Kommentar in GitLab gespeichert“) follows until the next
-    release. The scrum master never sees it.
+    release. With `project` in the snapshot it links the issue („In GitLab öffnen ↗“,
+    `last-result-open`, `project.webUrl/-/issues/<iid>`, new tab, `rel="noopener noreferrer"`;
+    spec 0032). The scrum master never sees it.
   - Card and table (part C, spec 0029): `app-card` (`session/card.ts`) is the only card view,
     with the states open, chosen, locked, hidden, pending and revealed and the `aria-label`
     „Karte <Wert>“. The deck is a `role="group"` „Deine Karte“ with arrow keys, Home and End;
     `RoundStatus` holds the phase bar (round, counter, progress bar, `round-timer`, „Kartensatz:
     <Name>“ from `motif-name.ts`), projects the active issue below the bar and shows
-    `seat-table` in `VOTING`; `RoundResult` does the same in `REVEALED`. The glyphs of ? and ☕
+    `seat-table` in `VOTING`; `RoundResult` does the same in `REVEALED` and lists the
+    distribution as `result-count` with `result-count-card` and `result-count-votes`. The open
+    deck `card-deck` and the locked deck `card-deck-locked` are at most 1000 px wide and centred,
+    so the cards stay portrait; below 600 px the deck has 6 columns (spec 0032). The iid of the
+    active issue (`active-issue-iid`) has the size of its title, in mono, muted and not bold.
+    The seats of `seat-table` align at the top: cards of one row share top and height and
+    the names one line; in `REVEALED` a seat without a vote shows „–“ and „nicht geschätzt“,
+    in `VOTING` „…“ and „ausstehend“ (spec 0032). „✓ Kopiert“ of `share-session` disappears
+    after 3 s; a new click starts the 3 s again; the failure text stays (spec 0032). The glyphs of ? and ☕
     come from `public/question-mark.svg` and `public/coffee-break.svg` through `card-glyphs.ts`
     (`fetch`, parse, remove metadata, scripts, event and link attributes, then
     `bypassSecurityTrustHtml`); this is the only use of `bypassSecurityTrust…`. Confetti and the

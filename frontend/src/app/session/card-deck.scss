@@ -1,4 +1,8 @@
 .deck {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1000px;
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: var(--app-space-m);

@@ -105,7 +105,7 @@ public class SessionResource {
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     @APIResponse(
             responseCode = "404",
-            description = "ISSUE_NOT_FOUND",
+            description = "ISSUE_NOT_FOUND, PROJECT_NOT_FOUND",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     @APIResponse(
             responseCode = "409",
@@ -118,8 +118,13 @@ public class SessionResource {
     public Response createSession(@NotNull @Valid CreateSessionRequest request) {
         String projectId = request.gitlabProjectId().strip();
         allowlist.requireAllowed(projectId);
-        gitLabIssues.loadIssue(projectId, request.issueIid());
-        Project project = gitLabProjects.loadForSession(projectId).orElse(null);
+        Project project;
+        if (request.issueIid() == null) {
+            project = gitLabProjects.loadRequired(projectId);
+        } else {
+            gitLabIssues.loadIssue(projectId, request.issueIid());
+            project = gitLabProjects.loadForSession(projectId).orElse(null);
+        }
         SessionRegistry.Created created =
                 registry.create(projectId, request.issueIid(), request.name(), project, gitLabConfig.writeWeight());
         return Response.status(Response.Status.CREATED)

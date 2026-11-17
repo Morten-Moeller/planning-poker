@@ -11,19 +11,21 @@ import {
   Subject,
   catchError,
   combineLatest,
-  debounceTime,
+  debounce,
   distinctUntilChanged,
   filter,
   map,
+  merge,
   of,
   skip,
   startWith,
   switchMap,
   tap,
+  timer,
 } from 'rxjs';
-import type { ErrorCode } from '../api/api-error';
+import { ApiError, type ErrorCode } from '../api/api-error';
 import { ApiService, IssueSummary, ProjectSummary } from '../api/api.service';
-import { formErrorMessage } from '../api/error-messages';
+import { errorMessage, formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
 import { participantNameValidators } from '../api/participant-name';
 import { TokenStore } from '../api/token-store';
@@ -32,7 +34,8 @@ import { HealthApi } from './health-api';
 const SESSION_ID_PATTERN = /^[A-Z2-9]{8}$/;
 const NOT_BLANK = /\S/;
 const WHOLE_NUMBER = /^\d+$/;
-const ISSUE_NUMBER = /^\s*\d+\s*$/;
+const ISSUE_NUMBER = /^\s*\d*\s*$/;
+const PROJECT_NOT_FOUND = 'notFound';
 const SEARCH_DELAY_MS = 300;
 const CREATE_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
   'ISSUE_NOT_FOUND',
@@ -61,6 +64,7 @@ function idle<T>(): SearchResult<T> {
 interface SearchQuery {
   projectId: string;
   text: string;
+  all?: boolean;
 }
 
 @Component({
@@ -84,6 +88,7 @@ export class StartPage {
   private readonly router = inject(Router);
 
   private readonly healthChecks = new Subject<void>();
+  private readonly projectFocus = new Subject<void>();
 
   protected readonly backendReachable = toSignal(
     this.healthChecks.pipe(
@@ -116,7 +121,7 @@ export class StartPage {
     }),
     issueIid: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.min(1), Validators.pattern(ISSUE_NUMBER)],
+      validators: [Validators.min(1), Validators.pattern(ISSUE_NUMBER)],
     }),
   });
 
@@ -133,6 +138,7 @@ export class StartPage {
   );
 
   protected readonly createError = signal<string | null>(null);
+  protected readonly projectNotFound = errorMessage('PROJECT_NOT_FOUND');
   protected readonly creating = signal(false);
   protected readonly projects = signal(idle<ProjectSummary>());
   protected readonly issues = signal(idle<IssueSummary>());
@@ -142,14 +148,22 @@ export class StartPage {
     const projectText = textOf(this.createForm.controls.gitlabProjectId.valueChanges);
     const issueText = textOf(this.createForm.controls.issueIid.valueChanges);
 
-    projectText
-      .pipe(
+    const projectField = this.createForm.controls.gitlabProjectId;
+    merge(
+      projectText.pipe(
         skip(1),
-        map((text) => ({ projectId: '', text })),
+        map((text): SearchQuery => ({ projectId: '', text })),
+      ),
+      this.projectFocus.pipe(
+        filter(() => projectField.value.trim() === ''),
+        map((): SearchQuery => ({ projectId: '', text: '', all: true })),
+      ),
+    )
+      .pipe(
         this.search(
           this.projects,
-          (query) => query.text !== '' && !WHOLE_NUMBER.test(query.text),
-          (query) => this.api.searchProjects({ search: query.text }),
+          (query) => query.all === true || (query.text !== '' && !WHOLE_NUMBER.test(query.text)),
+          (query) => this.api.searchProjects(query.text === '' ? {} : { search: query.text }),
         ),
         takeUntilDestroyed(destroyRef),
       )
@@ -186,7 +200,7 @@ export class StartPage {
             result.set(idle());
           }
         }),
-        debounceTime(SEARCH_DELAY_MS),
+        debounce((query) => timer(query.all === true ? 0 : SEARCH_DELAY_MS)),
         switchMap((query) =>
           searchable(query)
             ? request(query).pipe(
@@ -214,6 +228,10 @@ export class StartPage {
     return { items: [], searched: true, error: message };
   }
 
+  protected showAllProjects(): void {
+    this.projectFocus.next();
+  }
+
   protected checkBackend(): void {
     this.healthChecks.next();
   }
@@ -228,12 +246,13 @@ export class StartPage {
       return;
     }
     const { name, gitlabProjectId, issueIid } = this.createForm.getRawValue();
+    const issue = issueIid.trim();
     this.creating.set(true);
     this.api
       .createSession({
         name: name.trim(),
         gitlabProjectId: gitlabProjectId.trim(),
-        issueIid: Number(issueIid.trim()),
+        ...(issue === '' ? {} : { issueIid: Number(issue) }),
       })
       .subscribe({
         next: ({ sessionId, participantId, token }) => {
@@ -242,6 +261,13 @@ export class StartPage {
         },
         error: (error: unknown) => {
           this.creating.set(false);
+          if (error instanceof ApiError && error.errorCode === 'PROJECT_NOT_FOUND') {
+            this.errorState.clear();
+            const project = this.createForm.controls.gitlabProjectId;
+            project.setErrors({ [PROJECT_NOT_FOUND]: true });
+            project.markAsTouched();
+            return;
+          }
           const message = formErrorMessage(error, CREATE_FORM_ERRORS);
           if (message !== null) {
             this.errorState.clear();

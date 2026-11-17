@@ -198,6 +198,7 @@ class ContractTest {
                         "PROJECT_NOT_ALLOWED",
                         "SESSION_NOT_FOUND",
                         "ISSUE_NOT_FOUND",
+                        "PROJECT_NOT_FOUND",
                         "NAME_TAKEN",
                         "INVALID_STATE",
                         "LIMIT_REACHED",
@@ -211,7 +212,7 @@ class ContractTest {
 
     @Test
     void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
-        assertEquals("3.1.0", contract.at("/info/version").asText());
+        assertEquals("3.2.0", contract.at("/info/version").asText());
         assertEquals(
                 "PROJECT_NOT_ALLOWED",
                 contract.at("/paths/~1api~1sessions/post/responses/403/description")
@@ -223,6 +224,17 @@ class ContractTest {
         assertEquals(
                 "NAME_TAKEN, LIMIT_REACHED",
                 contract.at("/paths/~1api~1sessions~1{id}~1participants/post/responses/409/description")
+                        .asText());
+    }
+
+    @Test
+    void createsASessionWithoutARequiredIssue() {
+        JsonNode request = contract.at("/components/schemas/CreateSessionRequest");
+        assertEquals(List.of("name", "gitlabProjectId"), texts(request.get("required")));
+        assertEquals(0, request.at("/properties/issueIid/exclusiveMinimum").asInt());
+        assertEquals(
+                "ISSUE_NOT_FOUND, PROJECT_NOT_FOUND",
+                contract.at("/paths/~1api~1sessions/post/responses/404/description")
                         .asText());
     }
 

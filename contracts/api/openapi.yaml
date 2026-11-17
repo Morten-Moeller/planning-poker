@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Planning Poker API
-  version: 3.1.0
+  version: 3.2.0
   description: |
     Commands go over REST under /api and answer without state. The state reaches every participant
     over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
@@ -165,7 +165,6 @@ components:
       required:
       - name
       - gitlabProjectId
-      - issueIid
       properties:
         name:
           type: string
@@ -184,7 +183,8 @@ components:
         issueIid:
           type: integer
           format: int64
-          description: Iid of the preselected issue.
+          description: Iid of the preselected issue. Without it the session starts
+            without a preselection.
           examples:
           - 42
           exclusiveMinimum: 0
@@ -222,6 +222,7 @@ components:
       - PROJECT_NOT_ALLOWED
       - SESSION_NOT_FOUND
       - ISSUE_NOT_FOUND
+      - PROJECT_NOT_FOUND
       - NAME_TAKEN
       - INVALID_STATE
       - LIMIT_REACHED
@@ -980,7 +981,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
         "404":
-          description: ISSUE_NOT_FOUND
+          description: "ISSUE_NOT_FOUND, PROJECT_NOT_FOUND"
           content:
             application/problem+json:
               schema:
