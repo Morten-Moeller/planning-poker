@@ -3,14 +3,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { ApiService } from '../api/api.service';
 import { SessionStore } from '../api/session-store';
-import { cardName, cardSymbol } from './cards';
+import { cardLabel, cardName, cardSymbol } from './cards';
+import { Confetti } from './confetti';
 import { ConfirmResultData, ConfirmResultDialog } from './confirm-result-dialog';
+import { consensusCard } from './consensus';
 import { outlierCards } from './outliers';
 import { averageText } from './round-stats';
 
 @Component({
   selector: 'app-round-result',
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, Confetti],
   templateUrl: './round-result.html',
   styleUrl: './round-result.scss',
 })
@@ -26,6 +28,13 @@ export class RoundResult {
   protected readonly round = computed(() => this.store.round());
   protected readonly votes = computed(() => this.round()?.votes ?? []);
   protected readonly outliers = computed(() => outlierCards(this.votes()));
+  protected readonly consensus = computed(() => consensusCard(this.votes()));
+  protected readonly consensusText = computed(() => {
+    const card = this.consensus();
+    return card === null
+      ? null
+      : $localize`:@@roundResult.consensus:Konsens: Alle haben ${cardLabel(card)}:card: gewählt.`;
+  });
   protected readonly stats = computed(() => this.round()?.stats ?? null);
   protected readonly average = computed(() => averageText(this.stats()?.average ?? null));
   protected readonly confirming = computed(() => this.round()?.confirming === true);
@@ -53,7 +62,7 @@ export class RoundResult {
     this.dialogOpen.set(true);
     this.dialog
       .open<ConfirmResultDialog, ConfirmResultData, boolean>(ConfirmResultDialog, {
-        data: { sessionId: this.sessionId() },
+        data: { sessionId: this.sessionId(), suggestedCard: this.consensus() },
       })
       .afterClosed()
       .subscribe(() => this.dialogOpen.set(false));

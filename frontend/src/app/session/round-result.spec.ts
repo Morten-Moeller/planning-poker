@@ -213,6 +213,30 @@ describe('RoundResult', () => {
     }
   });
 
+  it.each([
+    ['scrum master', revealedScrumMaster],
+    ['developer', revealedDeveloper],
+  ])(
+    'shows the consensus hint and the confetti to the %s when all votes match',
+    async (_role, base) => {
+      await open(withVotes(base, ['5', '5']));
+
+      const hint = all('consensus-hint')[0];
+      expect(hint.getAttribute('role')).toBe('status');
+      expect(texts('consensus-hint')).toEqual(['Konsens: Alle haben 5 gewählt.']);
+      const confetti = all('consensus-confetti');
+      expect(confetti).toHaveLength(1);
+      expect(confetti[0].getAttribute('aria-hidden')).toBe('true');
+    },
+  );
+
+  it('shows neither consensus hint nor confetti when the votes differ', async () => {
+    await open(withVotes(revealedDeveloper, ['5', '8']));
+
+    expect(all('consensus-hint')).toHaveLength(0);
+    expect(all('consensus-confetti')).toHaveLength(0);
+  });
+
   it('renders the actions for the scrum master', async () => {
     await open(revealedScrumMaster);
 
@@ -278,5 +302,35 @@ describe('RoundResult', () => {
 
     expect(document.querySelector('[data-testid="confirm-dialog"]')).not.toBeNull();
     expect(button('result-accept').disabled).toBe(true);
+  });
+
+  function dialogCard(card: Card): HTMLInputElement {
+    return document.querySelector<HTMLInputElement>(
+      `[data-testid="confirm-dialog"] [data-testid="confirm-card"] input[value="${card}"]`,
+    )!;
+  }
+
+  function dialogSubmit(): HTMLButtonElement {
+    return document.querySelector<HTMLButtonElement>('[data-testid="confirm-submit"]')!;
+  }
+
+  it('preselects the consensus card in the result dialog', async () => {
+    await open(withVotes(revealedScrumMaster, ['8', '8']));
+
+    button('result-accept').click();
+    await fixture.whenStable();
+
+    expect(dialogCard('8').checked).toBe(true);
+    expect(dialogSubmit().disabled).toBe(false);
+  });
+
+  it('opens the result dialog without a selection when there is no consensus', async () => {
+    await open(withVotes(revealedScrumMaster, ['5', '8']));
+
+    button('result-accept').click();
+    await fixture.whenStable();
+
+    expect(document.querySelectorAll('[data-testid="confirm-card"] input:checked')).toHaveLength(0);
+    expect(dialogSubmit().disabled).toBe(true);
   });
 });
