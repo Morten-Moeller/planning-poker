@@ -1,5 +1,14 @@
-@if (remaining() !== null) {
-  <p class="round-timer" role="timer" data-testid="round-timer" [class.expired]="remaining() === 0">
-    {{ text() }}
+@if (remaining(); as seconds) {
+  <p class="round-timer" role="timer" data-testid="round-timer" [class.final]="final()">
+    <span aria-hidden="true">◷ </span>{{ text() }}
   </p>
+} @else if (remaining() === 0) {
+  <p class="round-timer expired" role="timer" data-testid="round-timer">
+    <span aria-hidden="true">⏱ </span>{{ text() }}
+  </p>
+}
+@if (remaining() !== null) {
+  <span class="live" [attr.aria-live]="'polite'" data-testid="round-timer-live">{{
+    announcement()
+  }}</span>
 }

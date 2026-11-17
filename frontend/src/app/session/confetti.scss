@@ -1,17 +1,18 @@
 @use 'sass:list';
-@use 'sass:math';
 
-$pieces: 16;
+$pieces: 46;
 $colors: (
   var(--mat-sys-primary),
-  var(--mat-sys-secondary),
-  var(--mat-sys-tertiary),
+  var(--app-success),
+  var(--app-warning),
+  var(--app-card-accent, var(--mat-sys-primary-container)),
   var(--mat-sys-error)
 );
 
 :host {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: block;
   overflow: hidden;
   pointer-events: none;
@@ -19,35 +20,39 @@ $colors: (
 
 .piece {
   position: absolute;
-  top: calc(-1 * var(--app-space-m));
-  width: var(--app-space-s);
-  height: var(--app-space-m);
-  border-radius: var(--mat-sys-corner-extra-small);
+  top: 0;
+  border-radius: 1px;
   opacity: 0;
-  animation: fall 2.4s ease-in 1 forwards;
+  animation: fall 2.6s cubic-bezier(0.3, 0.6, 0.5, 1) 1 forwards;
 }
 
-@for $i from 1 through $pieces {
-  .piece:nth-child(#{$i}) {
-    left: math.percentage(math.div($i - 0.5, $pieces));
+@for $i from 0 to $pieces {
+  $width: 6px + ($i % 3) * 2px;
+
+  .piece:nth-child(#{$i + 1}) {
+    --dx: #{($i * 53) % 120 - 60}px;
+
+    left: ($i * 37) % 100 * 1%;
+    width: $width;
+    height: $width * 1.6;
     background-color: list.nth($colors, ($i % list.length($colors)) + 1);
-    animation-delay: #{($i * 7 % 10) * 0.06}s;
+    animation-delay: #{($i % 9) * 0.09}s;
   }
 }
 
 @keyframes fall {
   0% {
     opacity: 1;
-    transform: translateY(0) rotate(0deg);
+    transform: translate3d(0, -40px, 0) rotate(0deg);
   }
 
-  80% {
+  85% {
     opacity: 1;
   }
 
   100% {
     opacity: 0;
-    transform: translateY(320px) rotate(540deg);
+    transform: translate3d(var(--dx), 520px, 0) rotate(540deg);
   }
 }
 

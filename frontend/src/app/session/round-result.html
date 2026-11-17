@@ -1,55 +1,62 @@
 <section class="result" data-testid="round-result">
-  <h2 i18n="@@roundResult.title">Aufgedeckte Karten</h2>
-  @if (round(); as round) {
-    <p class="round-number" data-testid="round-number" i18n="@@roundResult.number">
-      Runde {{ round.number }}
-    </p>
-  }
+  <h2 class="title" i18n="@@roundResult.title">Aufgedeckte Karten</h2>
+  <div class="bar">
+    @if (round(); as round) {
+      <span class="phase"
+        ><span data-testid="round-number" i18n="@@roundResult.number">Runde {{ round.number }}</span
+        ><ng-container i18n="@@roundResult.revealed"> · aufgelöst</ng-container></span
+      >
+    }
+    <span class="counter" data-testid="result-counter"
+      ><strong i18n="@@roundResult.voteCount">{votes().length, plural,
+        =1 {1 Schätzung}
+        other {{{ votes().length }} Schätzungen}
+      }</strong>
+      @if (absentText(); as absent) {
+        · {{ absent }}
+      }
+    </span>
+    @if (motifLabel(); as name) {
+      <span class="motif" data-testid="motif-name"
+        ><span class="swatch" aria-hidden="true"></span
+        ><ng-container i18n="@@roundResult.motif">Kartensatz: {{ name }}</ng-container></span
+      >
+    }
+  </div>
+  <ng-content />
   @if (confirming()) {
     <p class="hint" role="status" data-testid="confirming-hint" i18n="@@roundResult.confirming">
       Das Ergebnis wird nach GitLab geschrieben.
     </p>
   }
   @if (consensusText(); as text) {
-    <app-confetti data-testid="consensus-confetti" />
-    <p class="consensus-hint" role="status" data-testid="consensus-hint">{{ text }}</p>
+    @if (confetti) {
+      <app-confetti data-testid="consensus-confetti" />
+    }
+    <div class="consensus">
+      @if (consensus(); as card) {
+        <span class="consensus-card" aria-hidden="true">{{ symbol(card) }}</span>
+      }
+      <p class="consensus-hint" role="status" data-testid="consensus-hint">{{ text }}</p>
+    </div>
     @if (turnoutText(); as turnout) {
       <p class="turnout-hint" data-testid="turnout-hint">{{ turnout }}</p>
     }
   }
   @if (outliers().size > 0) {
-    <p class="outlier-hint" data-testid="outlier-hint" i18n="@@roundResult.outlierHint">
-      Niedrigste und höchste Schätzung liegen weit auseinander.
-    </p>
+    <div class="outliers" role="note">
+      <span class="outliers-title" i18n="@@roundResult.outlierTitle">↕ Ausreißer</span>
+      <span data-testid="outlier-hint" i18n="@@roundResult.outlierHint"
+        >Niedrigste und höchste Schätzung liegen weit auseinander.</span
+      >
+    </div>
   }
   @if (votes().length === 0) {
     <p class="empty" data-testid="result-empty" i18n="@@roundResult.empty">
       Keine Karten abgegeben.
     </p>
-  } @else {
-    <ul class="votes">
-      @for (vote of votes(); track vote.participantId) {
-        <li class="vote" [class.outlier]="outliers().has(vote.card)" data-testid="result-vote">
-          <span class="name" data-testid="result-vote-name">{{ vote.name }}</span>
-          <span
-            class="card"
-            data-testid="result-vote-card"
-            [attr.role]="name(vote.card) === null ? null : 'img'"
-            [attr.aria-label]="name(vote.card)"
-            >{{ symbol(vote.card) }}</span
-          >
-          @if (outliers().has(vote.card)) {
-            <span
-              class="outlier-label"
-              data-testid="result-vote-outlier"
-              i18n="@@roundResult.outlier"
-              >Ausreißer</span
-            >
-          }
-        </li>
-      }
-    </ul>
   }
+  <app-seat-table />
   @if (notVoted().length > 0) {
     <p class="not-voted" data-testid="not-voted">
       <span i18n="@@roundResult.notVoted">Nicht geschätzt:</span>{{ ' ' }}
@@ -61,34 +68,64 @@
   }
 
   @if (stats(); as stats) {
-    <h3 i18n="@@roundResult.statsTitle">Auswertung</h3>
-    <ul class="distribution">
-      @for (entry of stats.distribution; track entry.card) {
-        <li data-testid="result-count" i18n="@@roundResult.count">
-          <span
-            class="card"
-            [attr.role]="name(entry.card) === null ? null : 'img'"
-            [attr.aria-label]="name(entry.card)"
-            >{{ symbol(entry.card) }}</span
-          >: {entry.count, plural, =1 {1 Stimme} other {{{ entry.count }} Stimmen}}
-        </li>
-      }
-    </ul>
-    <dl class="facts">
-      <dt i18n="@@roundResult.average">Durchschnitt (Orientierung)</dt>
-      <dd data-testid="result-average">{{ average() }}</dd>
-      <dt i18n="@@roundResult.mostFrequent">Häufigste Werte (Orientierung)</dt>
-      <dd data-testid="result-most-frequent">
-        @for (card of stats.mostFrequent; track card; let last = $last) {
-          <span [attr.role]="name(card) === null ? null : 'img'" [attr.aria-label]="name(card)">{{
-            symbol(card)
-          }}</span>
-          @if (!last) {
-            <span>, </span>
+    <div class="stats">
+      <div class="panel">
+        <h3 class="label" i18n="@@roundResult.distribution">VERTEILUNG</h3>
+        <ul class="distribution">
+          @for (entry of stats.distribution; track entry.card) {
+            <li data-testid="result-count">
+              <span
+                class="card"
+                data-testid="result-count-card"
+                [attr.role]="name(entry.card) === null ? null : 'img'"
+                [attr.aria-label]="name(entry.card)"
+                >{{ symbol(entry.card) }}</span
+              >
+              <span class="bar-track" aria-hidden="true"
+                ><span class="bar-value" [style.width.%]="(entry.count / maxCount()) * 100"></span
+              ></span>
+              <span
+                class="count"
+                data-testid="result-count-votes"
+                i18n="@@roundResult.count"
+                >{entry.count, plural, =1 {1 Stimme} other {{{ entry.count }} Stimmen}}</span
+              >
+            </li>
           }
-        }
-      </dd>
-    </dl>
+        </ul>
+      </div>
+      <div class="panel facts">
+        <h3 class="label" i18n="@@roundResult.orientation">ZUR ORIENTIERUNG</h3>
+        <dl>
+          <div>
+            <dt i18n="@@roundResult.average">
+              Durchschnitt<span class="visually-hidden"> (Orientierung)</span>
+            </dt>
+            <dd data-testid="result-average">{{ average() }}</dd>
+          </div>
+          <div>
+            <dt i18n="@@roundResult.mostFrequent">
+              Häufigste Werte<span class="visually-hidden"> (Orientierung)</span>
+            </dt>
+            <dd data-testid="result-most-frequent">
+              @for (card of stats.mostFrequent; track card; let last = $last) {
+                <span
+                  [attr.role]="name(card) === null ? null : 'img'"
+                  [attr.aria-label]="name(card)"
+                  >{{ symbol(card) }}</span
+                >
+                @if (!last) {
+                  <span>, </span>
+                }
+              }
+            </dd>
+          </div>
+        </dl>
+        <p class="no-proposal" i18n="@@roundResult.noProposal">
+          Kein Vorschlag: Den Endwert legt das Team fest.
+        </p>
+      </div>
+    </div>
   }
 
   @if (store.isScrumMaster()) {
@@ -96,23 +133,29 @@
       <button
         type="button"
         mat-stroked-button
+        class="action"
         data-testid="round-restart"
         [disabled]="actionsDisabled()"
         (click)="restart()"
         i18n="@@roundResult.restart"
       >
-        Neue Runde
+        ↻ Neue Runde
       </button>
       <button
         type="button"
         mat-flat-button
+        class="action"
         data-testid="result-accept"
         [disabled]="actionsDisabled()"
         (click)="openConfirm()"
         i18n="@@roundResult.accept"
       >
-        Ergebnis übernehmen
+        Ergebnis übernehmen …
       </button>
     </div>
+  } @else {
+    <p class="waiting" data-testid="result-waiting" i18n="@@roundResult.waiting">
+      Der Scrum Master startet eine neue Runde oder übernimmt das Ergebnis.
+    </p>
   }
 </section>

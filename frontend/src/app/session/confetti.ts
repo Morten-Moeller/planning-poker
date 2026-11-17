@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-const PIECES = 16;
+const PIECES = 46;
 
 @Component({
   selector: 'app-confetti',

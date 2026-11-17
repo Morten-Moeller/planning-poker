@@ -1,7 +1,9 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, linkedSignal, signal } from '@angular/core';
 import { SessionStore } from '../api/session-store';
 
 const TICK_MS = 1000;
+const ANNOUNCE_EVERY_SECONDS = 15;
+const FINAL_SECONDS = 10;
 
 export function remainingSeconds(deadline: string, serverNow: number): number {
   return Math.max(0, Math.ceil((Date.parse(deadline) - serverNow) / 1000));
@@ -11,6 +13,16 @@ export function formatRemaining(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   const rest = seconds % 60;
   return `${minutes}:${rest.toString().padStart(2, '0')}`;
+}
+
+export function announces(seconds: number): boolean {
+  return seconds <= FINAL_SECONDS || seconds % ANNOUNCE_EVERY_SECONDS === 0;
+}
+
+function remainingText(seconds: number): string {
+  return seconds > 0
+    ? $localize`:@@roundTimer.remaining:Noch ${formatRemaining(seconds)}:remaining:`
+    : $localize`:@@roundTimer.expired:Zeit abgelaufen`;
 }
 
 @Component({
@@ -29,12 +41,22 @@ export class RoundTimer {
   });
   protected readonly text = computed(() => {
     const remaining = this.remaining();
-    if (remaining === null) {
-      return '';
-    }
-    return remaining > 0
-      ? $localize`:@@roundTimer.remaining:Noch ${formatRemaining(remaining)}:remaining:`
-      : $localize`:@@roundTimer.expired:Zeit abgelaufen`;
+    return remaining === null ? '' : remainingText(remaining);
+  });
+  protected readonly final = computed(() => {
+    const remaining = this.remaining();
+    return remaining !== null && remaining > 0 && remaining <= FINAL_SECONDS;
+  });
+  protected readonly announcement = linkedSignal<number | null, string>({
+    source: this.remaining,
+    computation: (remaining, previous) => {
+      if (remaining === null) {
+        return '';
+      }
+      return previous === undefined || announces(remaining)
+        ? remainingText(remaining)
+        : previous.value;
+    },
   });
 
   constructor() {

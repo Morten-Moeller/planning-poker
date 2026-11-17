@@ -128,9 +128,10 @@ test('everybody sees the same result, the scrum master starts a new round and co
 
   for (const view of everybody) {
     expect(await texts(result(view).getByTestId('result-vote'))).toEqual(['Ben5', 'Cem8']);
-    expect(await texts(result(view).getByTestId('result-count'))).toEqual([
-      '5: 1 Stimme',
-      '8: 1 Stimme',
+    expect(await texts(result(view).getByTestId('result-count-card'))).toEqual(['5', '8']);
+    expect(await texts(result(view).getByTestId('result-count-votes'))).toEqual([
+      '1 Stimme',
+      '1 Stimme',
     ]);
     await expect(result(view).getByTestId('result-average')).toHaveText('6,5');
     await expect(result(view).getByTestId('result-most-frequent')).toHaveText('5, 8');

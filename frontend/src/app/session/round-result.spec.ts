@@ -167,7 +167,8 @@ describe('RoundResult', () => {
   it('shows the count per card in deck order, the average with a comma and the most frequent cards', async () => {
     await open(numbers);
 
-    expect(texts('result-count')).toEqual(['2: 2 Stimmen', '3: 1 Stimme', '13: 1 Stimme']);
+    expect(texts('result-count-card')).toEqual(['2', '3', '13']);
+    expect(texts('result-count-votes')).toEqual(['2 Stimmen', '1 Stimme', '1 Stimme']);
     expect(texts('result-average')).toEqual(['5,0']);
     expect(texts('result-most-frequent')).toEqual(['2']);
   });
@@ -183,12 +184,13 @@ describe('RoundResult', () => {
     await open(coffeeAndQuestion);
 
     expect(texts('result-average')).toEqual(['kein Durchschnitt']);
-    expect(texts('result-count')).toEqual(['?: 1 Stimme', '☕: 2 Stimmen']);
+    expect(texts('result-count-card')).toEqual(['?', '☕']);
+    expect(texts('result-count-votes')).toEqual(['1 Stimme', '2 Stimmen']);
     const coffee = all('result-vote-card')[0];
     expect(coffee.textContent?.trim()).toBe('☕');
     expect(coffee.getAttribute('role')).toBe('img');
-    expect(coffee.getAttribute('aria-label')).toBe('Kaffeepause');
-    expect(all('result-vote-card')[1].getAttribute('aria-label')).toBeNull();
+    expect(coffee.getAttribute('aria-label')).toBe('Karte Kaffeepause');
+    expect(all('result-vote-card')[1].getAttribute('aria-label')).toBe('Karte Unklar');
     expect(
       all('result-most-frequent')[0].querySelector('[role="img"]')?.getAttribute('aria-label'),
     ).toBe('Kaffeepause');
@@ -228,19 +230,94 @@ describe('RoundResult', () => {
     expect(root().querySelectorAll('.vote.outlier')).toHaveLength(0);
   });
 
-  it('puts the outlier text into the row of the vote and keeps it readable', async () => {
+  it('puts the outlier text into the seat of the vote and keeps it readable', async () => {
     await open(withVotes(revealedDeveloper, ['1', '3', '13']));
 
     const row = all('result-vote')[0];
     const label = row.querySelector<HTMLElement>('[data-testid="result-vote-outlier"]')!;
-    expect(row.textContent?.replace(/\s+/g, ' ').trim()).toBe('Ben1Ausreißer');
-    expect(label.parentElement).toBe(row);
-    expect(row.classList).toContain('outlier');
-    for (let node: HTMLElement | null = label; node !== null; node = node.parentElement) {
-      expect(node.getAttribute('aria-hidden')).toBeNull();
-      expect(node.getAttribute('role')).not.toBe('img');
-      expect(node.getAttribute('aria-label')).toBeNull();
+    expect(row.textContent?.replace(/\s+/g, ' ').trim()).toBe('BenAusreißer1');
+    expect(row.querySelector('[data-testid="result-vote-card"]')?.classList).toContain('outlier');
+    for (let node: HTMLElement | null = label; node !== row; node = node!.parentElement) {
+      expect(node!.getAttribute('aria-hidden')).toBeNull();
+      expect(node!.getAttribute('role')).not.toBe('img');
+      expect(node!.getAttribute('aria-label')).toBeNull();
     }
+  });
+
+  it('shows the distribution as bars and the orientation without a proposal', async () => {
+    await open(numbers);
+
+    const panels = Array.from(root().querySelectorAll<HTMLElement>('.panel'));
+    expect(panels.map((panel) => panel.querySelector('h3')?.textContent?.trim())).toEqual([
+      'VERTEILUNG',
+      'ZUR ORIENTIERUNG',
+    ]);
+    const widths = Array.from(root().querySelectorAll<HTMLElement>('.bar-value')).map(
+      (bar) => bar.style.width,
+    );
+    expect(widths).toEqual(['100%', '50%', '50%']);
+    expect(root().querySelector('.no-proposal')?.textContent?.trim()).toBe(
+      'Kein Vorschlag: Den Endwert legt das Team fest.',
+    );
+  });
+
+  it('counts the votes and names the developers who were disconnected', async () => {
+    await open(
+      withTeam(
+        revealedScrumMaster,
+        [developer('Ben'), developer('Cem'), developer('Finn', false)],
+        [
+          { name: 'Ben', card: '5' },
+          { name: 'Cem', card: '8' },
+        ],
+      ),
+    );
+
+    expect(texts('result-counter')).toEqual(['2 Schätzungen · Finn war getrennt']);
+  });
+
+  it('shows the waiting text to a developer and the actions to the scrum master', async () => {
+    await open(revealedDeveloper);
+    expect(texts('result-waiting')).toEqual([
+      'Der Scrum Master startet eine neue Runde oder übernimmt das Ergebnis.',
+    ]);
+    fixture.destroy();
+    store.leave();
+
+    await open(revealedScrumMaster);
+    expect(all('result-waiting')).toHaveLength(0);
+    expect(texts('round-restart')).toEqual(['↻ Neue Runde']);
+    expect(texts('result-accept')).toEqual(['Ergebnis übernehmen …']);
+  });
+
+  describe('under reduced motion', () => {
+    beforeEach(() => {
+      Object.defineProperty(document.defaultView!, 'matchMedia', {
+        configurable: true,
+        value: (query: string) => ({ matches: query === '(prefers-reduced-motion: reduce)' }),
+      });
+    });
+
+    afterEach(() => {
+      Reflect.deleteProperty(document.defaultView!, 'matchMedia');
+    });
+
+    it('renders no confetti and shows the cards without the flip', async () => {
+      await open(withVotes(revealedDeveloper, ['5', '5']));
+
+      expect(texts('consensus-hint')).toEqual(['Konsens: Alle 2 abgegebenen Stimmen zeigen 5.']);
+      expect(all('consensus-confetti')).toHaveLength(0);
+      expect(all('result-vote-card')).toHaveLength(2);
+      expect(root().querySelectorAll('.flip')).toHaveLength(0);
+    });
+  });
+
+  it('flips the revealed cards one after the other without reduced motion', async () => {
+    await open(withVotes(revealedDeveloper, ['3', '5', '8']));
+
+    const cards = all('result-vote-card');
+    expect(cards.every((card) => card.classList.contains('flip'))).toBe(true);
+    expect(cards.map((card) => card.style.animationDelay)).toEqual(['0ms', '40ms', '80ms']);
   });
 
   it.each([

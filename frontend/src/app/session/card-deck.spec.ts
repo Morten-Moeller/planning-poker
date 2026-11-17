@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { authInterceptor } from '../api/auth.interceptor';
-import { SessionView, votingDeveloper } from '../api/examples';
+import { SessionView, discussionDeveloper, votingDeveloper } from '../api/examples';
 import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { TokenStore } from '../api/token-store';
@@ -57,7 +57,7 @@ describe('CardDeck', () => {
     http.verify();
   });
 
-  async function open(snapshot: SessionView): Promise<void> {
+  async function open(snapshot: SessionView, locked = false): Promise<void> {
     TestBed.inject(TokenStore).store(SESSION_ID, {
       participantId: snapshot.me.participantId,
       token: 'token-dev',
@@ -66,6 +66,7 @@ describe('CardDeck', () => {
     http.expectOne(`/api/sessions/${SESSION_ID}`).flush(snapshot);
     fixture = TestBed.createComponent(CardDeck);
     fixture.componentRef.setInput('sessionId', SESSION_ID);
+    fixture.componentRef.setInput('locked', locked);
     await fixture.whenStable();
   }
 
@@ -77,7 +78,7 @@ describe('CardDeck', () => {
   function cards(): HTMLButtonElement[] {
     return Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
-        '[data-testid^="card-"]:not([data-testid="card-deck"])',
+        'button[data-testid^="card-"]',
       ),
     );
   }
@@ -115,11 +116,80 @@ describe('CardDeck', () => {
     ]);
   });
 
-  it('names the coffee card Kaffeepause for assistive technology', async () => {
+  it('names every card with Karte and the value for assistive technology', async () => {
     await open(votingDeveloper);
 
-    expect(card('COFFEE').getAttribute('aria-label')).toBe('Kaffeepause');
-    expect(card('5').hasAttribute('aria-label')).toBe(false);
+    expect(card('COFFEE').getAttribute('aria-label')).toBe('Karte Kaffeepause');
+    expect(card('?').getAttribute('aria-label')).toBe('Karte Unklar');
+    expect(card('5').getAttribute('aria-label')).toBe('Karte 5');
+  });
+
+  it('shows the cards as a group named Deine Karte with the hint for the voting', async () => {
+    await open(votingDeveloper);
+
+    const group = (fixture.nativeElement as HTMLElement).querySelector('[role="group"]');
+    expect(group?.getAttribute('aria-label')).toBe('Deine Karte');
+    expect(
+      (fixture.nativeElement as HTMLElement)
+        .querySelector('[data-testid="card-deck-hint"]')
+        ?.textContent?.trim(),
+    ).toBe('Du kannst sie ändern, bis aufgelöst wird.');
+  });
+
+  function key(target: HTMLElement, value: string): void {
+    target.dispatchEvent(new KeyboardEvent('keydown', { key: value, bubbles: true }));
+  }
+
+  it.each([
+    ['ArrowRight', '8', '13'],
+    ['ArrowDown', '8', '13'],
+    ['ArrowLeft', '8', '5'],
+    ['ArrowRight', 'COFFEE', '0'],
+    ['ArrowLeft', '0', 'COFFEE'],
+    ['Home', '8', '0'],
+    ['End', '8', 'COFFEE'],
+  ])('moves the focus with %s from card %s to card %s', async (pressed, from, to) => {
+    await open(votingDeveloper);
+    card(from).focus();
+
+    key(card(from), pressed);
+
+    expect(document.activeElement).toBe(card(to));
+    http.expectNone(VOTE_URL);
+  });
+
+  it.each(['Enter', ' '])('chooses the focused card with the key %j', async (pressed) => {
+    await open(withMyVote(null));
+    card('8').focus();
+    key(card('8'), 'ArrowRight');
+
+    key(card('13'), pressed);
+    await fixture.whenStable();
+
+    const request = http.expectOne(VOTE_URL);
+    expect(request.request.body).toEqual({ card: '13' });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+  });
+
+  it('shows the locked deck in DISCUSSION and sends no vote on click or key', async () => {
+    await open(discussionDeveloper, true);
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('[data-testid="card-deck"]')).toBeNull();
+    expect(root.querySelector('[data-testid="card-deck-locked"]')).not.toBeNull();
+    expect(root.querySelector('h2')?.textContent?.trim()).toBe('Deine Karte · gesperrt');
+    expect(root.querySelector('[data-testid="discussion-hint"]')?.textContent?.trim()).toBe(
+      'Diskussion: Die Karten werden geöffnet, wenn der Scrum Master die Schätzung startet.',
+    );
+    expect(cards()).toHaveLength(11);
+    expect(cards().every((node) => node.getAttribute('aria-disabled') === 'true')).toBe(true);
+
+    card('5').click();
+    key(card('8'), 'Enter');
+    await fixture.whenStable();
+
+    http.expectNone(VOTE_URL);
+    expect(pressed()).toEqual([]);
   });
 
   it('renders every card as a button in the tab order', async () => {
