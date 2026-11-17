@@ -1,14 +1,14 @@
 ---
 id: "0026"
 title: Diskussionsphase vor der Schätzung
-status: Review
+status: done
 risk: high
 adrs: ["0010"]
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#26"
+note: alle Kriterien erfüllt
 ---
 
 # Diskussionsphase vor der Schätzung
