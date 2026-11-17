@@ -123,17 +123,24 @@ describe('ParticipantList', () => {
   });
 
   it.each([
-    ['VOTING', votingDeveloper],
-    ['REVEALED', revealedDeveloper],
-  ])('shows the vote status in %s with a filled chip for a vote', async (_, snapshot) => {
-    await open(withVotes(snapshot, ['Ben']));
+    ['VOTING', votingDeveloper, '○ Ausstehend', 'Ausstehend', true],
+    ['REVEALED', revealedDeveloper, 'Nicht geschätzt', 'Nicht geschätzt', false],
+  ])(
+    'shows the vote status in %s with a filled chip for a vote',
+    async (_, snapshot, shown, label, pending) => {
+      await open(withVotes(snapshot, ['Ben']));
 
-    expect(status('Ben')).toBe('✓ Hat geschätzt');
-    expect(chip('Ben').classList).toContain('filled');
-    expect(status('Cem')).toBe('○ Ausstehend');
-    expect(chip('Cem').classList).toContain('empty');
-    expect(chip('Cem').classList).not.toContain('filled');
-  });
+      expect(status('Ben')).toBe('✓ Hat geschätzt');
+      expect(chip('Ben').classList).toContain('filled');
+      expect(status('Cem')).toBe(shown);
+      expect(
+        text(row('Cem').querySelector<HTMLElement>('[data-testid="participant-vote-status"]')!),
+      ).toBe(label);
+      expect(row('Cem').querySelector('.activity')?.classList.contains('pending')).toBe(pending);
+      expect(chip('Cem').classList).toContain('empty');
+      expect(chip('Cem').classList).not.toContain('filled');
+    },
+  );
 
   it.each([
     ['LOBBY', lobbyScrumMaster],

@@ -3,6 +3,26 @@ import { startVoting } from './helpers';
 
 const PROJECT = '1234';
 
+const ACCENTS = {
+  light: ['#2f5fd0', '#0a6f8f', '#3a7a39', '#9a2299', '#8a5f00'],
+  dark: ['#61afef', '#56b6c2', '#98c379', '#c678dd', '#e5c07b'],
+} as const;
+
+function rgb(hex: string): string {
+  const [r, g, b] = [1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+async function accent(locator: Locator): Promise<string> {
+  return locator.evaluate((element) =>
+    getComputedStyle(element).getPropertyValue('--app-card-accent').trim(),
+  );
+}
+
+async function background(locator: Locator): Promise<string> {
+  return locator.evaluate((element) => getComputedStyle(element).backgroundColor);
+}
+
 interface Room {
   anna: Page;
   ben: Page;
@@ -53,6 +73,47 @@ test.afterEach(async ({ browser, context: own }) => {
     await context.close();
   }
 });
+
+for (const scheme of ['light', 'dark'] as const) {
+  test(`the motif colours of room, toolbar and join page are the same in the ${scheme} theme`, async ({
+    page,
+    browser,
+  }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto('/');
+    await page.getByTestId('create-name').fill('Anna');
+    await page.getByTestId('create-project').fill(PROJECT);
+    await page.getByTestId('create-issue').fill('42');
+    await page.getByTestId('create-submit').click();
+    await expect(room(page)).toHaveAttribute('data-motif', '0');
+    expect(await accent(room(page))).toBe(ACCENTS[scheme][0]);
+    expect(await background(page.getByTestId('toolbar-motif'))).toBe(rgb(ACCENTS[scheme][0]));
+
+    const link = (await page.getByTestId('share-link').textContent()) ?? '';
+    const ben = await (await browser.newContext({ colorScheme: scheme })).newPage();
+    await ben.goto(link);
+    const backs = ben.getByTestId('join-card-backs').locator('.back');
+    await expect(backs).toHaveCount(5);
+    for (const [index, hex] of ACCENTS[scheme].entries()) {
+      expect(await accent(backs.nth(index))).toBe(hex);
+      expect(await background(backs.nth(index))).toBe(rgb(hex));
+    }
+    await expect(ben.getByTestId('toolbar-motif')).toHaveCount(0);
+
+    await ben.getByTestId('join-name').fill('Ben');
+    await ben.getByTestId('join-submit').click();
+    await page.getByTestId('issue-release').click();
+    await expectPhase([page, ben], 'Diskussion');
+    await playRound({ anna: page, ben });
+    const current = Number(await motif(page));
+    for (const view of [page, ben]) {
+      expect(await accent(room(view))).toBe(ACCENTS[scheme][current]);
+      expect(await background(view.getByTestId('toolbar-motif'))).toBe(
+        rgb(ACCENTS[scheme][current]),
+      );
+    }
+  });
+}
 
 test('both roles see the same motif in a round and a new one after Neue Runde', async ({
   page,

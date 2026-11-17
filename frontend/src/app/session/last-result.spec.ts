@@ -95,6 +95,25 @@ describe('LastResult', () => {
     expect(text('last-result-saved')).toBe('Als Kommentar in GitLab gespeichert');
   });
 
+  it('links the issue in GitLab in a new tab when the project is known', async () => {
+    await open(withHistory(lobbyDeveloper, [confirmed]));
+
+    const link = (fixture.nativeElement as HTMLElement).querySelector<HTMLAnchorElement>(
+      '[data-testid="last-result-open"]',
+    );
+    expect(link?.textContent?.trim()).toBe('In GitLab öffnen ↗');
+    expect(link?.getAttribute('href')).toBe('https://gitlab.com/webshop/frontend/-/issues/42');
+    expect(link?.getAttribute('target')).toBe('_blank');
+    expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('shows no link when the project is unknown', async () => {
+    await open({ ...withHistory(lobbyDeveloper, [confirmed]), project: null });
+
+    expect(text('last-result')).toContain('Zuletzt geschätzt');
+    expect(text('last-result-open')).toBeNull();
+  });
+
   it('disappears with the next release', async () => {
     await open(withHistory(lobbyDeveloper, [confirmed]));
 

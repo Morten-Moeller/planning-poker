@@ -1,50 +1,4 @@
-@use 'sass:map';
-
-$pattern-light: rgba(255, 255, 255, 0.3);
-$pattern-dark: rgba(29, 32, 38, 0.3);
-$motifs: (
-  0: (
-    light: #2f5fd0,
-    dark: #61afef,
-    size: auto,
-  ),
-  1: (
-    light: #0a6f8f,
-    dark: #56b6c2,
-    size: 9px 9px,
-  ),
-  2: (
-    light: #3a7a39,
-    dark: #98c379,
-    size: auto,
-  ),
-  3: (
-    light: #9a2299,
-    dark: #c678dd,
-    size: auto,
-  ),
-  4: (
-    light: #8a5f00,
-    dark: #e5c07b,
-    size: 12px 12px,
-  ),
-);
-
-@function pattern($motif, $color) {
-  @if $motif == 0 {
-    @return repeating-linear-gradient(45deg, $color 0 2px, transparent 2px 8px);
-  }
-  @if $motif == 1 {
-    @return radial-gradient($color 1.6px, transparent 1.9px);
-  }
-  @if $motif == 2 {
-    @return repeating-linear-gradient(0deg, $color 0 2px, transparent 2px 7px);
-  }
-  @if $motif == 3 {
-    @return repeating-radial-gradient(circle at 30% 30%, $color 0 1.5px, transparent 1.5px 7px);
-  }
-  @return conic-gradient($color 25%, transparent 0 50%, $color 0 75%, transparent 0);
-}
+@use '../../styles/motifs';
 
 :host {
   display: flex;
@@ -69,20 +23,23 @@ mat-toolbar {
   border: 1px dashed var(--mat-sys-outline-variant);
 }
 
-@each $motif, $values in $motifs {
+:host:has([data-motif]) .motif {
+  border: none;
+  background-color: var(--app-card-accent);
+  background-image: var(--app-card-pattern);
+  background-size: var(--app-card-pattern-size);
+}
+
+@each $motif in motifs.$ids {
   :host:has([data-motif='#{$motif}']) .motif {
-    border: none;
-    background-color: map.get($values, light);
-    background-image: pattern($motif, $pattern-light);
-    background-size: map.get($values, size);
+    @include motifs.card-variables($motif, light);
   }
 }
 
 @media (prefers-color-scheme: dark) {
-  @each $motif, $values in $motifs {
+  @each $motif in motifs.$ids {
     :host:has([data-motif='#{$motif}']) .motif {
-      background-color: map.get($values, dark);
-      background-image: pattern($motif, $pattern-dark);
+      @include motifs.card-variables($motif, dark);
     }
   }
 }

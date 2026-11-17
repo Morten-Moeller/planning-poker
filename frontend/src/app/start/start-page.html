@@ -103,6 +103,7 @@
         data-testid="create-project"
         autocomplete="off"
         [matAutocomplete]="projectPanel"
+        (focus)="showAllProjects()"
       />
       <mat-autocomplete #projectPanel="matAutocomplete" class="pick-panel">
         @for (project of projects().items; track project.id) {

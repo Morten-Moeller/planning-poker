@@ -80,3 +80,9 @@ h2 {
   font: var(--mat-sys-body-medium);
   color: var(--app-success);
 }
+
+.open {
+  align-self: flex-start;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-primary);
+}

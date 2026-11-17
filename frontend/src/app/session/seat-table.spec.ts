@@ -155,5 +155,7 @@ describe('SeatTable', () => {
       'nicht geschätzt',
       'getrennt',
     ]);
+    expect(texts('[data-testid="seat-card"]')).toEqual(['–', '–', 'getrennt']);
+    expect(texts('[data-testid="seat-card"]')).not.toContain('…');
   });
 });

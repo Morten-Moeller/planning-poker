@@ -1,8 +1,10 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 
 export type ShareTarget = 'link' | 'sessionId';
+
+const COPIED_VISIBLE_MS = 3000;
 
 @Component({
   selector: 'app-share-session',
@@ -23,6 +25,12 @@ export class ShareSession {
   protected readonly copied = signal<ShareTarget | null>(null);
   protected readonly failed = signal<ShareTarget | null>(null);
 
+  private copiedTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.stopCopiedTimer());
+  }
+
   protected copy(target: ShareTarget): void {
     if (this.clipboard === null) {
       return;
@@ -32,11 +40,24 @@ export class ShareSession {
       () => {
         this.failed.set(null);
         this.copied.set(target);
+        this.stopCopiedTimer();
+        this.copiedTimer = setTimeout(() => {
+          this.copiedTimer = null;
+          this.copied.set(null);
+        }, COPIED_VISIBLE_MS);
       },
       () => {
+        this.stopCopiedTimer();
         this.copied.set(null);
         this.failed.set(target);
       },
     );
+  }
+
+  private stopCopiedTimer(): void {
+    if (this.copiedTimer !== null) {
+      clearTimeout(this.copiedTimer);
+      this.copiedTimer = null;
+    }
   }
 }
