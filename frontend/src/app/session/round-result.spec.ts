@@ -333,4 +333,13 @@ describe('RoundResult', () => {
     expect(document.querySelectorAll('[data-testid="confirm-card"] input:checked')).toHaveLength(0);
     expect(dialogSubmit().disabled).toBe(true);
   });
+
+  it.each([
+    ['scrum master', revealedScrumMaster],
+    ['developer', revealedDeveloper],
+  ])('shows the round number after a new round to the %s', async (_role, snapshot) => {
+    await open(withRound(snapshot, { number: 2 }));
+
+    expect(texts('round-number')).toEqual(['Runde 2']);
+  });
 });

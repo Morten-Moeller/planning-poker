@@ -1,9 +1,10 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { authInterceptor } from '../api/auth.interceptor';
+import { ErrorState } from '../api/error-state';
 import {
   lobbyDeveloper,
   lobbyScrumMaster,
@@ -22,15 +23,18 @@ const SESSION_ID = 'K7P2QX9M';
 
 describe('SessionPage', () => {
   let http: HttpTestingController;
+  let sockets: FakeSocketFactory;
   let fixture: ComponentFixture<SessionPage>;
 
   beforeEach(() => {
     sessionStorage.clear();
+    sockets = new FakeSocketFactory();
     TestBed.configureTestingModule({
       providers: [
+        provideRouter([]),
         provideHttpClient(withInterceptors([authInterceptor, apiErrorInterceptor])),
         provideHttpClientTesting(),
-        { provide: WEB_SOCKET_FACTORY, useValue: new FakeSocketFactory().create },
+        { provide: WEB_SOCKET_FACTORY, useValue: sockets.create },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: convertToParamMap({ id: SESSION_ID }) } },
@@ -204,5 +208,73 @@ describe('SessionPage', () => {
     http
       .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
       .flush({ items: [], nextPage: null });
+  });
+
+  function storeToken(): void {
+    TestBed.inject(TokenStore).store(SESSION_ID, {
+      participantId: lobbyDeveloper.me.participantId,
+      token: 'token',
+    });
+  }
+
+  function element(id: string): HTMLElement | null {
+    return (fixture.nativeElement as HTMLElement).querySelector(`[data-testid="${id}"]`);
+  }
+
+  it('shows the gone state with a link to the start page when the API does not find the session', async () => {
+    storeToken();
+    fixture = TestBed.createComponent(SessionPage);
+    await fixture.whenStable();
+
+    http.expectOne(`/api/sessions/${SESSION_ID}`).flush(
+      { errorCode: 'SESSION_NOT_FOUND', title: 'Not Found', status: 404 },
+      {
+        status: 404,
+        statusText: 'Not Found',
+        headers: { 'Content-Type': 'application/problem+json' },
+      },
+    );
+    await fixture.whenStable();
+
+    expect(element('session-gone')?.textContent).toContain(
+      'Diese Sitzung ist abgelaufen oder existiert nicht.',
+    );
+    expect(element('session-gone-home')?.getAttribute('href')).toBe('/');
+    expect(count('session-loading')).toBe(0);
+    expect(TestBed.inject(TokenStore).identity(SESSION_ID)).toBeNull();
+    expect(TestBed.inject(ErrorState).error()).toBeNull();
+  });
+
+  it('shows the gone state when the WebSocket does not find the session', async () => {
+    await open(lobbyDeveloper);
+
+    sockets.last().receive({
+      type: 'error',
+      payload: { errorCode: 'SESSION_NOT_FOUND', detail: 'Session not found.' },
+    });
+    await fixture.whenStable();
+
+    expect(count('session-gone')).toBe(1);
+    expect(count('participant-list')).toBe(0);
+    expect(TestBed.inject(TokenStore).identity(SESSION_ID)).toBeNull();
+  });
+
+  it('keeps the token and shows no gone state for another error', async () => {
+    storeToken();
+    fixture = TestBed.createComponent(SessionPage);
+    await fixture.whenStable();
+
+    http.expectOne(`/api/sessions/${SESSION_ID}`).flush(
+      { errorCode: 'UNAUTHORIZED', title: 'Unauthorized', status: 401 },
+      {
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: { 'Content-Type': 'application/problem+json' },
+      },
+    );
+    await fixture.whenStable();
+
+    expect(count('session-gone')).toBe(0);
+    expect(TestBed.inject(TokenStore).identity(SESSION_ID)).not.toBeNull();
   });
 });

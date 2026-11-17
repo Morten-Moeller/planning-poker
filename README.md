@@ -7,25 +7,32 @@ Kommentar an das GitLab-Issue. Lösung der Coding Challenge Planning Poker
 ([Frontend-README](https://github.com/buchner-org/coding-challenge/blob/main/planning-poker/frontend/README.md),
 [Backend-README](https://github.com/buchner-org/coding-challenge/blob/main/planning-poker/backend/README.md)).
 
-## Einrichtung und Start
+## Schnellstart
 
-Voraussetzungen: JDK 21 (`JAVA_HOME`; auf macOS findet `make` das JDK 21 selbst), Node in der
-Version aus `.nvmrc`, pnpm 12, ein GitLab Personal Access Token mit Scope `api`.
+Voraussetzungen: JDK 21 (`JAVA_HOME`), Node in der Version aus `.nvmrc`, pnpm 12, Git und ein
+GitLab Personal Access Token mit Scope `api`. Aus einem frischen Klon starten fünf Befehle die
+Anwendung; die letzten beiden laufen je in einem eigenen Terminal:
 
 ```bash
-cp .env.example .env            # GITLAB_TOKEN eintragen
-make setup && make install      # Git-Hooks, Abhängigkeiten, Playwright-Browser
-set -a && source .env && set +a
-(cd backend && ./mvnw quarkus:dev)   # Backend auf http://localhost:8080
-pnpm -C frontend start               # Frontend auf http://localhost:4200
+git clone https://github.com/Morten-Moeller/planning-poker.git && cd planning-poker
+cp .env.example .env                                       # GITLAB_TOKEN eintragen
+make install                                               # Abhängigkeiten, Playwright-Browser
+(set -a && . ./.env && cd backend && ./mvnw quarkus:dev)   # Backend auf http://localhost:8080
+pnpm -C frontend start                                     # Frontend auf http://localhost:4200
 ```
 
+Danach `http://localhost:4200` öffnen; die Startseite zeigt, ob das Backend erreichbar ist
+(`GET /api/health`). Ohne `GITLAB_TOKEN` startet das Backend nicht und nennt den fehlenden
+Schlüssel. Eine andere GitLab-Instanz setzt `planningpoker.gitlab.base-url` (Abschnitt GitLab),
+zum Beispiel mit `./mvnw quarkus:dev -Dplanningpoker.gitlab.base-url=https://gitlab.example.com`.
+
 Das Frontend erreicht das Backend über den Dev-Proxy (`frontend/proxy.conf.mjs`, Pfade `/api`
-und `/ws`); es gibt kein CORS. Die Startseite zeigt, ob das Backend erreichbar ist.
+und `/ws`); es gibt kein CORS.
 
 Ist Port 8080 oder 4200 belegt: Backend mit `./mvnw quarkus:dev -Dquarkus.http.port=18080`,
 Frontend mit `BACKEND_PORT=18080 pnpm -C frontend start --port 14200`. `make e2e` nimmt
-dieselben Variablen `BACKEND_PORT` und `FRONTEND_PORT`.
+dieselben Variablen `BACKEND_PORT` und `FRONTEND_PORT`, dazu `GITLAB_DOUBLE_PORT` für das
+GitLab-Double.
 
 ## Variante
 
@@ -141,7 +148,7 @@ Karten im Wire-Format: `"0"`, `"1"`, `"2"`, `"3"`, `"5"`, `"8"`, `"13"`, `"21"`,
 
 ### WebSocket-Nachrichten
 
-Endpunkt `/ws/sessions/{sessionId}` (Umsetzung ab Spec 0009). Jede Nachricht hat die Hülle
+Endpunkt `/ws/sessions/{sessionId}`. Jede Nachricht hat die Hülle
 `{ "type": "…", "payload": { … } }`; das Token steht nie in der URL.
 
 | Richtung | `type` | Payload | Wann |
@@ -190,6 +197,27 @@ nicht in ihrer Zahl. Ein Aufrufer kann die Obergrenze der Sitzungen ausschöpfen
 Verfall weitere Erstellungen verhindern. Die Anwendung ist deshalb für den Betrieb in einem
 internen Netz gedacht (ADR 0005).
 
+Issue-Beschreibungen kommen als Markdown aus GitLab und gehen über die eingebaute Bereinigung
+von Angular in die Seite. Zusätzlich setzt `frontend/src/index.html` die Content-Security-Policy
+`img-src 'self' data:`: Bilder von fremden Hosts in einer Beschreibung lädt der Browser nicht, so
+erfährt kein fremder Server, wer eine Sitzung geöffnet hat.
+
+## Optionale Features
+
+| ID | Feature | Verhalten |
+|---|---|---|
+| O-01 | Timer | Der Scrum Master stellt in der Sitzung eine Dauer von 5 bis 3600 Sekunden ein. Jede danach startende Runde zeigt allen die Restzeit; bei Ablauf löst der Server die Runde auf, auch ohne verbundenen Scrum Master (ADR 0006). |
+| O-02 | Ausreißer | Liegen niedrigste und höchste Zahlenkarte einer aufgelösten Runde mehr als zwei Positionen im Kartensatz auseinander, tragen die Stimmen mit diesen Karten den Text „Ausreißer“. Das Frontend berechnet die Markierung aus dem Snapshot. |
+| O-03 | Konsens | Zeigen mindestens zwei Stimmen dieselbe Zahlenkarte und keine andere, sehen alle einen Hinweis mit Konfetti; im Dialog „Ergebnis übernehmen“ ist der Wert vorausgewählt. Unter reduzierter Bewegung entfällt das Konfetti. |
+
+## Abgabe
+
+- `docs/abgabe/anforderungen.md`: jede Anforderung R-01 bis R-26 mit den Tests, die sie belegen.
+- `docs/abgabe/checkliste.md`: manuelle Prüfung gegen ein echtes GitLab-Projekt und der
+  Barrierefreiheit.
+- `make e2e` spielt den Gesamtablauf mit drei Browsern gegen das GitLab-Double durch
+  (`frontend/e2e/full-flow.spec.ts`).
+
 ## Entwicklung
 
 Dieses Repository verwendet den AI Development Harness. Einstieg: `AGENTS.md` und
@@ -198,6 +226,7 @@ Dieses Repository verwendet den AI Development Harness. Einstieg: `AGENTS.md` un
 
 | Ich will | Befehl |
 |---|---|
+| Git-Hooks einrichten (einmal je Klon) | `make setup` |
 | alle Gates laufen lassen | `make check` (test, typecheck, lint, sast, deps, drift) |
 | End-to-End-Tests | `make e2e` (startet Backend und Frontend selbst; Ports über `BACKEND_PORT`, `FRONTEND_PORT`) |
 | Formatierer anwenden | `make format` |

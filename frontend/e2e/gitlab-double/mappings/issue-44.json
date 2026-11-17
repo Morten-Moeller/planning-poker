@@ -9,7 +9,7 @@
     "jsonBody": {
       "iid": 44,
       "title": "Script check",
-      "description": "**fett**\n\n<script>window.__pwned = true</script>\n\n<img src=\"x\" onerror=\"window.__pwned = true\">",
+      "description": "**fett**\n\n<script>window.__pwned = true</script>\n\n<img src=\"x\" onerror=\"window.__pwned = true\">\n\n![Pixel](https://tracker.example/pixel.gif)",
       "web_url": "https://gitlab.example/group/project/-/issues/44",
       "labels": []
     }

@@ -158,3 +158,38 @@ test('script content of an issue description does not run', async ({ page, brows
     ).toBeUndefined();
   }
 });
+
+test('an external image of an issue description sends no request to its host', async ({
+  page,
+  browser,
+}) => {
+  const { scrumMaster, developer } = await openRoom(page, browser, '44');
+  const outcomes: string[] = [];
+  const isTracker = (url: string) => new URL(url).hostname === 'tracker.example';
+  for (const view of [scrumMaster, developer]) {
+    view.on('requestfinished', (request) => {
+      if (isTracker(request.url())) {
+        outcomes.push('sent');
+      }
+    });
+    view.on('requestfailed', (request) => {
+      if (isTracker(request.url())) {
+        outcomes.push(request.failure()?.errorText ?? 'unknown');
+      }
+    });
+  }
+
+  await scrumMaster.getByTestId('issue-release').click();
+
+  for (const view of [scrumMaster, developer]) {
+    await expect(view.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveAttribute(
+      'content',
+      "img-src 'self' data:",
+    );
+    const image = view.getByTestId('active-issue-description').locator('img[alt="Pixel"]');
+    await expect(image).toHaveAttribute('src', 'https://tracker.example/pixel.gif');
+    await expect.poll(() => image.evaluate((node: HTMLImageElement) => node.complete)).toBe(true);
+  }
+  await expect.poll(() => outcomes.length).toBe(2);
+  expect(outcomes).toEqual(['csp', 'csp']);
+});

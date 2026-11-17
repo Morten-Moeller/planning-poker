@@ -169,4 +169,13 @@ describe('RoundStatus', () => {
 
     expect(revealButton().disabled).toBe(false);
   });
+
+  it.each([
+    ['scrum master', votingScrumMaster],
+    ['developer', votingDeveloper],
+  ])('shows the round number after a new round to the %s', async (_role, snapshot) => {
+    await open({ ...snapshot, round: { ...snapshot.round!, number: 2 } });
+
+    expect(text('round-number')).toBe('Runde 2');
+  });
 });

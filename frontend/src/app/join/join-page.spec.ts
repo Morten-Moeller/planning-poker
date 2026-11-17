@@ -62,6 +62,23 @@ describe('JoinPage', () => {
     await harness.fixture.whenStable();
   }
 
+  it('joins the session in capital letters from a link in small letters', async () => {
+    await harness.navigateByUrl(`/session/${SESSION_ID.toLowerCase()}/join`);
+    expect(text('join-session-id')).toBe(SESSION_ID);
+
+    await submitName('Ben');
+    http
+      .expectOne(JOIN_URL)
+      .flush(
+        { participantId: 'p-ben', token: 'token-ben' },
+        { status: 201, statusText: 'Created' },
+      );
+    await harness.fixture.whenStable();
+
+    expect(TestBed.inject(TokenStore).identity(SESSION_ID)?.token).toBe('token-ben');
+    expect(router.url).toBe(`/session/${SESSION_ID}`);
+  });
+
   it('joins, stores the token and opens the session room', async () => {
     await submitName(' Ben ');
     const request = http.expectOne(JOIN_URL);

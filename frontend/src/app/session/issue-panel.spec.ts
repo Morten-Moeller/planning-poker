@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
 import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { authInterceptor } from '../api/auth.interceptor';
+import { ErrorState } from '../api/error-state';
 import { lobbyScrumMaster, SessionView, votingScrumMaster } from '../api/examples';
 import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
@@ -231,5 +232,39 @@ describe('IssuePanel', () => {
     const request = http.expectOne(ACTIVE_ISSUE_URL);
     expect(request.request.body).toEqual({ issueIid: 43 });
     request.flush(null, { status: 204, statusText: 'No Content' });
+  });
+
+  it('shows the GitLab error with a retry and lists the issues after a successful retry', async () => {
+    await open(lobbyScrumMaster);
+    const input = one('issue-search-input') as HTMLInputElement;
+    input.value = 'login';
+    input.dispatchEvent(new Event('input'));
+
+    await click('issue-search-submit');
+    http
+      .expectOne((r) => r.url === ISSUES_URL)
+      .flush(
+        { errorCode: 'GITLAB_ERROR', title: 'Bad Gateway', status: 502 },
+        {
+          status: 502,
+          statusText: 'Bad Gateway',
+          headers: { 'Content-Type': 'application/problem+json' },
+        },
+      );
+    await fixture.whenStable();
+
+    expect(one('issue-results-error').textContent).toContain('GitLab ist nicht erreichbar.');
+    expect(one('issue-results-retry').textContent?.trim()).toBe('Erneut versuchen');
+    expect(all('issue-results-empty')).toHaveLength(0);
+    expect(TestBed.inject(ErrorState).error()).toBeNull();
+
+    await click('issue-results-retry');
+    const retry = http.expectOne((r) => r.url === ISSUES_URL);
+    expect(retry.request.params.get('search')).toBe('login');
+    retry.flush({ items: [FIRST_PAGE[1]], nextPage: null });
+    await fixture.whenStable();
+
+    expect(all('issue-results-error')).toHaveLength(0);
+    expect(all('issue-result').map((node) => node.textContent?.trim())).toEqual(['#42 Login page']);
   });
 });

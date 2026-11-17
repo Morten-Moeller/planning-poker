@@ -1,4 +1,5 @@
 import { Browser, Locator, Page, expect, test } from '@playwright/test';
+import { removeStubs, stubIssueWithFailingFirstNote, uniqueIssueIid } from './gitlab-double';
 
 const PROJECT = '1234';
 
@@ -97,10 +98,14 @@ function lastRoundNumber(view: View): number | null {
   return view.snapshots.at(-1)?.round?.number ?? null;
 }
 
+let stubs: string[] = [];
+
 test.afterEach(async ({ browser, context: own }) => {
   for (const context of browser.contexts().filter((context) => context !== own)) {
     await context.close();
   }
+  await removeStubs(stubs);
+  stubs = [];
 });
 
 test('everybody sees the same result, the scrum master starts a new round and confirms the result', async ({
@@ -190,7 +195,9 @@ test('a GitLab error stays in the dialog and the second attempt confirms the res
   page,
   browser,
 }) => {
-  const { anna, link } = await createSession(page, '45');
+  const iid = uniqueIssueIid();
+  stubs = await stubIssueWithFailingFirstNote(iid, 'Export report');
+  const { anna, link } = await createSession(page, String(iid));
   const ben = await join(browser, link, 'Ben');
   await expect(anna.page.getByTestId('participant')).toHaveCount(2);
   await anna.page.getByTestId('issue-release').click();
@@ -198,10 +205,13 @@ test('a GitLab error stays in the dialog and the second attempt confirms the res
 
   await anna.page.getByTestId('result-accept').click();
   const dialog = anna.page.getByTestId('confirm-dialog');
+  await expect(dialog.locator(':focus')).toHaveCount(1);
   await dialog.getByRole('radio', { name: '5', exact: true }).focus();
   await anna.page.keyboard.press('ArrowRight');
   await expect(dialog.getByRole('radio', { name: '8', exact: true })).toBeChecked();
+  await expect(dialog.getByTestId('confirm-submit')).toBeEnabled();
   await dialog.getByTestId('confirm-submit').focus();
+  await expect(dialog.getByTestId('confirm-submit')).toBeFocused();
   await anna.page.keyboard.press('Enter');
 
   await expect(dialog.getByTestId('confirm-error')).toHaveText('GitLab hat nicht geantwortet.');
@@ -219,7 +229,7 @@ test('a GitLab error stays in the dialog and the second attempt confirms the res
   for (const view of [anna, ben]) {
     const entries = await openHistory(view);
     await expect(entries).toHaveCount(1);
-    await expect(entries.getByTestId('history-issue')).toHaveText('#45 Export report');
+    await expect(entries.getByTestId('history-issue')).toHaveText(`#${iid} Export report`);
     await expect(entries.getByTestId('history-final-card')).toHaveText('8');
   }
 });

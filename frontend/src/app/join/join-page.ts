@@ -34,7 +34,7 @@ export class JoinPage {
   private readonly router = inject(Router);
 
   protected readonly sessionId = toSignal(
-    this.route.paramMap.pipe(map((params) => params.get('id') ?? '')),
+    this.route.paramMap.pipe(map((params) => (params.get('id') ?? '').toUpperCase())),
     { initialValue: '' },
   );
 
