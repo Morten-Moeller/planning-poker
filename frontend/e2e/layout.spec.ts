@@ -72,3 +72,21 @@ test('the session page has no horizontal scroll bar at 375 px in every phase', a
     await expectNoHorizontalScroll(page);
   }
 });
+
+test.describe('desktop', () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test('the side column of the session page is 320 px wide', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('create-name').fill('Anna');
+    await page.getByTestId('create-project').fill('1234');
+    await page.getByTestId('create-issue').fill('42');
+    await page.getByTestId('create-submit').click();
+    await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
+    await expect(page.getByTestId('share-link')).toBeVisible();
+
+    const side = await page.locator('app-session-page .side').boundingBox();
+    expect(side?.width).toBe(320);
+    await expectNoHorizontalScroll(page);
+  });
+});

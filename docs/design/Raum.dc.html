@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>body{margin:0;}a{color:inherit;}*{box-sizing:border-box;}button,[role=group] span{white-space:nowrap;}
+@keyframes pp-fall{0%{transform:translate3d(0,-40px,0) rotate(0deg);opacity:1}85%{opacity:1}100%{transform:translate3d(var(--dx),520px,0) rotate(540deg);opacity:0}}
+@media (prefers-reduced-motion: reduce){.pp-confetti{display:none!important}}</style>
+</helmet>
+<div style="width:100%;min-height:100%;background:{{ t.bg }};color:{{ t.onv }};font-family:'IBM Plex Sans',sans-serif;font-size:15px;line-height:1.5;display:flex;flex-direction:column;position:relative;overflow:hidden;max-height:{{ rootMax }};">
+
+<header style="height:56px;flex:none;display:flex;align-items:center;gap:14px;padding:0 {{ padX }};background:{{ t.low }};border-bottom:1px solid {{ t.line }};">
+<div style="width:20px;height:28px;border-radius:4px;flex:none;background-color:{{ m.a }};background-image:{{ m.pat }};background-size:{{ m.size }};"></div>
+<span style="font-size:17px;font-weight:600;color:{{ t.on }};">Planning Poker</span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:{{ t.muted }};padding:2px 8px;border:1px solid {{ t.ov }};border-radius:4px;">K7P2QX9M</span>
+<div style="flex:1;"></div>
+<sc-if value="{{ showMe }}" hint-placeholder-val="{{ true }}"><span style="font-size:14px;color:{{ t.muted }};">{{ meText }}</span></sc-if>
+</header>
+
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:12px {{ padX }};background:{{ t.errC }};color:{{ t.onErrC }};border-bottom:1px solid {{ t.line }};">
+<span style="font-weight:600;">⚠ Verbindung zum Server unterbrochen.</span><span>Neuer Versuch in 5 s. Deine Karte bleibt erhalten.</span>
+<div style="flex:1;"></div>
+<button style="height:36px;padding:0 14px;border-radius:8px;border:1px solid {{ t.onErrC }};background:transparent;color:{{ t.onErrC }};font:500 14px 'IBM Plex Sans',sans-serif;cursor:pointer;">Jetzt verbinden</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:120px 24px;">
+<div style="width:220px;height:4px;border-radius:2px;background:{{ t.ov }};overflow:hidden;"><div style="width:40%;height:100%;margin-left:30%;background:{{ t.pri }};border-radius:2px;"></div></div>
+<span style="font-size:16px;color:{{ t.on }};">Sitzung wird geladen …</span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:{{ t.muted }};">K7P2QX9M</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ isExpired }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;align-items:center;justify-content:center;padding:96px 24px;">
+<div style="max-width:520px;display:flex;flex-direction:column;gap:20px;align-items:flex-start;">
+<div style="display:flex;gap:8px;"><div style="width:44px;height:64px;border-radius:8px;border:1.5px dashed {{ t.outline }};"></div><div style="width:44px;height:64px;border-radius:8px;border:1.5px dashed {{ t.outline }};transform:rotate(6deg);"></div></div>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.08em;color:{{ t.muted }};">SITZUNG K7P2QX9M</span>
+<h1 style="margin:0;font-size:{{ h1 }};line-height:1.25;font-weight:600;color:{{ t.on }};text-wrap:balance;">Diese Sitzung ist abgelaufen oder existiert nicht</h1>
+<p style="margin:0;font-size:16px;line-height:1.6;">Prüfe den Link oder lass dir vom Scrum Master eine neue Session-ID geben.</p>
+<a href="#" style="display:inline-flex;align-items:center;height:40px;padding:0 18px;border-radius:8px;background:{{ t.pri }};color:{{ t.onPri }};font-weight:500;text-decoration:none;">Zur Startseite</a>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isRoom }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;display:grid;grid-template-columns:{{ cols }};min-height:0;">
+
+<aside style="order:{{ asideOrder }};background:{{ t.low }};border-right:{{ asideBorder }};border-top:{{ asideTop }};padding:{{ asidePad }};display:flex;flex-direction:column;gap:28px;">
+<sc-if value="{{ isSM }}" hint-placeholder-val="{{ false }}">
+<section style="display:flex;flex-direction:column;gap:8px;">
+<h3 style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.08em;color:{{ t.muted }};">TIMER</h3>
+<div style="position:relative;display:flex;align-items:center;height:48px;padding:0 12px;border:1px solid {{ t.outline }};border-radius:8px;background:{{ t.bg }};">
+<span style="position:absolute;top:-9px;left:10px;padding:0 4px;background:{{ t.low }};font-size:12px;color:{{ t.muted }};">Timer</span>
+<span style="flex:1;color:{{ t.on }};">1 min</span><span style="color:{{ t.muted }};">▾</span>
+</div>
+<span style="font-size:13px;color:{{ t.muted }};">Gilt ab der nächsten Runde.</span>
+</section>
+</sc-if>
+<section style="display:flex;flex-direction:column;gap:6px;">
+<h3 style="margin:0 0 4px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.08em;color:{{ t.muted }};">TEILNEHMER · {{ peopleCount }}</h3>
+<sc-for list="{{ people }}" as="p" hint-placeholder-count="6">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:6px;background:{{ p.rowBg }};">
+<div style="width:16px;height:22px;border-radius:3px;flex:none;border:{{ p.chipBorder }};background-color:{{ p.chipBg }};background-image:{{ p.chipPat }};background-size:{{ m.size }};"></div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><span style="font-size:15px;font-weight:500;color:{{ p.nameColor }};">{{ p.name }}</span><sc-if value="{{ p.isMe }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:{{ t.muted }};">(du)</span></sc-if><sc-if value="{{ p.sm }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;line-height:18px;font-weight:600;white-space:nowrap;color:{{ t.onWarnC }};background:{{ t.warnC }};padding:1px 7px;border-radius:4px;">★ Scrum Master</span></sc-if></div>
+<span style="font-size:13px;color:{{ p.statusColor }};">{{ p.statusText }}</span>
+</div>
+<span style="font-size:12px;color:{{ p.connColor }};white-space:nowrap;">{{ p.connText }}</span>
+</div>
+</sc-for>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:8px;">
+<h3 style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.08em;color:{{ t.muted }};">TEILEN</h3>
+<span style="font-size:13px;color:{{ t.muted }};">Beitrittslink</span>
+<div style="display:flex;align-items:center;gap:8px;padding:4px 4px 4px 12px;border:1px solid {{ t.ov }};border-radius:8px;background:{{ t.bg }};">
+<span style="flex:1;min-width:0;font-family:'IBM Plex Mono',monospace;font-size:13px;color:{{ t.onv }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">poker.intern/join/K7P2QX9M</span>
+<button style="height:32px;padding:0 10px;border-radius:6px;border:none;background:transparent;color:{{ t.pri }};font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer;" style-hover="background:{{ t.high }};">⧉ Kopieren</button>
+</div>
+<sc-if value="{{ copyOk }}" hint-placeholder-val="{{ false }}"><span role="status" style="font-size:13px;color:{{ t.ok }};">✓ Kopiert</span></sc-if>
+<span style="font-size:13px;color:{{ t.muted }};margin-top:4px;">Session-ID</span>
+<div style="display:flex;align-items:center;gap:8px;padding:4px 4px 4px 12px;border:1px solid {{ t.ov }};border-radius:8px;background:{{ t.bg }};">
+<span style="flex:1;font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.06em;color:{{ t.on }};">K7P2QX9M</span>
+<button style="height:32px;padding:0 10px;border-radius:6px;border:none;background:transparent;color:{{ t.pri }};font:500 13px 'IBM Plex Sans',sans-serif;cursor:pointer;" style-hover="background:{{ t.high }};">⧉ Kopieren</button>
+</div>
+<sc-if value="{{ copyErr }}" hint-placeholder-val="{{ false }}"><span role="status" style="font-size:13px;color:{{ t.err }};">⚠ Kopieren nicht möglich, bitte von Hand kopieren</span></sc-if>
+</section>
+
+<section style="display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:14px;">
+<h3 style="grid-column:1 / -1;margin:0 0 4px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.08em;color:{{ t.muted }};">FAKTEN</h3>
+<span style="color:{{ t.muted }};">Session-ID</span><span style="font-family:'IBM Plex Mono',monospace;color:{{ t.on }};">K7P2QX9M</span>
+<span style="color:{{ t.muted }};">Phase</span><span style="color:{{ t.on }};">{{ phaseName }}</span>
+<span style="color:{{ t.muted }};">Deine Rolle</span><span style="color:{{ t.on }};">{{ roleName }}</span>
+<span style="color:{{ t.muted }};">Teilnehmer</span><span style="color:{{ t.on }};">6 (5 Entwickler)</span>
+</section>
+
+
+</aside>
+
+<main style="order:1;padding:{{ mainPad }};display:flex;flex-direction:column;gap:28px;min-width:0;position:relative;">
+{{ confetti }}
+
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:10px 14px;background:{{ t.c }};border-radius:8px;">
+<span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:{{ t.on }};">{{ phaseTitle }}</span>
+<sc-if value="{{ hasCounter }}" hint-placeholder-val="{{ true }}">
+<span role="status" style="color:{{ t.onv }};"><strong style="color:{{ t.on }};font-weight:600;">{{ counterStrong }}</strong> {{ counterRest }}</span>
+<div aria-hidden="true" style="flex:1 1 80px;min-width:60px;height:4px;background:{{ t.ov }};border-radius:2px;overflow:hidden;"><div style="width:{{ progress }};height:100%;background:{{ t.ok }};"></div></div>
+</sc-if>
+<sc-if value="{{ showTimer }}" hint-placeholder-val="{{ true }}">
+<span role="timer" style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;color:{{ timerFg }};background:{{ timerBg }};padding:3px 10px;border-radius:6px;">{{ timerText }}</span>
+</sc-if>
+<sc-if value="{{ showMotif }}" hint-placeholder-val="{{ true }}">
+<span style="display:flex;align-items:center;gap:6px;font-size:13px;color:{{ t.muted }};margin-left:auto;"><span style="width:10px;height:14px;border-radius:2px;background-color:{{ m.a }};background-image:{{ m.pat }};background-size:{{ m.size }};"></span>Kartensatz: {{ m.name }}</span>
+</sc-if>
+</div>
+
+<sc-if value="{{ lastResult }}" hint-placeholder-val="{{ false }}">
+<section aria-label="Zuletzt geschätzt" style="display:flex;flex-direction:column;gap:14px;padding:20px;border:1px solid {{ t.ov }};border-radius:12px;background:{{ t.low }};">
+<h3 style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.08em;color:{{ t.muted }};">ZULETZT GESCHÄTZT</h3>
+<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+<div style="width:64px;height:92px;flex:none;border-radius:8px;background:{{ t.okC }};color:{{ t.onOkC }};display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;"><span style="font-size:10px;font-weight:600;">ENDWERT</span><span style="font-size:32px;font-weight:600;line-height:1.1;">5</span></div>
+<div style="flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:4px;">
+<span style="font-size:17px;font-weight:600;color:{{ t.on }};"><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;color:{{ t.muted }};">#42</span> Passwort per E-Mail zurücksetzen</span>
+<span style="font-size:14px;color:{{ t.onv }};">Runde 2 · Karten <span style="font-family:'IBM Plex Mono',monospace;">5 · 5 · 5 · 5</span> · ✓ Konsens</span>
+<span style="font-size:14px;color:{{ t.ok }};">✓ Als Kommentar in GitLab gespeichert</span>
+</div>
+<a href="#" style="font-size:14px;color:{{ t.pri }};">In GitLab öffnen ↗</a>
+</div>
+</section>
+</sc-if>
+<sc-if value="{{ waitDev }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:{{ waitPad }};border:1px dashed {{ t.ov }};border-radius:12px;text-align:center;">
+<div style="display:flex;"><div style="width:48px;height:70px;border-radius:8px;background-color:{{ m.a }};background-image:{{ m.pat }};background-size:{{ m.size }};transform:rotate(-8deg);"></div><div style="width:48px;height:70px;border-radius:8px;margin-left:-18px;background-color:{{ m.a }};background-image:{{ m.pat }};background-size:{{ m.size }};box-shadow:0 0 0 2px {{ t.bg }};"></div><div style="width:48px;height:70px;border-radius:8px;margin-left:-18px;background-color:{{ m.a }};background-image:{{ m.pat }};background-size:{{ m.size }};transform:rotate(8deg);box-shadow:0 0 0 2px {{ t.bg }};"></div></div>
+<span style="font-size:20px;font-weight:600;color:{{ t.on }};text-wrap:balance;">{{ waitTitle }}</span>
+<span style="color:{{ t.muted }};">Die Seite aktualisiert sich von selbst.</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ waitSM }}" hint-placeholder-val="{{ false }}">
+<section style="display:flex;flex-direction:column;gap:16px;padding:{{ panelPad }};background:{{ t.low }};border:1px solid {{ t.ov }};border-radius:12px;">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;"><h2 style="margin:0;font-size:20px;font-weight:600;color:{{ t.on }};">Issue auswählen</h2><span style="font-size:13px;color:{{ t.muted }};">Projekt: webshop/frontend · 1234</span></div>
+<div style="position:relative;display:flex;align-items:center;gap:10px;height:52px;padding:0 14px;border:2px solid {{ t.pri }};border-radius:8px;background:{{ t.bg }};">
+<span style="position:absolute;top:-9px;left:10px;padding:0 4px;background:{{ t.low }};font-size:12px;color:{{ t.pri }};">Suche</span>
+<span style="color:{{ t.muted }};">⌕</span><span style="flex:1;color:{{ t.on }};">{{ searchText }}</span><span style="width:2px;height:20px;background:{{ t.pri }};"></span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+<div role="group" aria-label="Gewicht" style="display:flex;border:1px solid {{ t.outline }};border-radius:8px;overflow:hidden;font-size:14px;">
+<span style="padding:8px 12px;color:{{ t.onv }};">Ohne Gewicht</span><span style="padding:8px 12px;color:{{ t.onv }};border-left:1px solid {{ t.outline }};">Mit Gewicht</span><span aria-pressed="true" style="padding:8px 12px;border-left:1px solid {{ t.outline }};background:{{ t.priC }};color:{{ t.onPriC }};font-weight:500;">✓ Alle</span>
+</div>
+<div style="position:relative;display:flex;align-items:center;gap:10px;white-space:nowrap;height:38px;padding:0 12px;border:1px solid {{ t.outline }};border-radius:8px;font-size:14px;"><span style="color:{{ t.muted }};">Geändert in:</span><span style="color:{{ t.on }};">1 Monat</span><span style="color:{{ t.muted }};">▾</span></div>
+</div>
+<sc-if value="{{ issuesList }}" hint-placeholder-val="{{ true }}">
+<div role="listbox" style="display:flex;flex-direction:column;border:1px solid {{ t.ov }};border-radius:8px;overflow:hidden;background:{{ t.bg }};">
+<sc-for list="{{ issues }}" as="it" hint-placeholder-count="6">
+<div role="option" aria-selected="{{ it.selStr }}" style="display:flex;align-items:center;gap:14px;padding:12px 14px;border-top:{{ it.border }};background:{{ it.bg }};cursor:pointer;" style-hover="background:{{ t.c }};">
+<span style="width:18px;flex:none;color:{{ t.onPriC }};font-weight:600;">{{ it.check }}</span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:{{ it.idColor }};flex:none;width:44px;">#{{ it.iid }}</span>
+<span style="flex:1;min-width:0;color:{{ it.titleColor }};font-weight:{{ it.weight }};">{{ it.title }}</span>
+<span style="flex:none;white-space:nowrap;font-size:12px;font-family:'IBM Plex Mono',monospace;padding:2px 8px;border-radius:4px;border:1px solid {{ t.ov }};color:{{ it.wColor }};">{{ it.w }}</span>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+<button style="height:40px;padding:0 16px;border-radius:8px;border:1px solid {{ t.outline }};background:transparent;color:{{ t.pri }};font:500 14px 'IBM Plex Sans',sans-serif;cursor:pointer;">Mehr laden</button>
+<span style="font-size:13px;color:{{ t.muted }};">6 von 23 Issues</span>
+<div style="flex:1;"></div>
+<span style="font-size:14px;color:{{ t.onv }};">Ausgewählt: <strong style="color:{{ t.on }};">#42</strong></span>
+<button style="height:40px;padding:0 20px;border-radius:8px;border:none;background:{{ t.pri }};color:{{ t.onPri }};font:600 14px 'IBM Plex Sans',sans-serif;cursor:pointer;">Freigeben</button>
+</div>
+</sc-if>
+<sc-if value="{{ issuesEmpty }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:40px 16px;border:1px dashed {{ t.ov }};border-radius:8px;text-align:center;">
+<span style="font-size:16px;font-weight:600;color:{{ t.on }};">Keine Issues gefunden</span>
+<span style="color:{{ t.muted }};">Für „{{ searchText }}“ mit dem Filter „Ohne Gewicht · 1 Woche“ gibt es keine offenen Issues.</span>
+<button style="margin-top:8px;height:36px;padding:0 14px;border-radius:8px;border:none;background:transparent;color:{{ t.pri }};font:500 14px 'IBM Plex Sans',sans-serif;cursor:pointer;">Filter zurücksetzen</button>
+</div>
+</sc-if>
+<sc-if value="{{ issuesError }}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="display:flex;align-items:flex-start;gap:12px;padding:16px;background:{{ t.errC }};color:{{ t.onErrC }};border-radius:8px;flex-wrap:wrap;">
+<span style="font-weight:600;">⚠</span>
+<div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:4px;"><span style="font-weight:600;">Die Issues konnten nicht geladen werden.</span><span>GitLab hat nicht rechtzeitig geantwortet.</span></div>
+<button style="height:36px;padding:0 14px;border-radius:8px;border:1px solid {{ t.onErrC }};background:transparent;color:{{ t.onErrC }};font:500 14px 'IBM Plex Sans',sans-serif;cursor:pointer;">↻ Erneut versuchen</button>
+</div>
+</sc-if>
+</section>
+</sc-if>
+
+<sc-if value="{{ showIssue }}" hint-placeholder-val="{{ true }}">
+<article style="display:flex;flex-direction:column;gap:14px;">
+<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:15px;color:{{ t.muted }};">#42</span>
+<h2 style="margin:0;font-size:{{ h2 }};line-height:1.25;font-weight:600;color:{{ t.on }};flex:1 1 {{ titleBasis }};text-wrap:balance;">Passwort per E-Mail zurücksetzen</h2>
+<a href="#" style="font-size:14px;color:{{ t.pri }};">In GitLab öffnen ↗</a>
+</div>
+<div style="position:relative;max-height:{{ descMax }};overflow:hidden;">
+<div style="font-size:15px;line-height:1.65;color:{{ t.onv }};max-width:720px;display:flex;flex-direction:column;gap:12px;">
+<p style="margin:0;">Nutzer sollen über „Passwort vergessen?“ einen Link per E-Mail anfordern können. Der Link ist 30 Minuten gültig und nur einmal verwendbar.</p>
+<h4 style="margin:4px 0 0;font-size:15px;font-weight:600;color:{{ t.on }};">Akzeptanzkriterien</h4>
+<ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:2px;"><li>☐ Formular mit E-Mail-Feld und Validierung</li><li>☐ Rate-Limit: 3 Anfragen pro Stunde</li><li>☑ Mail-Vorlage abgestimmt</li></ul>
+<pre style="margin:0;padding:12px 14px;background:{{ t.code }};border:1px solid {{ t.ov }};border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.6;color:{{ t.codeText }};overflow-x:auto;">POST /api/auth/reset
+{ "email": "anna@example.org" }</pre>
+<div style="height:140px;border-radius:6px;border:1px solid {{ t.ov }};background-image:repeating-linear-gradient(135deg,{{ t.c }} 0 8px,{{ t.bg }} 8px 16px);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ t.muted }};">Bild aus dem Issue (Mockup)</div>
+</div>
+<sc-if value="{{ descCollapsed }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:0;right:0;bottom:0;height:56px;background:linear-gradient(to bottom,transparent,{{ t.bg }});"></div></sc-if>
+</div>
+<sc-if value="{{ descCollapsed }}" hint-placeholder-val="{{ false }}"><button style="align-self:flex-start;height:32px;padding:0 10px;margin-left:-10px;border-radius:6px;border:none;background:transparent;color:{{ t.pri }};font:500 14px 'IBM Plex Sans',sans-serif;cursor:pointer;">▾ Ganze Beschreibung anzeigen</button></sc-if>
+</article>
+</sc-if>
+
+<sc-if value="{{ consensus }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:8px;background:{{ t.okC }};color:{{ t.onOkC }};">
+<span style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;width:44px;height:44px;flex:none;border-radius:6px;background:{{ t.ok }};color:{{ t.onOk }};display:flex;align-items:center;justify-content:center;">5</span>
+<span style="font-size:17px;font-weight:600;">Konsens: Alle haben 5 gewählt.</span>
+</div>
+</sc-if>
+<sc-if value="{{ outliers }}" hint-placeholder-val="{{ false }}">
+<div role="note" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;background:{{ t.warnC }};color:{{ t.onWarnC }};">
+<span style="font-weight:600;">↕ Ausreißer</span><span>Niedrigste und höchste Schätzung liegen weit auseinander.</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}">
+<section aria-label="Karten am Tisch" style="display:flex;flex-direction:column;gap:12px;">
+<h3 style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.08em;color:{{ t.muted }};">{{ tableTitle }}</h3>
+<div style="display:flex;flex-wrap:wrap;gap:{{ slotGap }};">
+<sc-for list="{{ slots }}" as="s" hint-placeholder-count="5">
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:{{ slotW }};">
+<div style="height:20px;display:flex;align-items:flex-end;"><sc-if value="{{ s.outlier }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px;background:{{ t.warnC }};color:{{ t.onWarnC }};">Ausreißer</span></sc-if></div>
+<sc-if value="{{ s.back }}" hint-placeholder-val="{{ true }}"><div aria-label="verdeckt" style="width:{{ slotW }};height:{{ slotH }};border-radius:8px;background-color:{{ m.a }};background-image:{{ m.pat }};background-size:{{ m.size }};"></div></sc-if>
+<sc-if value="{{ s.empty }}" hint-placeholder-val="{{ false }}"><div style="width:{{ slotW }};height:{{ slotH }};border-radius:8px;border:1.5px dashed {{ t.outline }};display:flex;align-items:center;justify-content:center;font-size:12px;color:{{ t.muted }};">{{ s.emptyText }}</div></sc-if>
+<sc-if value="{{ s.face }}" hint-placeholder-val="{{ false }}"><div style="width:{{ slotW }};height:{{ slotH }};border-radius:8px;border:{{ s.faceBorder }};background:{{ t.lowest }};display:flex;flex-direction:column;overflow:hidden;"><div style="height:6px;flex:none;background-color:{{ m.a }};background-image:{{ m.pat }};background-size:{{ m.size }};"></div><span style="flex:1;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:{{ slotFont }};font-weight:600;color:{{ t.on }};">{{ s.v }}</span></div></sc-if>
+<span style="font-size:13px;font-weight:500;color:{{ t.on }};max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ s.name }}</span>
+<span style="font-size:12px;white-space:nowrap;color:{{ s.subColor }};margin-top:-6px;">{{ s.sub }}</span>
+</div>
+</sc-for>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{ showFan }}" hint-placeholder-val="{{ false }}">
+<section aria-label="Deine Karte" style="display:flex;flex-direction:column;gap:14px;padding-top:8px;">
+<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;"><span style="font-size:15px;font-weight:600;color:{{ t.on }};">{{ fanTitle }}</span><span role="status" style="font-size:14px;color:{{ t.muted }};">{{ fanHint }}</span></div>
+<div style="display:grid;grid-template-columns:{{ fanCols }};gap:{{ fanGap }};align-items:end;padding-top:14px;">
+<sc-for list="{{ fan }}" as="c" hint-placeholder-count="11">
+<sc-if value="{{ c.sel }}" hint-placeholder-val="{{ false }}">
+<button aria-pressed="true" aria-label="Karte {{ c.label }}, gewählt" onClick="{{ c.pick }}" style="height:{{ fanH }};border-radius:10px;border:none;background:{{ m.a }};color:{{ m.onA }};display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;padding:{{ fanPad }};cursor:pointer;transform:translateY(-12px);box-shadow:0 0 0 3px {{ t.bg }},0 8px 20px {{ t.shadow }};font-family:'IBM Plex Mono',monospace;transition:transform .15s;">
+<span style="font-size:{{ fanLabel }};font-weight:600;text-align:left;white-space:nowrap;">✓ {{ selWord }}</span><span style="font-size:{{ fanFont }};font-weight:600;line-height:1;">{{ c.v }}</span><span style="height:{{ fanLabel }};"></span></button>
+</sc-if>
+<sc-if value="{{ c.lk }}" hint-placeholder-val="{{ false }}">
+<button aria-disabled="true" aria-label="Karte {{ c.label }}, gesperrt" style="height:{{ fanH }};border-radius:10px;border:1.5px dashed {{ t.ov }};background:{{ t.c }};color:{{ t.muted }};display:flex;align-items:center;justify-content:center;padding:0;cursor:not-allowed;font-family:'IBM Plex Mono',monospace;"><span style="font-size:{{ fanFont }};font-weight:500;">{{ c.v }}</span></button>
+</sc-if>
+<sc-if value="{{ c.un }}" hint-placeholder-val="{{ true }}">
+<button aria-pressed="false" aria-label="Karte {{ c.label }}" onClick="{{ c.pick }}" style="height:{{ fanH }};border-radius:10px;border:1.5px solid {{ t.ov }};background:{{ t.lowest }};color:{{ t.on }};display:flex;flex-direction:column;align-items:stretch;padding:0;overflow:hidden;cursor:pointer;font-family:'IBM Plex Mono',monospace;transition:transform .15s;" style-hover="border-color:{{ m.a }};transform:translateY(-4px);" style-focus="outline:3px solid {{ t.focus }};outline-offset:3px;">
+<span style="height:6px;flex:none;background-color:{{ m.a }};background-image:{{ m.pat }};background-size:{{ m.size }};"></span><span style="flex:1;display:flex;align-items:center;justify-content:center;font-size:{{ fanFont }};font-weight:500;">{{ c.v }}</span></button>
+</sc-if>
+</sc-for>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{ smDiscuss }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:16px;border-radius:10px;border:1px solid {{ t.ov }};background:{{ t.low }};">
+<div style="flex:1 1 280px;display:flex;flex-direction:column;gap:2px;"><span style="color:{{ t.on }};font-weight:500;">Das Team bespricht das Issue.</span><span style="font-size:14px;color:{{ t.muted }};">Die Karten sind gesperrt, bis du die Schätzung startest. Timer: 1 min.</span></div>
+<button style="height:40px;padding:0 14px;border-radius:8px;border:none;background:transparent;color:{{ t.pri }};font:500 14px 'IBM Plex Sans',sans-serif;cursor:pointer;">Issue wechseln …</button>
+<button style="height:48px;padding:0 24px;border-radius:8px;border:none;background:{{ t.pri }};color:{{ t.onPri }};font:600 15px 'IBM Plex Sans',sans-serif;cursor:pointer;">◷ Timer starten</button>
+</div>
+</sc-if>
+<sc-if value="{{ smVoting }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:16px;border-radius:10px;background:{{ resolveBoxBg }};border:1px solid {{ resolveBoxBorder }};">
+<span role="status" style="flex:1 1 260px;color:{{ resolveHintColor }};font-weight:{{ resolveHintWeight }};">{{ resolveHint }}</span>
+<button style="height:40px;padding:0 14px;border-radius:8px;border:none;background:transparent;color:{{ t.pri }};font:500 14px 'IBM Plex Sans',sans-serif;cursor:pointer;">Issue wechseln …</button>
+<button style="height:{{ resolveH }};padding:0 24px;border-radius:8px;border:{{ resolveBorder }};background:{{ resolveBg }};color:{{ resolveFg }};font:600 15px 'IBM Plex Sans',sans-serif;cursor:pointer;box-shadow:{{ resolveShadow }};">Auflösen</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isRevealed }}" hint-placeholder-val="{{ false }}">
+<section style="display:grid;grid-template-columns:{{ statCols }};gap:16px;">
+<div style="display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid {{ t.ov }};border-radius:10px;">
+<h3 style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.08em;color:{{ t.muted }};">VERTEILUNG</h3>
+<sc-for list="{{ dist }}" as="d" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:44px minmax(0,1fr) 84px;align-items:center;gap:10px;font-size:14px;">
+<span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:{{ t.on }};">{{ d.card }}</span>
+<div style="height:10px;border-radius:2px;background:{{ t.c }};overflow:hidden;"><div style="width:{{ d.pct }};height:100%;background:{{ m.a }};"></div></div>
+<span style="color:{{ t.onv }};">{{ d.text }}</span>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid {{ t.ov }};border-radius:10px;">
+<h3 style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.08em;color:{{ t.muted }};">ZUR ORIENTIERUNG</h3>
+<div style="display:flex;gap:28px;flex-wrap:wrap;">
+<div style="display:flex;flex-direction:column;"><span style="font-size:13px;color:{{ t.muted }};">Durchschnitt</span><span style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:600;color:{{ t.on }};">{{ avg }}</span></div>
+<div style="display:flex;flex-direction:column;"><span style="font-size:13px;color:{{ t.muted }};">Häufigster Wert</span><span style="font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:600;color:{{ t.on }};">{{ mode }}</span></div>
+</div>
+<span style="font-size:13px;color:{{ t.muted }};">Kein Vorschlag: Den Endwert legt das Team fest.</span>
+</div>
+</section>
+<sc-if value="{{ isSM }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end;">
+<button style="height:44px;padding:0 20px;border-radius:8px;border:1px solid {{ t.outline }};background:transparent;color:{{ t.pri }};font:500 15px 'IBM Plex Sans',sans-serif;cursor:pointer;">↻ Neue Runde</button>
+<button style="height:44px;padding:0 22px;border-radius:8px;border:none;background:{{ t.pri }};color:{{ t.onPri }};font:600 15px 'IBM Plex Sans',sans-serif;cursor:pointer;">Ergebnis übernehmen …</button>
+</div>
+</sc-if>
+<sc-if value="{{ isDev }}" hint-placeholder-val="{{ false }}"><span style="color:{{ t.muted }};">Der Scrum Master startet eine neue Runde oder übernimmt das Ergebnis.</span></sc-if>
+</sc-if>
+
+<section style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+<h3 style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.08em;color:{{ t.muted }};">SITZUNGSPROTOKOLL</h3>
+<sc-for list="{{ history }}" as="h" hint-placeholder-count="3">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:10px 0;border-top:1px solid {{ t.ov }};font-size:14px;">
+<span style="font-family:'IBM Plex Mono',monospace;color:{{ t.muted }};width:40px;">#{{ h.iid }}</span>
+<span style="flex:1 1 200px;min-width:0;color:{{ t.on }};">{{ h.title }} <span style="color:{{ t.muted }};">· Runde {{ h.round }}</span></span>
+<span style="font-family:'IBM Plex Mono',monospace;color:{{ t.onv }};">{{ h.cards }}</span>
+<span style="font-size:13px;font-weight:500;padding:2px 8px;border-radius:4px;background:{{ h.endBg }};color:{{ h.endFg }};min-width:96px;text-align:center;">{{ h.end }}</span>
+</div>
+</sc-for>
+</section>
+</main>
+</div>
+</sc-if>
+
+<sc-if value="{{ dlgAny }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:{{ t.scrim }};display:flex;align-items:{{ dlgAlign }};justify-content:center;padding:{{ dlgOuterPad }};">
+<div role="dialog" aria-modal="true" style="width:{{ dlgW }};background:{{ t.dlg }};border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 24px 64px rgba(0,0,0,.35);color:{{ t.onv }};">
+<sc-if value="{{ dlgSwitch }}" hint-placeholder-val="{{ false }}">
+<h2 style="margin:0;font-size:22px;font-weight:600;color:{{ t.on }};">Issue wechseln?</h2>
+<p style="margin:0;line-height:1.6;">Runde 2 zu #42 läuft noch. Beim Wechsel endet sie ohne Ergebnis, die 3 abgegebenen Schätzungen werden verworfen.</p>
+<div style="display:flex;justify-content:flex-end;gap:8px;"><button style="height:40px;padding:0 16px;border-radius:8px;border:none;background:transparent;color:{{ t.pri }};font:500 14px 'IBM Plex Sans',sans-serif;outline:3px solid {{ t.focus }};outline-offset:2px;">Abbrechen</button><button style="height:40px;padding:0 18px;border-radius:8px;border:none;background:{{ t.pri }};color:{{ t.onPri }};font:600 14px 'IBM Plex Sans',sans-serif;">Issue wechseln</button></div>
+</sc-if>
+<sc-if value="{{ dlgResult }}" hint-placeholder-val="{{ false }}">
+<h2 style="margin:0;font-size:22px;font-weight:600;color:{{ t.on }};">Ergebnis übernehmen</h2>
+<p style="margin:0;line-height:1.6;">Endwert für <strong style="color:{{ t.on }};">#42 Passwort per E-Mail zurücksetzen</strong>. {{ dlgLead }}</p>
+<div role="radiogroup" aria-label="Endwert" style="display:grid;grid-template-columns:{{ dlgCols }};border:1px solid {{ t.outline }};border-radius:8px;overflow:hidden;">
+<sc-for list="{{ dlgDeck }}" as="o" hint-placeholder-count="9">
+<span aria-checked="{{ o.selStr }}" aria-label="{{ o.aria }}" style="height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font-family:'IBM Plex Mono',monospace;background:{{ o.bg }};color:{{ o.fg }};border-left:1px solid {{ t.outline }};border-top:1px solid {{ t.outline }};margin:-1px 0 0 -1px;box-shadow:{{ o.ring }};"><span style="font-size:16px;line-height:1.2;font-weight:{{ o.weight }};">{{ o.label }}</span><span style="font-size:10px;line-height:1.2;height:12px;font-weight:600;">{{ o.count }}</span></span>
+</sc-for>
+</div>
+<sc-if value="{{ dlgNoCons }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;font-size:13px;color:{{ t.onv }};"><span style="width:18px;height:14px;border-radius:3px;background:{{ t.warnC }};box-shadow:inset 0 -3px 0 {{ t.warn }};flex:none;"></span><span>Häufigster Wert dieser Runde, darunter die Anzahl der Stimmen. Nur zur Orientierung.</span></div></sc-if>
+<div style="display:flex;gap:10px;font-size:14px;line-height:1.55;color:{{ t.onv }};"><span style="color:{{ t.pri }};font-weight:600;">ⓘ</span><span>Ins GitLab-Issue #42 wird ein Kommentar mit dem Endwert geschrieben. Das Gewicht des Issues bleibt unverändert.</span></div>
+<sc-if value="{{ dlgWriting }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="display:flex;flex-direction:column;gap:8px;"><div style="height:4px;border-radius:2px;background:{{ t.ov }};overflow:hidden;"><div style="width:45%;height:100%;margin-left:20%;background:{{ t.pri }};"></div></div><span style="font-size:14px;color:{{ t.on }};">Das Ergebnis wird nach GitLab geschrieben …</span></div>
+</sc-if>
+<sc-if value="{{ dlgError }}" hint-placeholder-val="{{ false }}">
+<div role="alert" style="display:flex;gap:10px;padding:12px 14px;border-radius:8px;background:{{ t.errC }};color:{{ t.onErrC }};font-size:14px;line-height:1.5;"><span style="font-weight:600;">⚠</span><span><strong>GitLab verweigert den Zugriff.</strong> Der Kommentar wurde nicht geschrieben. Prüfe das Token und versuche es erneut.</span></div>
+</sc-if>
+<div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
+<button style="height:40px;padding:0 16px;border-radius:8px;border:none;background:transparent;color:{{ dlgCancelFg }};font:500 14px 'IBM Plex Sans',sans-serif;">Abbrechen</button>
+<button style="height:40px;padding:0 18px;border-radius:8px;border:none;background:{{ dlgOkBg }};color:{{ dlgOkFg }};font:600 14px 'IBM Plex Sans',sans-serif;">{{ dlgOkText }}</button>
+</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showSnack }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);width:{{ snackW }};display:flex;align-items:center;gap:16px;padding:12px 8px 12px 16px;border-radius:8px;background:{{ t.inv }};color:{{ t.onInv }};box-shadow:0 8px 24px rgba(0,0,0,.3);font-size:14px;">
+<span style="flex:1;">✓ Endwert 5 in GitLab-Issue #42 gespeichert.</span>
+<a href="#" style="height:36px;padding:0 10px;display:flex;align-items:center;border-radius:6px;color:{{ t.invPri }};font-weight:600;text-decoration:none;">Öffnen</a>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1100},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sm&quot;,&quot;dev&quot;],&quot;default&quot;:&quot;dev&quot;,&quot;tsType&quot;:&quot;'sm'|'dev'&quot;},&quot;phase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;waiting&quot;,&quot;discussing&quot;,&quot;voting&quot;,&quot;revealed&quot;,&quot;loading&quot;,&quot;expired&quot;],&quot;default&quot;:&quot;voting&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;outliers&quot;,&quot;consensus&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;dialog&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;switch&quot;,&quot;result&quot;,&quot;writing&quot;,&quot;error&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;allVoted&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;timeUp&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;banner&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;snackbar&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;motif&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:4,&quot;tsType&quot;:&quot;number&quot;},&quot;copy&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ok&quot;,&quot;err&quot;,&quot;none&quot;],&quot;default&quot;:&quot;ok&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { pick: null };
+  static T = {
+    dark: { bg:'#282c34', low:'#21252b', lowest:'#1d2026', c:'#2c313a', high:'#323844', on:'#e6e9ef', onv:'#abb2bf', muted:'#9da5b4', outline:'#7f8794', ov:'#3e4451', line:'#181a1f', pri:'#61afef', onPri:'#1d2026', priC:'#284566', onPriC:'#d3e7fb', err:'#ef8a92', errC:'#4a2a2f', onErrC:'#ffd9dc', ok:'#98c379', onOk:'#1d2026', okC:'#2f3d2b', onOkC:'#d4ecc6', warn:'#e5c07b', warnC:'#4a3d26', onWarnC:'#f7e3bd', scrim:'rgba(12,14,18,.62)', code:'#21252b', codeText:'#98c379', focus:'#61afef', dlg:'#2c313a', inv:'#e6e9ef', onInv:'#282c34', invPri:'#2f5fd0', shadow:'rgba(0,0,0,.35)' },
+    light: { bg:'#fafafa', low:'#f3f3f4', lowest:'#ffffff', c:'#ececee', high:'#e5e5e6', on:'#232428', onv:'#383a42', muted:'#5d606b', outline:'#8a8d96', ov:'#d4d5d9', line:'#e3e3e6', pri:'#2f5fd0', onPri:'#ffffff', priC:'#dbe6fc', onPriC:'#142f6e', err:'#b8352a', errC:'#fbe2df', onErrC:'#6e1a12', ok:'#3a7a39', onOk:'#ffffff', okC:'#dcefd9', onOkC:'#1f4a1e', warn:'#8a5f00', warnC:'#fbedc9', onWarnC:'#4f3600', scrim:'rgba(35,36,40,.45)', code:'#f3f3f4', codeText:'#3a7a39', focus:'#2f5fd0', dlg:'#ffffff', inv:'#2b2d33', onInv:'#f3f3f4', invPri:'#8cc4f5', shadow:'rgba(35,36,40,.18)' }
+  };
+  static M = [
+    { name:'Raster', d:'#61afef', l:'#2f5fd0', pat:c=>`repeating-linear-gradient(45deg, ${c} 0 2px, transparent 2px 8px)`, size:'auto' },
+    { name:'Punkte', d:'#56b6c2', l:'#0a6f8f', pat:c=>`radial-gradient(${c} 1.6px, transparent 1.9px)`, size:'9px 9px' },
+    { name:'Zeilen', d:'#98c379', l:'#3a7a39', pat:c=>`repeating-linear-gradient(0deg, ${c} 0 2px, transparent 2px 7px)`, size:'auto' },
+    { name:'Ringe', d:'#c678dd', l:'#9a2299', pat:c=>`repeating-radial-gradient(circle at 30% 30%, ${c} 0 1.5px, transparent 1.5px 7px)`, size:'auto' },
+    { name:'Stufen', d:'#e5c07b', l:'#8a5f00', pat:c=>`conic-gradient(${c} 25%, transparent 0 50%, ${c} 0 75%, transparent 0)`, size:'12px 12px' }
+  ];
+
+  static svgP = null; static svgs = null;
+  static loadSvgs() {
+    if (!Component.svgP) Component.svgP = Promise.all(['assets/coffee-break.svg','assets/question-mark.svg'].map(u => fetch(u).then(r => r.text()))).then(([c, q]) => {
+      const clean = s => s.replace(/<metadata>[\s\S]*?<\/metadata>/, '').replace(/role="img"/, 'aria-hidden="true" focusable="false"').replace(/aria-label="[^"]*"/, '').replace('<svg ', '<svg width="100%" height="100%" ');
+      Component.svgs = { '☕': clean(c), '?': clean(q) };
+    }).catch(() => {});
+    return Component.svgP;
+  }
+  static mix(a, b, k) { const p = h => [1,3,5].map(i => parseInt(h.substr(i,2),16)); const x = p(a), y = p(b); return '#' + x.map((v,i) => Math.round(v + (y[i]-v)*k).toString(16).padStart(2,'0')).join(''); }
+  static gpal(accent, dark, mode, t) {
+    const M = Component.mix;
+    if (mode === 'locked') return { body: t.ov, shade: M(t.ov, '#000000', .25), soft: t.c, ink: t.muted, cur: t.muted };
+    if (mode === 'sel') return { body: M(accent, '#ffffff', dark ? .55 : .7), shade: M(accent, '#ffffff', .3), soft: '#ffffff', ink: dark ? '#1d2026' : M(accent, '#000000', .6), cur: dark ? '#1d2026' : '#ffffff' };
+    return { body: accent, shade: M(accent, '#000000', .35), soft: M(accent, '#ffffff', .72), ink: dark ? '#14161a' : M(accent, '#000000', .62), cur: t.on };
+  }
+  glyph(v, pal, size) {
+    const svg = Component.svgs && Component.svgs[v];
+    if (!svg) return v;
+    return React.createElement('span', { 'aria-hidden': 'true', style: { display:'inline-flex', width:size, height:size, maxWidth:'100%', margin:'0 auto', color: pal.cur, '--poker-ink': pal.ink, '--poker-body': pal.body, '--poker-shade': pal.shade, '--poker-soft': pal.soft }, dangerouslySetInnerHTML: { __html: svg } });
+  }
+  componentDidMount() { this.reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; Component.loadSvgs().then(() => this.forceUpdate()); }
+  confetti(colors) {
+    const pieces = [];
+    for (let i = 0; i < 46; i++) {
+      const x = (i * 37) % 100, dx = ((i * 53) % 120) - 60, d = (i % 9) * 0.09, w = 6 + (i % 3) * 2;
+      pieces.push(React.createElement('span', { key: i, style: { position:'absolute', top:0, left: x + '%', width: w, height: w * 1.6, borderRadius: 1, background: colors[i % colors.length], '--dx': dx + 'px', animation: `pp-fall 2.6s ${d}s cubic-bezier(.3,.6,.5,1) forwards`, opacity: 0 } }));
+    }
+    return React.createElement('div', { className: 'pp-confetti', 'aria-hidden': 'true', style: { position:'absolute', inset:0, pointerEvents:'none', overflow:'hidden', zIndex: 2 } }, pieces);
+  }
+  renderVals() {
+    const P = this.props;
+    const dark = (P.theme ?? 'dark') !== 'light';
+    const t = dark ? Component.T.dark : Component.T.light;
+    const role = P.role ?? 'dev', phase = P.phase ?? 'voting', v = P.variant ?? '', dlg = P.dialog ?? 'none';
+    const mobile = !!P.mobile, all = !!P.allVoted, timeUp = !!P.timeUp;
+    const isSM = role === 'sm', isDev = !isSM;
+    const Mo = Component.M[(P.motif ?? 0) % 5];
+    const m = { name: Mo.name, a: dark ? Mo.d : Mo.l, onA: dark ? '#1d2026' : '#ffffff', pat: Mo.pat(dark ? 'rgba(29,32,38,.30)' : 'rgba(255,255,255,.30)'), size: Mo.size };
+    const isRoom = !['loading','expired'].includes(phase);
+    const isWaiting = phase === 'waiting', isDiscuss = phase === 'discussing', isVoting = phase === 'voting', isRevealed = phase === 'revealed';
+    const consensus = isRevealed && v === 'consensus', outliers = isRevealed && v !== 'consensus';
+
+    const devs = [
+      { name:'Ben', vote: consensus ? '5' : '3', con: true },
+      { name:'Cem', vote: '5', con: true },
+      { name:'Dana', vote: consensus ? '5' : '13', con: true },
+      { name:'Eva', vote: '5', con: true },
+      { name:'Finn', vote: null, con: false }
+    ];
+    const votedNow = n => isVoting ? (n === 'Ben' || n === 'Cem' || n === 'Eva' || (all && n === 'Dana')) : isRevealed ? n !== 'Finn' : false;
+    const meName = isSM ? 'Anna' : 'Ben';
+    const people = [{ name:'Anna', sm:true, con:true }, ...devs].map(p => {
+      const voted = !p.sm && votedNow(p.name);
+      const idle = isWaiting || isDiscuss;
+      return {
+        name: p.name, sm: !!p.sm, isMe: p.name === meName,
+        nameColor: p.con ? t.on : t.muted,
+        rowBg: p.name === meName ? t.c : 'transparent',
+        statusText: p.sm ? 'Moderiert, schätzt nicht mit' : isDiscuss ? 'Bespricht' : isWaiting ? 'Bereit' : voted ? '✓ Hat geschätzt' : '○ Ausstehend',
+        statusColor: p.sm || idle ? t.muted : voted ? t.ok : t.warn,
+        connText: p.con ? '● verbunden' : '○ getrennt',
+        connColor: p.con ? t.muted : t.err,
+        chipBorder: p.sm ? 'none' : voted ? 'none' : `1.5px dashed ${idle ? t.ov : t.outline}`,
+        chipBg: p.sm ? 'transparent' : voted ? m.a : 'transparent',
+        chipPat: voted ? m.pat : 'none'
+      };
+    });
+
+    const isG = x => x === '?' || x === '☕';
+    const G = (x, mode, size) => isG(x) ? this.glyph(x, Component.gpal(m.a, dark, mode, t), size) : x;
+    const outSet = outliers ? ['3','13'] : [];
+    const slots = devs.map(d => {
+      const voted = votedNow(d.name);
+      const face = isRevealed && voted, back = isVoting && voted, empty = !face && !back;
+      return { name: d.name, face, back, empty, v: d.vote && isG(d.vote) ? G(d.vote, 'face', mobile ? '40px' : '56px') : d.vote, outlier: face && outSet.includes(d.vote),
+        faceBorder: face && outSet.includes(d.vote) ? `2px solid ${t.warn}` : `1.5px solid ${t.ov}`,
+        emptyText: d.con ? '…' : 'getrennt',
+        sub: face ? '' : back ? (mobile ? '✓' : '✓ geschätzt') : d.con ? 'ausstehend' : 'getrennt',
+        subColor: back ? t.ok : t.muted };
+    });
+
+    const deck = ['0','1','2','3','5','8','13','21','34','?','☕'];
+    const label = x => x === '☕' ? 'Kaffeepause' : x === '?' ? 'Unklar' : x;
+    const cur = this.state.pick ?? (P.picked ?? '5');
+    const fan = deck.map(x => ({ v: isDiscuss ? G(x, 'locked', mobile ? '38px' : '58px') : cur === x ? G(x, 'sel', mobile ? '30px' : '52px') : G(x, 'face', mobile ? '38px' : '58px'), label: label(x), sel: !isDiscuss && cur === x, un: !isDiscuss && cur !== x, lk: isDiscuss, pick: () => this.setState({ pick: x }) }));
+
+    const finalSel = consensus ? '5' : (P.dlgPick ?? null);
+    const writing = dlg === 'writing', dErr = dlg === 'error';
+    const counts = consensus ? { '5': 4 } : { '3': 1, '5': 2, '13': 1 };
+    const top = Math.max(...Object.values(counts));
+    const dlgDeck = deck.map(x => { const s = finalSel === x, n = counts[x] || 0, hot = !consensus && n === top;
+      return { label: isG(x) ? G(x, s ? 'sel' : 'face', '30px') : s ? '✓ ' + x : x, selStr: s ? 'true' : 'false', aria: label(x) + (n ? ', ' + n + (n === 1 ? ' Stimme' : ' Stimmen') : '') + (hot ? ', häufigster Wert' : ''),
+        count: n ? n + '×' : '', bg: s ? t.priC : hot ? t.warnC : 'transparent', fg: s ? t.onPriC : hot ? t.onWarnC : (writing ? t.muted : t.on), weight: s || hot ? 600 : 500, ring: hot && !s ? 'inset 0 -3px 0 ' + t.warn : 'none' }; });
+
+    const issues = [
+      ['42','Passwort per E-Mail zurücksetzen',null],['44','Profilbild hochladen und zuschneiden',null],['47','Export der Zeiterfassung als CSV','5'],['51','Benachrichtigungen bündeln',null],['53','Dunkelmodus für den Admin-Bereich','3'],['58','Rate-Limit für die öffentliche API',null]
+    ].map((it, i) => { const s = it[0] === '42'; return { iid: it[0], title: it[1], w: it[2] ? 'Gewicht ' + it[2] : 'ohne Gewicht', wColor: it[2] ? t.onv : t.muted, sel: s, selStr: s ? 'true' : 'false', check: s ? '✓' : '', bg: s ? t.priC : 'transparent', titleColor: s ? t.onPriC : t.on, idColor: s ? t.onPriC : t.muted, weight: s ? 600 : 400, border: i ? `1px solid ${t.ov}` : 'none' }; });
+
+    const historyRaw = [
+      ...(v === 'after' ? [['42','Passwort per E-Mail zurücksetzen','2','5 · 5 · 5 · 5','5']] : []),
+      ...(isRevealed || isVoting || v === 'after' ? [['42','Passwort per E-Mail zurücksetzen','1','2 · 3 · 8 · 13',null]] : []),
+      ['41','Registrierung mit SSO','1','3 · 5 · 5 · 5','5'],
+      ['40','Passwort-Regeln anpassen','2','2 · 3 · 3 · 3','3'],
+      ['40','Passwort-Regeln anpassen','1','1 · 3 · 8 · ?',null]
+    ];
+    const history = historyRaw.map(h => ({ iid: h[0], title: h[1], round: h[2], cards: h[3], end: h[4] ? 'Endwert ' + h[4] : 'ohne Endwert', endBg: h[4] ? t.okC : 'transparent', endFg: h[4] ? t.onOkC : t.muted }));
+
+    const dist = consensus ? [{ card:'5', count:4 }] : [{ card:'3', count:1 }, { card:'5', count:2 }, { card:'13', count:1 }];
+    const max = Math.max(...dist.map(d => d.count));
+
+    const votedCount = isVoting ? (all ? 4 : 3) : 4;
+    const pad = mobile ? '16px' : '24px';
+    return {
+      t, m, isSM, isDev,
+      padX: mobile ? '16px' : '24px', rootMax: mobile && (dlg !== 'none' || P.snackbar) ? '812px' : 'none',
+      showMe: !mobile, meText: isSM ? 'Anna · Scrum Master' : 'Ben · Entwickler',
+      showBanner: !!P.banner, isLoading: phase === 'loading', isExpired: phase === 'expired', isRoom,
+      h1: mobile ? '24px' : '30px', titleBasis: mobile ? '100%' : '300px', h2: mobile ? '21px' : '26px',
+      cols: mobile ? 'minmax(0,1fr)' : '320px minmax(0,1fr)',
+      asideOrder: mobile ? 2 : 0, asideBorder: mobile ? 'none' : `1px solid ${t.line}`, asideTop: mobile ? `1px solid ${t.line}` : 'none', asidePad: mobile ? '24px 16px 32px' : '24px',
+      mainPad: mobile ? '16px 16px 28px' : '32px 48px 48px', panelPad: mobile ? '16px' : '24px',
+      peopleCount: 6, people,
+      copyOk: (P.copy ?? 'ok') === 'ok', copyErr: P.copy === 'err',
+      phaseName: isWaiting ? 'Wartet auf ein Issue' : isDiscuss ? 'Besprechung' : isVoting ? 'Runde läuft' : 'Runde aufgelöst',
+      roleName: isSM ? 'Scrum Master' : 'Entwickler',
+      confetti: consensus && !P.noConfetti ? this.confetti([t.pri, t.ok, t.warn, dark ? '#c678dd' : '#9a2299', dark ? '#56b6c2' : '#0a6f8f']) : null,
+      phaseTitle: isWaiting ? 'Wartet auf ein Issue' : isDiscuss ? 'Besprechung' : isVoting ? 'Runde 2' : 'Runde 2 · aufgelöst',
+      hasCounter: !isWaiting && !isDiscuss,
+      counterStrong: isVoting ? `${votedCount} von 5` : '4 Schätzungen',
+      counterRest: isVoting ? 'haben geschätzt' : '· Finn war getrennt',
+      progress: Math.round(votedCount / 5 * 100) + '%',
+      showTimer: isVoting || isDiscuss, timerText: isDiscuss ? '◷ 1:00 · startet mit der Schätzung' : timeUp ? '⏱ Zeit abgelaufen' : '◷ Noch 0:42',
+      timerFg: isDiscuss ? t.muted : timeUp ? t.onErrC : t.onWarnC, timerBg: isDiscuss ? 'transparent' : timeUp ? t.errC : t.warnC,
+      showMotif: !isWaiting && !mobile,
+      waitDev: isWaiting && isDev, waitSM: isWaiting && isSM,
+      searchText: v === 'empty' ? 'Kalender' : 'pass',
+      issuesList: isWaiting && !['empty','error'].includes(v), issuesEmpty: v === 'empty', issuesError: v === 'error', issues,
+      showIssue: isVoting || isRevealed || isDiscuss,
+      descCollapsed: isRevealed || mobile, descMax: isRevealed || mobile ? '120px' : 'none',
+      consensus, outliers,
+      showTable: isVoting || isRevealed,
+      tableTitle: isVoting ? 'AM TISCH · VERDECKT' : 'AUFGEDECKT',
+      slots, slotW: mobile ? '56px' : '72px', slotH: mobile ? '80px' : '104px', slotFont: mobile ? '24px' : '32px', slotGap: mobile ? '10px' : '20px',
+      showFan: (isVoting || isDiscuss) && isDev, smDiscuss: isDiscuss && isSM,
+      fanTitle: isDiscuss ? 'Deine Karte · gesperrt' : 'Deine Karte',
+      fanHint: isDiscuss ? 'Die Karten werden frei, sobald der Scrum Master den Timer startet.' : 'Du kannst sie ändern, bis aufgelöst wird.', fan, selWord: mobile ? '' : 'GEWÄHLT',
+      fanCols: mobile ? 'repeat(6,minmax(0,1fr))' : 'repeat(11,minmax(0,1fr))', fanGap: mobile ? '8px' : '10px',
+      fanH: mobile ? '76px' : '124px', fanFont: mobile ? '24px' : '38px', fanLabel: mobile ? '10px' : '11px', fanPad: mobile ? '6px' : '8px',
+      smVoting: isVoting && isSM,
+      resolveHint: all ? '✓ Alle verbundenen Entwickler haben geschätzt. Finn ist getrennt und wird nicht abgewartet.' : 'Noch 2 Schätzungen ausstehend. Du kannst auch vorher auflösen.',
+      resolveHintColor: all ? t.on : t.onv, resolveHintWeight: all ? 500 : 400,
+      resolveBoxBg: all ? t.priC : 'transparent', resolveBoxBorder: all ? t.pri : t.ov,
+      resolveBg: all ? t.pri : 'transparent', resolveFg: all ? t.onPri : t.pri, resolveBorder: all ? 'none' : `1px solid ${t.outline}`,
+      resolveH: all ? '48px' : '40px', resolveShadow: all ? `0 0 0 4px ${dark ? 'rgba(97,175,239,.25)' : 'rgba(47,95,208,.18)'}` : 'none',
+      isRevealed,
+      statCols: mobile ? 'minmax(0,1fr)' : 'minmax(0,1.4fr) minmax(0,1fr)',
+      dist: dist.map(d => ({ card: d.card, text: d.count === 1 ? '1 Stimme' : d.count + ' Stimmen', pct: Math.round(d.count / max * 100) + '%' })),
+      avg: consensus ? '5' : '6,5', mode: '5',
+      history,
+      dlgAny: dlg !== 'none', dlgSwitch: dlg === 'switch', dlgResult: ['result','writing','error'].includes(dlg), dlgWriting: writing, dlgError: dErr,
+      dlgNoCons: !consensus, dlgLead: consensus ? 'Konsens: 5 ist vorausgewählt.' : 'Kein Konsens, deshalb ist nichts vorausgewählt.',
+      lastResult: isWaiting && isDev && v === 'after', waitTitle: v === 'after' ? 'Das Ergebnis ist übernommen. Warten, bis der Scrum Master das nächste Issue freigibt' : 'Warten, bis der Scrum Master ein Issue freigibt', waitPad: v === 'after' ? '40px 24px' : '72px 24px',
+      dlgW: mobile ? '100%' : '560px', dlgAlign: mobile ? 'flex-end' : 'flex-start', dlgOuterPad: mobile ? '12px' : '140px 24px',
+      dlgCols: mobile ? 'repeat(6,minmax(0,1fr))' : 'repeat(11,minmax(0,1fr))', dlgDeck,
+      dlgOkText: writing ? 'Wird übernommen …' : dErr ? 'Erneut versuchen' : 'Übernehmen',
+      dlgOkBg: writing ? t.c : t.pri, dlgOkFg: writing ? t.muted : t.onPri, dlgCancelFg: writing ? t.muted : t.pri,
+      showSnack: !!P.snackbar, snackW: mobile ? 'calc(100% - 24px)' : '480px'
+    };
+  }
+}
+</script>
+</body>
+</html>
