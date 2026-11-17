@@ -212,12 +212,13 @@ public final class Session {
         phase = Phase.REVEALED;
     }
 
-    public void restart(String actorId) {
+    public void restart(String actorId, Instant now) {
         requireRole(actorId, Role.SCRUM_MASTER);
         requireNotConfirming();
         requirePhase(Phase.REVEALED, "A new round needs a revealed round.");
         round = new Round(round.number() + 1);
-        phase = Phase.DISCUSSION;
+        round.start(deadlineFrom(now));
+        phase = Phase.VOTING;
     }
 
     private Instant deadlineFrom(Instant start) {

@@ -11,7 +11,7 @@ Variante A statt B: Der Server erzwingt verdeckte Karten und Rollen, wie es das 
 **Im Scope**
 
 - Sitzung erstellen und beitreten, Rollen Scrum Master und Entwickler
-- Issue-Auswahl und Freigabe, Schätzrunde, Auflösung, neue Runde, Ergebnisübernahme nach GitLab
+- Issue-Auswahl und Freigabe, Schätzrunde, Auflösung, erneut schätzen, Ergebnisübernahme nach GitLab
 - Echtzeit-Synchronisation aller Teilnehmer
 - Sitzungsprotokoll der aufgelösten Runden
 - README mit Setup, Variantenwahl, GitLab-Entscheidung und Schnittstellendefinition
@@ -151,7 +151,7 @@ Die Sitzung kennt vier Phasen: `LOBBY` (kein freigegebenes Issue), `DISCUSSION` 
 | VOTING | Auflösen | Scrum Master | REVEALED | Auswertung wird berechnet, Protokolleintrag entsteht |
 | VOTING | Frist erreicht | Server | REVEALED | Wie Auflösen, auch ohne Stimmen und ohne verbundenen Scrum Master; Prüfung alle 250 ms (ADR 0010) |
 | VOTING | Issue wechseln | Scrum Master | DISCUSSION | Laufende Runde wird verworfen, Runde 1 für das neue Issue, ohne Frist |
-| REVEALED | Neue Runde | Scrum Master | DISCUSSION | Rundennummer plus 1, alle Karten gelöscht, ohne Frist |
+| REVEALED | Erneut schätzen | Scrum Master | VOTING | Rundennummer plus 1, alle Karten gelöscht, Karten sofort offen; mit Timer gilt die Frist Start plus Timer (ADR 0012) |
 | REVEALED | Ergebnis bestätigen | Scrum Master | LOBBY | `confirming` wird gesetzt, dann Schreiben nach GitLab; bei Erfolg `finalCard` im Protokoll und Phase LOBBY. Bei GitLab-Fehler wird `confirming` zurückgesetzt, die Phase bleibt REVEALED, Antwort 502. |
 | REVEALED | Issue wechseln | Scrum Master | DISCUSSION | Runde bleibt ohne Endwert im Protokoll |
 | jede | Beitreten, Verbinden, Trennen | alle | unverändert | Teilnehmerliste und `connected` werden aktualisiert |
@@ -402,7 +402,7 @@ Arbeitspakete:
 Akzeptanzkriterien:
 
 - Eine Sitzung mit unbekanntem Issue wird nicht angelegt (404 `ISSUE_NOT_FOUND`).
-- Integrationstest für den Ablauf: freigeben, drei Stimmen, auflösen, neue Runde, auflösen.
+- Integrationstest für den Ablauf: freigeben, drei Stimmen, auflösen, erneut schätzen, auflösen.
 - Stimmabgabe in `LOBBY` oder `REVEALED`: 409. Ungültige Karte: 400.
 - Auflösen mit nur einer von drei Stimmen funktioniert; fehlende Stimmen erscheinen als nicht abgegeben.
 - Nach einem Issue-Wechsel sind alle Stimmen gelöscht und die Rundennummer ist 1.
@@ -521,14 +521,14 @@ Akzeptanzkriterien:
 
 ### M12 – Auflösung und Abschluss (Frontend)
 
-Ziel: Das Ergebnis wird dargestellt; der Scrum Master startet eine neue Runde oder übernimmt einen Wert.
+Ziel: Das Ergebnis wird dargestellt; der Scrum Master lässt erneut schätzen oder übernimmt einen Wert.
 
 Arbeitspakete:
 
 - Aufgedeckte Ansicht: Karte und Name je Teilnehmer.
 - Gruppenauswertung je abgegebenem Wert in Kartenreihenfolge.
 - Durchschnitt und häufigster Wert, als Orientierung beschriftet und nicht anklickbar.
-- Aktionen für den Scrum Master: „Neue Runde“ und „Ergebnis übernehmen“ mit Auswahl aus dem Kartensatz und Bestätigungsdialog.
+- Aktionen für den Scrum Master: „Erneut schätzen“ und „Ergebnis übernehmen“ mit Auswahl aus dem Kartensatz und Bestätigungsdialog.
 - Während `confirming` sehen alle einen Hinweis, die Aktionen sind gesperrt.
 - Rückmeldung bei Erfolg und bei GitLab-Fehler mit Möglichkeit zum erneuten Versuch.
 - Sitzungsprotokoll als einklappbarer Bereich für alle.
@@ -537,7 +537,7 @@ Akzeptanzkriterien:
 
 - Alle Clients zeigen dieselben Karten und dieselbe Auswertung.
 - Als Ergebnis sind nur die 11 Karten wählbar.
-- Nach „Neue Runde“ sind alle Karten zurückgesetzt und die vorige Runde steht im Protokoll.
+- Nach „Erneut schätzen“ sind alle Karten zurückgesetzt und die vorige Runde steht im Protokoll.
 - Nach der Übernahme zeigt das Protokoll den Endwert, und die Sitzung ist zurück in der Issue-Auswahl.
 
 ### M13 – Härtung und Abgabe

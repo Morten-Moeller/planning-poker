@@ -60,7 +60,7 @@ class ConfirmRoundTest {
     void confirmsTheCardWritesTheCommentAndReturnsToLobby() {
         flow.revealedRound("5", "8", "13", "3", "5");
         flow.restart().statusCode(204);
-        flow.playRound("3", "5", "5", "5", "8");
+        flow.voteAndReveal("3", "5", "5", "5", "8");
 
         flow.confirm("5").statusCode(204);
 

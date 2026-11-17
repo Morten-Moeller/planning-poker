@@ -449,7 +449,8 @@ public class SessionResource {
     @RequiresRole(Role.SCRUM_MASTER)
     @Operation(
             operationId = "restartRound",
-            summary = "Start a new round for the active issue in DISCUSSION without a deadline; scrum master only.")
+            summary =
+                    "Start a new round for the active issue in VOTING and set the deadline from the timer; scrum master only.")
     @APIResponse(responseCode = "204", description = "New round started.")
     @APIResponse(
             responseCode = "401",
@@ -471,7 +472,7 @@ public class SessionResource {
             @PathParam("id") @Parameter(description = SESSION_ID) String id, @Context ContainerRequestContext context) {
         Actor actor = ActorFilter.actorOf(context);
         registry.update(id, session -> {
-            session.restart(actor.participantId());
+            session.restart(actor.participantId(), clock.instant());
             return null;
         });
         return Response.noContent().build();

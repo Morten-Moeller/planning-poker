@@ -115,7 +115,7 @@ for (const scheme of ['light', 'dark'] as const) {
   });
 }
 
-test('both roles see the same motif in a round and a new one after Neue Runde', async ({
+test('both roles see the same motif in a round and a new one after Erneut schätzen', async ({
   page,
   browser,
 }) => {
@@ -134,7 +134,7 @@ test('both roles see the same motif in a round and a new one after Neue Runde', 
   await expect(room(ben)).toHaveAttribute('data-motif', first!);
 
   await anna.getByTestId('round-restart').click();
-  await expectPhase([anna, ben], 'Diskussion');
+  await expectPhase([anna, ben], 'Runde läuft');
   await expect(room(anna)).not.toHaveAttribute('data-motif', first!);
   const second = await motif(anna);
   expect(second).toMatch(/^[0-4]$/);

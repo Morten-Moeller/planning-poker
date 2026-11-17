@@ -279,14 +279,14 @@ describe('RoundResult', () => {
   it('shows the waiting text to a developer and the actions to the scrum master', async () => {
     await open(revealedDeveloper);
     expect(texts('result-waiting')).toEqual([
-      'Der Scrum Master startet eine neue Runde oder übernimmt das Ergebnis.',
+      'Der Scrum Master lässt erneut schätzen oder übernimmt das Ergebnis.',
     ]);
     fixture.destroy();
     store.leave();
 
     await open(revealedScrumMaster);
     expect(all('result-waiting')).toHaveLength(0);
-    expect(texts('round-restart')).toEqual(['↻ Neue Runde']);
+    expect(texts('round-restart')).toEqual(['↻ Erneut schätzen']);
     expect(texts('result-accept')).toEqual(['Ergebnis übernehmen …']);
   });
 

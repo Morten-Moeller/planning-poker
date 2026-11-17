@@ -306,7 +306,7 @@ class RoundCommandsTest {
     }
 
     @Test
-    void startsANewRoundWithoutCards() {
+    void restartOpensTheVotingOfANewRoundWithoutCards() {
         openVoting(GitLabStubs.ISSUE);
         vote(0, "5").statusCode(204);
         reveal().statusCode(204);
@@ -314,7 +314,7 @@ class RoundCommandsTest {
         restart().statusCode(204);
 
         snapshotOf(asDeveloper(0))
-                .body("phase", equalTo("DISCUSSION"))
+                .body("phase", equalTo("VOTING"))
                 .body("round.deadline", nullValue())
                 .body("round.number", equalTo(2))
                 .body("round.myVote", nullValue())
@@ -327,7 +327,10 @@ class RoundCommandsTest {
     void rejectsANewRoundOutsideRevealedAndByDevelopers() {
         restart().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
 
-        openVoting(GitLabStubs.ISSUE);
+        releaseIssue(GitLabStubs.ISSUE);
+        restart().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
+
+        startVoting().statusCode(204);
         restart().statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("INVALID_STATE"));
         reveal().statusCode(204);
 
@@ -357,7 +360,6 @@ class RoundCommandsTest {
                 .body("history[0].revealedAt", matchesPattern("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z"));
 
         restart().statusCode(204);
-        startVoting().statusCode(204);
         vote(1, "8").statusCode(204);
         reveal().statusCode(204);
 
@@ -424,7 +426,6 @@ class RoundCommandsTest {
         vote(2, "13").statusCode(204);
         reveal().statusCode(204);
         restart().statusCode(204);
-        startVoting().statusCode(204);
         vote(0, "8").statusCode(204);
         vote(1, "8").statusCode(204);
         vote(2, "8").statusCode(204);

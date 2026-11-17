@@ -129,7 +129,7 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   page and joins two developers (`Ben`, and `Cem` at 375×800) for the toolbar;
   `layout.spec.ts` also checks at 375×800 that the side column stands under the main area (spec
   0028); `design-sidebar.spec.ts` (spec 0028) joins `Ben` on issue 42, compares `data-motif` of
-  both roles before and after „Neue Runde“, confirms the result `5` (notes mapping of issue 42)
+  both roles before and after „Erneut schätzen“, confirms the result `5` (notes mapping of issue 42)
   and checks `last-result` until the release of issue 43; it also compares the motif colours of
   room, toolbar and the card backs of the join page light and dark (spec 0032).
   `voting-round.spec.ts` chooses a card with the keyboard and checks the table, the 6 columns at

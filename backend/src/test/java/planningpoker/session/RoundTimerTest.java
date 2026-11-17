@@ -192,7 +192,7 @@ class RoundTimerTest {
     }
 
     @Test
-    void releaseSwitchAndNewRoundHaveNoDeadlineUntilTheVotingStarts() {
+    void releaseAndSwitchHaveNoDeadlineAndRestartSetsIt() {
         setTimer(asScrumMaster(), "30").statusCode(204);
 
         releaseIssue(GitLabStubs.ISSUE);
@@ -209,15 +209,10 @@ class RoundTimerTest {
 
         startVoting();
         asScrumMaster().when().post(session + "/round/reveal").then().statusCode(204);
-        asScrumMaster().when().post(session + "/round/restart").then().statusCode(204);
-        snapshot()
-                .body("phase", equalTo("DISCUSSION"))
-                .body("round.number", equalTo(2))
-                .body("round.deadline", nullValue());
-
         CLOCK.advance(Duration.ofSeconds(10));
         Instant restarted = CLOCK.instant();
-        startVoting();
+        asScrumMaster().when().post(session + "/round/restart").then().statusCode(204);
+        snapshot().body("phase", equalTo("VOTING")).body("round.number", equalTo(2));
         assertEquals(at(restarted.plusSeconds(30)), deadline());
     }
 
@@ -289,7 +284,6 @@ class RoundTimerTest {
         asScrumMaster().when().post(session + "/round/reveal").then().statusCode(204);
         CLOCK.advance(Duration.ofSeconds(20));
         asScrumMaster().when().post(session + "/round/restart").then().statusCode(204);
-        startVoting();
 
         CLOCK.advance(Duration.ofSeconds(15));
         registry.revealDue(CLOCK.instant());

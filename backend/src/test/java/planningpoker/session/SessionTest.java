@@ -135,13 +135,13 @@ class SessionTest {
         }
 
         @Test
-        void a_new_round_raises_the_number_and_clears_the_cards() {
+        void restart_raises_the_number_clears_the_cards_and_opens_the_voting() {
             Session session = session().revealed().build();
 
-            session.restart(master(session).id());
+            session.restart(master(session).id(), SessionBuilder.CREATED_AT);
 
             Round round = session.round().orElseThrow();
-            assertEquals(Phase.DISCUSSION, session.phase());
+            assertEquals(Phase.VOTING, session.phase());
             assertEquals(2, round.number());
             assertTrue(round.votes().isEmpty());
             assertFalse(round.revealed());
@@ -267,7 +267,7 @@ class SessionTest {
                 invalid(
                         "new round in LOBBY",
                         session().build(),
-                        s -> s.restart(master(s).id())),
+                        s -> s.restart(master(s).id(), SessionBuilder.CREATED_AT)),
                 invalid(
                         "confirm in LOBBY",
                         session().build(),
@@ -287,7 +287,7 @@ class SessionTest {
                 invalid(
                         "new round in DISCUSSION",
                         session().discussion().build(),
-                        s -> s.restart(master(s).id())),
+                        s -> s.restart(master(s).id(), SessionBuilder.CREATED_AT)),
                 invalid(
                         "confirm in DISCUSSION",
                         session().discussion().build(),
@@ -299,7 +299,7 @@ class SessionTest {
                 invalid(
                         "new round in VOTING",
                         session().voting().build(),
-                        s -> s.restart(master(s).id())),
+                        s -> s.restart(master(s).id(), SessionBuilder.CREATED_AT)),
                 invalid(
                         "confirm in VOTING",
                         session().voting().build(),
@@ -336,7 +336,7 @@ class SessionTest {
                 invalid(
                         "new round while confirming",
                         session().confirming().build(),
-                        s -> s.restart(master(s).id())),
+                        s -> s.restart(master(s).id(), SessionBuilder.CREATED_AT)),
                 invalid(
                         "start voting while confirming",
                         session().confirming().build(),
@@ -368,7 +368,7 @@ class SessionTest {
                 invalid(
                         "developer starts a new round",
                         session().revealed().build(),
-                        s -> s.restart(developer(s, 0).id())),
+                        s -> s.restart(developer(s, 0).id(), SessionBuilder.CREATED_AT)),
                 invalid(
                         "developer confirms",
                         session().revealed().build(),
@@ -600,13 +600,12 @@ class SessionTest {
         }
 
         @Test
-        void a_new_round_has_no_deadline_until_the_voting_starts() {
+        void restart_sets_the_deadline_from_the_start_time() {
             Session session = session().timer(30).revealed().build();
 
-            session.restart(master(session).id());
-            assertEquals(Optional.empty(), session.round().orElseThrow().deadline());
+            session.restart(master(session).id(), START);
 
-            session.startVoting(master(session).id(), START);
+            assertEquals(Phase.VOTING, session.phase());
             assertEquals(
                     Optional.of(START.plusSeconds(30)),
                     session.round().orElseThrow().deadline());
@@ -642,8 +641,7 @@ class SessionTest {
             Session session = session().timer(30).revealed().build();
 
             session.setTimer(master(session).id(), null);
-            session.restart(master(session).id());
-            session.startVoting(master(session).id(), START);
+            session.restart(master(session).id(), START);
 
             assertEquals(Optional.empty(), session.round().orElseThrow().deadline());
         }

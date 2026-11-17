@@ -146,10 +146,14 @@ test('everybody sees the same result, the scrum master starts a new round and co
     await expect(developer.page.getByTestId('result-accept')).toHaveCount(0);
   }
 
+  await expect(anna.page.getByTestId('round-restart')).toHaveText('↻ Erneut schätzen');
+  for (const developer of [ben, cem]) {
+    await expect(developer.page.getByTestId('result-waiting')).toHaveText(
+      'Der Scrum Master lässt erneut schätzen oder übernimmt das Ergebnis.',
+    );
+  }
   await anna.page.getByTestId('round-restart').click();
 
-  await expectPhase(everybody, 'Diskussion');
-  await startVoting(anna.page);
   await expectPhase(everybody, 'Runde läuft');
   for (const view of everybody) {
     await expect(voteStatus(view, 'Ben')).toHaveText('Ausstehend');
@@ -194,6 +198,30 @@ test('everybody sees the same result, the scrum master starts a new round and co
     await expect(entries.nth(1).getByTestId('history-no-final-card')).toHaveText('ohne Endwert');
   }
   await expect(ben.page.getByTestId('confirm-success')).toHaveCount(0);
+});
+
+test('restart with a timer opens the cards at once and runs the timer', async ({
+  page,
+  browser,
+}) => {
+  const { anna, link } = await createSession(page, '42');
+  const ben = await join(browser, link, 'Ben');
+  await expect(anna.page.getByTestId('participant')).toHaveCount(2);
+  await anna.page.getByTestId('timer-setting').click();
+  await anna.page.getByTestId('timer-option-15').click();
+  await expect(anna.page.getByTestId('timer-setting')).toContainText('15 s');
+  await anna.page.getByTestId('issue-release').click();
+  await startVoting(anna.page);
+  await playRound(anna, [[ben, '5']]);
+
+  await anna.page.getByTestId('round-restart').click();
+
+  await expectPhase([anna, ben], 'Runde läuft');
+  await expect(ben.page.getByTestId('discussion-hint')).toHaveCount(0);
+  await expect(anna.page.getByTestId('round-start')).toHaveCount(0);
+  await choose(ben, '8');
+  await expect(ben.page.getByRole('timer')).toHaveText(/Noch 0:1\d/);
+  await expect.poll(() => lastRoundNumber(ben)).toBe(2);
 });
 
 test('a GitLab error stays in the dialog and the second attempt confirms the result', async ({

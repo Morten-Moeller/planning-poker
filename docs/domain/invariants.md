@@ -8,11 +8,11 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 
 | Nr | Regel | Durchgesetzt in | Fehlercode |
 |---|---|---|---|
-| I1 | Nur der Scrum Master gibt ein Issue frei, startet die Schätzung, löst auf, startet eine neue Runde und bestätigt. | `Session.selectIssue`, `Session.startVoting`, `Session.reveal`, `Session.restart`, `Session.beginConfirm` über `requireRole` | `FORBIDDEN_ROLE` |
+| I1 | Nur der Scrum Master gibt ein Issue frei, startet die Schätzung, löst auf, lässt erneut schätzen und bestätigt. | `Session.selectIssue`, `Session.startVoting`, `Session.reveal`, `Session.restart`, `Session.beginConfirm` über `requireRole` | `FORBIDDEN_ROLE` |
 | I2 | Nur ein Entwickler wählt eine Karte. | `Session.vote` über `requireRole` | `FORBIDDEN_ROLE` |
 | I3 | Eine Karte wird nur in `VOTING` gewählt oder geändert (A-12). | `Session.vote` über `requirePhase` | `INVALID_STATE` |
 | I4 | Auflösen nur in `VOTING`; die Auswertung entsteht bei der Auflösung, der Protokolleintrag ohne Endwert dazu. | `Session.reveal` | `INVALID_STATE` |
-| I5 | Neue Runde und Bestätigung nur in `REVEALED`; die neue Runde trägt Nummer plus 1, keine Karten und beginnt in `DISCUSSION` (ADR 0010). | `Session.restart`, `Session.beginConfirm` über `requirePhase` | `INVALID_STATE` |
+| I5 | Erneut schätzen und Bestätigung nur in `REVEALED`; die neue Runde trägt Nummer plus 1, keine Karten und beginnt in `VOTING` (ADR 0012). | `Session.restart`, `Session.beginConfirm` über `requirePhase` | `INVALID_STATE` |
 | I6 | Die Freigabe eines Issues ist in `LOBBY`, `DISCUSSION`, `VOTING` und `REVEALED` möglich und startet Runde 1 in `DISCUSSION`; eine laufende Runde wird verworfen, ein aufgelöster Eintrag bleibt ohne Endwert im Protokoll (A-04). | `Session.selectIssue` | – |
 | I7 | Solange `confirming` gesetzt ist, ist jede Steuerungsaktion abgelehnt. | `Session.selectIssue`, `Session.restart`, `Session.beginConfirm` über `requireNotConfirming`; `Session.vote` und `Session.reveal` über die Phase `REVEALED` | `INVALID_STATE` |
 | I8 | `finishConfirm` und `failConfirm` setzen eine laufende Bestätigung voraus. Erfolg: Endwert im jüngsten Protokolleintrag, Phase `LOBBY` ohne aktives Issue, ohne Runde, ohne vorausgewähltes Issue (A-16). Fehler: `confirming` zurück, Phase `REVEALED`. | `Session.finishConfirm`, `Session.failConfirm` über `requireConfirming` | `INVALID_STATE` |
@@ -63,12 +63,12 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 | I36 | Eine Sitzung hat höchstens `planningpoker.session.max-participants` Teilnehmer, der Scrum Master zählt mit; die Grenze wird vor der Namensprüfung geprüft, ein abgelehnter Beitritt ändert nichts und löst kein `SessionChanged` aus (I19). | `Session.join` | `LIMIT_REACHED` |
 | I37 | Ist `planningpoker.session.allowed-projects` gesetzt, entsteht eine Sitzung nur für eine Projekt-ID der Liste (exakter Vergleich nach dem Trimmen); die Prüfung läuft vor dem GitLab-Aufruf. Ohne den Schlüssel ist jedes Projekt erlaubt. | `SessionResource.createSession` | `PROJECT_NOT_ALLOWED` |
 
-## Timer und Frist (Spec 0016, Spec 0026, ADR 0010)
+## Timer und Frist (Spec 0016, Spec 0026, Spec 0034, ADR 0010, ADR 0012)
 
 | Nr | Regel | Durchgesetzt in | Fehlercode |
 |---|---|---|---|
 | I38 | Der Timer ist `null` oder 5 bis 3600 Sekunden; nur der Scrum Master setzt ihn, in jeder Phase. Er wirkt erst ab dem nächsten „Schätzung starten“; eine Änderung in `DISCUSSION` gilt für diesen Start, eine laufende Schätzung behält ihre Frist. | `TimerRequest` (`@Min`, `@Max`), `Session.setTimer` | `VALIDATION_ERROR`, `FORBIDDEN_ROLE` |
-| I39 | Freigabe, Issue-Wechsel und Neue Runde starten eine Runde ohne Frist. Erst „Schätzung starten“ setzt die Frist auf Start plus Timer; ohne Timer hat die Runde keine Frist. | `Session.selectIssue`, `Session.restart`, `Session.startVoting` | – |
+| I39 | Freigabe und Issue-Wechsel starten eine Runde ohne Frist. „Schätzung starten“ und „Erneut schätzen“ setzen die Frist auf Start plus Timer; ohne Timer hat die Runde keine Frist (ADR 0012). | `Session.selectIssue`, `Session.startVoting`, `Session.restart` | – |
 | I40 | Eine Sitzung in `VOTING` mit erreichter Frist löst der Server unter der Sperre der Sitzung auf, mit derselben Wirkung wie die manuelle Auflösung (Auswertung, Protokolleintrag, auch ohne Stimmen) und genau einem `SessionChanged`. Eine Runde in `DISCUSSION` und eine schon aufgelöste, neu gestartete oder verworfene Runde wird nicht aufgelöst. | `SessionRegistry.revealDue`, `Session.revealIfDue`, Prüfung alle 250 ms in `SessionRegistryProducer` | – |
 | I41 | „Schätzung starten“ ist nur in `DISCUSSION` möglich und führt nach `VOTING` mit derselben Runde. In `DISCUSSION` sind Stimme, Auflösung und Bestätigung abgelehnt; der Snapshot zeigt das aktive Issue, aber keine Stimmen, keine Auswertung und keine Frist (ADR 0010). | `Session.startVoting` über `requirePhase`, `Session.vote`, `Session.reveal`, `Session.beginConfirm`, `SessionViewMapper` | `INVALID_STATE` |
 

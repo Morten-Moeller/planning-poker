@@ -43,6 +43,10 @@ async function search(page: Page, text: string): Promise<void> {
 async function playRound(anna: Page, ben: Page, cem: Page, everybody: Page[]): Promise<void> {
   await expectAll(everybody, 'session-phase', 'Diskussion');
   await startVoting(anna);
+  await voteAndReveal(anna, ben, cem, everybody);
+}
+
+async function voteAndReveal(anna: Page, ben: Page, cem: Page, everybody: Page[]): Promise<void> {
   await expectAll(everybody, 'session-phase', 'Runde läuft');
   await expectAll(everybody, 'vote-counter', '0 von 2 haben geschätzt');
   await vote(ben, '5');
@@ -105,8 +109,7 @@ test('three people estimate two issues and the scrum master writes the result to
   await expectAll(everybody, 'round-number', 'Runde 1');
 
   await anna.getByTestId('round-restart').click();
-  await expectAll(everybody, 'round-number', 'Runde 2');
-  await playRound(anna, ben, cem, everybody);
+  await voteAndReveal(anna, ben, cem, everybody);
   await expectAll(everybody, 'round-number', 'Runde 2');
 
   await issueResult(anna, CONFIRMED_ISSUE).click();

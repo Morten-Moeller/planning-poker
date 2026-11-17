@@ -211,8 +211,16 @@ class ContractTest {
     }
 
     @Test
+    void describesRestartRoundWithTheFollowingPhaseVoting() {
+        JsonNode operation = contract.at("/paths/~1api~1sessions~1{id}~1round~1restart/post");
+        assertEquals("restartRound", operation.at("/operationId").asText());
+        assertTrue(operation.at("/summary").asText().contains("in VOTING"));
+        assertFalse(operation.at("/summary").asText().contains("DISCUSSION"));
+    }
+
+    @Test
     void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
-        assertEquals("3.2.0", contract.at("/info/version").asText());
+        assertEquals("3.3.0", contract.at("/info/version").asText());
         assertEquals(
                 "PROJECT_NOT_ALLOWED",
                 contract.at("/paths/~1api~1sessions/post/responses/403/description")

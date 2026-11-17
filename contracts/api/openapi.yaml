@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Planning Poker API
-  version: 3.2.0
+  version: 3.3.0
   description: |
     Commands go over REST under /api and answer without state. The state reaches every participant
     over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
@@ -1282,8 +1282,8 @@ paths:
       - bearerToken: []
   /api/sessions/{id}/round/restart:
     post:
-      summary: Start a new round for the active issue in DISCUSSION without a deadline;
-        scrum master only.
+      summary: Start a new round for the active issue in VOTING and set the deadline
+        from the timer; scrum master only.
       operationId: restartRound
       tags:
       - sessions

@@ -2,7 +2,7 @@
 
 Ein Scrum-Team schätzt GitLab-Issues synchron: Der Scrum Master legt eine Sitzung an, teilt Link
 oder Session-ID, wählt ein Issue und gibt es frei. Die Entwickler wählen verdeckt eine Karte, der
-Scrum Master löst auf, startet bei Bedarf eine neue Runde und übernimmt den vereinbarten Wert als
+Scrum Master löst auf, lässt bei Bedarf erneut schätzen und übernimmt den vereinbarten Wert als
 Kommentar an das GitLab-Issue. Lösung der Coding Challenge Planning Poker
 ([Frontend-README](https://github.com/buchner-org/coding-challenge/blob/main/planning-poker/frontend/README.md),
 [Backend-README](https://github.com/buchner-org/coding-challenge/blob/main/planning-poker/backend/README.md)).
@@ -159,7 +159,7 @@ wenn GitLab den Header weglässt.
 | `DISCUSSION` | Schätzung starten | Scrum Master | `VOTING`, Frist aus dem Timer |
 | `VOTING` | Auflösung | Scrum Master | `REVEALED` |
 | `VOTING` | Frist erreicht | Server | `REVEALED` |
-| `REVEALED` | Neue Runde | Scrum Master | `DISCUSSION`, Rundennummer plus 1 |
+| `REVEALED` | Erneut schätzen | Scrum Master | `VOTING`, Rundennummer plus 1, Frist aus dem Timer (ADR 0012) |
 | `REVEALED` | Bestätigung | Scrum Master | `LOBBY` |
 
 In `DISCUSSION` sehen alle das aktive Issue, die Karten sind gesperrt: Stimme, Auflösung und

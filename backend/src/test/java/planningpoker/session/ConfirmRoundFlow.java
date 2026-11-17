@@ -90,6 +90,10 @@ final class ConfirmRoundFlow {
 
     void playRound(String... cards) {
         startVoting().statusCode(204);
+        voteAndReveal(cards);
+    }
+
+    void voteAndReveal(String... cards) {
         for (int i = 0; i < cards.length; i++) {
             vote(i, cards[i]);
         }
