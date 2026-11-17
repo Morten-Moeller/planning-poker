@@ -1,14 +1,14 @@
 ---
 id: "0031"
 title: Design Werkbank, Teil E, Start und Beitritt
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-17
 updated: 2026-11-17
-pr: ""
-note: freigegeben in der Session
+pr: "#31"
+note: alle Kriterien erfüllt
 ---
 
 # Design Werkbank, Teil E, Start und Beitritt
