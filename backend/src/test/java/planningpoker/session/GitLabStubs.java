@@ -100,6 +100,39 @@ final class GitLabStubs {
                 .willReturn(json(status, "{\"message\":\"gitlab failure text\"}")));
     }
 
+    static final String PROJECTS = "/api/v4/projects";
+
+    static String projectPath(String projectId) {
+        return PROJECTS + "/" + projectId;
+    }
+
+    static String projectJson(long id, String name, String path) {
+        return "{\"id\":" + id + ",\"name\":\"" + name + "\",\"path_with_namespace\":\"" + path
+                + "\",\"web_url\":\"https://gitlab.example/" + path + "\",\"description\":\"\"}";
+    }
+
+    static void projects(WireMockServer server, String body, String nextPage) {
+        ResponseDefinitionBuilder response = json(200, body);
+        if (nextPage != null) {
+            response = response.withHeader("x-next-page", nextPage);
+        }
+        server.stubFor(get(urlPathEqualTo(PROJECTS)).willReturn(response));
+    }
+
+    static void projectsFailing(WireMockServer server, int status) {
+        server.stubFor(get(urlPathEqualTo(PROJECTS)).willReturn(json(status, "{\"message\":\"gitlab failure text\"}")));
+    }
+
+    static void project(WireMockServer server, long id, String name, String path) {
+        server.stubFor(get(urlPathEqualTo(projectPath(String.valueOf(id))))
+                .willReturn(json(200, projectJson(id, name, path))));
+    }
+
+    static void projectFailing(WireMockServer server, String projectId, int status) {
+        server.stubFor(get(urlPathEqualTo(projectPath(projectId)))
+                .willReturn(json(status, "{\"message\":\"gitlab failure text\"}")));
+    }
+
     static ResponseDefinitionBuilder json(int status, String body) {
         return aResponse()
                 .withStatus(status)

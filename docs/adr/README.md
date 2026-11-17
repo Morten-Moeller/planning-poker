@@ -12,3 +12,4 @@ Wann ein ADR nötig ist: `harness/policies/adr.md`. Format MADR aus `0000-templa
 | 0005 | Obergrenzen und Projekt-Allowlist für die offenen Endpunkte, NOT_IMPLEMENTED entfällt | accepted | 2026-11-16 |
 | 0006 | Countdown-Timer als Sitzungseinstellung mit Frist im Snapshot und Auflösung durch den Server | accepted | 2026-11-16 |
 | 0007 | Eigener Fehlercode GITLAB_ACCESS_DENIED für 401 und 403 von GitLab | accepted | 2026-11-17 |
+| 0008 | Offene Projekt- und Issue-Auswahl vor dem Anlegen einer Sitzung | accepted | 2026-11-17 |

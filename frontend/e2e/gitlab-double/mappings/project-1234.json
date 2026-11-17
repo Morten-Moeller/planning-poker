@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/v4/projects/1234"
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "id": 1234,
+      "name": "Planning Poker Test",
+      "path_with_namespace": "group/project",
+      "web_url": "https://gitlab.example/group/project"
+    }
+  }
+}

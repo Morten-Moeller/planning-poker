@@ -56,6 +56,22 @@ const calls: Call[] = [
     authenticated: true,
   },
   {
+    name: 'searchProjects',
+    call: (api) => api.searchProjects({ search: 'pok', page: 2 }),
+    method: 'GET',
+    url: '/api/projects?search=pok&page=2',
+    body: null,
+    authenticated: false,
+  },
+  {
+    name: 'searchProjectIssues',
+    call: (api) => api.searchProjectIssues('group/app', { search: 'login' }),
+    method: 'GET',
+    url: '/api/projects/group%2Fapp/issues?search=login',
+    body: null,
+    authenticated: false,
+  },
+  {
     name: 'selectIssue',
     call: (api) => api.selectIssue(SESSION_ID, { issueIid: 42 }),
     method: 'POST',

@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Planning Poker API
-  version: 2.2.0
+  version: 2.3.0
   description: |
     Commands go over REST under /api and answer without state. The state reaches every participant
     over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
@@ -480,6 +480,56 @@ components:
           - The round is already revealed.
         errorCode:
           $ref: "#/components/schemas/ErrorCode"
+    ProjectListResponse:
+      required:
+      - items
+      - nextPage
+      description: One page of the GitLab projects that a session can use.
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectSummary"
+          description: Projects of this page.
+        nextPage:
+          type:
+          - integer
+          - "null"
+          format: int32
+          description: Number of the next page; null on the last page.
+          examples:
+          - 2
+    ProjectSummary:
+      type: object
+      required:
+      - id
+      - name
+      - pathWithNamespace
+      - webUrl
+      description: "GitLab project with name, path and link."
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Numeric id of the project in GitLab.
+          examples:
+          - 1234
+        name:
+          type: string
+          description: Name of the project.
+          examples:
+          - Planning Poker
+        pathWithNamespace:
+          type: string
+          description: Path of the project with its group.
+          examples:
+          - group/planning-poker
+        webUrl:
+          type: string
+          description: Link to the project in GitLab.
+          examples:
+          - https://gitlab.com/group/planning-poker
     Role:
       description: Role of a participant. The server takes it from the token.
       type: string
@@ -709,6 +759,8 @@ components:
 tags:
 - name: platform
   description: Health of the backend.
+- name: projects
+  description: GitLab projects and their open issues before a session exists.
 - name: sessions
   description: "Sessions, participants and the commands of a round."
 paths:
@@ -725,6 +777,97 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /api/projects:
+    get:
+      summary: "Projects for a new session: the project allowlist when set, otherwise\
+        \ the projects of the GitLab token."
+      operationId: listProjects
+      tags:
+      - projects
+      parameters:
+      - description: "Page number, starting at 1."
+        name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          default: 1
+      - description: Text to search in name and path.
+        name: search
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: One page of projects.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectListResponse"
+        "400":
+          description: VALIDATION_ERROR
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          description: "GITLAB_ACCESS_DENIED, GITLAB_ERROR"
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+  /api/projects/{projectId}/issues:
+    get:
+      summary: Open issues of a project for a new session.
+      operationId: listProjectIssues
+      tags:
+      - projects
+      parameters:
+      - description: Id or path of the GitLab project.
+        name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: "Page number, starting at 1."
+        name: page
+        in: query
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          default: 1
+      - description: Text to search in title and description.
+        name: search
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: One page of open issues.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueListResponse"
+        "400":
+          description: VALIDATION_ERROR
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: PROJECT_NOT_ALLOWED
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "502":
+          description: "GITLAB_ACCESS_DENIED, GITLAB_ERROR"
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
   /api/sessions:
     post:
       summary: Create a session; the caller becomes the scrum master.
