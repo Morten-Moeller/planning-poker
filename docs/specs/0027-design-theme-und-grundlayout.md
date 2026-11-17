@@ -2,7 +2,7 @@
 id: "0027"
 title: Design Werkbank, Teil A, Theme und Grundlayout
 status: Review
-risk: high
+risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-17
@@ -53,6 +53,8 @@ Die Design-Dateien liegen versioniert unter `docs/design/`.
   - Das Motivfeld links neben dem Titel kommt mit Teil C.
 - **Grundlayout des Sitzungsraums:** Auf dem Desktop eine Spalte von 320 px für die Seitenleiste und eine Hauptspalte mit 32/48 px Innenabstand. Mobil wird gestapelt, die Seitenleiste steht unter dem Hauptbereich. Der Inhalt der Komponenten bleibt unverändert, er kommt mit B bis D.
 
+- **Favicon:** `favicon.ico` (16, 32 und 48 px) ersetzt das alte, dazu `favicon.svg` und `apple-touch-icon.png` (180 px), verlinkt in `index.html`. Ein Web-App-Manifest gehört nicht dazu.
+
 ### Nicht enthalten
 
 - **Inhalte der Teile B bis E:** Teilnehmer-Eintrag, Karten und Motive, Tisch, Bedienfeld, Dialoge, Verbindungsbanner, Start- und Beitrittsseite.
@@ -73,6 +75,7 @@ keine neuen; „Werkbank“ ist der Name des Designs, kein Domänenbegriff
 | A4 | Ein Button mit Tastaturfokus hat einen sichtbaren Rahmen in Primärfarbe (`outline-width` 3px). Bei Fokus per Maus fehlt er. | End-to-End `theme.spec.ts` |
 | A5 | Bei 375 px hat die Sitzungsseite in allen Phasen keinen horizontalen Scrollbalken, wie bisher. Auf dem Desktop ist die Seitenleiste 320 px breit. | End-to-End `frontend/e2e/layout.spec.ts` |
 | A6 | `docs/design/` enthält die drei Design-Dateien, die zwei SVGs und `README.md` mit Herkunft, Stand und Abweichungen. | Browser: Dateien im PR |
+| A8 | `index.html` verlinkt `favicon.ico` mit `sizes="16x16 32x32 48x48"`, `favicon.svg` als `image/svg+xml` und `apple-touch-icon.png` mit `sizes="180x180"`. Alle drei Pfade antworten im Dev-Server mit 200. | End-to-End `theme.spec.ts` |
 | A7 | `make check` und `make e2e` sind grün, alle bestehenden `data-testid` bleiben. | Aufruf `make check`, `make e2e` |
 
 ## Contracts
@@ -81,9 +84,8 @@ keine
 
 ## Risiko
 
-Stufe: high (bei der Umsetzung gemessen, siehe Offene Fragen)
-Begründung: Der Schlüsselwort-Eskalator hebt medium auf high, weil zwei neue Zeilen in
-`project-rules/` das Wort „tokens“ für Design-Tokens nutzen. Ohne ihn meldet `harness/scripts/risk-level.sh` medium für `frontend/src/` (Anwendungscode und
+Stufe: medium
+Begründung: `harness/scripts/risk-level.sh` meldet medium für `frontend/src/` (Anwendungscode und
 Styles). `docs/` und Tests sind low.
 Gates: G0 und G1 in dieser Session, G2 über das Label `human-approved`; `verify` läuft auch bei
 medium. Reviews: Code und Sicherheit.
@@ -105,7 +107,10 @@ Dateien:
 - `docs/design/assets/coffee-break.svg`: neu, aus Claude Design
 - `docs/design/assets/question-mark.svg`: neu, aus Claude Design
 - `frontend/src/styles.scss`: ändern, Theme, Tokens, Overrides, Fokus
-- `frontend/src/index.html`: ändern, IBM Plex statt Roboto
+- `frontend/src/index.html`: ändern, IBM Plex statt Roboto, Favicon-Links
+- `frontend/public/favicon.ico`: ersetzt, von der Person
+- `frontend/public/favicon.svg`: neu, von der Person
+- `frontend/public/apple-touch-icon.png`: neu, von der Person
 - `frontend/src/app/shell/app-shell.ts`: ändern, Session-ID und eigener Teilnehmer aus `SessionStore`
 - `frontend/src/app/shell/app-shell.html`: ändern, Kopfzeile
 - `frontend/src/app/shell/app-shell.scss`: ändern, Kopfzeile
@@ -135,6 +140,7 @@ Tests:
 | A5 | `layout.spec.ts` |
 | A6 | PR |
 | A7 | `make check`, `make e2e` |
+| A8 | `theme.spec.ts`: Links im `head` und `request.get` der drei Pfade |
 
 Testdaten: Sitzung über die Startseite, Issue 42 des GitLab-Doubles.
 
@@ -147,7 +153,8 @@ Contracts zu regenerieren: keine.
 - [x] Schnitt? → A Theme und Grundlayout, B Seitenleiste, C Tisch und Karten, D Bedienfeld, Dialoge und Banner (mit Vertragsänderung für Projektname, Gesamtzahl und `write-weight`), E Start und Beitritt. (Morten Möller, 2026-11-17)
 - [x] Automatische Auflösung bei Ablauf des Timers trotz Hinweis im Design-System? → Ja, wie O-01 und 0016; `docs/design/README.md` nennt die Abweichung. (Morten Möller, 2026-11-17)
 - [x] DesignSync im Worker nicht verfügbar, wer legt die Dateien ab? → Die Person exportiert sie aus Claude Design; die SVGs sind ihre lokalen Fassungen ohne die C2PA-Signatur-Metadaten der Originale, `docs/design/README.md` nennt das. (Morten Möller, 2026-11-17)
-- [x] Risikostufe: Eskalator „token“ meldet high für Design-Tokens in project-rules? → Formulierung auf „variables“ ändern, Stufe medium. Die Rechteprüfung des Workers hat die Änderung abgelehnt; es geht mit Stufe high weiter. (Morten Möller, 2026-11-17)
+- [x] Risikostufe: Eskalator „token“ meldet high für Design-Tokens in project-rules? → Formulierung auf „CSS variables“ ändern, Stufe medium; die Person hat die zwei Wörter selbst geändert, weil die Rechteprüfung des Workers die Änderung abgelehnt hat. (Morten Möller, 2026-11-17)
+- [x] Neues Favicon in Teil A, ohne Manifest? → Ja. (Morten Möller, 2026-11-17)
 
 ## Verifikationsplan
 

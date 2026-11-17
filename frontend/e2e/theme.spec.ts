@@ -127,3 +127,27 @@ test('a button shows the focus ring for keyboard focus only', async ({ page }) =
   await expect(button).toBeFocused();
   expect((await outline()).style).toBe('none');
 });
+
+test('the page links the favicon in three formats and serves them', async ({ page, request }) => {
+  await page.goto('/');
+
+  const icons = await page.evaluate(() =>
+    Array.from(
+      document.head.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]'),
+    ).map((link) => ({
+      rel: link.getAttribute('rel'),
+      href: link.getAttribute('href'),
+      type: link.getAttribute('type'),
+      sizes: link.getAttribute('sizes'),
+    })),
+  );
+  expect(icons).toEqual([
+    { rel: 'icon', href: 'favicon.ico', type: null, sizes: '16x16 32x32 48x48' },
+    { rel: 'icon', href: 'favicon.svg', type: 'image/svg+xml', sizes: null },
+    { rel: 'apple-touch-icon', href: 'apple-touch-icon.png', type: null, sizes: '180x180' },
+  ]);
+  for (const path of ['/favicon.ico', '/favicon.svg', '/apple-touch-icon.png']) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(200);
+  }
+});

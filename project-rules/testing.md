@@ -122,7 +122,7 @@ change touches.
   notes in the double, and opens an unknown session id with a stored token;
   `layout.spec.ts` (spec 0019) joins one developer at a viewport of 375×800 and checks the
   320 px side column at 1440×900 (spec 0027); `theme.spec.ts` (spec 0027) reads the theme
-  tokens under `emulateMedia({ colorScheme })`, the fonts and the keyboard focus on the start
+  CSS variables under `emulateMedia({ colorScheme })`, the fonts and the keyboard focus on the start
   page and joins two developers (`Ben`, and `Cem` at 375×800) for the toolbar.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.

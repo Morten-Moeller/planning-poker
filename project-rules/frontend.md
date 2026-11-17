@@ -115,7 +115,7 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   specification names the value.
 - Theme „Werkbank“ (spec 0027, design files in `docs/design/`): `mat.theme` with the blue palette
   and `theme-type: color-scheme`; `mat.theme-overrides` sets the fixed values of One Light and,
-  under `prefers-color-scheme: dark`, of One Dark. There is no switch in the UI. Own tokens next
+  under `prefers-color-scheme: dark`, of One Dark. There is no switch in the UI. Own CSS variables next
   to `--mat-sys-*`: `--app-on-surface-muted`, `--app-success`, `--app-warning` with their
   containers, `--app-font-mono`, `--app-label-section`, `--app-value-card`, `--app-value-id`,
   `--app-space-xs` to `--app-space-3xl` and `--app-corner-control`. Buttons, button toggles and
