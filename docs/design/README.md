@@ -55,6 +55,3 @@ Zeichnung ist gleich.
 - **Höchstzahl (Teil E):** Der Entwurf nennt die Zahl laufender Sitzungen („Es laufen bereits 20
   Sitzungen“). Das Backend liefert diese Zahl nicht; die Anwendung zeigt den bestehenden Text zu
   `LIMIT_REACHED`.
-- **Kartenrücken der Beitrittsseite (Teil E):** Die Reihe der fünf Kartenrücken über dem Titel
-  entfällt. Die Farben der Motive stehen nur im Sitzungsraum und in der Kopfzeile; eine dritte
-  Kopie entsteht dafür nicht.

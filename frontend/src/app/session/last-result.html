@@ -45,6 +45,17 @@
             >Als Kommentar in GitLab gespeichert</span
           ></span
         >
+        @if (issueUrl(); as url) {
+          <a
+            class="open"
+            data-testid="last-result-open"
+            [href]="url"
+            target="_blank"
+            [rel]="'noopener noreferrer'"
+            i18n="@@lastResult.open"
+            >In GitLab öffnen ↗</a
+          >
+        }
       </div>
     </div>
   </section>

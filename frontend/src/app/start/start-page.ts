@@ -11,15 +11,17 @@ import {
   Subject,
   catchError,
   combineLatest,
-  debounceTime,
+  debounce,
   distinctUntilChanged,
   filter,
   map,
+  merge,
   of,
   skip,
   startWith,
   switchMap,
   tap,
+  timer,
 } from 'rxjs';
 import type { ErrorCode } from '../api/api-error';
 import { ApiService, IssueSummary, ProjectSummary } from '../api/api.service';
@@ -61,6 +63,7 @@ function idle<T>(): SearchResult<T> {
 interface SearchQuery {
   projectId: string;
   text: string;
+  all?: boolean;
 }
 
 @Component({
@@ -84,6 +87,7 @@ export class StartPage {
   private readonly router = inject(Router);
 
   private readonly healthChecks = new Subject<void>();
+  private readonly projectFocus = new Subject<void>();
 
   protected readonly backendReachable = toSignal(
     this.healthChecks.pipe(
@@ -142,14 +146,22 @@ export class StartPage {
     const projectText = textOf(this.createForm.controls.gitlabProjectId.valueChanges);
     const issueText = textOf(this.createForm.controls.issueIid.valueChanges);
 
-    projectText
-      .pipe(
+    const projectField = this.createForm.controls.gitlabProjectId;
+    merge(
+      projectText.pipe(
         skip(1),
-        map((text) => ({ projectId: '', text })),
+        map((text): SearchQuery => ({ projectId: '', text })),
+      ),
+      this.projectFocus.pipe(
+        filter(() => projectField.value.trim() === ''),
+        map((): SearchQuery => ({ projectId: '', text: '', all: true })),
+      ),
+    )
+      .pipe(
         this.search(
           this.projects,
-          (query) => query.text !== '' && !WHOLE_NUMBER.test(query.text),
-          (query) => this.api.searchProjects({ search: query.text }),
+          (query) => query.all === true || (query.text !== '' && !WHOLE_NUMBER.test(query.text)),
+          (query) => this.api.searchProjects(query.text === '' ? {} : { search: query.text }),
         ),
         takeUntilDestroyed(destroyRef),
       )
@@ -186,7 +198,7 @@ export class StartPage {
             result.set(idle());
           }
         }),
-        debounceTime(SEARCH_DELAY_MS),
+        debounce((query) => timer(query.all === true ? 0 : SEARCH_DELAY_MS)),
         switchMap((query) =>
           searchable(query)
             ? request(query).pipe(
@@ -212,6 +224,10 @@ export class StartPage {
     }
     this.errorState.clear();
     return { items: [], searched: true, error: message };
+  }
+
+  protected showAllProjects(): void {
+    this.projectFocus.next();
   }
 
   protected checkBackend(): void {

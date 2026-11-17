@@ -15,26 +15,27 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import planningpoker.gitlab.WireMockGitLab;
+import planningpoker.session.GitLabStubs.HeldGitLab;
+import planningpoker.session.GitLabStubs.HeldResponses;
 
 @QuarkusTest
-@WithTestResource(WireMockGitLab.class)
+@WithTestResource(HeldGitLab.class)
 class ConfirmRoundTest {
 
     private static final String PROBLEM = "application/problem+json";
     private static final String NOTES = GitLabStubs.notesPath(GitLabStubs.PROJECT, GitLabStubs.ISSUE);
     private static final String ISSUE = GitLabStubs.issuePath(GitLabStubs.PROJECT, GitLabStubs.ISSUE);
-    private static final int DELAY_BELOW_TIMEOUT_MILLIS = (int) WireMockGitLab.TIMEOUT.toMillis() * 7 / 10;
-    private static final int DELAY_ABOVE_TIMEOUT_MILLIS = (int) WireMockGitLab.TIMEOUT.toMillis() * 2 + 500;
+    private static final int DELAY_ABOVE_TIMEOUT_MILLIS = (int) HeldGitLab.TIMEOUT.toMillis() * 2 + 500;
     private static final String COMMENT_AFTER_TWO_ROUNDS = "**Planning Poker: Ergebnis 5**\n\n"
             + "Runden: 2. Letzte Runde: 3 (1 Stimme), 5 (3 Stimmen), 8 (1 Stimme). Durchschnitt 5,2.";
 
@@ -48,6 +49,11 @@ class ConfirmRoundTest {
         GitLabStubs.defaultIssue(gitlab);
         GitLabStubs.note(gitlab, GitLabStubs.PROJECT, GitLabStubs.ISSUE);
         flow = ConfirmRoundFlow.create(5);
+    }
+
+    @AfterEach
+    void releaseHeldResponses() {
+        HeldResponses.release();
     }
 
     @Test
@@ -182,7 +188,7 @@ class ConfirmRoundTest {
 
     @Test
     void writesOneCommentForTwoFastConfirmationsAndBlocksCommandsMeanwhile() {
-        GitLabStubs.noteDelayed(gitlab, GitLabStubs.PROJECT, GitLabStubs.ISSUE, DELAY_BELOW_TIMEOUT_MILLIS);
+        GitLabStubs.noteHeld(gitlab, GitLabStubs.PROJECT, GitLabStubs.ISSUE);
         flow.revealedRound("5", "8");
 
         CompletableFuture<Void> firstFinished =
@@ -201,6 +207,7 @@ class ConfirmRoundTest {
                 .body("errorCode", equalTo("INVALID_STATE"));
         flow.snapshotOf(flow.asScrumMaster()).body("round.confirming", equalTo(true));
 
+        HeldResponses.release();
         firstFinished.join();
         gitlab.verify(1, postRequestedFor(urlPathEqualTo(NOTES)));
         flow.snapshotOf(flow.asScrumMaster())
@@ -210,7 +217,7 @@ class ConfirmRoundTest {
 
     @Test
     void acceptsAJoinWhileTheCommentIsWritten() {
-        GitLabStubs.noteDelayed(gitlab, GitLabStubs.PROJECT, GitLabStubs.ISSUE, DELAY_BELOW_TIMEOUT_MILLIS);
+        GitLabStubs.noteHeld(gitlab, GitLabStubs.PROJECT, GitLabStubs.ISSUE);
         flow.revealedRound("5", "8");
 
         CompletableFuture<Long> confirmFinished = CompletableFuture.supplyAsync(() -> {
@@ -221,16 +228,14 @@ class ConfirmRoundTest {
         SessionApiTest.join(
                 flow.sessionId, "Late " + UUID.randomUUID().toString().substring(0, 8));
         long joinFinished = System.nanoTime();
+        HeldResponses.release();
 
         assertTrue(joinFinished < confirmFinished.join(), "the join waited for the GitLab call");
         flow.snapshotOf(flow.asScrumMaster()).body("phase", equalTo("LOBBY")).body("participants", hasSize(7));
     }
 
     private void awaitNoteRequest() {
-        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-        while (gitlab.findAll(postRequestedFor(urlPathEqualTo(NOTES))).isEmpty()) {
-            assertTrue(System.nanoTime() < deadline, "GitLab did not receive the comment for " + NOTES);
-            Thread.onSpinWait();
-        }
+        assertTrue(
+                HeldResponses.awaitRequest(Duration.ofSeconds(5)), "GitLab did not receive the comment for " + NOTES);
     }
 }

@@ -1,7 +1,7 @@
 ---
 id: "0032"
 title: Projektliste beim Fokus und Nachträge zum Design-Rework
-status: approved
+status: Review
 risk: medium
 adrs: []
 owner: Morten Möller
@@ -51,6 +51,11 @@ Specs 0027 bis 0031. Bezug: R-01 (Projekt und Issue beim Anlegen), 0022 (Projekt
   - `ConfirmRoundTest.writesOneCommentForTwoFastConfirmationsAndBlocksCommandsMeanwhile` scheitert unter Last. Die Verzögerung der Notiz beträgt dort 700 ms. Läuft der Test langsamer, ist die Bestätigung vor den Prüfungen fertig.
   - Der Test hält die Antwort von GitLab, bis die Prüfungen gelaufen sind, zum Beispiel über eine von einem Latch gesteuerte WireMock-Erweiterung oder eine Verzögerung nahe am Timeout eines eigenen Testprofils. Keine Prüfung wird gelockert.
   - `acceptsAJoinWhileTheCommentIsWritten` nutzt dasselbe Muster, wenn es dort dieselbe Lücke gibt.
+- **Kartenleiste** (Ergänzung vom 2026-11-17): Der offene Fächer (`card-deck`) und der gesperrte Fächer in der Diskussion (`card-deck-locked`, gerendert von `round-status`) sind höchstens 1000 px breit und horizontal zentriert. Die Karten bleiben hochformatig wie im Design (84 × 124). Mobil bleiben die 6 Spalten wie bisher.
+- **Issue-Nummer im Kopf des aktiven Issues** (Ergänzung vom 2026-11-17): `active-issue-iid` bekommt dieselbe Schriftgröße und Zeilenhöhe wie die h2 des aktiven Issues, bleibt grau (`--app-on-surface-muted`), mit normalem Gewicht und in Plex Mono.
+- **Teilnehmerstatus nach der Auflösung** (Ergänzung vom 2026-11-17): In `REVEALED` zeigt die Teilnehmerliste bei einem Entwickler ohne Stimme „Nicht geschätzt“ in `--app-on-surface-muted` statt „○ Ausstehend“, der Chip bleibt gestrichelt. In `VOTING` bleibt „○ Ausstehend“, „✓ Hat geschätzt“ gilt in beiden Phasen. Die Testid `participant-vote-status` bleibt.
+- **„Kopiert“ ausblenden** (Ergänzung vom 2026-11-17): „✓ Kopiert“ im Teilen-Bereich verschwindet nach 3 Sekunden; ein erneuter Klick startet die 3 Sekunden neu. Der Fehlerhinweis bleibt, bis erneut kopiert wird. Der Timer wird beim Zerstören der Komponente aufgeräumt. Die Testids `copy-link-done` und `copy-session-id-done` bleiben.
+- **Tisch bündig** (Ergänzung vom 2026-11-17): Alle Plätze einer Reihe am Tisch (`seat-table`) haben dieselbe Kartenhöhe und Oberkante, die Namen stehen auf einer Linie; Zusatzzeilen verschieben die Karten nicht. In `REVEALED` zeigt ein Platz ohne Stimme „–“ in gedämpfter Farbe und darunter „nicht geschätzt“; in `VOTING` bleibt „…“ mit „ausstehend“. Das gilt auch mobil.
 
 ### Nicht enthalten
 
@@ -63,16 +68,21 @@ keine neuen
 
 ## Akzeptanzkriterien
 
-| Nr | Kriterium | Prüfung |
-|---|---|---|
-| A1 | Fokus auf das leere Feld „GitLab-Projekt“ ruft `GET /api/projects` ohne `search` auf und zeigt die Einträge mit Name, Pfad und ID. Tippen von „pok“ ruft mit `search=pok` auf, „1234“ ruft nichts auf. | Unit `frontend/src/app/start/start-page.spec.ts` |
-| A2 | Im Browser gegen das GitLab-Double öffnet ein Klick ins leere Feld die Liste. Die Auswahl setzt die ID, und das Issue-Feld zeigt danach seine Liste. | End-to-End `frontend/e2e/project-picker.spec.ts` |
-| A3 | Die Motivtabelle steht in genau einer SCSS-Datei. `app-shell.scss`, `session-page.scss` und `join-page.scss` enthalten keine Farbwerte der Motive mehr. Die berechneten `--app-card-accent` je `data-motif` sind hell und dunkel unverändert. | Aufruf `grep` im PR-Text; End-to-End `frontend/e2e/design-sidebar.spec.ts` (Farbwert je Motiv) |
-| A4 | Die Beitrittsseite zeigt fünf Kartenrücken mit den Mustern der Motive, `aria-hidden="true"`. `docs/design/README.md` nennt die Abweichung nicht mehr. | Unit `frontend/src/app/join/join-page.spec.ts` |
-| A5 | „Zuletzt geschätzt“ zeigt mit `project.webUrl` den Link auf `…/-/issues/42` mit `target="_blank"` und `rel="noopener noreferrer"`. Ohne `project` fehlt der Link. | Unit `frontend/src/app/session/last-result.spec.ts` |
-| A6 | `project-rules/frontend.md` und `testing.md` nennen die Testids, Mappings und E2E-Fälle aus dem Scope. Die Regelprüfung meldet keinen Doku-Hinweis mehr für die Dateien aus 0029 bis 0031. | Aufruf `harness/scripts/review-rules.sh` im PR |
-| A7 | `ConfirmRoundTest` läuft 20 Mal hintereinander grün, auch während parallel ein zweites `make test` läuft. Die Prüfungen sind dieselben wie vorher. | Aufruf `./mvnw test -Dtest=ConfirmRoundTest` in einer Schleife, Ergebnis im PR-Text |
-| A8 | `make check` und `make e2e` sind grün. | Aufruf `make check`, `make e2e` |
+| Nr  | Kriterium                                                                                                                                                                                                                                                            | Prüfung                                                                                                                                                |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A1  | Fokus auf das leere Feld „GitLab-Projekt“ ruft `GET /api/projects` ohne `search` auf und zeigt die Einträge mit Name, Pfad und ID. Tippen von „pok“ ruft mit `search=pok` auf, „1234“ ruft nichts auf.                                                               | Unit `frontend/src/app/start/start-page.spec.ts`                                                                                                       |
+| A2  | Im Browser gegen das GitLab-Double öffnet ein Klick ins leere Feld die Liste. Die Auswahl setzt die ID, und das Issue-Feld zeigt danach seine Liste.                                                                                                                 | End-to-End `frontend/e2e/project-picker.spec.ts`                                                                                                       |
+| A3  | Die Motivtabelle steht in genau einer SCSS-Datei. `app-shell.scss`, `session-page.scss` und `join-page.scss` enthalten keine Farbwerte der Motive mehr. Die berechneten `--app-card-accent` je `data-motif` sind hell und dunkel unverändert.                        | Aufruf `grep` im PR-Text; End-to-End `frontend/e2e/design-sidebar.spec.ts` (Farbwert je Motiv)                                                         |
+| A4  | Die Beitrittsseite zeigt fünf Kartenrücken mit den Mustern der Motive, `aria-hidden="true"`. `docs/design/README.md` nennt die Abweichung nicht mehr.                                                                                                                | Unit `frontend/src/app/join/join-page.spec.ts`                                                                                                         |
+| A5  | „Zuletzt geschätzt“ zeigt mit `project.webUrl` den Link auf `…/-/issues/42` mit `target="_blank"` und `rel="noopener noreferrer"`. Ohne `project` fehlt der Link.                                                                                                    | Unit `frontend/src/app/session/last-result.spec.ts`                                                                                                    |
+| A6  | `project-rules/frontend.md` und `testing.md` nennen die Testids, Mappings und E2E-Fälle aus dem Scope. Die Regelprüfung meldet keinen Doku-Hinweis mehr für die Dateien aus 0029 bis 0031.                                                                           | Aufruf `harness/scripts/review-rules.sh` im PR                                                                                                         |
+| A7  | `ConfirmRoundTest` läuft 20 Mal hintereinander grün, auch während parallel ein zweites `make test` läuft. Die Prüfungen sind dieselben wie vorher.                                                                                                                   | Aufruf `./mvnw test -Dtest=ConfirmRoundTest` in einer Schleife, Ergebnis im PR-Text                                                                    |
+| A8  | `make check` und `make e2e` sind grün.                                                                                                                                                                                                                               | Aufruf `make check`, `make e2e`                                                                                                                        |
+| A9  | Bei 1920 px Viewport ist die Kartenleiste höchstens 1000 px breit und horizontal zentriert; jede Karte ist höher als breit; bei 375 px unverändert 6 Spalten.                                                                                                        | End-to-End `frontend/e2e/voting-round.spec.ts`                                                                                                         |
+| A10 | `active-issue-iid` hat dieselbe berechnete `font-size` wie die h2 des aktiven Issues, `font-weight` 400 und die Farbe von `--app-on-surface-muted`.                                                                                                                  | End-to-End `frontend/e2e/session-room.spec.ts` mit `getComputedStyle`                                                                                  |
+| A11 | In `REVEALED` zeigt ein Entwickler ohne Stimme „Nicht geschätzt“, in `VOTING` „○ Ausstehend“; „✓ Hat geschätzt“ in beiden Phasen.                                                                                                                                    | Unit `frontend/src/app/session/participant-list.spec.ts`                                                                                               |
+| A12 | „✓ Kopiert“ verschwindet nach 3 s; ein zweiter Klick nach 2 s verlängert auf 3 s ab dem zweiten Klick; der Fehlerhinweis bleibt.                                                                                                                                     | Unit `frontend/src/app/session/share-session.spec.ts` mit Fake-Timern                                                                                  |
+| A13 | In `REVEALED` mit einer Stimme und einem Entwickler ohne Stimme haben beide Plätze dieselbe Oberkante und Höhe der Karte und die Namen dieselbe Grundlinie; der Platz ohne Stimme zeigt „–“ und „nicht geschätzt“; dasselbe in `VOTING` für verdeckt und ausstehend. | End-to-End `frontend/e2e/voting-round.spec.ts` mit Bounding Box (1440 px und 375 px); Unit `frontend/src/app/session/seat-table.spec.ts` für die Texte |
 
 ## Contracts
 
@@ -114,6 +124,19 @@ Dateien:
 - `project-rules/testing.md`: ändern, A6
 - `backend/src/test/java/planningpoker/session/ConfirmRoundTest.java`: ändern, A7
 - `backend/src/test/java/planningpoker/session/GitLabStubs.java`: ändern, gehaltene Antwort, falls nötig
+- `frontend/src/app/session/card-deck.scss`: ändern, A9
+- `frontend/src/app/session/round-status.scss`: geprüft, A9; der gesperrte Fächer nutzt `card-deck`, keine Änderung nötig
+- `frontend/e2e/voting-round.spec.ts`: ändern, A9
+- `frontend/src/app/session/active-issue.scss`: ändern, A10
+- `frontend/e2e/session-room.spec.ts`: ändern, A10
+- `frontend/src/app/session/participant-list.html`: ändern, A11
+- `frontend/src/app/session/participant-list.ts`: geprüft, A11; keine Änderung nötig
+- `frontend/src/app/session/participant-list.spec.ts`: ändern, A11
+- `frontend/src/app/session/share-session.ts`: ändern, A12
+- `frontend/src/app/session/share-session.spec.ts`: ändern, A12
+- `frontend/src/app/session/seat-table.html`: ändern, A13
+- `frontend/src/app/session/seat-table.scss`: ändern, A13
+- `frontend/src/app/session/seat-table.spec.ts`: ändern, A13
 
 Schritte:
 
@@ -126,16 +149,21 @@ Schritte:
 
 Tests:
 
-| Kriterium | Test |
-|---|---|
-| A1 | `start-page.spec.ts` mit Fake-Timern und HTTP-Testing |
-| A2 | `project-picker.spec.ts` |
-| A3 | `grep`, `design-sidebar.spec.ts` |
-| A4 | `join-page.spec.ts` |
-| A5 | `last-result.spec.ts` |
-| A6 | `review-rules.sh` |
-| A7 | 20 Läufe von `ConfirmRoundTest` |
-| A8 | `make check`, `make e2e` |
+| Kriterium | Test                                                  |
+| --------- | ----------------------------------------------------- |
+| A1        | `start-page.spec.ts` mit Fake-Timern und HTTP-Testing |
+| A2        | `project-picker.spec.ts`                              |
+| A3        | `grep`, `design-sidebar.spec.ts`                      |
+| A4        | `join-page.spec.ts`                                   |
+| A5        | `last-result.spec.ts`                                 |
+| A6        | `review-rules.sh`                                     |
+| A7        | 20 Läufe von `ConfirmRoundTest`                       |
+| A8        | `make check`, `make e2e`                              |
+| A9        | `voting-round.spec.ts`                                |
+| A10       | `session-room.spec.ts`                                |
+| A11       | `participant-list.spec.ts`                            |
+| A12       | `share-session.spec.ts`                               |
+| A13       | `voting-round.spec.ts`, `seat-table.spec.ts`          |
 
 Testdaten: GitLab-Double mit Projekt `1234` und Issue 42; Backend über `GitLabStubs`.
 
@@ -143,7 +171,11 @@ Contracts zu regenerieren: keine.
 
 ## Offene Fragen
 
-keine
+- [x] Kartenleiste begrenzen? → Ja, höchstens 1000 px, zentriert, Karten hochformatig. (Morten Möller, 2026-11-17)
+- [x] Issue-Nummer im Kopf des aktiven Issues so groß wie die Überschrift? → Ja, grau und nicht fett. (Morten Möller, 2026-11-17)
+- [x] Status nach der Auflösung für Entwickler ohne Stimme? → „Nicht geschätzt“ statt „Ausstehend“. (Morten Möller, 2026-11-17)
+- [x] „Kopiert“ nach einiger Zeit ausblenden? → Ja, nach 3 Sekunden. (Morten Möller, 2026-11-17)
+- [x] Tisch-Layout bei Entwicklern ohne Stimme? → Plätze bündig, „–“ und „nicht geschätzt“ nach der Auflösung. (Morten Möller, 2026-11-17)
 
 ## Verifikationsplan
 

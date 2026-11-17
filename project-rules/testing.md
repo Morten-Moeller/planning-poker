@@ -9,11 +9,11 @@ database engine; integration tests run against the real `SessionRegistry` in mem
 
 ## Levels
 
-| Level | Tool | Runs in | Scope (harness/testing.md T1) |
-|---|---|---|---|
-| unit | JUnit 5 (backend), vitest with jsdom (frontend) | `make test` | pure calculations and isolated mechanisms, table-driven: domain transitions, round evaluation, store, guards |
-| integration | JUnit 5 with `@QuarkusTest`, REST Assured, WireMock for GitLab, Quarkus WebSocket client | `make test` | one feature through its public interface (HTTP route, WebSocket), real `SessionRegistry` in memory, no database (ADR 0002) |
-| end-to-end | Playwright (Chromium) in `frontend/e2e/` | `make e2e`, in CI with `e2e_in_ci: true` | user flows in the browser against backend profile `e2e` and the GitLab double |
+| Level       | Tool                                                                                     | Runs in                                  | Scope (harness/testing.md T1)                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| unit        | JUnit 5 (backend), vitest with jsdom (frontend)                                          | `make test`                              | pure calculations and isolated mechanisms, table-driven: domain transitions, round evaluation, store, guards               |
+| integration | JUnit 5 with `@QuarkusTest`, REST Assured, WireMock for GitLab, Quarkus WebSocket client | `make test`                              | one feature through its public interface (HTTP route, WebSocket), real `SessionRegistry` in memory, no database (ADR 0002) |
+| end-to-end  | Playwright (Chromium) in `frontend/e2e/`                                                 | `make e2e`, in CI with `e2e_in_ci: true` | user flows in the browser against backend profile `e2e` and the GitLab double                                              |
 
 ## Additions
 
@@ -36,24 +36,24 @@ database engine; integration tests run against the real `SessionRegistry` in mem
 Which tests belong to which source paths. `implement` and `/verify` run the tests of the areas a
 change touches.
 
-| Source path | Unit and integration | End-to-end |
-|---|---|---|
-| `backend/src/main/java/planningpoker/platform/` | `backend/src/test/java/planningpoker/platform/` | `frontend/e2e/health.spec.ts` |
-| `backend/src/main/java/planningpoker/session/` | `backend/src/test/java/planningpoker/session/` (contract and stub tests from spec 0002, domain from spec 0004) | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/project-picker.spec.ts`, `frontend/e2e/issue-filter.spec.ts` |
-| `backend/src/main/java/planningpoker/gitlab/` | `backend/src/test/java/planningpoker/gitlab/` (from spec 0003) | – |
-| `backend/src/main/java/planningpoker/realtime/` | `backend/src/test/java/planningpoker/realtime/` (from spec 0009) | `frontend/e2e/create-and-join.spec.ts` |
-| `frontend/src/app/start/` | `frontend/src/app/start/*.spec.ts` | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/project-picker.spec.ts` |
-| `frontend/src/app/api/` | `frontend/src/app/api/*.spec.ts` (from spec 0005) | – |
-| `frontend/src/app/shell/`, `frontend/src/styles.scss`, `frontend/src/index.html` | `frontend/src/app/shell/*.spec.ts` | `frontend/e2e/theme.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/design-sidebar.spec.ts` |
-| `frontend/src/app/join/` | `frontend/src/app/join/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/full-flow.spec.ts` |
-| `frontend/src/app/session/` | `frontend/src/app/session/*.spec.ts` | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/issue-filter.spec.ts`, `frontend/e2e/theme.spec.ts`, `frontend/e2e/design-sidebar.spec.ts` |
+| Source path                                                                                              | Unit and integration                                                                                           | End-to-end                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/src/main/java/planningpoker/platform/`                                                          | `backend/src/test/java/planningpoker/platform/`                                                                | `frontend/e2e/health.spec.ts`                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `backend/src/main/java/planningpoker/session/`                                                           | `backend/src/test/java/planningpoker/session/` (contract and stub tests from spec 0002, domain from spec 0004) | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/project-picker.spec.ts`, `frontend/e2e/issue-filter.spec.ts`                                                                                                                                                                                                                                                                                                                      |
+| `backend/src/main/java/planningpoker/gitlab/`                                                            | `backend/src/test/java/planningpoker/gitlab/` (from spec 0003)                                                 | –                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `backend/src/main/java/planningpoker/realtime/`                                                          | `backend/src/test/java/planningpoker/realtime/` (from spec 0009)                                               | `frontend/e2e/create-and-join.spec.ts`                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `frontend/src/app/start/`                                                                                | `frontend/src/app/start/*.spec.ts`                                                                             | `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/project-picker.spec.ts`                                                                                                                                                                                                                                                                                                                            |
+| `frontend/src/app/api/`                                                                                  | `frontend/src/app/api/*.spec.ts` (from spec 0005)                                                              | –                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `frontend/src/app/shell/`, `frontend/src/styles.scss`, `frontend/src/styles/`, `frontend/src/index.html` | `frontend/src/app/shell/*.spec.ts`                                                                             | `frontend/e2e/theme.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/design-sidebar.spec.ts`                                                                                                                                                                                                                                                                                                                                      |
+| `frontend/src/app/join/`                                                                                 | `frontend/src/app/join/*.spec.ts`                                                                              | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/full-flow.spec.ts`                                                                                                                                                                                                                                                                                                                                                                |
+| `frontend/src/app/session/`                                                                              | `frontend/src/app/session/*.spec.ts`                                                                           | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/issue-filter.spec.ts`, `frontend/e2e/theme.spec.ts`, `frontend/e2e/design-sidebar.spec.ts` |
 
 ## End-to-end
 
 - Start: the tests start the application themselves. `frontend/playwright.config.ts` has three
   `webServer` entries: the GitLab double (WireMock Standalone, `--root-dir
-  frontend/e2e/gitlab-double`, ready at `/__admin/health`), the backend (`./mvnw -q -DskipTests
-  package`, then the jar with `-Dquarkus.profile=e2e` and
+frontend/e2e/gitlab-double`, ready at `/__admin/health`), the backend (`./mvnw -q -DskipTests
+package`, then the jar with `-Dquarkus.profile=e2e` and
   `-Dplanningpoker.gitlab.base-url=http://localhost:<GITLAB_DOUBLE_PORT>`) and the frontend dev
   server. `make gitlab-double` fetches the jar to `backend/target/gitlab-double/` (part of
   `make install`; `make e2e` runs it first). `make e2e` takes `harness/scripts/app-lock.sh`
@@ -85,12 +85,15 @@ change touches.
   them in their setup. Backend tests of the session area run with the test resource
   `WireMockGitLab` and stub GitLab through `backend/src/test/java/planningpoker/session/GitLabStubs.java`
   (issue 42 of project 1234 by default, searches, projects, failures, delays); every test resets the stubs
-  in its `@BeforeEach`. Tests of the realtime area use the same test resource with
-  `backend/src/test/java/planningpoker/realtime/RestCalls.java` (REST flow and the stub of issue
-  42) and `SocketClient.java` (WebSocket client with timeouts). GitLab data of the end-to-end
+  in its `@BeforeEach`. `ConfirmRoundTest` runs with the test resource `GitLabStubs.HeldGitLab`
+  (timeout 5 s): `noteHeld` holds the answer to the note until the test calls
+  `HeldResponses.release()`, so the checks during the confirmation do not depend on a delay
+  (spec 0032). Tests of the realtime area use the same test resource with
+  `backend/src/test/java/planningpoker/realtime/RestCalls.java` (REST flow and the stub of issue 42) and `SocketClient.java` (WebSocket client with timeouts). GitLab data of the end-to-end
   flows comes from the fixed mappings of the GitLab double in
   `frontend/e2e/gitlab-double/mappings/` (spec 0011): project `1234` with issues 42 and 43, the
-  issue search of the project (both issues), notes and weight of both issues; issue 404 answers
+  issue search of the project (both issues, header `X-Total`; also the mappings of the weight
+  filters, spec 0030), notes and weight of both issues; issue 404 answers
   404, issue 403 answers 403 (`issue-403.json`, spec 0021). The project search
   (`projects-search.json`) and project `1234` (`project-1234.json`) answer the project
   „Planning Poker Test“ with path `group/project` (spec 0022). Issue 44 (spec 0012) has `**fett**`, a `<script>` element, an `<img onerror>` and an
@@ -127,7 +130,16 @@ change touches.
   `layout.spec.ts` also checks at 375×800 that the side column stands under the main area (spec
   0028); `design-sidebar.spec.ts` (spec 0028) joins `Ben` on issue 42, compares `data-motif` of
   both roles before and after „Neue Runde“, confirms the result `5` (notes mapping of issue 42)
-  and checks `last-result` until the release of issue 43.
+  and checks `last-result` until the release of issue 43; it also compares the motif colours of
+  room, toolbar and the card backs of the join page light and dark (spec 0032).
+  `voting-round.spec.ts` chooses a card with the keyboard and checks the table, the 6 columns at
+  375 px (spec 0029) and the deck of at most 1000 px with portrait cards at 1920 px (spec 0032);
+  `consensus.spec.ts` checks the result under reduced motion (spec 0029);
+  `issue-filter.spec.ts` checks the project name and „von N Issues“, `result-round.spec.ts` the
+  error text in the confirm dialog (spec 0030); `create-and-join.spec.ts` checks the start and
+  join page at 375 px light and dark and the state `join-not-found` (spec 0031);
+  `project-picker.spec.ts` opens the project list with a click into the empty field (spec 0032);
+  `session-room.spec.ts` compares the size of `active-issue-iid` with the title (spec 0032).
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.
 

@@ -100,6 +100,20 @@ describe('JoinPage', () => {
     );
   });
 
+  it('shows the five card backs of the motifs above the title, hidden from assistive technology', () => {
+    const backs = element('join-card-backs');
+    const cards = Array.from(backs?.querySelectorAll<HTMLElement>('.back') ?? []);
+
+    expect(backs?.getAttribute('aria-hidden')).toBe('true');
+    expect(backs?.nextElementSibling?.querySelector('h1')).not.toBeNull();
+    expect(
+      cards.map((card) => getComputedStyle(card).getPropertyValue('--app-card-accent')),
+    ).toEqual(['#2f5fd0', '#0a6f8f', '#3a7a39', '#9a2299', '#8a5f00']);
+    expect(
+      cards.map((card) => getComputedStyle(card).getPropertyValue('--app-card-pattern-size')),
+    ).toEqual(['auto', '9px 9px', 'auto', 'auto', '12px 12px']);
+  });
+
   it('shows NAME_TAKEN at the name field and clears it with a new name', async () => {
     await submitName('Ben');
     fail('NAME_TAKEN', 409);
