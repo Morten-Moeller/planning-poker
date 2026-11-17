@@ -69,7 +69,12 @@ const formErrors: [string, number, string][] = [
   ['ISSUE_NOT_FOUND', 404, 'Das Issue wurde im GitLab-Projekt nicht gefunden.'],
   ['PROJECT_NOT_ALLOWED', 403, 'Für dieses GitLab-Projekt dürfen keine Sitzungen angelegt werden.'],
   ['LIMIT_REACHED', 409, 'Die Höchstzahl ist erreicht. Bitte später erneut versuchen.'],
-  ['GITLAB_ERROR', 502, 'GitLab hat nicht geantwortet.'],
+  [
+    'GITLAB_ACCESS_DENIED',
+    502,
+    'GitLab verweigert den Zugriff. Der GitLab-Token des Backends braucht Scope api und Rechte im Projekt.',
+  ],
+  ['GITLAB_ERROR', 502, 'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.'],
   ['VALIDATION_ERROR', 400, 'Die Eingabe ist ungültig.'],
 ];
 

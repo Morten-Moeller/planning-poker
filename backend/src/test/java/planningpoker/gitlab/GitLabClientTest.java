@@ -29,8 +29,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.stream.Stream;
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.jboss.logmanager.ExtLogRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -205,6 +210,48 @@ class GitLabClientTest {
         assertFalse(e.getMessage().contains(config.token()), e.getMessage());
         assertFalse(e.getMessage().contains(GITLAB_ERROR_TEXT), e.getMessage());
         assertFalse(e.getMessage().contains("invalid token"), e.getMessage());
+    }
+
+    @ParameterizedTest(name = "{0} with status {1} (0 = timeout) writes one WARN line")
+    @MethodSource("errorCases")
+    void writesOneWarnLineWithoutTokenOrGitLabText(String operation, int status, Reason reason) {
+        ResponseDefinitionBuilder response = status == 0
+                ? json(200, "{}").withFixedDelay(DELAY_ABOVE_TIMEOUT_MILLIS)
+                : json(status, GITLAB_ERROR_BODY);
+        gitlab.stubFor(stubFor(operation).willReturn(response));
+        List<ExtLogRecord> records = new CopyOnWriteArrayList<>();
+        Handler handler = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                records.add((ExtLogRecord) record);
+            }
+
+            @Override
+            public void flush() {}
+
+            @Override
+            public void close() {}
+        };
+        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(GitLabClient.class.getName());
+        logger.addHandler(handler);
+        try {
+            assertThrows(GitLabException.class, () -> call(operation));
+        } finally {
+            logger.removeHandler(handler);
+        }
+
+        assertEquals(1, records.size(), records.toString());
+        ExtLogRecord record = records.get(0);
+        String line = record.getFormattedMessage();
+        assertEquals(Level.WARNING.intValue(), record.getLevel().intValue(), line);
+        assertTrue(line.contains("operation=" + operation), line);
+        assertTrue(line.contains("projectId=" + PROJECT), line);
+        assertTrue(line.contains("status=" + status), line);
+        assertTrue(line.contains("reason=" + reason), line);
+        assertFalse(line.contains(config.token()), line);
+        assertFalse(line.contains(GITLAB_ERROR_TEXT), line);
+        assertFalse(line.contains("invalid token"), line);
+        assertEquals(null, record.getThrown(), line);
     }
 
     @Test

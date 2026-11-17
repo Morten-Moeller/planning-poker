@@ -106,7 +106,7 @@ public class SessionResource {
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     @APIResponse(
             responseCode = "502",
-            description = "GITLAB_ERROR",
+            description = "GITLAB_ACCESS_DENIED, GITLAB_ERROR",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response createSession(@NotNull @Valid CreateSessionRequest request) {
         String projectId = request.gitlabProjectId().strip();
@@ -198,7 +198,7 @@ public class SessionResource {
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     @APIResponse(
             responseCode = "502",
-            description = "GITLAB_ERROR",
+            description = "GITLAB_ACCESS_DENIED, GITLAB_ERROR",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response listIssues(
             @PathParam("id") @Parameter(description = SESSION_ID) String id,
@@ -241,7 +241,7 @@ public class SessionResource {
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     @APIResponse(
             responseCode = "502",
-            description = "GITLAB_ERROR",
+            description = "GITLAB_ACCESS_DENIED, GITLAB_ERROR",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response selectIssue(
             @PathParam("id") @Parameter(description = SESSION_ID) String id,
@@ -437,7 +437,7 @@ public class SessionResource {
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     @APIResponse(
             responseCode = "502",
-            description = "GITLAB_ERROR",
+            description = "GITLAB_ACCESS_DENIED, GITLAB_ERROR",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     public Response confirmRound(
             @PathParam("id") @Parameter(description = SESSION_ID) String id,

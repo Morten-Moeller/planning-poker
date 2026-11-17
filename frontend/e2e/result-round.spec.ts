@@ -214,7 +214,9 @@ test('a GitLab error stays in the dialog and the second attempt confirms the res
   await expect(dialog.getByTestId('confirm-submit')).toBeFocused();
   await anna.page.keyboard.press('Enter');
 
-  await expect(dialog.getByTestId('confirm-error')).toHaveText('GitLab hat nicht geantwortet.');
+  await expect(dialog.getByTestId('confirm-error')).toHaveText(
+    'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.',
+  );
   await expect(dialog.getByTestId('confirm-submit')).toHaveText('Erneut versuchen');
   await expect(dialog.getByRole('radio', { name: '8', exact: true })).toBeChecked();
   await expect(anna.page.getByTestId('error-banner')).toHaveCount(0);

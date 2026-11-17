@@ -93,7 +93,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
 - Errors: `planningpoker.platform.ErrorCode` holds every stable `errorCode` with its HTTP status
   (`VALIDATION_ERROR`, `INVALID_CARD`, `UNAUTHORIZED`, `FORBIDDEN_ROLE`, `SESSION_NOT_FOUND`,
   `ISSUE_NOT_FOUND`, `PROJECT_NOT_ALLOWED`, `NAME_TAKEN`, `INVALID_STATE`, `LIMIT_REACHED`,
-  `GITLAB_ERROR`). Code throws `ApiException(ErrorCode, detail)`; `ApiExceptionMapper`
+  `GITLAB_ACCESS_DENIED`, `GITLAB_ERROR`). Code throws `ApiException(ErrorCode, detail)`; `ApiExceptionMapper`
   writes RFC 9457 `application/problem+json` (`ProblemDetail`) and unwraps an `ApiException`
   that Jackson wrapped while reading a body (unknown card). `ValidationExceptionMapper` maps
   Bean Validation failures to 400 `VALIDATION_ERROR`. Domain code throws typed exceptions; only
@@ -138,8 +138,13 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   `application/problem+json` with its `errorCode` and status.
 - GitLab at the boundary: `GitLabIssues` (`planningpoker.session`) loads and searches issues
   through `GitLabClient` and maps `GitLabException` to `ApiException` (`NOT_FOUND` of a single
-  issue to `ISSUE_NOT_FOUND`, everything else to `GITLAB_ERROR` with a fixed detail text, never
-  the GitLab message). The resource loads the issue before `SessionRegistry.update` (ADR 0002,
+  issue to `ISSUE_NOT_FOUND`, `UNAUTHORIZED` (GitLab 401 or 403) to `GITLAB_ACCESS_DENIED`,
+  everything else to `GITLAB_ERROR`, each with a fixed detail text, never the GitLab message;
+  ADR 0007). `ResultPublisher` uses the same mapping for the comment and the weight.
+  `GitLabClient` writes one line on `WARN` per error response and per missing or unreadable
+  response: operation (`loadIssue`, `searchIssues`, `addNote`, `setWeight`), project id (control
+  characters replaced), status (0 without a response) and reason; never the token, a header or
+  the GitLab response body. The resource loads the issue before `SessionRegistry.update` (ADR 0002,
   no GitLab call inside the lock) and hands the finished `Issue` to `Session.selectIssue`.
 - Accepted risk (plan, A-01, A-08, A-14): creating a session needs no login, and the backend
   reads the named project with its own GitLab token. Whoever creates a session can read title,

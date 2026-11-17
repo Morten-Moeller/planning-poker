@@ -4,8 +4,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import planningpoker.gitlab.GitLabClient;
 import planningpoker.gitlab.GitLabConfig;
 import planningpoker.gitlab.GitLabException;
-import planningpoker.platform.ApiException;
-import planningpoker.platform.ErrorCode;
 
 @ApplicationScoped
 public class ResultPublisher {
@@ -27,8 +25,7 @@ public class ResultPublisher {
             }
             client.addNote(projectId, iid, ResultComment.of(confirmation));
         } catch (GitLabException e) {
-            String detail = e.status() == 0 ? "GitLab did not answer." : "GitLab rejected the request.";
-            throw new ApiException(ErrorCode.GITLAB_ERROR, detail);
+            throw GitLabIssues.gitLabError(e);
         }
     }
 

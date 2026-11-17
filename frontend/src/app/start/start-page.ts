@@ -21,6 +21,7 @@ const CREATE_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
   'ISSUE_NOT_FOUND',
   'PROJECT_NOT_ALLOWED',
   'LIMIT_REACHED',
+  'GITLAB_ACCESS_DENIED',
   'GITLAB_ERROR',
   'VALIDATION_ERROR',
 ]);

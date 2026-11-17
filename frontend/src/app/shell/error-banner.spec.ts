@@ -16,7 +16,11 @@ const texts: [string, string][] = [
   ['NAME_TAKEN', 'Der Name ist in dieser Sitzung schon vergeben.'],
   ['INVALID_STATE', 'Die Aktion passt nicht zum aktuellen Stand der Sitzung.'],
   ['LIMIT_REACHED', 'Die Höchstzahl ist erreicht. Bitte später erneut versuchen.'],
-  ['GITLAB_ERROR', 'GitLab hat nicht geantwortet.'],
+  [
+    'GITLAB_ACCESS_DENIED',
+    'GitLab verweigert den Zugriff. Der GitLab-Token des Backends braucht Scope api und Rechte im Projekt.',
+  ],
+  ['GITLAB_ERROR', 'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.'],
   ['SOMETHING_NEW', 'Es ist ein Fehler aufgetreten.'],
 ];
 
