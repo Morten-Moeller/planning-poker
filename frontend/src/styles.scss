@@ -1,26 +1,217 @@
+@use 'sass:list';
+@use 'sass:map';
 @use '@angular/material' as mat;
+
+$plain: 'IBM Plex Sans', sans-serif;
+$mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+$type-scale: (
+  display-small: (
+    40px,
+    48px,
+    600,
+    -0.01em,
+  ),
+  headline-small: (
+    26px,
+    32px,
+    600,
+    0,
+  ),
+  title-large: (
+    20px,
+    28px,
+    600,
+    0,
+  ),
+  title-medium: (
+    16px,
+    24px,
+    600,
+    0,
+  ),
+  body-large: (
+    17px,
+    28px,
+    400,
+    0,
+  ),
+  body-medium: (
+    15px,
+    24px,
+    400,
+    0,
+  ),
+  body-small: (
+    13px,
+    20px,
+    400,
+    0,
+  ),
+  label-large: (
+    14px,
+    20px,
+    500,
+    0,
+  ),
+);
+
+@function type-overrides($scale) {
+  $result: ();
+  @each $name, $values in $scale {
+    $size: list.nth($values, 1);
+    $line-height: list.nth($values, 2);
+    $weight: list.nth($values, 3);
+    $tracking: list.nth($values, 4);
+    $result: map.merge(
+      $result,
+      (
+        $name: #{$weight} #{$size} #{'/'} #{$line-height} #{$plain},
+        #{$name}-font: $plain,
+        #{$name}-size: $size,
+        #{$name}-line-height: $line-height,
+        #{$name}-weight: $weight,
+        #{$name}-tracking: $tracking,
+      )
+    );
+  }
+  @return $result;
+}
+
+$light: (
+  primary: #2f5fd0,
+  on-primary: #ffffff,
+  primary-container: #dbe6fc,
+  on-primary-container: #142f6e,
+  surface: #fafafa,
+  surface-container-lowest: #ffffff,
+  surface-container-low: #f3f3f4,
+  surface-container: #ececee,
+  surface-container-high: #e5e5e6,
+  on-surface: #232428,
+  on-surface-variant: #383a42,
+  outline: #8a8d96,
+  outline-variant: #d4d5d9,
+  error: #b8352a,
+  error-container: #fbe2df,
+  on-error-container: #6e1a12,
+);
+
+$dark: (
+  primary: #61afef,
+  on-primary: #1d2026,
+  primary-container: #284566,
+  on-primary-container: #d3e7fb,
+  surface: #282c34,
+  surface-container-lowest: #1d2026,
+  surface-container-low: #21252b,
+  surface-container: #2c313a,
+  surface-container-high: #323844,
+  on-surface: #e6e9ef,
+  on-surface-variant: #abb2bf,
+  outline: #7f8794,
+  outline-variant: #3e4451,
+  error: #ef8a92,
+  error-container: #4a2a2f,
+  on-error-container: #ffd9dc,
+);
+
+$shape: (
+  corner-extra-small: 4px,
+  corner-small: 6px,
+  corner-medium: 10px,
+  corner-large: 12px,
+  corner-extra-large: 16px,
+);
 
 html {
   height: 100%;
-  --app-space-s: 8px;
-  --app-space-m: 16px;
+  color-scheme: light dark;
   @include mat.theme(
     (
       color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        primary: mat.$blue-palette,
+        theme-type: color-scheme,
       ),
-      typography: Roboto,
+      typography: (
+        plain-family: 'IBM Plex Sans',
+        brand-family: 'IBM Plex Sans',
+      ),
       density: 0,
+    )
+  );
+  @include mat.theme-overrides(map.merge(map.merge($light, $shape), type-overrides($type-scale)));
+
+  --app-space-xs: 4px;
+  --app-space-s: 8px;
+  --app-space-m: 16px;
+  --app-space-l: 24px;
+  --app-space-xl: 32px;
+  --app-space-2xl: 48px;
+  --app-space-3xl: 64px;
+  --app-corner-control: 8px;
+  --app-font-mono: #{$mono};
+  --app-label-section: 500 12px / 16px #{$mono};
+  --app-value-card: 600 38px / 38px #{$mono};
+  --app-value-id: 400 15px / 24px #{$mono};
+  --app-on-surface-muted: #5d606b;
+  --app-success: #3a7a39;
+  --app-success-container: #dcefd9;
+  --app-on-success-container: #1f4a1e;
+  --app-warning: #8a5f00;
+  --app-warning-container: #fbedc9;
+  --app-on-warning-container: #4f3600;
+
+  @include mat.button-overrides(
+    (
+      filled-container-shape: var(--app-corner-control),
+      outlined-container-shape: var(--app-corner-control),
+      protected-container-shape: var(--app-corner-control),
+      tonal-container-shape: var(--app-corner-control),
+      text-container-shape: var(--mat-sys-corner-small),
+    )
+  );
+  @include mat.button-toggle-overrides(
+    (
+      shape: var(--app-corner-control),
+      selected-state-background-color: var(--mat-sys-primary-container),
+      selected-state-text-color: var(--mat-sys-on-primary-container),
+    )
+  );
+  @include mat.dialog-overrides(
+    (
+      container-shape: var(--mat-sys-corner-extra-large),
     )
   );
 }
 
+@media (prefers-color-scheme: dark) {
+  html {
+    @include mat.theme-overrides($dark);
+
+    --app-on-surface-muted: #9da5b4;
+    --app-success: #98c379;
+    --app-success-container: #2f3d2b;
+    --app-on-success-container: #d4ecc6;
+    --app-warning: #e5c07b;
+    --app-warning-container: #4a3d26;
+    --app-on-warning-container: #f7e3bd;
+  }
+}
+
 body {
-  color-scheme: light dark;
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
   margin: 0;
   height: 100%;
+}
+
+body :focus-visible:not(.mat-mdc-input-element, .mat-mdc-select) {
+  outline: 3px solid var(--mat-sys-primary);
+  outline-offset: 3px;
+}
+
+body :is(.mat-mdc-unelevated-button, .mat-mdc-raised-button):focus-visible {
+  box-shadow: 0 0 0 3px var(--mat-sys-surface);
 }
