@@ -59,7 +59,10 @@ h3 {
   font: var(--mat-sys-title-medium);
 }
 
-.outlier-hint {
+.outlier-hint,
+.turnout-hint,
+.not-voted,
+.empty {
   margin: 0;
   font: var(--mat-sys-body-large);
 }
