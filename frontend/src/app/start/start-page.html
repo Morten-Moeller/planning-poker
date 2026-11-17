@@ -1,39 +1,97 @@
-<h1 i18n="@@start.title">Planning Poker</h1>
-<p data-testid="health-status">
-  @switch (backendReachable()) {
-    @case (true) {
-      <ng-container i18n="@@start.backendReachable">Backend erreichbar</ng-container>
-    }
-    @case (false) {
-      <ng-container i18n="@@start.backendUnreachable">Backend nicht erreichbar</ng-container>
-    }
-    @default {
-      <ng-container i18n="@@start.backendChecking">Backend wird geprüft</ng-container>
-    }
+<div class="intro">
+  <div
+    class="health"
+    role="status"
+    [class.up]="backendReachable() === true"
+    [class.down]="backendDown()"
+  >
+    <span class="health-icon" aria-hidden="true">
+      @switch (backendReachable()) {
+        @case (true) {
+          ●
+        }
+        @case (false) {
+          ✕
+        }
+        @default {
+          ◌
+        }
+      }
+    </span>
+    <span data-testid="health-status">
+      @switch (backendReachable()) {
+        @case (true) {
+          <ng-container i18n="@@start.backendReachable">Backend erreichbar</ng-container>
+        }
+        @case (false) {
+          <ng-container i18n="@@start.backendUnreachable">Backend nicht erreichbar</ng-container>
+        }
+        @default {
+          <ng-container i18n="@@start.backendChecking">Backend wird geprüft …</ng-container>
+        }
+      }
+    </span>
+  </div>
+  @if (backendDown()) {
+    <div class="note note-error health-note" role="alert" data-testid="health-down">
+      <span class="health-note-text" i18n="@@start.backendDownHint">
+        Ohne Backend lassen sich keine Sitzungen erstellen oder betreten.
+      </span>
+      <button
+        mat-stroked-button
+        type="button"
+        class="retry"
+        data-testid="health-retry"
+        (click)="checkBackend()"
+        i18n="@@start.backendRetry"
+      >
+        ↻ Erneut prüfen
+      </button>
+    </div>
   }
-</p>
+  <h1 i18n="@@start.title">Issues gemeinsam schätzen</h1>
+  <p class="lead" i18n="@@start.lead">
+    Der Scrum Master erstellt die Sitzung und teilt den Link. Das Team tritt mit Namen bei und
+    schätzt verdeckt.
+  </p>
+</div>
 
-<section class="forms">
+<div class="panels">
   <form
-    class="form"
+    class="panel panel-create"
     [formGroup]="createForm"
     (ngSubmit)="createSession()"
     data-testid="create-form"
   >
-    <h2 i18n="@@start.create.title">Sitzung erstellen</h2>
+    <div class="panel-head">
+      <h2 i18n="@@start.create.title">Sitzung erstellen</h2>
+      <span class="panel-sub" i18n="@@start.create.subtitle">Für den Scrum Master</span>
+    </div>
+    @if (createError(); as text) {
+      <div class="note note-error" role="alert">
+        <span class="note-icon" aria-hidden="true">⚠</span>
+        <span data-testid="create-error">{{ text }}</span>
+      </div>
+    }
     <mat-form-field>
-      <mat-label i18n="@@start.create.name">Name</mat-label>
+      <mat-label i18n="@@start.create.name">Dein Name</mat-label>
       <input matInput formControlName="name" data-testid="create-name" autocomplete="name" />
       @if (
         createForm.controls.name.hasError('required') ||
         createForm.controls.name.hasError('pattern')
       ) {
-        <mat-error data-testid="create-name-error" i18n="@@start.create.nameRequired">
-          Bitte einen Namen eingeben
+        <mat-error>
+          <span class="error-icon" aria-hidden="true">⚠</span>
+          <span data-testid="create-name-error" i18n="@@start.create.nameRequired"
+            >Bitte einen Namen eingeben</span
+          >
         </mat-error>
       } @else if (createForm.controls.name.hasError('maxlength')) {
-        <mat-error data-testid="create-name-error" i18n="@@start.create.nameTooLong">
-          Der Name darf höchstens 30 Zeichen haben
+        <mat-error>
+          <span class="error-icon" aria-hidden="true">⚠</span>
+          <span data-testid="create-name-error" i18n="@@start.create.nameTooLong"
+            >Der Name darf höchstens 30 Zeichen haben</span
+          >
         </mat-error>
       }
     </mat-form-field>
@@ -64,19 +122,26 @@
           }
         }
       </mat-autocomplete>
+      <mat-hint i18n="@@start.create.projectHint"
+        >Name, Pfad oder ID. Eingabe von Hand möglich.</mat-hint
+      >
       @if (createForm.controls.gitlabProjectId.invalid) {
-        <mat-error data-testid="create-project-error" i18n="@@start.create.projectRequired">
-          Bitte die GitLab-Projekt-ID eingeben
+        <mat-error>
+          <span class="error-icon" aria-hidden="true">⚠</span>
+          <span data-testid="create-project-error" i18n="@@start.create.projectRequired"
+            >Bitte die GitLab-Projekt-ID eingeben</span
+          >
         </mat-error>
       }
     </mat-form-field>
     @if (projects().error; as message) {
-      <p class="form-error" role="alert" data-testid="create-project-search-error">
-        {{ message }}
-      </p>
+      <div class="note note-error" role="alert">
+        <span class="note-icon" aria-hidden="true">⚠</span>
+        <span data-testid="create-project-search-error">{{ message }}</span>
+      </div>
     }
     <mat-form-field>
-      <mat-label i18n="@@start.create.issue">Issue</mat-label>
+      <mat-label i18n="@@start.create.issue">Issue-Nummer</mat-label>
       <input
         matInput
         formControlName="issueIid"
@@ -87,7 +152,7 @@
       <mat-autocomplete #issuePanel="matAutocomplete" class="pick-panel">
         @for (issue of issues().items; track issue.iid) {
           <mat-option [value]="'' + issue.iid" data-testid="create-issue-option">
-            #{{ issue.iid }} {{ issue.title }}
+            <span class="pick-iid">#{{ issue.iid }}</span> {{ issue.title }}
           </mat-option>
         } @empty {
           @if (issues().searched && issues().error === null) {
@@ -102,55 +167,87 @@
         }
       </mat-autocomplete>
       @if (createForm.controls.issueIid.invalid) {
-        <mat-error data-testid="create-issue-error" i18n="@@start.create.issueInvalid">
-          Bitte eine Issue-Nummer ab 1 eingeben
+        <mat-error>
+          <span class="error-icon" aria-hidden="true">⚠</span>
+          <span data-testid="create-issue-error" i18n="@@start.create.issueInvalid"
+            >Bitte eine Issue-Nummer ab 1 eingeben</span
+          >
         </mat-error>
       }
     </mat-form-field>
     @if (issues().error; as message) {
-      <p class="form-error" role="alert" data-testid="create-issue-search-error">
-        {{ message }}
-      </p>
-    }
-    @if (createError(); as text) {
-      <p class="form-error" role="alert" data-testid="create-error">{{ text }}</p>
+      <div class="note note-error" role="alert">
+        <span class="note-icon" aria-hidden="true">⚠</span>
+        <span data-testid="create-issue-search-error">{{ message }}</span>
+      </div>
     }
     <button
       mat-flat-button
       type="submit"
+      class="submit"
       data-testid="create-submit"
-      [disabled]="creating()"
-      i18n="@@start.create.submit"
+      [disabled]="creating() || backendDown()"
     >
-      Sitzung erstellen
+      @if (backendDown()) {
+        <ng-container i18n="@@start.create.submitWithoutBackend"
+          >Sitzung erstellen (Backend fehlt)</ng-container
+        >
+      } @else {
+        <ng-container i18n="@@start.create.submit">Sitzung erstellen</ng-container>
+      }
     </button>
   </form>
 
-  <form class="form" [formGroup]="joinForm" (ngSubmit)="joinBySessionId()" data-testid="join-form">
-    <h2 i18n="@@start.join.title">Sitzung beitreten</h2>
+  <form
+    class="panel panel-join"
+    [formGroup]="joinForm"
+    (ngSubmit)="joinBySessionId()"
+    data-testid="join-form"
+  >
+    <div class="panel-head">
+      <h2 i18n="@@start.join.title">Sitzung beitreten</h2>
+      <span class="panel-sub" i18n="@@start.join.subtitle"
+        >Mit der Session-ID vom Scrum Master</span
+      >
+    </div>
     <mat-form-field>
       <mat-label i18n="@@start.join.sessionId">Session-ID</mat-label>
       <input
         matInput
+        class="session-id-input"
         formControlName="sessionId"
         data-testid="join-session-id-input"
         autocomplete="off"
         spellcheck="false"
         (input)="uppercaseSessionId()"
       />
+      <mat-hint i18n="@@start.join.sessionIdHint">8 Zeichen, z. B. K7P2QX9M</mat-hint>
       @if (joinForm.controls.sessionId.invalid) {
-        <mat-error data-testid="join-session-id-error" i18n="@@start.join.sessionIdInvalid">
-          Die Session-ID hat 8 Zeichen aus Großbuchstaben und Ziffern
+        <mat-error>
+          <span class="error-icon" aria-hidden="true">⚠</span>
+          <span data-testid="join-session-id-error">
+            @if (sessionIdLength() !== 8) {
+              <ng-container i18n="@@start.join.sessionIdLength"
+                >Die Session-ID hat 8 Zeichen ({{ sessionIdLength() }} eingegeben)</ng-container
+              >
+            } @else {
+              <ng-container i18n="@@start.join.sessionIdInvalid"
+                >Die Session-ID hat 8 Zeichen aus Großbuchstaben und Ziffern</ng-container
+              >
+            }
+          </span>
         </mat-error>
       }
     </mat-form-field>
     <button
       mat-stroked-button
       type="submit"
+      class="submit"
       data-testid="join-session-id-submit"
+      [disabled]="backendDown()"
       i18n="@@start.join.submit"
     >
-      Beitreten
+      Weiter
     </button>
   </form>
-</section>
+</div>

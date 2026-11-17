@@ -1,35 +1,74 @@
-<h1 i18n="@@join.title">Sitzung beitreten</h1>
-<p>
-  <span i18n="@@join.sessionIdLabel">Session-ID:</span>
-  <code data-testid="join-session-id">{{ sessionId() }}</code>
-</p>
-<form class="form" [formGroup]="joinForm" (ngSubmit)="join()" data-testid="join-form">
-  <h2 i18n="@@join.nameTitle">Mit welchem Namen?</h2>
-  <mat-form-field>
-    <mat-label i18n="@@join.name">Name</mat-label>
-    <input matInput formControlName="name" data-testid="join-name" autocomplete="name" />
-    @if (
-      joinForm.controls.name.hasError('required') || joinForm.controls.name.hasError('pattern')
-    ) {
-      <mat-error data-testid="join-name-error" i18n="@@join.nameRequired">
-        Bitte einen Namen eingeben
-      </mat-error>
-    } @else if (joinForm.controls.name.hasError('maxlength')) {
-      <mat-error data-testid="join-name-error" i18n="@@join.nameTooLong">
-        Der Name darf höchstens 30 Zeichen haben
-      </mat-error>
-    }
-  </mat-form-field>
-  @if (joinError(); as text) {
-    <p class="form-error" role="alert" data-testid="join-error">{{ text }}</p>
+<section class="join">
+  <div class="head">
+    <span class="session-chip"
+      ><span i18n="@@join.sessionIdLabel">Sitzung</span>
+      <code data-testid="join-session-id">{{ sessionId() }}</code></span
+    >
+    <h1 i18n="@@join.nameTitle">Mit welchem Namen?</h1>
+    <span class="role-hint" data-testid="join-role-hint" i18n="@@join.roleHint"
+      >Du trittst als Entwickler bei. Der Name ist für alle sichtbar.</span
+    >
+  </div>
+  @if (sessionNotFound()) {
+    <div class="note note-error not-found" role="alert" data-testid="join-not-found">
+      <span class="not-found-title"
+        ><span class="error-icon" aria-hidden="true">⚠</span>
+        <ng-container i18n="@@join.notFoundTitle">Sitzung nicht gefunden</ng-container></span
+      >
+      <span class="not-found-text"
+        ><ng-container i18n="@@join.notFoundText"
+          >Der Link ist abgelaufen oder falsch.</ng-container
+        >
+        <a routerLink="/" data-testid="join-not-found-home" i18n="@@join.notFoundHome"
+          >Zur Startseite</a
+        ></span
+      >
+    </div>
+  } @else {
+    <form class="form" [formGroup]="joinForm" (ngSubmit)="join()" data-testid="join-form">
+      @if (joinError(); as text) {
+        <div class="note note-error" role="alert">
+          <span class="note-icon" aria-hidden="true">⚠</span>
+          <span data-testid="join-error">{{ text }}</span>
+        </div>
+      }
+      <mat-form-field>
+        <mat-label i18n="@@join.name">Name</mat-label>
+        <input matInput formControlName="name" data-testid="join-name" autocomplete="name" />
+        <mat-hint i18n="@@join.nameHint">Höchstens 30 Zeichen</mat-hint>
+        @if (joinForm.controls.name.getError('nameTaken'); as text) {
+          <mat-error>
+            <span class="error-icon" aria-hidden="true">⚠</span>
+            <span data-testid="join-error">{{ text }}</span>
+          </mat-error>
+        } @else if (
+          joinForm.controls.name.hasError('required') || joinForm.controls.name.hasError('pattern')
+        ) {
+          <mat-error>
+            <span class="error-icon" aria-hidden="true">⚠</span>
+            <span data-testid="join-name-error" i18n="@@join.nameRequired"
+              >Bitte einen Namen eingeben</span
+            >
+          </mat-error>
+        } @else if (joinForm.controls.name.hasError('maxlength')) {
+          <mat-error>
+            <span class="error-icon" aria-hidden="true">⚠</span>
+            <span data-testid="join-name-error" i18n="@@join.nameTooLong"
+              >Der Name darf höchstens 30 Zeichen haben</span
+            >
+          </mat-error>
+        }
+      </mat-form-field>
+      <button
+        mat-flat-button
+        type="submit"
+        class="submit"
+        data-testid="join-submit"
+        [disabled]="joining()"
+        i18n="@@join.join"
+      >
+        Beitreten
+      </button>
+    </form>
   }
-  <button
-    mat-flat-button
-    type="submit"
-    data-testid="join-submit"
-    [disabled]="joining()"
-    i18n="@@join.join"
-  >
-    Beitreten
-  </button>
-</form>
+</section>

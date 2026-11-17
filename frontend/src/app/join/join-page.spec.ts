@@ -15,10 +15,25 @@ class EmptyPage {}
 const SESSION_ID = 'K7P2QX9M';
 const JOIN_URL = `/api/sessions/${SESSION_ID}/participants`;
 
+function spacedText(element: Element | null | undefined): string {
+  if (!element) {
+    return '';
+  }
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  const parts: string[] = [];
+  while (walker.nextNode()) {
+    const part = (walker.currentNode.textContent ?? '').replace(/\s+/g, ' ').trim();
+    if (part !== '') {
+      parts.push(part);
+    }
+  }
+  return parts.join(' ');
+}
+
 const formErrors: [string, number, string][] = [
-  ['SESSION_NOT_FOUND', 404, 'Die Sitzung wurde nicht gefunden oder ist abgelaufen.'],
   ['NAME_TAKEN', 409, 'Der Name ist in dieser Sitzung schon vergeben.'],
   ['LIMIT_REACHED', 409, 'Die Höchstzahl ist erreicht. Bitte später erneut versuchen.'],
+  ['VALIDATION_ERROR', 400, 'Die Eingabe ist ungültig.'],
 ];
 
 describe('JoinPage', () => {
@@ -35,6 +50,7 @@ describe('JoinPage', () => {
         provideRouter([
           { path: 'session/:id/join', component: JoinPage },
           { path: 'session/:id', component: EmptyPage },
+          { path: '', pathMatch: 'full', component: EmptyPage },
         ]),
       ],
     });
@@ -61,6 +77,63 @@ describe('JoinPage', () => {
     element('join-submit')?.click();
     await harness.fixture.whenStable();
   }
+
+  function fail(code: string, status: number): void {
+    http
+      .expectOne(JOIN_URL)
+      .flush(
+        { type: 'about:blank', title: 'Error', status, detail: 'detail', errorCode: code },
+        { status, statusText: 'Error' },
+      );
+  }
+
+  it('shows the session id as chip, the role and the name rule', () => {
+    expect(text('join-session-id')).toBe(SESSION_ID);
+    expect(spacedText(element('join-session-id')?.closest('.session-chip'))).toBe(
+      'Sitzung K7P2QX9M',
+    );
+    expect(text('join-role-hint')).toBe(
+      'Du trittst als Entwickler bei. Der Name ist für alle sichtbar.',
+    );
+    expect(harness.routeNativeElement?.querySelector('mat-hint')?.textContent?.trim()).toBe(
+      'Höchstens 30 Zeichen',
+    );
+  });
+
+  it('shows NAME_TAKEN at the name field and clears it with a new name', async () => {
+    await submitName('Ben');
+    fail('NAME_TAKEN', 409);
+    await harness.fixture.whenStable();
+
+    const error = element('join-error');
+    expect(error?.closest('mat-form-field')).not.toBeNull();
+    expect(spacedText(error?.closest('mat-error'))).toBe(
+      '⚠ Der Name ist in dieser Sitzung schon vergeben.',
+    );
+
+    const input = element('join-name') as HTMLInputElement;
+    input.value = 'Bea';
+    input.dispatchEvent(new Event('input'));
+    await harness.fixture.whenStable();
+    expect(element('join-error')).toBeNull();
+  });
+
+  it('replaces the form with the state session not found on SESSION_NOT_FOUND', async () => {
+    await submitName('Ben');
+    fail('SESSION_NOT_FOUND', 404);
+    await harness.fixture.whenStable();
+
+    expect(element('join-form')).toBeNull();
+    expect(spacedText(element('join-not-found'))).toBe(
+      '⚠ Sitzung nicht gefunden Der Link ist abgelaufen oder falsch. Zur Startseite',
+    );
+    expect(TestBed.inject(ErrorState).error()).toBeNull();
+    expect(TestBed.inject(TokenStore).identity(SESSION_ID)).toBeNull();
+
+    element('join-not-found-home')?.click();
+    await harness.fixture.whenStable();
+    expect(router.url).toBe('/');
+  });
 
   it('joins the session in capital letters from a link in small letters', async () => {
     await harness.navigateByUrl(`/session/${SESSION_ID.toLowerCase()}/join`);
@@ -104,15 +177,10 @@ describe('JoinPage', () => {
   });
 
   it.each(formErrors)(
-    'shows %s at the form and stays on the page',
+    'shows %s with the name kept and stays on the page',
     async (code, status, message) => {
       await submitName('Ben');
-      http
-        .expectOne(JOIN_URL)
-        .flush(
-          { type: 'about:blank', title: 'Error', status, detail: 'detail', errorCode: code },
-          { status, statusText: 'Error' },
-        );
+      fail(code, status);
       await harness.fixture.whenStable();
 
       expect(text('join-error')).toBe(message);

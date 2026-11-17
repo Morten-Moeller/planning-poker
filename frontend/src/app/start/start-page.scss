@@ -1,34 +1,192 @@
-.forms {
+@use '@angular/material' as mat;
+
+:host {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: calc(var(--app-space-xl) + var(--app-space-s));
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: calc(var(--app-space-l) + var(--app-space-m)) var(--app-space-xl)
+    calc(var(--app-space-3xl) - var(--app-space-s));
+  box-sizing: border-box;
+  color: var(--mat-sys-on-surface-variant);
+
+  @include mat.form-field-overrides(
+    (
+      outlined-container-shape: var(--app-corner-control),
+    )
+  );
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
   gap: var(--app-space-m);
 }
 
-.form {
+.health {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-s);
+  font: var(--mat-sys-label-large);
+  font-weight: 400;
+  color: var(--app-on-surface-muted);
+
+  &.up {
+    color: var(--app-success);
+  }
+
+  &.down {
+    color: var(--mat-sys-error);
+  }
+}
+
+.health-icon {
+  font-family: var(--app-font-mono);
+  font-weight: 600;
+}
+
+.note {
+  display: flex;
+  gap: var(--app-space-s);
+  padding: var(--app-space-s) var(--app-space-m);
+  border-radius: var(--app-corner-control);
+  font: var(--mat-sys-label-large);
+  font-weight: 400;
+}
+
+.note-error {
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.note-icon {
+  font-family: var(--app-font-mono);
+  font-weight: 600;
+}
+
+.health-note {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-s) var(--app-space-m);
+  font: var(--mat-sys-body-medium);
+}
+
+.health-note-text {
+  flex: 1 1 240px;
+}
+
+.retry {
+  --mat-button-outlined-label-text-color: var(--mat-sys-on-error-container);
+  --mat-button-outlined-outline-color: var(--mat-sys-on-error-container);
+}
+
+h1 {
+  margin: var(--app-space-s) 0 0;
+  font: var(--mat-sys-display-small);
+  letter-spacing: var(--mat-sys-display-small-tracking);
+  color: var(--mat-sys-on-surface);
+}
+
+.lead {
+  margin: 0;
+  max-width: 560px;
+  font: var(--mat-sys-body-large);
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--app-space-l);
+  align-items: start;
+}
+
+.panel {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--app-space-s);
-  width: 100%;
-  max-width: 24rem;
+  gap: var(--app-space-m);
+  min-width: 0;
+  padding: calc(var(--app-space-l) + var(--app-space-xs));
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-large);
+  box-sizing: border-box;
 }
 
-.form mat-form-field {
+.panel-create {
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+.panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  h2 {
+    margin: 0;
+    font: var(--mat-sys-title-large);
+    color: var(--mat-sys-on-surface);
+  }
+}
+
+.panel-sub {
+  font: var(--mat-sys-label-large);
+  font-weight: 400;
+  color: var(--app-on-surface-muted);
+}
+
+.panel mat-form-field {
   width: 100%;
 }
 
-.form-error {
-  margin: 0;
-  color: var(--mat-sys-error);
-  font: var(--mat-sys-body-medium);
+.panel-join .session-id-input {
+  font-family: var(--app-font-mono);
+  font-size: 18px;
+  letter-spacing: 0.12em;
+}
+
+.submit {
+  align-self: flex-start;
+  height: 44px;
 }
 
 .pick-title {
   display: block;
+  color: var(--mat-sys-on-surface);
+  font-weight: 500;
 }
 
 .pick-detail {
   display: block;
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--app-on-surface-muted);
   font: var(--mat-sys-body-small);
+  font-family: var(--app-font-mono);
+}
+
+.error-icon {
+  margin-inline-end: var(--app-space-xs);
+}
+
+.pick-iid {
+  font-family: var(--app-font-mono);
+  color: var(--app-on-surface-muted);
+}
+
+@media (max-width: 719.98px) {
+  :host {
+    gap: calc(var(--app-space-l) + var(--app-space-xs));
+    padding: var(--app-space-s) 0 var(--app-space-l);
+  }
+
+  h1 {
+    font: var(--mat-sys-headline-small);
+  }
+
+  .panels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panel {
+    padding: var(--app-space-l) var(--app-space-m);
+  }
 }
