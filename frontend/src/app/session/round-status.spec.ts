@@ -17,8 +17,15 @@ import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
 import { RoundStatus } from './round-status';
 
 const SESSION_ID = 'K7P2QX9M';
-const REVEAL_URL = `/api/sessions/${SESSION_ID}/round/reveal`;
-const START_URL = `/api/sessions/${SESSION_ID}/round/start`;
+const FOOTER_IDS = [
+  'card-deck',
+  'card-deck-locked',
+  'discussion-hint',
+  'round-start',
+  'round-reveal',
+  'all-voted-hint',
+  'pending-hint',
+];
 
 type Participant = SessionView['participants'][number];
 
@@ -72,7 +79,6 @@ describe('RoundStatus', () => {
     store.enter(SESSION_ID);
     http.expectOne(`/api/sessions/${SESSION_ID}`).flush(snapshot);
     fixture = TestBed.createComponent(RoundStatus);
-    fixture.componentRef.setInput('sessionId', SESSION_ID);
     await fixture.whenStable();
   }
 
@@ -89,10 +95,6 @@ describe('RoundStatus', () => {
 
   function text(id: string): string {
     return all(id)[0]?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-  }
-
-  function revealButton(): HTMLButtonElement {
-    return all('round-reveal')[0] as HTMLButtonElement;
   }
 
   it.each([
@@ -135,100 +137,33 @@ describe('RoundStatus', () => {
     expect(text('vote-counter')).toBe('1 von 2 haben geschätzt');
   });
 
-  it('shows no hint to the scrum master before every connected developer voted', async () => {
-    await open(votingScrumMaster);
+  it.each([
+    ['scrum master in DISCUSSION', discussionScrumMaster],
+    ['developer in DISCUSSION', discussionDeveloper],
+    [
+      'scrum master in VOTING',
+      { ...votingScrumMaster, round: { ...votingScrumMaster.round!, allVoted: true } },
+    ],
+    ['developer in VOTING', votingDeveloper],
+  ])('shows neither card deck nor action box to the %s', async (_case, snapshot) => {
+    await open(snapshot);
 
-    expect(all('all-voted-hint')).toHaveLength(0);
-    expect(revealButton().classList).toContain('mat-mdc-outlined-button');
+    expect(FOOTER_IDS.filter((id) => all(id).length > 0)).toEqual([]);
   });
 
-  it('shows the hint and the filled reveal button to the scrum master when all voted', async () => {
-    await open(votingScrumMaster);
-
-    await receive({ ...votingScrumMaster, round: { ...votingScrumMaster.round!, allVoted: true } });
-
-    const hint = all('all-voted-hint')[0];
-    expect(hint.getAttribute('role')).toBe('status');
-    expect(text('all-voted-hint')).toContain('Alle verbundenen Entwickler haben geschätzt');
-    expect(revealButton().classList).toContain('mat-mdc-unelevated-button');
-  });
-
-  it('renders neither hint nor reveal button for a developer', async () => {
-    await open({ ...votingDeveloper, round: { ...votingDeveloper.round!, allVoted: true } });
-
-    expect(all('all-voted-hint')).toHaveLength(0);
-    expect(all('round-reveal')).toHaveLength(0);
-    expect(all('vote-counter')).toHaveLength(1);
-  });
-
-  it('lets the scrum master reveal before every developer voted', async () => {
-    await open(votingScrumMaster);
-    expect(revealButton().disabled).toBe(false);
-
-    revealButton().click();
-    await fixture.whenStable();
-
-    const request = http.expectOne(REVEAL_URL);
-    expect(request.request.method).toBe('POST');
-    expect(revealButton().disabled).toBe(true);
-    request.flush(null, { status: 204, statusText: 'No Content' });
-    await fixture.whenStable();
-
-    expect(revealButton().disabled).toBe(false);
-  });
-
-  it('shows the hint without counter and start button to a developer in DISCUSSION', async () => {
+  it('shows phase, round and timer without counter or table in DISCUSSION', async () => {
     await open(discussionDeveloper);
-    expect(all('card-deck-locked')).toHaveLength(1);
-    expect(all('card-deck')).toHaveLength(0);
     expect(text('round-phase')).toBe('Diskussion');
     expect(text('round-number')).toBe('Runde 1');
     expect(text('discussion-timer')).toBe('◷ 1:00 · startet mit der Schätzung');
-
-    expect(text('discussion-hint')).toBe(
-      'Diskussion: Die Karten werden geöffnet, wenn der Scrum Master die Schätzung startet.',
-    );
-    expect(all('round-start')).toHaveLength(0);
     expect(all('vote-counter')).toHaveLength(0);
-    expect(all('round-reveal')).toHaveLength(0);
+    expect(all('seat-table')).toHaveLength(0);
   });
 
-  it('shows the start button with the timer to the scrum master and sends the start', async () => {
-    await open(discussionScrumMaster);
-    expect(text('discussion-hint')).toBe('Das Team diskutiert das Issue.');
-    expect(all('discussion-hint')[0].parentElement?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-      'Das Team diskutiert das Issue. Die Karten sind gesperrt, bis du die Schätzung startest. Timer: 1 min.',
-    );
-    expect(all('card-deck-locked')).toHaveLength(0);
-    const start = all('round-start')[0] as HTMLButtonElement;
-    expect(text('round-start')).toBe('Schätzung starten');
-    expect(text('round-start-timer')).toBe('Timer: 1 min');
-    expect(all('round-reveal')).toHaveLength(0);
+  it('shows no discussion timer without a timer', async () => {
+    await open({ ...discussionScrumMaster, timerSeconds: null });
 
-    start.click();
-    await fixture.whenStable();
-
-    const request = http.expectOne(START_URL);
-    expect(request.request.method).toBe('POST');
-    expect(start.disabled).toBe(true);
-    request.flush(null, { status: 204, statusText: 'No Content' });
-    await fixture.whenStable();
-    expect(start.disabled).toBe(false);
-  });
-
-  it.each([
-    ['no timer', null, null],
-    ['a timer outside the options', 45, 'Timer: 45 s'],
-  ])('shows the start button with %s', async (_case, seconds, expected) => {
-    await open({ ...discussionScrumMaster, timerSeconds: seconds });
-
-    expect(all('round-start')).toHaveLength(1);
-    if (expected === null) {
-      expect(all('round-start-timer')).toHaveLength(0);
-      expect(all('discussion-timer')).toHaveLength(0);
-    } else {
-      expect(text('round-start-timer')).toBe(expected);
-    }
+    expect(all('discussion-timer')).toHaveLength(0);
   });
 
   it.each([
@@ -259,39 +194,6 @@ describe('RoundStatus', () => {
 
     expect(all('seat-table')).toHaveLength(1);
     expect(all('card-deck')).toHaveLength(0);
-  });
-
-  it.each([
-    [[developer('Ben', true, true), developer('Cem', true, false)], 'Noch 1 Schätzung ausstehend.'],
-    [
-      [developer('Ben', true, false), developer('Cem', true, false), developer('Dan', true, false)],
-      'Noch 3 Schätzungen ausstehend.',
-    ],
-  ])('names the open votes to the scrum master %#', async (developers, expected) => {
-    await open(withParticipants(votingScrumMaster, developers));
-
-    expect(text('pending-hint')).toBe(`${expected} Du kannst auch vorher auflösen.`);
-    expect(all('pending-hint')[0].getAttribute('role')).toBe('status');
-  });
-
-  it.each([
-    [
-      [developer('Ben', true, true), developer('Finn', false, false)],
-      'Finn ist getrennt und wird nicht abgewartet.',
-    ],
-    [
-      [
-        developer('Ben', true, true),
-        developer('Finn', false, false),
-        developer('Gus', false, false),
-      ],
-      'Finn, Gus sind getrennt und werden nicht abgewartet.',
-    ],
-  ])('names the disconnected developers when all others voted %#', async (developers, absent) => {
-    await open(withParticipants(votingScrumMaster, developers, true));
-
-    expect(text('all-voted-hint')).toBe(`✓ Alle verbundenen Entwickler haben geschätzt. ${absent}`);
-    expect(all('pending-hint')).toHaveLength(0);
   });
 
   it('shows the name of the motif and the timer in the phase bar', async () => {

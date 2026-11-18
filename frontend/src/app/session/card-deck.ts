@@ -1,4 +1,13 @@
-import { Component, ElementRef, computed, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  afterRenderEffect,
+  computed,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ApiService } from '../api/api.service';
 import { SessionStore } from '../api/session-store';
 import { CardState, PokerCard } from './card';
@@ -17,7 +26,6 @@ const CHOOSE_KEYS = ['Enter', ' '];
 export class CardDeck {
   private readonly api = inject(ApiService);
   private readonly store = inject(SessionStore);
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly sessionId = input.required<string>();
   readonly locked = input(false);
@@ -26,6 +34,40 @@ export class CardDeck {
   protected readonly myVote = computed(() => this.store.round()?.myVote ?? null);
   protected readonly sending = signal(false);
   private readonly open = computed(() => !this.locked() && this.store.phase() === 'VOTING');
+  private readonly list = viewChild.required<ElementRef<HTMLElement>>('list');
+
+  constructor() {
+    afterRenderEffect(() => {
+      const vote = this.myVote();
+      const index = vote === null ? -1 : this.cards.indexOf(vote);
+      const button = this.buttons()[index];
+      if (button !== undefined) {
+        this.reveal(button);
+      }
+    });
+  }
+
+  protected onFocusin(event: FocusEvent): void {
+    if (event.target instanceof HTMLButtonElement && this.buttons().includes(event.target)) {
+      this.reveal(event.target);
+    }
+  }
+
+  private buttons(): HTMLButtonElement[] {
+    return Array.from(this.list().nativeElement.querySelectorAll<HTMLButtonElement>('button'));
+  }
+
+  private reveal(element: HTMLElement): void {
+    const list = this.list().nativeElement;
+    const padding = Number.parseFloat(getComputedStyle(list).scrollPaddingLeft) || 0;
+    const box = list.getBoundingClientRect();
+    const item = element.getBoundingClientRect();
+    if (item.left < box.left + padding) {
+      list.scrollLeft -= box.left + padding - item.left;
+    } else if (item.right > box.right - padding) {
+      list.scrollLeft += item.right - (box.right - padding);
+    }
+  }
 
   protected stateOf(card: Card): CardState {
     if (this.locked()) {
@@ -46,9 +88,7 @@ export class CardDeck {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
-    const buttons = Array.from(
-      this.host.nativeElement.querySelectorAll<HTMLButtonElement>('button'),
-    );
+    const buttons = this.buttons();
     const index = buttons.findIndex((button) => button === event.target);
     if (index < 0) {
       return;

@@ -71,65 +71,6 @@
   color: var(--app-on-surface-muted);
 }
 
-.box {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px var(--app-space-m);
-  padding: var(--app-space-m);
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--mat-sys-corner-medium);
-  background-color: var(--mat-sys-surface-container-low);
-}
-
-.box.ready {
-  border-color: var(--mat-sys-primary);
-  background-color: var(--mat-sys-primary-container);
-  color: var(--mat-sys-on-primary-container);
-}
-
-.box-text {
-  flex: 1 1 280px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.box > p {
-  flex: 1 1 260px;
-}
-
-.box-title {
-  margin: 0;
-  font-weight: 500;
-  color: inherit;
-}
-
-.box:not(.ready) .box-title {
-  color: var(--mat-sys-on-surface);
-}
-
-.box-detail {
-  margin: 0;
-  font: var(--mat-sys-label-large);
-  font-weight: 400;
-  color: var(--app-on-surface-muted);
-}
-
-.box > .box-detail {
-  font: var(--mat-sys-body-medium);
-  color: var(--mat-sys-on-surface-variant);
-}
-
-.action {
-  height: 48px;
-  padding: 0 var(--app-space-l);
-}
-
-.highlight {
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--mat-sys-primary) 25%, transparent);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .progress-value {
     transition: none;

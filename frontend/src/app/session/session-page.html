@@ -50,16 +50,13 @@
         <app-last-result />
       }
       @if (session.phase === 'DISCUSSION' || session.phase === 'VOTING') {
-        <app-round-status [sessionId]="session.sessionId" [motif]="motif()">
+        <app-round-status [motif]="motif()">
           @if (store.activeIssue(); as issue) {
             <app-active-issue [issue]="issue" />
           }
         </app-round-status>
-        @if (session.phase === 'VOTING' && !store.isScrumMaster()) {
-          <app-card-deck [sessionId]="session.sessionId" />
-        }
       } @else if (session.phase === 'REVEALED') {
-        <app-round-result [sessionId]="session.sessionId" [motif]="motif()">
+        <app-round-result [motif]="motif()">
           @if (store.activeIssue(); as issue) {
             <app-active-issue [issue]="issue" />
           }
@@ -68,6 +65,9 @@
         <app-active-issue [issue]="issue" />
       }
     </div>
+    @if (session.phase !== 'LOBBY') {
+      <app-round-footer class="footer" [sessionId]="session.sessionId" />
+    }
   </div>
 } @else if (gone()) {
   <div class="gone" role="alert" data-testid="session-gone">

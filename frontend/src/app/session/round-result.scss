@@ -118,14 +118,9 @@
 
 .turnout-hint,
 .not-voted,
-.empty,
-.waiting {
+.empty {
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
-}
-
-.waiting {
-  color: var(--app-on-surface-muted);
 }
 
 .stats {
@@ -218,18 +213,6 @@
   margin: 0;
   font: var(--mat-sys-body-small);
   color: var(--app-on-surface-muted);
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.action {
-  height: 44px;
-  padding: 0 20px;
 }
 
 @media (max-width: 599px) {

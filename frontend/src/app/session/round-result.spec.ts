@@ -13,7 +13,6 @@ import { Card } from './cards';
 import { RoundResult } from './round-result';
 
 const SESSION_ID = 'K7P2QX9M';
-const RESTART_URL = `/api/sessions/${SESSION_ID}/round/restart`;
 
 type Round = NonNullable<SessionView['round']>;
 
@@ -132,7 +131,6 @@ describe('RoundResult', () => {
     store.enter(SESSION_ID);
     http.expectOne(`/api/sessions/${SESSION_ID}`).flush(snapshot);
     fixture = TestBed.createComponent(RoundResult);
-    fixture.componentRef.setInput('sessionId', SESSION_ID);
     await fixture.whenStable();
   }
 
@@ -151,10 +149,6 @@ describe('RoundResult', () => {
 
   function texts(id: string): string[] {
     return all(id).map((node) => node.textContent?.replace(/\s+/g, ' ').trim() ?? '');
-  }
-
-  function button(id: string): HTMLButtonElement {
-    return all(id)[0] as HTMLButtonElement;
   }
 
   it('shows every vote with name and card', async () => {
@@ -276,18 +270,16 @@ describe('RoundResult', () => {
     expect(texts('result-counter')).toEqual(['2 Schätzungen · Finn war getrennt']);
   });
 
-  it('shows the waiting text to a developer and the actions to the scrum master', async () => {
-    await open(revealedDeveloper);
-    expect(texts('result-waiting')).toEqual([
-      'Der Scrum Master lässt erneut schätzen oder übernimmt das Ergebnis.',
-    ]);
-    fixture.destroy();
-    store.leave();
+  it.each([
+    ['scrum master', revealedScrumMaster],
+    ['developer', revealedDeveloper],
+  ])('shows neither result actions nor waiting text to the %s', async (_role, snapshot) => {
+    await open(snapshot);
 
-    await open(revealedScrumMaster);
+    expect(all('round-restart')).toHaveLength(0);
+    expect(all('result-accept')).toHaveLength(0);
     expect(all('result-waiting')).toHaveLength(0);
-    expect(texts('round-restart')).toEqual(['↻ Erneut schätzen']);
-    expect(texts('result-accept')).toEqual(['Ergebnis übernehmen …']);
+    expect(all('result-vote')).toHaveLength(2);
   });
 
   describe('under reduced motion', () => {
@@ -344,22 +336,6 @@ describe('RoundResult', () => {
     expect(all('consensus-confetti')).toHaveLength(0);
   });
 
-  it('renders the actions for the scrum master', async () => {
-    await open(revealedScrumMaster);
-
-    expect(button('round-restart').disabled).toBe(false);
-    expect(button('result-accept').disabled).toBe(false);
-    expect(all('confirming-hint')).toHaveLength(0);
-  });
-
-  it('renders no action for a developer', async () => {
-    await open(revealedDeveloper);
-
-    expect(all('round-restart')).toHaveLength(0);
-    expect(all('result-accept')).toHaveLength(0);
-    expect(all('result-vote')).toHaveLength(2);
-  });
-
   it.each([
     ['scrum master', revealedScrumMaster],
     ['developer', revealedDeveloper],
@@ -371,74 +347,6 @@ describe('RoundResult', () => {
     const hint = all('confirming-hint')[0];
     expect(hint.getAttribute('role')).toBe('status');
     expect(texts('confirming-hint')).toEqual(['Das Ergebnis wird nach GitLab geschrieben.']);
-  });
-
-  it('disables both actions while the result is written', async () => {
-    await open(withRound(revealedScrumMaster, { confirming: true }));
-
-    expect(button('round-restart').disabled).toBe(true);
-    expect(button('result-accept').disabled).toBe(true);
-
-    button('round-restart').click();
-    await fixture.whenStable();
-
-    http.expectNone(RESTART_URL);
-    expect(document.querySelector('[data-testid="confirm-dialog"]')).toBeNull();
-  });
-
-  it('starts a new round and blocks the button during the call', async () => {
-    await open(revealedScrumMaster);
-
-    button('round-restart').click();
-    await fixture.whenStable();
-
-    const request = http.expectOne(RESTART_URL);
-    expect(request.request.method).toBe('POST');
-    expect(button('round-restart').disabled).toBe(true);
-    request.flush(null, { status: 204, statusText: 'No Content' });
-    await fixture.whenStable();
-
-    expect(button('round-restart').disabled).toBe(false);
-  });
-
-  it('opens the result dialog', async () => {
-    await open(revealedScrumMaster);
-
-    button('result-accept').click();
-    await fixture.whenStable();
-
-    expect(document.querySelector('[data-testid="confirm-dialog"]')).not.toBeNull();
-    expect(button('result-accept').disabled).toBe(true);
-  });
-
-  function dialogCard(card: Card): HTMLInputElement {
-    return document.querySelector<HTMLInputElement>(
-      `[data-testid="confirm-dialog"] [data-testid="confirm-card"] input[value="${card}"]`,
-    )!;
-  }
-
-  function dialogSubmit(): HTMLButtonElement {
-    return document.querySelector<HTMLButtonElement>('[data-testid="confirm-submit"]')!;
-  }
-
-  it('preselects the consensus card in the result dialog', async () => {
-    await open(withVotes(revealedScrumMaster, ['8', '8']));
-
-    button('result-accept').click();
-    await fixture.whenStable();
-
-    expect(dialogCard('8').checked).toBe(true);
-    expect(dialogSubmit().disabled).toBe(false);
-  });
-
-  it('opens the result dialog without a selection when there is no consensus', async () => {
-    await open(withVotes(revealedScrumMaster, ['5', '8']));
-
-    button('result-accept').click();
-    await fixture.whenStable();
-
-    expect(document.querySelectorAll('[data-testid="confirm-card"] input:checked')).toHaveLength(0);
-    expect(dialogSubmit().disabled).toBe(true);
   });
 
   it.each([

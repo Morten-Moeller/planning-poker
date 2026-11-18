@@ -127,35 +127,4 @@
       </div>
     </div>
   }
-
-  @if (store.isScrumMaster()) {
-    <div class="actions">
-      <button
-        type="button"
-        mat-stroked-button
-        class="action"
-        data-testid="round-restart"
-        [disabled]="actionsDisabled()"
-        (click)="restart()"
-        i18n="@@roundResult.restart"
-      >
-        ↻ Erneut schätzen
-      </button>
-      <button
-        type="button"
-        mat-flat-button
-        class="action"
-        data-testid="result-accept"
-        [disabled]="actionsDisabled()"
-        (click)="openConfirm()"
-        i18n="@@roundResult.accept"
-      >
-        Ergebnis übernehmen …
-      </button>
-    </div>
-  } @else {
-    <p class="waiting" data-testid="result-waiting" i18n="@@roundResult.waiting">
-      Der Scrum Master lässt erneut schätzen oder übernimmt das Ergebnis.
-    </p>
-  }
 </section>

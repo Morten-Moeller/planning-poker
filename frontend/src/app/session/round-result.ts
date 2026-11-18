@@ -1,11 +1,7 @@
-import { Component, DOCUMENT, computed, inject, input, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { ApiService } from '../api/api.service';
+import { Component, DOCUMENT, computed, inject, input } from '@angular/core';
 import { SessionStore } from '../api/session-store';
 import { cardLabel, cardName, cardSymbol } from './cards';
 import { Confetti } from './confetti';
-import { ConfirmResultData, ConfirmResultDialog } from './confirm-result-dialog';
 import { consensusCard } from './consensus';
 import { outlierCards } from './outliers';
 import { motifName } from './motif-name';
@@ -15,16 +11,13 @@ import { SeatTable } from './seat-table';
 
 @Component({
   selector: 'app-round-result',
-  imports: [MatButtonModule, Confetti, SeatTable],
+  imports: [Confetti, SeatTable],
   templateUrl: './round-result.html',
   styleUrl: './round-result.scss',
 })
 export class RoundResult {
-  private readonly api = inject(ApiService);
-  private readonly dialog = inject(MatDialog);
-  protected readonly store = inject(SessionStore);
+  private readonly store = inject(SessionStore);
 
-  readonly sessionId = input.required<string>();
   readonly motif = input<number | null>(null);
 
   protected readonly symbol = cardSymbol;
@@ -86,33 +79,4 @@ export class RoundResult {
   );
   protected readonly average = computed(() => averageText(this.stats()?.average ?? null));
   protected readonly confirming = computed(() => this.round()?.confirming === true);
-  protected readonly restarting = signal(false);
-  protected readonly dialogOpen = signal(false);
-  protected readonly actionsDisabled = computed(
-    () => this.confirming() || this.restarting() || this.dialogOpen(),
-  );
-
-  protected restart(): void {
-    if (this.actionsDisabled()) {
-      return;
-    }
-    this.restarting.set(true);
-    this.api.restartRound(this.sessionId()).subscribe({
-      next: () => this.restarting.set(false),
-      error: () => this.restarting.set(false),
-    });
-  }
-
-  protected openConfirm(): void {
-    if (this.actionsDisabled()) {
-      return;
-    }
-    this.dialogOpen.set(true);
-    this.dialog
-      .open<ConfirmResultDialog, ConfirmResultData, boolean>(ConfirmResultDialog, {
-        data: { sessionId: this.sessionId(), suggestedCard: this.consensus() },
-      })
-      .afterClosed()
-      .subscribe(() => this.dialogOpen.set(false));
-  }
 }

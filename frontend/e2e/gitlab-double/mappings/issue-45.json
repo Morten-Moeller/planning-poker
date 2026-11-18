@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/v4/projects/1234/issues/45"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "iid": 45,
+      "title": "Monatsexport",
+      "description": "## Ausgangslage\n\nAbsatz 1: Der Export liefert alle Buchungen des Monats als CSV-Datei mit Kostenstelle und Projektnummer.\n\nAbsatz 2: Der Export liefert alle Buchungen des Monats als CSV-Datei mit Kostenstelle und Projektnummer.\n\nAbsatz 3: Der Export liefert alle Buchungen des Monats als CSV-Datei mit Kostenstelle und Projektnummer.\n\nAbsatz 4: Der Export liefert alle Buchungen des Monats als CSV-Datei mit Kostenstelle und Projektnummer.\n\nAbsatz 5: Der Export liefert alle Buchungen des Monats als CSV-Datei mit Kostenstelle und Projektnummer.\n\nAbsatz 6: Der Export liefert alle Buchungen des Monats als CSV-Datei mit Kostenstelle und Projektnummer.\n\nAbsatz 7: Der Export liefert alle Buchungen des Monats als CSV-Datei mit Kostenstelle und Projektnummer.\n\nAbsatz 8: Der Export liefert alle Buchungen des Monats als CSV-Datei mit Kostenstelle und Projektnummer.\n\nAbsatz 9: Der Export liefert alle Buchungen des Monats als CSV-Datei mit Kostenstelle und Projektnummer.\n\nAbsatz 10: Der Export liefert alle Buchungen des Monats als CSV-Datei mit Kostenstelle und Projektnummer.\n\n\n## Akzeptanzkriterien\n\n- Kriterium 1: Der Export enthält die Spalte 1 im richtigen Format.\n- Kriterium 2: Der Export enthält die Spalte 2 im richtigen Format.\n- Kriterium 3: Der Export enthält die Spalte 3 im richtigen Format.\n- Kriterium 4: Der Export enthält die Spalte 4 im richtigen Format.\n- Kriterium 5: Der Export enthält die Spalte 5 im richtigen Format.\n- Kriterium 6: Der Export enthält die Spalte 6 im richtigen Format.\n- Kriterium 7: Der Export enthält die Spalte 7 im richtigen Format.\n- Kriterium 8: Der Export enthält die Spalte 8 im richtigen Format.\n- Kriterium 9: Der Export enthält die Spalte 9 im richtigen Format.\n- Kriterium 10: Der Export enthält die Spalte 10 im richtigen Format.\n- Kriterium 11: Der Export enthält die Spalte 11 im richtigen Format.\n- Kriterium 12: Der Export enthält die Spalte 12 im richtigen Format.\n- Kriterium 13: Der Export enthält die Spalte 13 im richtigen Format.\n- Kriterium 14: Der Export enthält die Spalte 14 im richtigen Format.\n- Kriterium 15: Der Export enthält die Spalte 15 im richtigen Format.\n- Kriterium 16: Der Export enthält die Spalte 16 im richtigen Format.\n- Kriterium 17: Der Export enthält die Spalte 17 im richtigen Format.\n- Kriterium 18: Der Export enthält die Spalte 18 im richtigen Format.\n- Kriterium 19: Der Export enthält die Spalte 19 im richtigen Format.\n- Kriterium 20: Der Export enthält die Spalte 20 im richtigen Format.\n\n## Hinweise\n\n1. Hinweis 1 zur Umsetzung und zum Test des Exports.\n2. Hinweis 2 zur Umsetzung und zum Test des Exports.\n3. Hinweis 3 zur Umsetzung und zum Test des Exports.\n4. Hinweis 4 zur Umsetzung und zum Test des Exports.\n5. Hinweis 5 zur Umsetzung und zum Test des Exports.\n6. Hinweis 6 zur Umsetzung und zum Test des Exports.\n7. Hinweis 7 zur Umsetzung und zum Test des Exports.\n8. Hinweis 8 zur Umsetzung und zum Test des Exports.\n9. Hinweis 9 zur Umsetzung und zum Test des Exports.\n10. Hinweis 10 zur Umsetzung und zum Test des Exports.\n11. Hinweis 11 zur Umsetzung und zum Test des Exports.\n12. Hinweis 12 zur Umsetzung und zum Test des Exports.\n\nLetzte Zeile der Beschreibung.",
+      "web_url": "https://gitlab.example/group/project/-/issues/45",
+      "labels": []
+    }
+  }
+}
