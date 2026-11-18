@@ -142,6 +142,7 @@ async function expectFooterInWindowAndLastLineReachable(page: Page): Promise<voi
   const expand = page.getByTestId('active-issue-expand');
   if (await expand.isVisible()) {
     await expand.click();
+    await expect(page.getByTestId('active-issue-collapse')).toBeVisible();
   }
   const scroll = await page.evaluate(() => {
     const main = document.querySelector<HTMLElement>('app-session-page .main')!;
