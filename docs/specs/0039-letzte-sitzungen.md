@@ -1,14 +1,14 @@
 ---
 id: "0039"
 title: Letzte Sitzungen und Weg zur Startseite
-status: Review
+status: done
 risk: high
 adrs: ["0013"]
 owner: Morten Möller
 created: 2026-11-18
 updated: 2026-11-18
-pr: ""
-note: freigegeben in der Session
+pr: "#41"
+note: alle Kriterien erfüllt; make e2e nur in CI
 ---
 
 # Letzte Sitzungen und Weg zur Startseite
