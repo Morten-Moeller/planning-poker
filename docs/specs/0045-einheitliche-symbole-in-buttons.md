@@ -1,14 +1,14 @@
 ---
 id: "0045"
 title: Einheitliche Symbolgröße in Buttons und Links
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-18
 updated: 2026-11-18
-pr: ""
-note: freigegeben in der Session
+pr: "#46"
+note: alle Kriterien erfüllt
 ---
 
 # Einheitliche Symbolgröße in Buttons und Links
