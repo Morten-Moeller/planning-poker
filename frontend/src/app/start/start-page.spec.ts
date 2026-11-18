@@ -6,6 +6,7 @@ import { Router, provideRouter } from '@angular/router';
 import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { mockBackendInterceptor } from '../api/mock/mock-backend.interceptor';
 import { ErrorState } from '../api/error-state';
+import { Preferences, PreferencesStore } from '../api/preferences-store';
 import { TokenStore } from '../api/token-store';
 import { StartPage } from './start-page';
 
@@ -101,6 +102,7 @@ describe('StartPage', () => {
 
   beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([apiErrorInterceptor])),
@@ -369,8 +371,14 @@ describe('StartPage', () => {
 describe('StartPage project and issue choice', () => {
   let fixture: ComponentFixture<StartPage>;
 
-  function setUp(interceptors: Parameters<typeof withInterceptors>[0], testing: boolean): void {
+  function setUp(
+    interceptors: Parameters<typeof withInterceptors>[0],
+    testing: boolean,
+    saved: Partial<Preferences> = {},
+  ): void {
     sessionStorage.clear();
+    localStorage.clear();
+    new PreferencesStore().save(saved);
     vi.useFakeTimers({
       toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'],
     });
@@ -486,6 +494,28 @@ describe('StartPage project and issue choice', () => {
       typeInto('create-issue', 'kein Treffer');
       await wait(300);
       expect(optionTexts('create-issue-empty')).toEqual(['Keine Issues gefunden']);
+    });
+  });
+
+  describe('with a saved project', () => {
+    beforeEach(() => {
+      setUp([apiErrorInterceptor, mockBackendInterceptor], false, {
+        name: 'Anna',
+        projectId: '1234',
+      });
+    });
+
+    it('keeps the project list closed on focus and searches the issues of the saved project', async () => {
+      const project = input('create-project');
+      project.focus();
+      project.dispatchEvent(new Event('focusin'));
+      fixture.detectChanges();
+      await wait(300);
+      expect(overlay('create-project-option')).toHaveLength(0);
+
+      typeInto('create-issue', 'login');
+      await wait(300);
+      expect(optionTexts('create-issue-option')).toEqual(['#42 Login page']);
     });
   });
 
@@ -614,5 +644,153 @@ describe('StartPage project and issue choice', () => {
         expect(TestBed.inject(ErrorState).error()).toBeNull();
       },
     );
+  });
+});
+
+describe('StartPage preferences', () => {
+  let fixture: ComponentFixture<StartPage>;
+  let http: HttpTestingController;
+  let router: Router;
+  let preferences: PreferencesStore;
+
+  const CREATED = { sessionId: 'K7P2QX9M', participantId: 'p-anna', token: 'token-anna' };
+  const TIMER_URL = '/api/sessions/K7P2QX9M/timer';
+
+  beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([{ path: 'session/:id', component: EmptyPage }]),
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    router = TestBed.inject(Router);
+    preferences = TestBed.inject(PreferencesStore);
+  });
+
+  afterEach(() => {
+    fixture.destroy();
+    http.verify();
+    localStorage.clear();
+  });
+
+  async function openPage(): Promise<void> {
+    fixture = TestBed.createComponent(StartPage);
+    fixture.autoDetectChanges();
+    http.expectOne('/api/health').flush({ status: 'UP' });
+    await fixture.whenStable();
+  }
+
+  function input(id: string): HTMLInputElement {
+    return (fixture.nativeElement as HTMLElement).querySelector(
+      `[data-testid="${id}"]`,
+    ) as HTMLInputElement;
+  }
+
+  function type(id: string, value: string): void {
+    const field = input(id);
+    field.value = value;
+    field.dispatchEvent(new Event('input'));
+  }
+
+  async function create(name: string, project: string): Promise<void> {
+    type('create-name', name);
+    type('create-project', project);
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('[data-testid="create-submit"]')
+      ?.click();
+    await fixture.whenStable();
+  }
+
+  it('saves name and project after a successful creation and fills them in next time', async () => {
+    await openPage();
+    expect(input('create-name').value).toBe('');
+    expect(input('create-project').value).toBe('');
+
+    await create('  Anna ', ' 1234 ');
+    http.expectOne('/api/sessions').flush(CREATED, { status: 201, statusText: 'Created' });
+    await fixture.whenStable();
+    expect(preferences.read()).toMatchObject({ name: 'Anna', projectId: '1234' });
+    fixture.destroy();
+
+    await openPage();
+    expect(input('create-name').value).toBe('Anna');
+    expect(input('create-project').value).toBe('1234');
+    expect(input('create-issue').value).toBe('');
+  });
+
+  it('saves nothing after PROJECT_NOT_FOUND', async () => {
+    await openPage();
+
+    await create('Anna', '999999');
+    http.expectOne('/api/sessions').flush(
+      {
+        type: 'about:blank',
+        title: 'Not Found',
+        status: 404,
+        detail: 'detail',
+        errorCode: 'PROJECT_NOT_FOUND',
+      },
+      { status: 404, statusText: 'Not Found' },
+    );
+    await fixture.whenStable();
+
+    expect(preferences.read()).toMatchObject({ name: '', projectId: '' });
+    expect(localStorage.getItem('planningpoker.preferences')).toBeNull();
+  });
+
+  it('sets the saved timer of 30 s after the creation and opens the session afterwards', async () => {
+    preferences.save({ timerSeconds: 30 });
+    await openPage();
+
+    await create('Anna', '1234');
+    http.expectOne('/api/sessions').flush(CREATED, { status: 201, statusText: 'Created' });
+    await fixture.whenStable();
+    expect(router.url).toBe('/');
+
+    const request = http.expectOne(TIMER_URL);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ seconds: 30 });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await fixture.whenStable();
+
+    expect(router.url).toBe('/session/K7P2QX9M');
+  });
+
+  it('sets no timer when the saved timer is Aus', async () => {
+    preferences.save({ timerSeconds: 0 });
+    await openPage();
+
+    await create('Anna', '1234');
+    http.expectOne('/api/sessions').flush(CREATED, { status: 201, statusText: 'Created' });
+    await fixture.whenStable();
+
+    http.expectNone(TIMER_URL);
+    expect(router.url).toBe('/session/K7P2QX9M');
+  });
+
+  it('opens the session when setting the saved timer fails', async () => {
+    preferences.save({ timerSeconds: 30 });
+    await openPage();
+
+    await create('Anna', '1234');
+    http.expectOne('/api/sessions').flush(CREATED, { status: 201, statusText: 'Created' });
+    await fixture.whenStable();
+    http.expectOne(TIMER_URL).flush(
+      {
+        type: 'about:blank',
+        title: 'Conflict',
+        status: 409,
+        detail: 'detail',
+        errorCode: 'INVALID_STATE',
+      },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await fixture.whenStable();
+
+    expect(router.url).toBe('/session/K7P2QX9M');
   });
 });

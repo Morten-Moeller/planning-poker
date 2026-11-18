@@ -11,6 +11,7 @@ import { ApiService } from '../api/api.service';
 import { formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
 import { participantNameValidators } from '../api/participant-name';
+import { PreferencesStore } from '../api/preferences-store';
 import { TokenStore } from '../api/token-store';
 
 const JOIN_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
@@ -31,6 +32,7 @@ export class JoinPage {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(ApiService);
   private readonly tokens = inject(TokenStore);
+  private readonly preferences = inject(PreferencesStore);
   private readonly errorState = inject(ErrorState);
   private readonly router = inject(Router);
 
@@ -40,7 +42,7 @@ export class JoinPage {
   );
 
   protected readonly joinForm = new FormGroup({
-    name: new FormControl('', {
+    name: new FormControl(this.preferences.read().name, {
       nonNullable: true,
       validators: participantNameValidators,
     }),
@@ -57,10 +59,12 @@ export class JoinPage {
       return;
     }
     const sessionId = this.sessionId();
+    const name = this.joinForm.controls.name.value.trim();
     this.joining.set(true);
-    this.api.joinSession(sessionId, { name: this.joinForm.controls.name.value.trim() }).subscribe({
+    this.api.joinSession(sessionId, { name }).subscribe({
       next: ({ participantId, token }) => {
         this.tokens.store(sessionId, { participantId, token });
+        this.preferences.save({ name });
         void this.router.navigate(['/session', sessionId]);
       },
       error: (error: unknown) => {
