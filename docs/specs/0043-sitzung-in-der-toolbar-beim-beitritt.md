@@ -1,7 +1,7 @@
 ---
 id: "0043"
 title: Session-ID in der Toolbar der Beitrittsseite
-status: approved
+status: Review
 risk: medium
 adrs: []
 owner: Morten Möller

@@ -39,10 +39,11 @@ describe('sessionGuard', () => {
     expect(testId('health-status')).not.toBeNull();
   });
 
-  it('shows the join page with the session id at /session/:id/join', async () => {
+  it('shows the join page without a session chip at /session/:id/join', async () => {
     await harness.navigateByUrl(`/session/${SESSION_ID}/join`);
 
-    expect(testId('join-session-id')?.textContent).toBe(SESSION_ID);
+    expect(testId('join-invite-missing')).not.toBeNull();
+    expect(testId('join-session-id')).toBeNull();
   });
 
   it('redirects to the join page without a token for the session', async () => {

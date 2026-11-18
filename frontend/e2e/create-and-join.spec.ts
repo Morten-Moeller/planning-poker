@@ -177,7 +177,10 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await expectNoHorizontalScroll(page);
 
       await page.goto('/session/K7P2QX9M/join?invite=some-invite');
-      await expect(page.getByTestId('join-session-id')).toHaveText('K7P2QX9M');
+      await expect(page.getByTestId('toolbar-session-id')).toHaveText('K7P2QX9M');
+      await expect(page.getByTestId('toolbar-motif')).toBeVisible();
+      await expect(page.getByTestId('toolbar-me')).toHaveCount(0);
+      await expect(page.getByTestId('join-session-id')).toHaveCount(0);
       await expect(page.getByTestId('join-form')).toBeVisible();
       await expectNoHorizontalScroll(page);
     });

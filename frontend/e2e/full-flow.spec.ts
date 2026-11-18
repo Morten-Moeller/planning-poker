@@ -81,8 +81,15 @@ test('three people estimate two issues and the scrum master writes the result to
 
   const ben = await newPage(browser);
   await ben.goto(link.replace(sessionId, sessionId.toLowerCase()));
-  await expect(ben.getByTestId('join-session-id')).toHaveText(sessionId);
+  await expect(ben.getByTestId('toolbar-session-id')).toHaveText(sessionId);
+  await expect(ben.getByTestId('toolbar-me')).toHaveCount(0);
+  const joinBox = await ben.getByTestId('toolbar-session-id').boundingBox();
   await joinWithName(ben, 'Ben');
+  await expect(ben.getByTestId('toolbar-session-id')).toHaveText(sessionId);
+  await expect(ben.getByTestId('toolbar-me')).toHaveText(/Ben · Entwickler/);
+  const roomBox = await ben.getByTestId('toolbar-session-id').boundingBox();
+  expect(roomBox?.x).toBe(joinBox?.x);
+  expect(roomBox?.y).toBe(joinBox?.y);
 
   const cem = await newPage(browser);
   await cem.goto(link);

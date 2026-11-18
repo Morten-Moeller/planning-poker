@@ -31,26 +31,6 @@
   gap: var(--app-space-s);
 }
 
-.session-chip {
-  align-self: flex-start;
-  display: inline-flex;
-  gap: var(--app-space-s);
-  padding: 0 var(--app-space-s);
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--mat-sys-corner-extra-small);
-  font: var(--app-label-section);
-  font-size: var(--mat-sys-label-large-size);
-  line-height: var(--mat-sys-body-medium-line-height);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--app-on-surface-muted);
-
-  code {
-    font: inherit;
-    color: var(--mat-sys-on-surface);
-  }
-}
-
 h1 {
   margin: 0;
   font: var(--mat-sys-display-small);

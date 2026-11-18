@@ -1,7 +1,8 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { authInterceptor } from '../api/auth.interceptor';
 import { SessionView, lobbyDeveloper, lobbyScrumMaster } from '../api/examples';
@@ -15,6 +16,9 @@ import { ThemeService } from './theme.service';
 
 const SESSION_ID = 'K7P2QX9M';
 
+@Component({ template: '' })
+class EmptyPage {}
+
 describe('AppShell', () => {
   let http: HttpTestingController;
   let store: SessionStore;
@@ -26,7 +30,10 @@ describe('AppShell', () => {
     const sockets = new FakeSocketFactory();
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([]),
+        provideRouter([
+          { path: '', component: EmptyPage },
+          { path: 'session/:id/join', component: EmptyPage },
+        ]),
         provideHttpClient(withInterceptors([authInterceptor, apiErrorInterceptor])),
         provideHttpClientTesting(),
         { provide: WEB_SOCKET_FACTORY, useValue: sockets.create },
@@ -105,6 +112,43 @@ describe('AppShell', () => {
     expect(element('toolbar-session-id')).toBeNull();
     expect(element('toolbar-me')).toBeNull();
   });
+
+  async function navigate(url: string): Promise<void> {
+    await TestBed.inject(Router).navigateByUrl(url);
+    await fixture.whenStable();
+  }
+
+  it('shows the motif field and the session id of the join route without name and role', async () => {
+    await navigate(`/session/${SESSION_ID}/join?invite=abc`);
+
+    expect(text('toolbar-session-id')).toBe(SESSION_ID);
+    expect(element('toolbar-motif')).not.toBeNull();
+    expect(element('toolbar-me')).toBeNull();
+  });
+
+  it('shows the session id of a join link in small letters in capital letters', async () => {
+    await navigate(`/session/${SESSION_ID.toLowerCase()}/join`);
+
+    expect(text('toolbar-session-id')).toBe(SESSION_ID);
+  });
+
+  it('shows no session id on the start page', async () => {
+    await navigate(`/session/${SESSION_ID}/join`);
+    await navigate('/');
+
+    expect(element('toolbar-session-id')).toBeNull();
+    expect(element('toolbar-motif')).toBeNull();
+  });
+
+  it.each([['K7P2QX9'], ['K7P2QX9MA'], ['K7P2QX0M'], ['K7P2-X9M']])(
+    'shows no invalid session id %s from the join route',
+    async (id) => {
+      await navigate(`/session/${id}/join`);
+
+      expect(element('toolbar-session-id')).toBeNull();
+      expect(element('toolbar-motif')).toBeNull();
+    },
+  );
 
   function toggle(): HTMLButtonElement {
     return element('theme-toggle') as HTMLButtonElement;
