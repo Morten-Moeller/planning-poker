@@ -36,6 +36,9 @@ wirkt dadurch einladender.
 - Überschrift und Einleitung stehen zentriert; das Formular „Sitzung erstellen“ und die Liste
   „Letzte Sitzungen“ stehen mittig mit höchstens 600px Breite. Der Footer bleibt linksbündig
   (Wunsch der Person nach Ansicht des Stands, 2026-11-18).
+- Ist das Fenster höher als der Inhalt, steht der Footer am unteren Rand des Fensters; sonst folgt
+  er dem Formular mit dem normalen Abstand der Seite. Die Seite scrollt dadurch nicht zusätzlich
+  (Wunsch der Person, 2026-11-18).
 - `project-rules/frontend.md` nennt Footer und Illustration der Startseite.
 
 ### Nicht enthalten
@@ -44,7 +47,8 @@ wirkt dadurch einladender.
 - Das globale Fehlerbanner `error-banner` unter der Toolbar; es bleibt, wo es ist.
 - Logik der Backend-Prüfung, Sperre des Formulars und Text „Sitzung erstellen (Backend fehlt)“;
   sie bleiben unverändert.
-- Ein fest am Fensterrand stehender Footer (`position: fixed` oder `sticky`).
+- Ein fest am Fensterrand stehender Footer, der beim Scrollen stehen bleibt (`position: fixed` oder
+  `sticky`).
 
 ## Begriffe
 
@@ -62,6 +66,7 @@ wirkt dadurch einladender.
 | A3 | Über der Überschrift steht `card-hand` in der Größe `large`, horizontal mittig zur Seite (Abweichung höchstens 1px). | Test, Test (e2e) |
 | A4 | „Erneut prüfen“ im Footer startet eine neue Prüfung; bei Erfolg verschwindet `health-down` und das Formular ist frei. | Test |
 | A6 | Überschrift, Einleitung und das Formular „Sitzung erstellen“ stehen horizontal mittig (Abweichung höchstens 1px), der Status im Footer beginnt am linken Rand der Seite. | Test (e2e) |
+| A7 | Bei 1280×1200px steht der Footer mindestens 100px unter dem Formular und die Seite scrollt nicht; bei 1280×700px folgt er dem Formular mit dem Abstand der Seite. | Test (e2e) |
 | A5 | Startseite hell und dunkel, breit und 375px: Illustration oben mittig, Footer dezent am Ende, bei nicht erreichbarem Backend der rote Hinweis im Footer. | Browser |
 
 ## Contracts
@@ -123,6 +128,7 @@ Tests:
 | A4 | `frontend/src/app/start/start-page.spec.ts`: bestehender Test „locks the create form without backend and frees it after a new check“ mit Retry im Footer |
 | A5 | Browser: Startseite hell, dunkel, 375px, Backend gestoppt |
 | A6 | `frontend/e2e/health.spec.ts`: Mitte von `h1`, Einleitung und Formular gleich Mitte der Seite ±1px; Status links |
+| A7 | `frontend/e2e/health.spec.ts`: Abstand Formular–Footer und Scrollhöhe bei 1200px und 700px Fensterhöhe |
 
 ## Offene Fragen
 

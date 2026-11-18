@@ -6,6 +6,7 @@
   gap: calc(var(--app-space-xl) + var(--app-space-s));
   width: 100%;
   max-width: 1080px;
+  min-height: calc(100dvh - 56px - 2 * var(--app-space-m));
   margin: 0 auto;
   padding: calc(var(--app-space-l) + var(--app-space-m)) var(--app-space-xl)
     calc(var(--app-space-3xl) - var(--app-space-s));
@@ -29,6 +30,7 @@
 
 .start-footer {
   display: flex;
+  margin-top: auto;
   flex-direction: column;
   gap: var(--app-space-s);
   padding-top: var(--app-space-m);

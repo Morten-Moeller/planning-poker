@@ -43,3 +43,23 @@ for (const width of [1280, 375]) {
     expect(Math.abs(status!.x - footerBox!.x)).toBeLessThanOrEqual(1);
   });
 }
+
+test('the footer stands at the bottom of a tall window and follows the form in a short one', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 1200 });
+  await page.goto('/');
+  const footer = page.getByTestId('start-footer');
+  await expect(footer.getByTestId('health-status')).toHaveText('Backend erreichbar');
+  const form = await page.locator('.panel-create').boundingBox();
+  const tall = await footer.boundingBox();
+  expect(tall!.y - (form!.y + form!.height)).toBeGreaterThanOrEqual(100);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(
+    1200,
+  );
+
+  await page.setViewportSize({ width: 1280, height: 700 });
+  const shortForm = await page.locator('.panel-create').boundingBox();
+  const short = await footer.boundingBox();
+  expect(short!.y - (shortForm!.y + shortForm!.height)).toBeLessThan(100);
+});
