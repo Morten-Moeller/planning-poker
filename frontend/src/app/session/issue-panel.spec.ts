@@ -528,6 +528,9 @@ describe('IssuePanel', () => {
       'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.',
     ]);
     expect(texts('issue-results-retry')).toEqual(['↻ Erneut versuchen']);
+    expect(
+      one('issue-results-retry').querySelector('.app-symbol[aria-hidden="true"]')?.textContent,
+    ).toBe('↻');
   });
 
   it('starts with the saved filters and loads the issues with them', async () => {

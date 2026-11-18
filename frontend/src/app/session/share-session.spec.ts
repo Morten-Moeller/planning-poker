@@ -52,6 +52,7 @@ describe('ShareSession', () => {
   ])('labels the button %s and shows Kopieren', (id, label) => {
     expect(element(id)?.getAttribute('aria-label')).toBe(label);
     expect(normalized(element(id))).toBe('⧉ Kopieren');
+    expect(element(id)?.querySelector('.app-symbol[aria-hidden="true"]')?.textContent).toBe('⧉');
   });
 
   it('names both invite rows and has no row for the session id', () => {

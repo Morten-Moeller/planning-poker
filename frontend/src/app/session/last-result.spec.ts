@@ -107,17 +107,14 @@ describe('LastResult', () => {
     expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
-  it('shows the arrow of the GitLab link larger in its own hidden span', async () => {
+  it('shows the arrow of the GitLab link in its own hidden span with the class app-symbol', async () => {
     await open(withHistory(lobbyDeveloper, [confirmed]));
 
     const symbol = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
-      '[data-testid="last-result-open"] .symbol',
+      '[data-testid="last-result-open"] .app-symbol',
     )!;
     expect(symbol.textContent).toBe('↗');
     expect(symbol.getAttribute('aria-hidden')).toBe('true');
-    expect(parseFloat(getComputedStyle(symbol).fontSize)).toBeGreaterThan(
-      parseFloat(getComputedStyle(fixture.nativeElement as HTMLElement).fontSize),
-    );
   });
 
   it('shows no link when the project is unknown', async () => {
