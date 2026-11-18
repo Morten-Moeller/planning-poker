@@ -59,8 +59,8 @@ class SessionRegistryTest {
         List<String> developers = new ArrayList<>();
         for (int i = 0; i < DEVELOPERS; i++) {
             String name = "Dev" + i;
-            developers.add(
-                    registry.update(sessionId, session -> session.join(name).id()));
+            developers.add(registry.update(sessionId, session -> session.join(name, session.developerInvite())
+                    .id()));
         }
         registry.update(sessionId, session -> {
             session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE);
@@ -91,7 +91,7 @@ class SessionRegistryTest {
         String sessionId = created.session().id();
         events.clear();
 
-        registry.update(sessionId, session -> session.join("Anna"));
+        registry.update(sessionId, session -> session.join("Anna", session.developerInvite()));
         registry.update(sessionId, session -> {
             session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE);
             return null;
@@ -106,7 +106,7 @@ class SessionRegistryTest {
         String sessionId = created.session().id();
         probeNestedUpdate.set(true);
 
-        registry.update(sessionId, session -> session.join("Anna"));
+        registry.update(sessionId, session -> session.join("Anna", session.developerInvite()));
 
         assertEquals(List.of(Phase.LOBBY), seenByNestedUpdate);
         assertEquals(2, events.size());
@@ -116,8 +116,8 @@ class SessionRegistryTest {
     void a_rejected_command_fires_no_event_and_changes_nothing() {
         SessionRegistry.Created created = registry.create("4711", 42L, "Master", null, false);
         String sessionId = created.session().id();
-        String developer =
-                registry.update(sessionId, session -> session.join("Anna").id());
+        String developer = registry.update(sessionId, session -> session.join("Anna", session.developerInvite())
+                .id());
         events.clear();
         Instant lastActivity = created.session().lastActivityAt();
         clock.advance(Duration.ofMinutes(5));
@@ -193,7 +193,7 @@ class SessionRegistryTest {
         SessionRegistry.Created created = registry.create("4711", 42L, "Master", null, false);
         clock.advance(Duration.ofMinutes(5));
 
-        registry.update(created.session().id(), session -> session.join("Anna"));
+        registry.update(created.session().id(), session -> session.join("Anna", session.developerInvite()));
 
         assertEquals(START.plus(Duration.ofMinutes(5)), created.session().lastActivityAt());
     }
@@ -228,7 +228,7 @@ class SessionRegistryTest {
         SessionRegistry.Created created = registry.create("4711", 42L, "Master", null, false);
         String sessionId = created.session().id();
         clock.advance(TTL.minusMinutes(1));
-        registry.update(sessionId, session -> session.join("Anna"));
+        registry.update(sessionId, session -> session.join("Anna", session.developerInvite()));
         clock.advance(TTL.minusMinutes(1));
 
         registry.expire(clock.instant());
@@ -276,13 +276,14 @@ class SessionRegistryTest {
         SessionRegistry limited = new SessionRegistry(clock, TTL, MAX_SESSIONS, 2, this::onChanged);
         String sessionId =
                 limited.create("4711", 42L, "Master", null, false).session().id();
-        limited.update(sessionId, session -> session.join("Anna"));
+        limited.update(sessionId, session -> session.join("Anna", session.developerInvite()));
         events.clear();
         Instant lastActivity = limited.find(sessionId).orElseThrow().lastActivityAt();
         clock.advance(Duration.ofMinutes(5));
 
-        SessionException exception =
-                assertThrows(SessionException.class, () -> limited.update(sessionId, session -> session.join("Ben")));
+        SessionException exception = assertThrows(
+                SessionException.class,
+                () -> limited.update(sessionId, session -> session.join("Ben", session.developerInvite())));
 
         assertEquals(ErrorCode.LIMIT_REACHED, exception.errorCode());
         assertEquals(List.of(), events);
@@ -295,7 +296,7 @@ class SessionRegistryTest {
         SessionRegistry.Created created = registry.create("4711", 42L, "Master", null, false);
         String sessionId = created.session().id();
         String master = created.scrumMaster().id();
-        registry.update(sessionId, session -> session.join("Anna"));
+        registry.update(sessionId, session -> session.join("Anna", session.developerInvite()));
         registry.update(sessionId, session -> {
             session.setTimer(master, seconds);
             session.selectIssue(master, SessionBuilder.ISSUE);

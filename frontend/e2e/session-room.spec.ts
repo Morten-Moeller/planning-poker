@@ -15,7 +15,7 @@ async function openRoom(page: Page, browser: Browser, issue = '42'): Promise<Roo
   await page.getByTestId('create-issue').fill(issue);
   await page.getByTestId('create-submit').click();
   await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  const link = (await page.getByTestId('share-link').textContent()) ?? '';
+  const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
 
   const developer = await (await browser.newContext()).newPage();
   await developer.goto(link);

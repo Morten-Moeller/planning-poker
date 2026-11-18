@@ -57,7 +57,7 @@ class ContractTest {
                                 "JoinSessionRequest",
                                 "201",
                                 "JoinSessionResponse",
-                                List.of("400", "404", "409")),
+                                List.of("400", "403", "404", "409")),
                         new Endpoint("get", "/api/sessions/{id}", null, "200", "SessionView", List.of("401", "404")),
                         new Endpoint(
                                 "get",
@@ -198,6 +198,7 @@ class ContractTest {
                         "UNAUTHORIZED",
                         "FORBIDDEN_ROLE",
                         "PROJECT_NOT_ALLOWED",
+                        "INVITE_INVALID",
                         "SESSION_NOT_FOUND",
                         "ISSUE_NOT_FOUND",
                         "PROJECT_NOT_FOUND",
@@ -222,7 +223,7 @@ class ContractTest {
 
     @Test
     void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
-        assertEquals("3.4.0", contract.at("/info/version").asText());
+        assertEquals("4.0.0", contract.at("/info/version").asText());
         assertEquals(
                 "PROJECT_NOT_ALLOWED",
                 contract.at("/paths/~1api~1sessions/post/responses/403/description")
@@ -235,6 +236,24 @@ class ContractTest {
                 "NAME_TAKEN, LIMIT_REACHED",
                 contract.at("/paths/~1api~1sessions~1{id}~1participants/post/responses/409/description")
                         .asText());
+        assertEquals(
+                "INVITE_INVALID",
+                contract.at("/paths/~1api~1sessions~1{id}~1participants/post/responses/403/description")
+                        .asText());
+    }
+
+    @Test
+    void describesTheViewerRoleTheInviteAndTheInvites() {
+        assertEquals(
+                List.of("SCRUM_MASTER", "DEVELOPER", "VIEWER"), texts(contract.at("/components/schemas/Role/enum")));
+        JsonNode join = contract.at("/components/schemas/JoinSessionRequest");
+        assertEquals(List.of("name", "invite"), texts(join.get("required")));
+        assertEquals("string", join.at("/properties/invite/type").asText());
+        JsonNode view = contract.at("/components/schemas/SessionView");
+        assertTrue(texts(view.get("required")).contains("invites"));
+        assertEquals(ref("Invites"), view.at("/properties/invites/anyOf/0/$ref").asText());
+        assertEquals("null", view.at("/properties/invites/anyOf/1/type").asText());
+        assertEquals(List.of("developer", "viewer"), texts(contract.at("/components/schemas/Invites/required")));
     }
 
     @Test

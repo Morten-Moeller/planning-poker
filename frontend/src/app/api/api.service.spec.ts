@@ -33,10 +33,10 @@ const calls: Call[] = [
   },
   {
     name: 'joinSession',
-    call: (api) => api.joinSession(SESSION_ID, { name: 'Ben' }),
+    call: (api) => api.joinSession(SESSION_ID, { name: 'Ben', invite: 'invite-code' }),
     method: 'POST',
     url: `${BASE}/participants`,
-    body: { name: 'Ben' },
+    body: { name: 'Ben', invite: 'invite-code' },
     authenticated: false,
   },
   {

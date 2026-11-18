@@ -48,7 +48,7 @@ async function createSession(page: Page): Promise<{ scrumMaster: View; link: str
   await page.getByTestId('create-issue').fill('42');
   await page.getByTestId('create-submit').click();
   await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  const link = (await page.getByTestId('share-link').textContent()) ?? '';
+  const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
   return { scrumMaster, link };
 }
 

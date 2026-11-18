@@ -12,7 +12,7 @@ async function createSession(page: Page): Promise<string> {
   await page.getByTestId('create-issue').fill('42');
   await page.getByTestId('create-submit').click();
   await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  return (await page.getByTestId('share-link').textContent()) ?? '';
+  return (await page.getByTestId('share-link-developer').textContent()) ?? '';
 }
 
 async function join(browser: Browser, link: string, reducedMotion: Motion): Promise<Page> {

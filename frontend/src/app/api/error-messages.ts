@@ -6,6 +6,7 @@ function messagesByCode(): Record<ErrorCode, string> {
     INVALID_CARD: $localize`:@@error.INVALID_CARD:Diese Karte gibt es nicht.`,
     UNAUTHORIZED: $localize`:@@error.UNAUTHORIZED:Der Zugang zur Sitzung ist nicht mehr gültig.`,
     FORBIDDEN_ROLE: $localize`:@@error.FORBIDDEN_ROLE:Diese Aktion ist für Ihre Rolle nicht erlaubt.`,
+    INVITE_INVALID: $localize`:@@error.INVITE_INVALID:Der Einladungslink ist ungültig. Bitte den Scrum Master um einen neuen.`,
     PROJECT_NOT_ALLOWED: $localize`:@@error.PROJECT_NOT_ALLOWED:Für dieses GitLab-Projekt dürfen keine Sitzungen angelegt werden.`,
     SESSION_NOT_FOUND: $localize`:@@error.SESSION_NOT_FOUND:Die Sitzung wurde nicht gefunden oder ist abgelaufen.`,
     ISSUE_NOT_FOUND: $localize`:@@error.ISSUE_NOT_FOUND:Das Issue wurde im GitLab-Projekt nicht gefunden.`,

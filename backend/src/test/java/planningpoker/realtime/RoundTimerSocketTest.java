@@ -76,7 +76,7 @@ class RoundTimerSocketTest {
         RestCalls.Created created = RestCalls.createSession("Anna " + suffix);
         sessionId = created.sessionId();
         scrumMaster = created.scrumMaster();
-        developers = List.of(RestCalls.join(sessionId, "Ben " + suffix), RestCalls.join(sessionId, "Cleo " + suffix));
+        developers = List.of(RestCalls.join(created, "Ben " + suffix), RestCalls.join(created, "Cleo " + suffix));
     }
 
     @AfterEach

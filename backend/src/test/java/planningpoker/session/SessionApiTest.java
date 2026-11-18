@@ -39,7 +39,7 @@ class SessionApiTest {
         GitLabStubs.defaultIssue(gitlab);
     }
 
-    record Created(String sessionId, String participantId, String token) {}
+    record Created(String sessionId, String participantId, String token, String developerInvite, String viewerInvite) {}
 
     record Joined(String participantId, String token) {}
 
@@ -53,21 +53,40 @@ class SessionApiTest {
                 .when()
                 .post("/api/sessions");
         response.then().statusCode(201);
+        String sessionId = response.jsonPath().getString("sessionId");
+        String token = response.jsonPath().getString("token");
+        Response snapshot =
+                given().header("Authorization", "Bearer " + token).when().get("/api/sessions/" + sessionId);
+        snapshot.then().statusCode(200);
         return new Created(
-                response.jsonPath().getString("sessionId"),
+                sessionId,
                 response.jsonPath().getString("participantId"),
-                response.jsonPath().getString("token"));
+                token,
+                snapshot.jsonPath().getString("invites.developer"),
+                snapshot.jsonPath().getString("invites.viewer"));
     }
 
-    static Joined join(String sessionId, String name) {
+    static Joined join(Created created, String name) {
+        return join(created.sessionId(), created.developerInvite(), name);
+    }
+
+    static Joined joinAsViewer(Created created, String name) {
+        return join(created.sessionId(), created.viewerInvite(), name);
+    }
+
+    static Joined join(String sessionId, String invite, String name) {
         Response response = given().contentType(ContentType.JSON)
-                .body("{\"name\":\"" + name + "\"}")
+                .body(joinBody(name, invite))
                 .when()
                 .post("/api/sessions/" + sessionId + "/participants");
         response.then().statusCode(201);
         return new Joined(
                 response.jsonPath().getString("participantId"),
                 response.jsonPath().getString("token"));
+    }
+
+    static String joinBody(String name, String invite) {
+        return "{\"name\":\"" + name + "\",\"invite\":\"" + invite + "\"}";
     }
 
     @Test
@@ -94,7 +113,7 @@ class SessionApiTest {
     @Test
     void joinsAsDeveloperWithoutThePreselectedIssue() {
         Created created = createSession(uniqueName("Anna"));
-        Joined joined = join(created.sessionId(), uniqueName("Ben"));
+        Joined joined = join(created, uniqueName("Ben"));
 
         given().header("Authorization", "Bearer " + joined.token())
                 .when()
@@ -111,10 +130,10 @@ class SessionApiTest {
     void rejectsATakenNameIgnoringCase() {
         String name = uniqueName("Ben");
         Created created = createSession(uniqueName("Anna"));
-        join(created.sessionId(), name);
+        join(created, name);
 
         given().contentType(ContentType.JSON)
-                .body("{\"name\":\"" + name.toUpperCase() + "\"}")
+                .body(joinBody(name.toUpperCase(), created.developerInvite()))
                 .when()
                 .post("/api/sessions/" + created.sessionId() + "/participants")
                 .then()
@@ -126,7 +145,7 @@ class SessionApiTest {
     @Test
     void rejectsJoiningAnUnknownSession() {
         given().contentType(ContentType.JSON)
-                .body("{\"name\":\"Ben\"}")
+                .body(joinBody("Ben", "any-invite"))
                 .when()
                 .post("/api/sessions/ZZZZZZZZ/participants")
                 .then()
@@ -140,7 +159,7 @@ class SessionApiTest {
         Created created = createSession(uniqueName("Anna"));
 
         given().contentType(ContentType.JSON)
-                .body("{\"name\":\"" + "x".repeat(31) + "\"}")
+                .body(joinBody("x".repeat(31), created.developerInvite()))
                 .when()
                 .post("/api/sessions/" + created.sessionId() + "/participants")
                 .then()
@@ -204,7 +223,7 @@ class SessionApiTest {
     @Test
     void keepsTokensOutOfSnapshotsAndLogs() throws IOException {
         Created created = createSession(uniqueName("Anna"));
-        Joined joined = join(created.sessionId(), uniqueName("Ben"));
+        Joined joined = join(created, uniqueName("Ben"));
 
         String snapshot = given().header("Authorization", "Bearer " + joined.token())
                 .when()

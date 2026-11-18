@@ -7,6 +7,7 @@ import { authInterceptor } from '../api/auth.interceptor';
 import { SessionView, lobbyDeveloper, lobbyScrumMaster } from '../api/examples';
 import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
+import { asViewer } from '../api/testing/viewer-snapshots';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
 import { AppShell } from './app-shell';
@@ -87,6 +88,7 @@ describe('AppShell', () => {
   it.each([
     ['the scrum master', lobbyScrumMaster, 'Anna · Scrum Master'],
     ['a developer', lobbyDeveloper, 'Ben · Entwickler'],
+    ['a viewer', asViewer(lobbyDeveloper, 'Paula'), 'Paula · Zuschauer'],
   ])('shows the session id and name and role of %s', async (_, snapshot, me) => {
     await open(snapshot);
 

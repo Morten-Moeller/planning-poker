@@ -29,9 +29,20 @@ export const MOCK_WRITE_WEIGHT = false;
 const TOKEN_PREFIX: Record<Role, string> = {
   SCRUM_MASTER: 'mock-scrum-master-',
   DEVELOPER: 'mock-developer-',
+  VIEWER: 'mock-viewer-',
 };
 
-const EXAMPLES: Record<Phase, Record<Role, SessionView>> = {
+export const MOCK_INVITES = lobbyScrumMaster.invites!;
+
+const MOCK_VIEWER: SessionView['participants'][number] = {
+  id: '01973f5e-2a4f-7a1b-8c2d-3e4f5a6b7c8d',
+  name: 'Paula',
+  role: 'VIEWER',
+  connected: true,
+  hasVoted: false,
+};
+
+const EXAMPLES: Record<Phase, Record<Exclude<Role, 'VIEWER'>, SessionView>> = {
   LOBBY: { SCRUM_MASTER: lobbyScrumMaster, DEVELOPER: lobbyDeveloper },
   DISCUSSION: { SCRUM_MASTER: discussionScrumMaster, DEVELOPER: discussionDeveloper },
   VOTING: { SCRUM_MASTER: votingScrumMaster, DEVELOPER: votingDeveloper },
@@ -59,21 +70,33 @@ export function roleOfToken(token: string | null): Role | null {
   if (token === null) {
     return null;
   }
-  if (token.startsWith(TOKEN_PREFIX.SCRUM_MASTER)) {
-    return 'SCRUM_MASTER';
-  }
-  if (token.startsWith(TOKEN_PREFIX.DEVELOPER)) {
+  const roles = Object.keys(TOKEN_PREFIX) as Role[];
+  return roles.find((role) => token.startsWith(TOKEN_PREFIX[role])) ?? null;
+}
+
+export function roleOfInvite(invite: string | undefined): Role | null {
+  if (invite === MOCK_INVITES.developer) {
     return 'DEVELOPER';
   }
-  return null;
+  return invite === MOCK_INVITES.viewer ? 'VIEWER' : null;
 }
 
 export function snapshotFor(role: Role): SessionView {
-  const example = EXAMPLES[mockPhase][role];
+  const example = role === 'VIEWER' ? viewerSnapshot() : EXAMPLES[mockPhase][role];
   return {
     ...example,
     project: MOCK_PROJECT,
     writeWeight: MOCK_WRITE_WEIGHT,
     serverTime: new Date().toISOString(),
+  };
+}
+
+function viewerSnapshot(): SessionView {
+  const example = EXAMPLES[mockPhase].DEVELOPER;
+  return {
+    ...example,
+    me: { participantId: MOCK_VIEWER.id, role: 'VIEWER' },
+    participants: [...example.participants, MOCK_VIEWER],
+    round: example.round === null ? null : { ...example.round, myVote: null },
   };
 }

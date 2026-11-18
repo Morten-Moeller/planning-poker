@@ -30,15 +30,24 @@
           @case ('DEVELOPER') {
             <ng-container i18n="@@session.role.DEVELOPER">Entwickler</ng-container>
           }
+          @case ('VIEWER') {
+            <ng-container i18n="@@session.role.VIEWER">Zuschauer</ng-container>
+          }
         }
       </dd>
       <dt i18n="@@session.participantsLabel">Teilnehmer</dt>
       <dd data-testid="session-participants">
         <span data-testid="session-participant-count">{{ session.participants.length }}</span
         >&ngsp;
-        <span data-testid="session-developer-count" i18n="@@facts.developers"
-          >({{ developers() }} Entwickler)</span
-        >
+        @if (viewers() > 0) {
+          <span data-testid="session-developer-count" i18n="@@facts.developersAndViewers"
+            >({{ developers() }} Entwickler, {{ viewers() }} Zuschauer)</span
+          >
+        } @else {
+          <span data-testid="session-developer-count" i18n="@@facts.developers"
+            >({{ developers() }} Entwickler)</span
+          >
+        }
       </dd>
     </dl>
   </section>

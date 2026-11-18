@@ -14,6 +14,7 @@ import {
 } from '../api/examples';
 import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
+import { asViewer, viewer } from '../api/testing/viewer-snapshots';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
 import { ParticipantList } from './participant-list';
@@ -156,6 +157,40 @@ describe('ParticipantList', () => {
     expect(row('Anna').querySelector('[data-testid="participant-chip"]')).toBeNull();
     expect(row('Anna').querySelector('[data-testid="participant-vote-status"]')).toBeNull();
     expect(row('Ben').querySelector('[data-testid="participant-role"]')).toBeNull();
+  });
+
+  it('lists viewers below the developers with the label and without a vote status', async () => {
+    const snapshot = withVotes(votingScrumMaster, ['Ben']);
+    await open({
+      ...snapshot,
+      participants: [snapshot.participants[0], viewer('Paula'), ...snapshot.participants.slice(1)],
+    });
+
+    const names = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="participant-name"]'),
+      (node) => node.textContent?.trim(),
+    );
+    expect(names).toEqual(['Anna', 'Ben', 'Cem', 'Paula']);
+    expect(text(row('Paula').querySelector<HTMLElement>('.role')!)).toBe('👁 Zuschauer');
+    expect(text(row('Paula').querySelector<HTMLElement>('[data-testid="participant-role"]')!)).toBe(
+      'Zuschauer',
+    );
+    expect(row('Paula').querySelector('[data-testid="participant-chip"]')).toBeNull();
+    expect(row('Paula').querySelector('[data-testid="participant-vote-status"]')).toBeNull();
+    expect(row('Paula').querySelector('.activity')).toBeNull();
+    expect(text(row('Paula').querySelector<HTMLElement>('.connection')!)).toBe('● verbunden');
+  });
+
+  it.each([
+    ['LOBBY', lobbyDeveloper],
+    ['DISCUSSION', discussionDeveloper],
+    ['REVEALED', revealedDeveloper],
+  ])('shows the own viewer row in %s with (du) and without a status', async (_, snapshot) => {
+    await open(asViewer(snapshot));
+
+    expect(row('Paula').classList).toContain('me');
+    expect(row('Paula').querySelector('.activity')).toBeNull();
+    expect(row('Paula').querySelector('[data-testid="participant-chip"]')).toBeNull();
   });
 
   it('marks the own row with (du)', async () => {

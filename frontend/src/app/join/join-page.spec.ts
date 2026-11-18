@@ -15,6 +15,7 @@ class EmptyPage {}
 
 const SESSION_ID = 'K7P2QX9M';
 const JOIN_URL = `/api/sessions/${SESSION_ID}/participants`;
+const INVITE = 'q3Vx8LkP0aZ1bC2dE3fG4hI5jK6lM7nO';
 
 function spacedText(element: Element | null | undefined): string {
   if (!element) {
@@ -57,7 +58,7 @@ describe('JoinPage', () => {
       ],
     });
     harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl(`/session/${SESSION_ID}/join`);
+    await harness.navigateByUrl(`/session/${SESSION_ID}/join?invite=${INVITE}`);
     http = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);
   });
@@ -137,7 +138,7 @@ describe('JoinPage', () => {
     await harness.fixture.whenStable();
     expect(TestBed.inject(PreferencesStore).read().name).toBe('Ben');
 
-    await harness.navigateByUrl('/session/M3N4P5Q6/join');
+    await harness.navigateByUrl(`/session/M3N4P5Q6/join?invite=${INVITE}`);
     expect((element('join-name') as HTMLInputElement).value).toBe('Ben');
   });
 
@@ -185,7 +186,7 @@ describe('JoinPage', () => {
   });
 
   it('joins the session in capital letters from a link in small letters', async () => {
-    await harness.navigateByUrl(`/session/${SESSION_ID.toLowerCase()}/join`);
+    await harness.navigateByUrl(`/session/${SESSION_ID.toLowerCase()}/join?invite=${INVITE}`);
     expect(text('join-session-id')).toBe(SESSION_ID);
 
     await submitName('Ben');
@@ -204,7 +205,7 @@ describe('JoinPage', () => {
   it('joins, stores the token and opens the session room', async () => {
     await submitName(' Ben ');
     const request = http.expectOne(JOIN_URL);
-    expect(request.request.body).toEqual({ name: 'Ben' });
+    expect(request.request.body).toEqual({ name: 'Ben', invite: INVITE });
     request.flush(
       { participantId: 'p-ben', token: 'token-ben' },
       { status: 201, statusText: 'Created' },
@@ -236,7 +237,61 @@ describe('JoinPage', () => {
       expect((element('join-name') as HTMLInputElement).value).toBe('Ben');
       expect(TestBed.inject(ErrorState).error()).toBeNull();
       expect(TestBed.inject(TokenStore).identity(SESSION_ID)).toBeNull();
-      expect(router.url).toBe(`/session/${SESSION_ID}/join`);
+      expect(router.url).toBe(`/session/${SESSION_ID}/join?invite=${INVITE}`);
     },
   );
+
+  it('shows the hint for viewers with as=viewer and sends the same invite', async () => {
+    await harness.navigateByUrl(`/session/${SESSION_ID}/join?invite=${INVITE}&as=viewer`);
+
+    expect(text('join-viewer-hint')).toBe(
+      'Du trittst als Zuschauer bei. Du siehst die Runde, schätzt aber nicht mit.',
+    );
+    expect(element('join-role-hint')).toBeNull();
+
+    await submitName('Paula');
+    const request = http.expectOne(JOIN_URL);
+    expect(request.request.body).toEqual({ name: 'Paula', invite: INVITE });
+    request.flush(
+      { participantId: 'p-paula', token: 'token-paula' },
+      { status: 201, statusText: 'Created' },
+    );
+    await harness.fixture.whenStable();
+    expect(router.url).toBe(`/session/${SESSION_ID}`);
+  });
+
+  it('shows the developer hint without as=viewer', () => {
+    expect(element('join-viewer-hint')).toBeNull();
+    expect(element('join-role-hint')).not.toBeNull();
+  });
+
+  it.each(['', '?invite=', '?invite=%20%20', '?as=viewer'])(
+    'shows the missing invite without a form for the query "%s"',
+    async (query) => {
+      await harness.navigateByUrl(`/session/${SESSION_ID}/join${query}`);
+
+      expect(text('join-invite-missing')).toBe(
+        'Zum Beitreten brauchst du einen Einladungslink vom Scrum Master.',
+      );
+      expect(element('join-form')).toBeNull();
+      expect(element('join-role-hint')).toBeNull();
+      expect(element('join-viewer-hint')).toBeNull();
+      http.expectNone(JOIN_URL);
+    },
+  );
+
+  it('replaces the form with the invalid invite on INVITE_INVALID', async () => {
+    await submitName('Ben');
+    fail('INVITE_INVALID', 403);
+    await harness.fixture.whenStable();
+
+    expect(text('join-invite-invalid')).toBe(
+      'Der Einladungslink ist ungültig. Bitte den Scrum Master um einen neuen.',
+    );
+    expect(element('join-form')).toBeNull();
+    expect(element('join-role-hint')).toBeNull();
+    expect(TestBed.inject(ErrorState).error()).toBeNull();
+    expect(TestBed.inject(TokenStore).identity(SESSION_ID)).toBeNull();
+    expect(router.url).toBe(`/session/${SESSION_ID}/join?invite=${INVITE}`);
+  });
 });

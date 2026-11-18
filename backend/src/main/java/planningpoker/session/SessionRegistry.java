@@ -47,7 +47,7 @@ public class SessionRegistry {
             while (true) {
                 Session session = new Session(
                         Ids.sessionId(), gitlabProjectId, issueIid, now, maxParticipants, project, writeWeight);
-                Participant scrumMaster = session.join(creatorName);
+                Participant scrumMaster = session.joinAsScrumMaster(creatorName);
                 if (sessions.putIfAbsent(session.id(), new Entry(session, new ReentrantLock())) == null) {
                     return new Created(session, scrumMaster);
                 }

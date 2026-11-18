@@ -35,7 +35,7 @@ async function openRoom(page: Page, browser: Browser): Promise<Room> {
   await page.getByTestId('create-issue').fill('42');
   await page.getByTestId('create-submit').click();
   await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  const link = (await page.getByTestId('share-link').textContent()) ?? '';
+  const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
 
   const ben = await (await browser.newContext()).newPage();
   await ben.goto(link);
@@ -89,7 +89,7 @@ for (const scheme of ['light', 'dark'] as const) {
     expect(await accent(room(page))).toBe(ACCENTS[scheme][0]);
     expect(await background(page.getByTestId('toolbar-motif'))).toBe(rgb(ACCENTS[scheme][0]));
 
-    const link = (await page.getByTestId('share-link').textContent()) ?? '';
+    const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
     const ben = await (await browser.newContext({ colorScheme: scheme })).newPage();
     await ben.goto(link);
     const hand = ben.getByTestId('card-hand');

@@ -76,8 +76,8 @@ test('three people estimate two issues and the scrum master writes the result to
   await anna.getByTestId('create-issue').fill('42');
   await anna.getByTestId('create-submit').click();
   await expect(anna).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  const sessionId = (await anna.getByTestId('share-session-id').textContent()) ?? '';
-  const link = (await anna.getByTestId('share-link').textContent()) ?? '';
+  const sessionId = (await anna.getByTestId('session-id').textContent()) ?? '';
+  const link = (await anna.getByTestId('share-link-developer').textContent()) ?? '';
 
   const ben = await newPage(browser);
   await ben.goto(link.replace(sessionId, sessionId.toLowerCase()));
@@ -85,9 +85,7 @@ test('three people estimate two issues and the scrum master writes the result to
   await joinWithName(ben, 'Ben');
 
   const cem = await newPage(browser);
-  await cem.goto('/');
-  await cem.getByTestId('join-session-id-input').fill(sessionId.toLowerCase());
-  await cem.getByTestId('join-session-id-submit').click();
+  await cem.goto(link);
   await joinWithName(cem, 'Cem');
   expect(new URL(cem.url()).pathname).toBe(`/session/${sessionId}`);
 

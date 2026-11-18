@@ -6,11 +6,33 @@
       <code data-testid="join-session-id">{{ sessionId() }}</code></span
     >
     <h1 i18n="@@join.nameTitle">Mit welchem Namen?</h1>
-    <span class="role-hint" data-testid="join-role-hint" i18n="@@join.roleHint"
-      >Du trittst als Entwickler bei. Der Name ist für alle sichtbar.</span
-    >
+    @if (invite() !== '' && !sessionNotFound() && !inviteInvalid()) {
+      @if (viewer()) {
+        <span class="role-hint" data-testid="join-viewer-hint" i18n="@@join.viewerHint"
+          >Du trittst als Zuschauer bei. Du siehst die Runde, schätzt aber nicht mit.</span
+        >
+      } @else {
+        <span class="role-hint" data-testid="join-role-hint" i18n="@@join.roleHint"
+          >Du trittst als Entwickler bei. Der Name ist für alle sichtbar.</span
+        >
+      }
+    }
   </div>
-  @if (sessionNotFound()) {
+  @if (invite() === '') {
+    <div class="note note-error" role="alert">
+      <span class="note-icon" aria-hidden="true">⚠</span>
+      <span data-testid="join-invite-missing" i18n="@@join.inviteMissing"
+        >Zum Beitreten brauchst du einen Einladungslink vom Scrum Master.</span
+      >
+    </div>
+  } @else if (inviteInvalid()) {
+    <div class="note note-error" role="alert">
+      <span class="note-icon" aria-hidden="true">⚠</span>
+      <span data-testid="join-invite-invalid" i18n="@@join.inviteInvalid"
+        >Der Einladungslink ist ungültig. Bitte den Scrum Master um einen neuen.</span
+      >
+    </div>
+  } @else if (sessionNotFound()) {
     <div class="note note-error not-found" role="alert" data-testid="join-not-found">
       <span class="not-found-title"
         ><span class="error-icon" aria-hidden="true">⚠</span>

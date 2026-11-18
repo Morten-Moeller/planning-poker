@@ -105,9 +105,9 @@ class SessionLimitsTest {
                 .then();
     }
 
-    private ValidatableResponse join(String sessionId, String name) {
+    private ValidatableResponse join(String sessionId, String invite, String name) {
         return given().contentType(ContentType.JSON)
-                .body("{\"name\":\"" + name + " " + suffix + "\"}")
+                .body(SessionApiTest.joinBody(name + " " + suffix, invite))
                 .when()
                 .post("/api/sessions/" + sessionId + "/participants")
                 .then();
@@ -127,15 +127,25 @@ class SessionLimitsTest {
     }
 
     @Test
-    void theFourthParticipantIsRejectedAndTheSessionStaysUnchanged() {
+    void theFourthParticipantIsRejectedCountingViewersAndTheSessionStaysUnchanged() {
         ValidatableResponse created = create("Anna").statusCode(201);
         String sessionId = created.extract().path("sessionId");
         String token = created.extract().path("token");
-        join(sessionId, "Ben").statusCode(201);
-        join(sessionId, "Cleo").statusCode(201);
+        ValidatableResponse snapshot = given().header("Authorization", "Bearer " + token)
+                .when()
+                .get("/api/sessions/" + sessionId)
+                .then()
+                .statusCode(200);
+        String developerInvite = snapshot.extract().path("invites.developer");
+        String viewerInvite = snapshot.extract().path("invites.viewer");
+        join(sessionId, developerInvite, "Ben").statusCode(201);
+        join(sessionId, viewerInvite, "Cleo").statusCode(201);
         int eventsBefore = changedEvents.of(sessionId).size();
 
-        join(sessionId, "Dora").statusCode(409).contentType(PROBLEM).body("errorCode", equalTo("LIMIT_REACHED"));
+        join(sessionId, developerInvite, "Dora")
+                .statusCode(409)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("LIMIT_REACHED"));
 
         assertEquals(eventsBefore, changedEvents.of(sessionId).size());
         given().header("Authorization", "Bearer " + token)

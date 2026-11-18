@@ -7,7 +7,7 @@ type SessionView = components['schemas']['SessionView'];
 type HistoryEntry = components['schemas']['HistoryEntryView'];
 
 export function lastConfirmed(session: SessionView | null): HistoryEntry | null {
-  if (session === null || session.phase !== 'LOBBY' || session.me.role !== 'DEVELOPER') {
+  if (session === null || session.phase !== 'LOBBY' || session.me.role === 'SCRUM_MASTER') {
     return null;
   }
   const latest = session.history[0];

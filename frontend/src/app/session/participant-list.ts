@@ -8,6 +8,13 @@ import { SessionStore } from '../api/session-store';
 })
 export class ParticipantList {
   protected readonly store = inject(SessionStore);
+  protected readonly participants = computed(() => {
+    const participants = this.store.participants();
+    return [
+      ...participants.filter((participant) => participant.role !== 'VIEWER'),
+      ...participants.filter((participant) => participant.role === 'VIEWER'),
+    ];
+  });
   protected readonly myId = computed(() => this.store.me()?.participantId ?? null);
   protected readonly round = computed(() => {
     const phase = this.store.phase();

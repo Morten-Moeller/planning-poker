@@ -17,6 +17,8 @@ export class SessionStore {
   readonly me = computed(() => this.snapshot()?.me ?? null);
   readonly role = computed(() => this.me()?.role ?? null);
   readonly isScrumMaster = computed(() => this.role() === 'SCRUM_MASTER');
+  readonly isViewer = computed(() => this.role() === 'VIEWER');
+  readonly invites = computed(() => this.snapshot()?.invites ?? null);
   readonly phase = computed(() => this.snapshot()?.phase ?? null);
   readonly participants = computed(() => this.snapshot()?.participants ?? []);
   readonly activeIssue = computed(() => this.snapshot()?.activeIssue ?? null);

@@ -1,7 +1,7 @@
 # Planning Poker
 
-Ein Scrum-Team schätzt GitLab-Issues synchron: Der Scrum Master legt eine Sitzung an, teilt Link
-oder Session-ID, wählt ein Issue und gibt es frei. Die Entwickler wählen verdeckt eine Karte, der
+Ein Scrum-Team schätzt GitLab-Issues synchron: Der Scrum Master legt eine Sitzung an, teilt die
+Einladungslinks für Entwickler und Zuschauer, wählt ein Issue und gibt es frei. Die Entwickler wählen verdeckt eine Karte, der
 Scrum Master löst auf, lässt bei Bedarf erneut schätzen und übernimmt den vereinbarten Wert als
 Kommentar an das GitLab-Issue. Lösung der Coding Challenge Planning Poker
 ([Frontend-README](https://github.com/buchner-org/coding-challenge/blob/main/planning-poker/frontend/README.md),
@@ -127,7 +127,7 @@ und `backend/src/main/resources/META-INF/openapi.yaml`); `make contracts` schrei
 TypeScript-Typen `frontend/src/app/api/schema.d.ts`, `make drift` meldet einen veralteten Stand.
 Im Dev-Modus zeigt `http://localhost:8080/q/swagger-ui` den Vertrag. Acht Beispiel-Snapshots je
 Phase und Rolle liegen unter `contracts/api/examples/`; Backend-Test und Frontend-Typen prüfen sie.
-Version des Vertrags: `3.0.0` (ADR 0005 bis ADR 0010).
+Version des Vertrags: `4.0.0` (ADR 0014: Beitreten nur mit Einladungscode).
 
 ### Ablauf
 
@@ -137,10 +137,18 @@ Beide Felder suchen 300 ms nach der letzten Eingabe und nehmen weiter eine getip
 an. Ist die Projekt-Allowlist gesetzt, zeigt die Liste genau deren Projekte; sonst die Projekte,
 in denen der GitLab-Token Mitglied ist (ADR 0008).
 
+Rollen (ADR 0003, ADR 0014): Der Ersteller ist Scrum Master. Im Bereich „Teilen“ sieht nur er zwei
+Einladungslinks `…/session/<id>/join?invite=<code>`, einen für Entwickler und einen für
+Zuschauer (dieser mit `&as=viewer` nur für den Hinweistext). Der Server erzeugt je Sitzung zwei
+Codes mit 192 Bit aus `SecureRandom` und leitet die Rolle beim Beitreten nur aus dem Code ab;
+Beitreten nur mit der Session-ID geht nicht. Entwickler schätzen. Zuschauer sehen die Runde,
+haben keine Karten, steuern nicht und zählen nicht bei „Alle haben geschätzt“ und „Nicht
+geschätzt“, wohl aber zur Obergrenze der Teilnehmer.
+
 Befehle gehen per REST an `/api` und antworten ohne Zustand (204 oder 201 mit den neuen IDs).
 Nach jeder Änderung sendet der Server jedem verbundenen Teilnehmer per WebSocket den
 vollständigen, je Empfänger gefilterten Snapshot `session.state` (`SessionView`): verdeckte
-Karten anderer fehlen bis zur Auflösung, `preselectedIssueIid` sieht nur der Scrum Master, in
+Karten anderer fehlen bis zur Auflösung, `preselectedIssueIid` und `invites` sieht nur der Scrum Master, in
 `LOBBY` sind `activeIssue` und `round` `null`, in `DISCUSSION` hat `round` weder Stimmen noch
 Frist. Das Frontend ersetzt seinen Zustand mit jedem
 Snapshot vollständig (ADR 0004). Jeder Snapshot trägt `timerSeconds` (Timer der Sitzung oder
@@ -185,8 +193,8 @@ trägt jeder Aufruf `Authorization: Bearer <token>`.
 | `GET /api/projects?search=&page=` | offen | – | 200 `{ items: [{ id, name, pathWithNamespace, webUrl }], nextPage }` | 400, 502 |
 | `GET /api/projects/{projectId}/issues?search=&page=` | offen | – | 200 `{ items, nextPage, total }` (offene Issues mit `weight`) | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
 | `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid? }`; ohne `issueIid` startet die Sitzung ohne Vorauswahl | 201 `{ sessionId, participantId, token }` | 400, 403 `PROJECT_NOT_ALLOWED`, 404 `ISSUE_NOT_FOUND` oder `PROJECT_NOT_FOUND`, 409 `LIMIT_REACHED`, 502 |
-| `POST /api/sessions/{id}/participants` | offen | `{ name }` | 201 `{ participantId, token }` | 400, 404, 409 `NAME_TAKEN`, `LIMIT_REACHED` |
-| `GET /api/sessions/{id}` | beide | – | 200 `SessionView` | 401, 404 |
+| `POST /api/sessions/{id}/participants` | offen | `{ name, invite }`; der Code setzt die Rolle Entwickler oder Zuschauer | 201 `{ participantId, token }` | 400, 403 `INVITE_INVALID`, 404, 409 `NAME_TAKEN`, `LIMIT_REACHED` |
+| `GET /api/sessions/{id}` | alle | – | 200 `SessionView` | 401, 404 |
 | `GET /api/sessions/{id}/issues?search=&page=&weight=&period=` | Scrum Master | – | 200 `{ items, nextPage, total }` mit `weight` je Eintrag | 400 `VALIDATION_ERROR`, 403, 502 |
 | `POST /api/sessions/{id}/active-issue` | Scrum Master | `{ issueIid }` | 204 | 400, 403, 404, 409, 502 |
 | `PUT /api/sessions/{id}/timer` | Scrum Master | `{ seconds }` (5 bis 3600 oder `null`) | 204 | 400, 403 |
@@ -226,7 +234,8 @@ Fehler folgen RFC 9457 als `application/problem+json`; Clients entscheiden nur a
 | `VALIDATION_ERROR` | 400 | Request-Body oder Parameter ungültig (leerer Name, fehlende Projekt-ID) |
 | `INVALID_CARD` | 400 | Karte nicht im Kartensatz |
 | `UNAUTHORIZED` | 401 | Token fehlt oder ist unbekannt |
-| `FORBIDDEN_ROLE` | 403 | Aktion der anderen Rolle vorbehalten |
+| `FORBIDDEN_ROLE` | 403 | Aktion einer anderen Rolle vorbehalten |
+| `INVITE_INVALID` | 403 | Einladungscode beim Beitreten passt zu keinem der zwei Codes der Sitzung |
 | `PROJECT_NOT_ALLOWED` | 403 | Projekt nicht in der Projekt-Allowlist; GitLab wird nicht gefragt |
 | `SESSION_NOT_FOUND` | 404 | Sitzung unbekannt oder verfallen |
 | `ISSUE_NOT_FOUND` | 404 | Issue im GitLab-Projekt nicht gefunden |

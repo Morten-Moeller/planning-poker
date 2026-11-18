@@ -27,6 +27,7 @@ import {
   changeMockPhase,
   currentMockPhase,
   issueToken,
+  roleOfInvite,
   roleOfToken,
   snapshotFor,
 } from './mock-session';
@@ -135,13 +136,20 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
   }
   const subPath = match[2] ?? '';
   if (subPath === '/participants' && request.method === 'POST') {
-    const name = (request.body as JoinSessionRequest | null)?.name?.trim().toLowerCase();
-    if (name === MOCK_TAKEN_NAME.toLowerCase()) {
+    const body = request.body as JoinSessionRequest | null;
+    if (!body?.invite?.trim()) {
+      return problem(400, 'Bad Request', 'VALIDATION_ERROR', 'invite: must not be blank');
+    }
+    const joinedRole = roleOfInvite(body.invite);
+    if (joinedRole === null) {
+      return problem(403, 'Forbidden', 'INVITE_INVALID', 'The invite code is not valid.');
+    }
+    if (body.name?.trim().toLowerCase() === MOCK_TAKEN_NAME.toLowerCase()) {
       return problem(409, 'Conflict', 'NAME_TAKEN', 'The name is already taken.');
     }
     const joined: JoinSessionResponse = {
-      participantId: snapshotFor('DEVELOPER').me.participantId,
-      token: issueToken('DEVELOPER'),
+      participantId: snapshotFor(joinedRole).me.participantId,
+      token: issueToken(joinedRole),
     };
     return ok(joined, 201);
   }

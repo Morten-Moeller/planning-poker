@@ -75,6 +75,10 @@
           </button>
         </div>
       }
+    } @else if (store.isViewer()) {
+      <p class="waiting" role="status" data-testid="viewer-hint" i18n="@@roundFooter.viewer">
+        Du schaust zu.
+      </p>
     } @else {
       <app-card-deck [sessionId]="sessionId()" [locked]="store.phase() === 'DISCUSSION'" />
     }
