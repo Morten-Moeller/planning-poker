@@ -19,6 +19,7 @@ export type ProjectSummary = Schemas['ProjectSummary'];
 export type IssueSummary = Schemas['IssueSummary'];
 export type WeightFilter = Schemas['WeightFilter'];
 export type UpdatedPeriod = Schemas['UpdatedPeriod'];
+export type ConfigResponse = Schemas['ConfigResponse'];
 
 export interface IssueQuery {
   search?: string;
@@ -33,6 +34,10 @@ export interface IssueFilterQuery extends IssueQuery {
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
+
+  config(): Observable<ConfigResponse> {
+    return this.http.get<ConfigResponse>('/api/config');
+  }
 
   createSession(request: CreateSessionRequest): Observable<CreateSessionResponse> {
     return this.http.post<CreateSessionResponse>('/api/sessions', request);

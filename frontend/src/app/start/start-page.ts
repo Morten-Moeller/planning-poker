@@ -11,7 +11,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   Observable,
   Subject,
@@ -20,6 +20,7 @@ import {
   debounce,
   distinctUntilChanged,
   filter,
+  forkJoin,
   map,
   merge,
   of,
@@ -30,11 +31,12 @@ import {
   timer,
 } from 'rxjs';
 import { ApiError, type ErrorCode } from '../api/api-error';
-import { ApiService, IssueSummary, ProjectSummary } from '../api/api.service';
+import { ApiService, IssueSummary, ProjectSummary, SessionView } from '../api/api.service';
 import { errorMessage, formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
 import { participantNameValidators } from '../api/participant-name';
 import { PreferencesStore, TIMER_OFF } from '../api/preferences-store';
+import { RecentSession, RecentSessions } from '../api/recent-sessions';
 import { TokenStore } from '../api/token-store';
 import { HealthApi } from './health-api';
 
@@ -68,6 +70,16 @@ function idle<T>(): SearchResult<T> {
   return { items: [], searched: false, error: null };
 }
 
+export interface RecentSessionRow {
+  entry: RecentSession;
+  view: SessionView | null;
+}
+
+const GONE_SESSION_ERRORS: ReadonlySet<string> = new Set(['SESSION_NOT_FOUND', 'UNAUTHORIZED']);
+const MINUTE_MS = 60_000;
+const HOUR_MINUTES = 60;
+const DAY_HOURS = 24;
+
 interface SearchQuery {
   projectId: string;
   text: string;
@@ -78,6 +90,7 @@ interface SearchQuery {
   selector: 'app-start-page',
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     MatAutocompleteModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -95,6 +108,7 @@ export class StartPage {
   private readonly saved = this.preferences.read();
   private readonly errorState = inject(ErrorState);
   private readonly router = inject(Router);
+  private readonly recent = inject(RecentSessions);
 
   private readonly healthChecks = new Subject<void>();
   private readonly projectFocus = new Subject<void>();
@@ -151,9 +165,11 @@ export class StartPage {
   protected readonly creating = signal(false);
   protected readonly projects = signal(idle<ProjectSummary>());
   protected readonly issues = signal(idle<IssueSummary>());
+  protected readonly recentSessions = signal<RecentSessionRow[]>([]);
 
   constructor() {
     const destroyRef = inject(DestroyRef);
+    this.loadRecentSessions(destroyRef);
     const projectText = textOf(this.createForm.controls.gitlabProjectId);
     const issueText = textOf(this.createForm.controls.issueIid);
 
@@ -193,6 +209,56 @@ export class StartPage {
         takeUntilDestroyed(destroyRef),
       )
       .subscribe();
+  }
+
+  private loadRecentSessions(destroyRef: DestroyRef): void {
+    const enabled = this.recent.enabled();
+    if (enabled === false) {
+      this.recent.clear();
+      return;
+    }
+    const entries = enabled === true ? this.recent.list() : [];
+    if (entries.length === 0) {
+      return;
+    }
+    forkJoin(entries.map((entry) => this.checkRecentSession(entry)))
+      .pipe(takeUntilDestroyed(destroyRef))
+      .subscribe((rows) =>
+        this.recentSessions.set(rows.filter((row): row is RecentSessionRow => row !== null)),
+      );
+  }
+
+  private checkRecentSession(entry: RecentSession): Observable<RecentSessionRow | null> {
+    return this.api.getSession(entry.sessionId).pipe(
+      map((view): RecentSessionRow | null => ({ entry, view })),
+      catchError((error: unknown) => {
+        this.errorState.clear();
+        if (error instanceof ApiError && GONE_SESSION_ERRORS.has(error.errorCode)) {
+          this.tokens.remove(entry.sessionId);
+          return of(null);
+        }
+        return of({ entry, view: null });
+      }),
+    );
+  }
+
+  protected removeRecentSession(sessionId: string): void {
+    this.recent.remove(sessionId);
+    this.recentSessions.update((rows) => rows.filter((row) => row.entry.sessionId !== sessionId));
+  }
+
+  protected lastUsed(entry: RecentSession): { value: number; unit: 'minute' | 'hour' | 'day' } {
+    const minutes = Math.max(
+      1,
+      Math.floor((Date.now() - Date.parse(entry.lastUsedAt)) / MINUTE_MS),
+    );
+    if (minutes < HOUR_MINUTES) {
+      return { value: minutes, unit: 'minute' };
+    }
+    const hours = Math.floor(minutes / HOUR_MINUTES);
+    return hours < DAY_HOURS
+      ? { value: hours, unit: 'hour' }
+      : { value: Math.floor(hours / DAY_HOURS), unit: 'day' };
   }
 
   private search<T>(
@@ -267,7 +333,11 @@ export class StartPage {
       })
       .subscribe({
         next: ({ sessionId, participantId, token }) => {
-          this.tokens.store(sessionId, { participantId, token });
+          this.tokens.store(
+            sessionId,
+            { participantId, token },
+            { role: 'SCRUM_MASTER', name: participantName },
+          );
           this.preferences.save({ name: participantName, projectId });
           this.applySavedTimer(sessionId);
         },

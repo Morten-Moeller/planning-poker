@@ -1,15 +1,46 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { ParticipantRole, RecentSessions } from './recent-sessions';
 
 export interface SessionIdentity {
   participantId: string;
   token: string;
 }
 
+export interface ParticipantDetails {
+  role: ParticipantRole;
+  name: string;
+}
+
 const KEY_PREFIX = 'planningpoker.session.';
 
 @Injectable({ providedIn: 'root' })
 export class TokenStore {
+  private readonly recent = inject(RecentSessions);
+
   identity(sessionId: string): SessionIdentity | null {
+    return this.storedIdentity(sessionId) ?? this.recentIdentity(sessionId);
+  }
+
+  store(sessionId: string, identity: SessionIdentity, details?: ParticipantDetails): void {
+    sessionStorage.setItem(KEY_PREFIX + sessionId, JSON.stringify(identity));
+    if (this.recent.enabled() === true && details !== undefined) {
+      this.recent.save({
+        sessionId,
+        participantId: identity.participantId,
+        token: identity.token,
+        role: details.role,
+        name: details.name,
+        lastUsedAt: new Date().toISOString(),
+      });
+    }
+  }
+
+  remove(sessionId: string): void {
+    sessionStorage.removeItem(KEY_PREFIX + sessionId);
+    this.recent.remove(sessionId);
+  }
+
+  private storedIdentity(sessionId: string): SessionIdentity | null {
     const raw = sessionStorage.getItem(KEY_PREFIX + sessionId);
     if (raw === null) {
       return null;
@@ -24,12 +55,17 @@ export class TokenStore {
     }
   }
 
-  store(sessionId: string, identity: SessionIdentity): void {
+  private recentIdentity(sessionId: string): SessionIdentity | null {
+    if (this.recent.enabled() !== true) {
+      return null;
+    }
+    const entry = this.recent.find(sessionId);
+    if (entry === null) {
+      return null;
+    }
+    const identity = { participantId: entry.participantId, token: entry.token };
     sessionStorage.setItem(KEY_PREFIX + sessionId, JSON.stringify(identity));
-  }
-
-  remove(sessionId: string): void {
-    sessionStorage.removeItem(KEY_PREFIX + sessionId);
+    return identity;
   }
 }
 

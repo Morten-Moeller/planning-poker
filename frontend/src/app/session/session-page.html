@@ -9,7 +9,7 @@
         </section>
       }
       <app-participant-list />
-      <app-share-session [sessionId]="session.sessionId" />
+      <app-share-session [sessionId]="session.sessionId" [scrumMaster]="store.isScrumMaster()" />
       <app-session-facts />
       @if (store.history().length > 0) {
         <app-session-history />

@@ -71,7 +71,7 @@ export class JoinPage {
     this.joining.set(true);
     this.api.joinSession(sessionId, { name }).subscribe({
       next: ({ participantId, token }) => {
-        this.tokens.store(sessionId, { participantId, token });
+        this.tokens.store(sessionId, { participantId, token }, { role: 'DEVELOPER', name });
         this.preferences.save({ name });
         void this.router.navigate(['/session', sessionId]);
       },

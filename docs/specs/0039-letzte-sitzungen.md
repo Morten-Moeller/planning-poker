@@ -1,7 +1,7 @@
 ---
 id: "0039"
 title: Letzte Sitzungen und Weg zur Startseite
-status: approved
+status: Review
 risk: high
 adrs: ["0013"]
 owner: Morten Möller

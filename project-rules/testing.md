@@ -158,7 +158,12 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   `theme-toggle.spec.ts` (spec 0037) clicks `theme-toggle` under `emulateMedia({ colorScheme })`
   light and dark, checks `--mat-sys-surface`, the page background, `aria-label` and the symbol
   before and after a reload, and in the room `--app-card-accent` of `.room` and the colour of
-  `toolbar-motif`. Every
+  `toolbar-motif`; `recent-sessions.spec.ts` (spec 0039) creates a session, closes the page and
+  opens `/` in a new page of the same browser context (`localStorage` stays, `sessionStorage` is
+  empty), returns as scrum master and, in a second context, as developer, opens „＋ Neue Sitzung“
+  and creates a second session on project `5678` („Release Notes Test“,
+  `project-5678.json`), and answers `GET /api/config` with `rememberSessions: false` through
+  `context.route` for the switched-off feature. Every
   Playwright test starts with a new browser context and so an empty `localStorage`.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.
