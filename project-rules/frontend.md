@@ -146,7 +146,17 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   specification names the value.
 - Theme „Werkbank“ (spec 0027, design files in `docs/design/`): `mat.theme` with the blue palette
   and `theme-type: color-scheme`; `mat.theme-overrides` sets the fixed values of One Light and,
-  under `prefers-color-scheme: dark`, of One Dark. There is no switch in the UI. Own CSS variables next
+  for the dark design, of One Dark. Light and dark (spec 0037): the toggle `theme-toggle` at the
+  right end of the toolbar (🌙 in the light design, ☀️ in the dark one, `aria-pressed` true in the
+  dark one) switches from the visible design to the other one; `ThemeService` (`shell`) stores the
+  choice as `theme` (`system`, `light`, `dark`) in the `PreferencesStore` and sets
+  `data-theme="light|dark"` on `<html>` before the first render (`provideAppInitializer`); without
+  a choice the design follows `prefers-color-scheme`. Dark rules never use
+  `@media (prefers-color-scheme: dark)` directly but the mixin `dark` of
+  `frontend/src/styles/_theme.scss`: it writes the rules for `html[data-theme='dark']` and, under
+  `prefers-color-scheme: dark`, for `html:not([data-theme='light'])`; in components through
+  `:host-context(…)`, and with `$has` for a condition on the whole page instead of `:host:has(…)`
+  (Angular drops `:has` after `:host-context`). Own CSS variables next
   to `--mat-sys-*`: `--app-on-surface-muted`, `--app-success`, `--app-warning` with their
   containers, `--app-font-mono`, `--app-label-section`, `--app-value-card`, `--app-value-id`,
   `--app-space-xs` to `--app-space-3xl` and `--app-corner-control`. Buttons, button toggles and

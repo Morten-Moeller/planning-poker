@@ -10,6 +10,7 @@ import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
 import { AppShell } from './app-shell';
+import { ThemeService } from './theme.service';
 
 const SESSION_ID = 'K7P2QX9M';
 
@@ -20,6 +21,7 @@ describe('AppShell', () => {
 
   beforeEach(async () => {
     sessionStorage.clear();
+    localStorage.clear();
     const sockets = new FakeSocketFactory();
     TestBed.configureTestingModule({
       providers: [
@@ -39,6 +41,9 @@ describe('AppShell', () => {
     fixture.destroy();
     store.leave();
     http.verify();
+    vi.restoreAllMocks();
+    localStorage.clear();
+    document.documentElement.removeAttribute('data-theme');
   });
 
   function element(id: string): HTMLElement | null {
@@ -59,8 +64,8 @@ describe('AppShell', () => {
     return element(id)?.textContent?.replace(/\s+/g, ' ').trim();
   }
 
-  it('shows only the title outside a session', () => {
-    expect(text('toolbar')).toBe('Planning Poker');
+  it('shows only the title and the theme toggle outside a session', () => {
+    expect(text('toolbar')).toBe('Planning Poker🌙');
     expect(element('toolbar-session-id')).toBeNull();
     expect(element('toolbar-me')).toBeNull();
   });
@@ -83,5 +88,35 @@ describe('AppShell', () => {
 
     expect(element('toolbar-session-id')).toBeNull();
     expect(element('toolbar-me')).toBeNull();
+  });
+
+  function toggle(): HTMLButtonElement {
+    return element('theme-toggle') as HTMLButtonElement;
+  }
+
+  it('shows the moon and „Dunkles Design“ in the light design', () => {
+    expect(toggle().textContent?.trim()).toBe('🌙');
+    expect(toggle().getAttribute('aria-label')).toBe('Dunkles Design');
+    expect(toggle().getAttribute('aria-pressed')).toBe('false');
+    expect(toggle().querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('🌙');
+  });
+
+  it('calls toggle on a click and shows the sun and „Helles Design“ in the dark design', async () => {
+    const theme = TestBed.inject(ThemeService);
+    const spy = vi.spyOn(theme, 'toggle');
+
+    toggle().click();
+    await fixture.whenStable();
+
+    expect(spy).toHaveBeenCalledOnce();
+    expect(toggle().textContent?.trim()).toBe('☀️');
+    expect(toggle().getAttribute('aria-label')).toBe('Helles Design');
+    expect(toggle().getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('shows the toggle in the room as well', async () => {
+    await open(lobbyDeveloper);
+
+    expect(toggle()).not.toBeNull();
   });
 });

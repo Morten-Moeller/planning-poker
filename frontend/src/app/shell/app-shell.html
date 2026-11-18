@@ -20,6 +20,18 @@
       </span>
     }
   }
+  <button
+    mat-icon-button
+    type="button"
+    class="theme-toggle"
+    data-testid="theme-toggle"
+    [attr.aria-label]="themeLabel()"
+    [attr.aria-pressed]="theme.dark()"
+    [matTooltip]="themeLabel()"
+    (click)="theme.toggle()"
+  >
+    <span class="theme-symbol" aria-hidden="true">{{ theme.dark() ? '☀️' : '🌙' }}</span>
+  </button>
 </mat-toolbar>
 <app-error-banner />
 <main class="content" [class.room]="session() !== null">

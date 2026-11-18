@@ -1,0 +1,28 @@
+$-dark-chosen: "html[data-theme='dark']";
+$-light-not-chosen: "html:not([data-theme='light'])";
+
+@mixin -within($root, $has) {
+  @if $has {
+    $root: '#{$root}:has(#{$has})';
+  }
+  @if not & {
+    #{$root} {
+      @content;
+    }
+  } @else {
+    @at-root :host-context(#{$root}) & {
+      @content;
+    }
+  }
+}
+
+@mixin dark($has: null) {
+  @include -within($-dark-chosen, $has) {
+    @content;
+  }
+  @media (prefers-color-scheme: dark) {
+    @include -within($-light-not-chosen, $has) {
+      @content;
+    }
+  }
+}

@@ -5,6 +5,8 @@ export const TIMER_OFF = 0;
 export const TIMER_SECONDS: readonly number[] = [TIMER_OFF, 15, 30, 60, 120, 300];
 const WEIGHT_FILTERS: readonly WeightFilter[] = ['NONE', 'ANY', 'ALL'];
 const UPDATED_PERIODS: readonly UpdatedPeriod[] = ['WEEK', 'MONTH', 'YEAR', 'ALL'];
+export type ThemeChoice = 'system' | 'light' | 'dark';
+const THEME_CHOICES: readonly ThemeChoice[] = ['system', 'light', 'dark'];
 const KEY = 'planningpoker.preferences';
 
 export interface Preferences {
@@ -13,6 +15,7 @@ export interface Preferences {
   timerSeconds: number;
   weightFilter: WeightFilter;
   periodFilter: UpdatedPeriod;
+  theme: ThemeChoice;
 }
 
 export const DEFAULT_PREFERENCES: Readonly<Preferences> = {
@@ -21,6 +24,7 @@ export const DEFAULT_PREFERENCES: Readonly<Preferences> = {
   timerSeconds: TIMER_OFF,
   weightFilter: 'NONE',
   periodFilter: 'ALL',
+  theme: 'system',
 };
 
 @Injectable({ providedIn: 'root' })
@@ -37,6 +41,7 @@ export class PreferencesStore {
         UPDATED_PERIODS,
         DEFAULT_PREFERENCES.periodFilter,
       ),
+      theme: oneOf(stored['theme'], THEME_CHOICES, DEFAULT_PREFERENCES.theme),
     };
   }
 

@@ -1,5 +1,6 @@
 @use '@angular/material' as mat;
 @use '../../styles/motifs';
+@use '../../styles/theme';
 
 :host {
   display: flex;
@@ -42,9 +43,9 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  @each $motif in motifs.$ids {
-    .back-#{$motif} {
+@each $motif in motifs.$ids {
+  .back-#{$motif} {
+    @include theme.dark {
       @include motifs.card-variables($motif, dark);
     }
   }
