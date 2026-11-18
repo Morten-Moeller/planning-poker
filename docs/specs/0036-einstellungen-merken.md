@@ -1,14 +1,14 @@
 ---
 id: "0036"
 title: Name, Projekt, Timer und Issue-Filter im Browser merken
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-18
 updated: 2026-11-18
-pr: ""
-note: freigegeben in der Session
+pr: "#36"
+note: gemergt mit grüner CI; verify nicht gelaufen (Worker-Abbruch), für medium nicht erforderlich
 ---
 
 # Name, Projekt, Timer und Issue-Filter im Browser merken
