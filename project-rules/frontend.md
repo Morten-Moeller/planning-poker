@@ -34,6 +34,24 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `serverTime` of the last snapshot and the client clock; the remaining time of a round
   (`RoundTimer`) is `round.deadline` minus `serverNow()`, never the client clock alone (ADR 0006).
 - Client state: the token per session id in `sessionStorage`; locale is fixed to `de`.
+- Recent sessions (spec 0039, ADR 0013): `RecentSessions` in `frontend/src/app/api/` keeps at
+  most five entries in `localStorage` under the key `planningpoker.recent-sessions` as a JSON
+  array, newest first; an entry has `sessionId`, `participantId`, `token`, `role`, `name` and
+  `lastUsedAt`. Saving a session again moves it to the front. Invalid JSON, an invalid entry or an
+  exception of `localStorage` gives an empty list, never an error. The setting comes from
+  `GET /api/config` (`rememberSessions`): the app initializer `loadRecentSessionsSetting`
+  (`app.config.ts`, timeout 3 s) sets the signal `RecentSessions.enabled`; it stays `null` when
+  the call fails. Only with `true`, `TokenStore.store` also writes the entry (create: role
+  `SCRUM_MASTER`, join: `DEVELOPER`) and `TokenStore.identity` falls back to the entry when
+  `sessionStorage` has none and copies it into `sessionStorage`; `TokenStore.remove` removes both.
+  With `false` or `null` ADR 0003 applies unchanged. The start page with `true` checks every entry
+  with `GET /api/sessions/{id}` and its token: `SESSION_NOT_FOUND` and `UNAUTHORIZED` remove the
+  entry, another error keeps it without project and issue; every error of the check clears
+  `ErrorState`. The section `recent-sessions` („Letzte Sitzungen“) shows the checked entries as
+  `recent-session` (project name, `#iid Titel` or „Kein Issue aktiv“, role, own name, session id
+  `recent-session-id`, „zuletzt vor …“); the link of the row opens `/session/:id`,
+  `recent-session-remove` („Aus Liste entfernen“) removes only the entry in the browser. With
+  `false` the start page shows no section and clears the list.
 - Preferences (spec 0036): `PreferencesStore` in `frontend/src/app/api/` keeps the last inputs in
   `localStorage` under one key `planningpoker.preferences` as JSON with `name`, `projectId`,
   `timerSeconds` (one of `TIMER_SECONDS`, `0` = Aus), `weightFilter` and `periodFilter`. They only
@@ -137,7 +155,7 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   (`angular.json`, `fileReplacements` of `backend.providers.ts` by `backend.providers.mock.ts`).
   The mock answers REST through an `HttpInterceptorFn` and the WebSocket through a fake socket
   from the example snapshots; tokens carry the role (`mock-scrum-master-…`, `mock-developer-…`),
-  the session id is `K7P2QX9M`. The project list and the issues of every project come from fixed
+  the session id is `K7P2QX9M`; `GET /api/config` answers `rememberSessions: true`. The project list and the issues of every project come from fixed
   data (projects 1234 „Planning Poker“, 5678 „Poker Tools“, 9012 „Release Notes“; issues 42 and
   43 without weight, 46 with weight 3), filtered by `search` and, in the session, by `weight`. The
   mock keeps one phase (`mock-session.ts`, start `LOBBY`): release, `round/start`, reveal, restart
@@ -175,7 +193,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
 - Focus: a global rule in `styles.scss` draws a 3 px outline in `--mat-sys-primary` with 3 px
   offset on `:focus-visible` (not on inputs and selects inside form fields); filled buttons add a
   ring in `--mat-sys-surface`. Components do not remove the outline.
-- Toolbar (`shell`): 56 px, `surface-container-low` with a divider, title; in the room the
+- Toolbar (`shell`): 56 px, `surface-container-low` with a divider, title as a link to `/`
+  (`toolbar-home`, spec 0039) on every page and for every role; in the room the
   motif field (`toolbar-motif`, 20 × 28 px, left of the title), the session id
   (`toolbar-session-id`, mono) and „Name · Rolle“ (`toolbar-me`, hidden below 600 px) from the
   `SessionStore`.
@@ -215,7 +234,9 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
     meaning; states always stand as text next to it.
   - Side column (part B): sections with a mono label (`--app-label-section`, upper case by CSS)
     in this order: „Timer“ (scrum master, with the hint „Gilt ab der nächsten Runde.“),
-    „Teilnehmer · n“, „Teilen“, „Fakten“ (`session-facts`: Session-ID, Phase, Deine Rolle,
+    „Teilnehmer · n“, „Teilen“ (for the scrum master with the link „＋ Neue Sitzung“
+    `new-session` to the start page at its end, spec 0039; leaving the room does not end the
+    session), „Fakten“ (`session-facts`: Session-ID, Phase, Deine Rolle,
     Teilnehmer „n (m Entwickler)“), „Sitzungsprotokoll“ (`session-history`, collapsed panel;
     head and content with 16 px padding left and right, spec 0038).
     A participant entry (design system, section 8) has a chip (filled with the motif after a

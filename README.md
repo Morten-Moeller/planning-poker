@@ -70,6 +70,7 @@ den Schlüssel so ab: Großbuchstaben, `.` und `-` werden zu `_`. Ausnahme ist d
 | `planningpoker.session.max-sessions` | `PLANNINGPOKER_SESSION_MAX_SESSIONS` | `1000` | Obergrenze lebender Sitzungen der Instanz; abgelaufene Sitzungen zählen nicht |
 | `planningpoker.session.max-participants` | `PLANNINGPOKER_SESSION_MAX_PARTICIPANTS` | `50` | Obergrenze der Teilnehmer je Sitzung, der Scrum Master zählt mit |
 | `planningpoker.session.allowed-projects` | `PLANNINGPOKER_SESSION_ALLOWED_PROJECTS` | keiner, alle Projekte erlaubt | Projekt-Allowlist: kommagetrennte Projekt-IDs oder -Pfade, für die Sitzungen angelegt werden dürfen; ein leerer Wert gilt als nicht gesetzt. Die Projektauswahl der Startseite zeigt dann genau diese Projekte; für die Auswahl braucht die Liste numerische IDs, weil die Auswahl die ID setzt und ein reiner Pfad-Eintrag sie mit `PROJECT_NOT_ALLOWED` ablehnt |
+| `planningpoker.session.remember` | `PLANNINGPOKER_SESSION_REMEMBER` | `true` | Letzte Sitzungen: Der Browser merkt sich die letzten fünf eigenen Sitzungen samt Token im `localStorage`, die Startseite führt mit derselben Rolle zurück (ADR 0013). In offenem Umfeld auf `false` setzen |
 | `planningpoker.realtime.auth-timeout` | `PLANNINGPOKER_REALTIME_AUTH_TIMEOUT` | `5s` | Zeit bis zur ersten Nachricht `auth` einer WebSocket-Verbindung |
 
 `.env.example` enthält jede Zeile der Tabelle: `GITLAB_TOKEN` leer als Pflichtzeile,
@@ -180,6 +181,7 @@ trägt jeder Aufruf `Authorization: Bearer <token>`.
 | Methode und Pfad | Rolle | Request | Erfolg | Fehler |
 |---|---|---|---|---|
 | `GET /api/health` | offen | – | 200 `{ status }` | – |
+| `GET /api/config` | offen | – | 200 `{ rememberSessions }` | – |
 | `GET /api/projects?search=&page=` | offen | – | 200 `{ items: [{ id, name, pathWithNamespace, webUrl }], nextPage }` | 400, 502 |
 | `GET /api/projects/{projectId}/issues?search=&page=` | offen | – | 200 `{ items, nextPage, total }` (offene Issues mit `weight`) | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
 | `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid? }`; ohne `issueIid` startet die Sitzung ohne Vorauswahl | 201 `{ sessionId, participantId, token }` | 400, 403 `PROJECT_NOT_ALLOWED`, 404 `ISSUE_NOT_FOUND` oder `PROJECT_NOT_FOUND`, 409 `LIMIT_REACHED`, 502 |
@@ -263,6 +265,14 @@ Issue-Beschreibungen kommen als Markdown aus GitLab und gehen über die eingebau
 von Angular in die Seite. Zusätzlich setzt `frontend/src/index.html` die Content-Security-Policy
 `img-src 'self' data:`: Bilder von fremden Hosts in einer Beschreibung lädt der Browser nicht, so
 erfährt kein fremder Server, wer eine Sitzung geöffnet hat.
+
+Mit `planningpoker.session.remember=true` (Standard, ADR 0013) liegt das Teilnehmer-Token der
+letzten fünf Sitzungen dauerhaft im `localStorage` des Browsers. Ein Skript, das durch eine Lücke
+in der Seite läuft, kann es lesen, und wer am selben Rechner im selben Browserprofil sitzt, öffnet
+die Sitzung in dieser Rolle. Ein SSO-Proxy vor der Anwendung schützt davor nicht. Ein Token gilt
+nur für seine Sitzung und verfällt mit ihr (`planningpoker.session.ttl`). Für den Betrieb in einem
+offenen Umfeld `PLANNINGPOKER_SESSION_REMEMBER=false` setzen: Das Frontend speichert dann nichts
+und löscht beim Laden der Startseite eine vorhandene Liste.
 
 ## Optionale Features
 

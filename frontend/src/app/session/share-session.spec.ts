@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { ShareSession } from './share-session';
 
 const SESSION_ID = 'K7P2QX9M';
@@ -23,6 +24,7 @@ describe('ShareSession', () => {
         },
       },
     });
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
     fixture = TestBed.createComponent(ShareSession);
     fixture.componentRef.setInput('sessionId', SESSION_ID);
     await fixture.whenStable();
@@ -46,6 +48,18 @@ describe('ShareSession', () => {
   ])('labels the button %s and shows Kopieren', (id, label) => {
     expect(element(id)?.getAttribute('aria-label')).toBe(label);
     expect(normalized(element(id))).toBe('⧉ Kopieren');
+  });
+
+  it('shows no Neue Sitzung to a developer', () => {
+    expect(element('new-session')).toBeNull();
+  });
+
+  it('shows Neue Sitzung to the scrum master as a link to the start page', async () => {
+    fixture.componentRef.setInput('scrumMaster', true);
+    await fixture.whenStable();
+
+    expect(normalized(element('new-session'))).toBe('＋ Neue Sitzung');
+    expect(element('new-session')?.getAttribute('href')).toBe('/');
   });
 
   it('shows the join link from the origin of the page and the session id', () => {

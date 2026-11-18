@@ -2,14 +2,14 @@ import { Component, computed, inject } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltip } from '@angular/material/tooltip';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { SessionStore } from '../api/session-store';
 import { ErrorBanner } from './error-banner';
 import { ThemeService } from './theme.service';
 
 @Component({
   selector: 'app-shell',
-  imports: [MatToolbarModule, MatIconButton, MatTooltip, RouterOutlet, ErrorBanner],
+  imports: [MatToolbarModule, MatIconButton, MatTooltip, RouterLink, RouterOutlet, ErrorBanner],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
 })

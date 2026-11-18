@@ -2,7 +2,7 @@
   @if (session()) {
     <span class="motif" data-testid="toolbar-motif" aria-hidden="true"></span>
   }
-  <span class="title" i18n="@@shell.title">Planning Poker</span>
+  <a class="title" routerLink="/" data-testid="toolbar-home" i18n="@@shell.title">Planning Poker</a>
   @if (session(); as session) {
     <span class="session-id" data-testid="toolbar-session-id">{{ session.sessionId }}</span>
     <span class="spacer"></span>

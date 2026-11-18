@@ -64,6 +64,20 @@ describe('AppShell', () => {
     return element(id)?.textContent?.replace(/\s+/g, ' ').trim();
   }
 
+  it.each([
+    ['outside a session', null],
+    ['in the room of the scrum master', lobbyScrumMaster],
+    ['in the room of a developer', lobbyDeveloper],
+  ])('links the title to the start page %s', async (_, snapshot) => {
+    if (snapshot !== null) {
+      await open(snapshot);
+    }
+
+    expect(element('toolbar-home')?.tagName).toBe('A');
+    expect(element('toolbar-home')?.getAttribute('href')).toBe('/');
+    expect(text('toolbar-home')).toBe('Planning Poker');
+  });
+
   it('shows only the title and the theme toggle outside a session', () => {
     expect(text('toolbar')).toBe('Planning Poker🌙');
     expect(element('toolbar-session-id')).toBeNull();

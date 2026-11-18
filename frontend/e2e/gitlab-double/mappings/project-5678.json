@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/v4/projects/5678"
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "id": 5678,
+      "name": "Release Notes Test",
+      "path_with_namespace": "group/release-notes",
+      "web_url": "https://gitlab.example/group/release-notes"
+    }
+  }
+}

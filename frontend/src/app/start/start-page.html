@@ -56,6 +56,94 @@
   </p>
 </div>
 
+@if (recentSessions().length > 0) {
+  <section class="recent" data-testid="recent-sessions">
+    <h2 i18n="@@start.recent.title">Letzte Sitzungen</h2>
+    <ul class="recent-list">
+      @for (row of recentSessions(); track row.entry.sessionId) {
+        <li class="recent-row" data-testid="recent-session">
+          <a class="recent-open" [routerLink]="['/session', row.entry.sessionId]">
+            @if (row.view; as view) {
+              <span class="recent-main">
+                <span class="recent-project" data-testid="recent-session-project">{{
+                  view.project?.name ?? view.gitlabProjectId
+                }}</span>
+                <span class="recent-issue" data-testid="recent-session-issue">
+                  @if (view.activeIssue; as issue) {
+                    <span class="recent-iid">#{{ issue.iid }}</span> {{ issue.title }}
+                  } @else {
+                    <ng-container i18n="@@start.recent.noIssue">Kein Issue aktiv</ng-container>
+                  }
+                </span>
+              </span>
+            }
+            <span class="recent-meta">
+              <span data-testid="recent-session-role">
+                @switch (row.entry.role) {
+                  @case ('SCRUM_MASTER') {
+                    <ng-container i18n="@@start.recent.role.SCRUM_MASTER"
+                      >Scrum Master</ng-container
+                    >
+                  }
+                  @case ('DEVELOPER') {
+                    <ng-container i18n="@@start.recent.role.DEVELOPER">Entwickler</ng-container>
+                  }
+                }
+              </span>
+              <span aria-hidden="true">·</span>
+              <span data-testid="recent-session-name">{{ row.entry.name }}</span>
+              <span aria-hidden="true">·</span>
+              <span class="recent-id" data-testid="recent-session-id">{{
+                row.entry.sessionId
+              }}</span>
+              <span aria-hidden="true">·</span>
+              <span data-testid="recent-session-last-used">
+                @let ago = lastUsed(row.entry);
+                @switch (ago.unit) {
+                  @case ('minute') {
+                    <ng-container i18n="@@start.recent.lastUsedMinutes"
+                      >zuletzt vor
+                      {ago.value, plural,
+                        =1 {1 Minute}
+                        other {{{ ago.value }} Minuten}
+                      }</ng-container
+                    >
+                  }
+                  @case ('hour') {
+                    <ng-container i18n="@@start.recent.lastUsedHours"
+                      >zuletzt vor
+                      {ago.value, plural,
+                        =1 {1 Stunde}
+                        other {{{ ago.value }} Stunden}
+                      }</ng-container
+                    >
+                  }
+                  @case ('day') {
+                    <ng-container i18n="@@start.recent.lastUsedDays"
+                      >zuletzt vor
+                      {ago.value, plural, =1 {1 Tag} other {{{ ago.value }} Tagen}}</ng-container
+                    >
+                  }
+                }
+              </span>
+            </span>
+          </a>
+          <button
+            mat-button
+            type="button"
+            class="recent-remove"
+            data-testid="recent-session-remove"
+            (click)="removeRecentSession(row.entry.sessionId)"
+            i18n="@@start.recent.remove"
+          >
+            Aus Liste entfernen
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
 <div class="panels">
   <form
     class="panel panel-create"
