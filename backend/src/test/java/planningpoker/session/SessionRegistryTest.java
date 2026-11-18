@@ -365,8 +365,7 @@ class SessionRegistryTest {
         clock.advance(Duration.ofSeconds(10));
         registry.update(sessionId, s -> {
             s.reveal(master);
-            s.restart(master);
-            s.startVoting(master, clock.instant());
+            s.restart(master, clock.instant());
             return null;
         });
         events.clear();

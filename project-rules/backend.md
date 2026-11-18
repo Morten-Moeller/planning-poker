@@ -75,10 +75,12 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   `allowedProjects` (`Optional<List<String>>`; an empty value counts as not set). `find` and `update` remove an expired session on access; a Vert.x timer in
   `SessionRegistryProducer` (every 10 minutes) calls `expire(now)` for the rest. No
   `quarkus-scheduler`.
-- Deadline (ADR 0010, replaces ADR 0006): `selectIssue` and `restart` start a round in
+- Deadline (ADR 0010, replaces ADR 0006; ADR 0012): `selectIssue` starts a round in
   `DISCUSSION` without a deadline; `Session.startVoting` (`POST …/round/start`, start time from the
   `Clock`) moves it to `VOTING` and sets `Round.deadline` from `Session.timerSeconds` (null or 5 to
-  3600, `Session.setTimer`). A second Vert.x timer in `SessionRegistryProducer` (every 250 ms) calls
+  3600, `Session.setTimer`). `Session.restart` (`POST …/round/restart`, start time from the
+  `Clock`) starts the next round of a revealed issue directly in `VOTING` with the same deadline
+  rule. A second Vert.x timer in `SessionRegistryProducer` (every 250 ms) calls
   `SessionRegistry.revealDue(now)`: under the lock of each live session `Session.revealIfDue`
   reveals a round in `VOTING` whose deadline is reached, the same way as `reveal`; only then
   `lastActivityAt` is set and `SessionChanged` fires. The mapper takes the snapshot time

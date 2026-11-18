@@ -95,15 +95,15 @@ class SessionViewMapperTest {
     }
 
     @Test
-    void showsNoCardOfTheLastRoundInTheDiscussionOfANewRound() throws JsonProcessingException {
+    void showsNoCardOfTheLastRoundInARestartedRound() throws JsonProcessingException {
         Session session = SessionBuilder.session().revealed().build();
         Participant master = SessionBuilder.master(session);
         Participant developer = SessionBuilder.developer(session, 0);
-        session.restart(master.id());
+        session.restart(master.id(), SERVER_TIME);
 
         SessionView view = mapper.toView(session, developer.id(), SERVER_TIME);
 
-        assertEquals(Phase.DISCUSSION, view.phase());
+        assertEquals(Phase.VOTING, view.phase());
         assertEquals(2, view.round().number());
         assertNull(view.round().myVote());
         assertNull(view.round().votes());

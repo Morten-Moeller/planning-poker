@@ -167,7 +167,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Start a new round for the active issue in DISCUSSION without a deadline; scrum master only. */
+        /** Start a new round for the active issue in VOTING and set the deadline from the timer; scrum master only. */
         post: operations["restartRound"];
         delete?: never;
         options?: never;

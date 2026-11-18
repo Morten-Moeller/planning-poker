@@ -54,7 +54,7 @@ const PHASE_COMMANDS: Record<string, { from: Phase[] | null; to: Phase }> = {
   'POST /active-issue': { from: null, to: 'DISCUSSION' },
   'POST /round/start': { from: ['DISCUSSION'], to: 'VOTING' },
   'POST /round/reveal': { from: ['VOTING'], to: 'REVEALED' },
-  'POST /round/restart': { from: ['REVEALED'], to: 'DISCUSSION' },
+  'POST /round/restart': { from: ['REVEALED'], to: 'VOTING' },
   'POST /round/confirm': { from: ['REVEALED'], to: 'LOBBY' },
   'PUT /vote': { from: ['VOTING'], to: 'VOTING' },
 };

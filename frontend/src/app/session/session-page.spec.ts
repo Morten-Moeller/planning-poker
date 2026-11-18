@@ -260,6 +260,26 @@ describe('SessionPage', () => {
     expect(count('vote-counter')).toBe(0);
   });
 
+  it('shows the open card deck without discussion hint to a developer after a restart', async () => {
+    await open(revealedDeveloper);
+
+    sockets.last().receive({
+      type: 'session.state',
+      payload: {
+        ...votingDeveloper,
+        round: { ...votingDeveloper.round!, number: 2, myVote: null },
+        history: revealedDeveloper.history,
+      },
+    });
+    await fixture.whenStable();
+
+    expect(count('round-result')).toBe(0);
+    expect(count('card-deck')).toBe(1);
+    expect(count('discussion-hint')).toBe(0);
+    expect(count('round-timer')).toBe(1);
+    expect(text('session-phase')).not.toBe('Diskussion');
+  });
+
   it('shows the result and the history but no action to a developer after the reveal', async () => {
     await open(revealedDeveloper);
 

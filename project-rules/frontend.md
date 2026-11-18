@@ -104,6 +104,11 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `ApiService.startVoting`) and, with a timer, `round-start-timer` („Timer: 1 min“). An issue
   switch in `LOBBY` or `DISCUSSION` opens no dialog. The participant list shows the vote status
   only in `VOTING` and `REVEALED` (spec 0028).
+- Erneut schätzen (spec 0034, ADR 0012): in `REVEALED` the scrum master sees `round-restart`
+  („↻ Erneut schätzen“), the developer sees `result-waiting` („Der Scrum Master lässt erneut
+  schätzen oder übernimmt das Ergebnis.“). The restart leads straight to `VOTING`: the developer
+  sees the open `card-deck` without `discussion-hint`, with a timer also the remaining time. The
+  mock backend changes the phase from `REVEALED` to `VOTING` as well.
 - Session ids from the route of the join page are taken in capital letters, like the input on
   the start page. The name rule of create and join is `api/participant-name.ts`.
 - Authentication: `authInterceptor` adds `Authorization: Bearer <token>` from the `TokenStore`
