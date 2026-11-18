@@ -204,7 +204,10 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   (`toolbar-home`, spec 0039) on every page and for every role; in the room the
   motif field (`toolbar-motif`, 20 × 28 px, left of the title), the session id
   (`toolbar-session-id`, mono) and „Name · Rolle“ (`toolbar-me`, hidden below 600 px) from the
-  `SessionStore`.
+  `SessionStore`. On the join page (spec 0043) the toolbar shows the motif field as dashed
+  placeholder and the session id from the URL (`Router`, `NavigationEnd`, only for
+  `/session/:id/join`, in capital letters, only when it matches the pattern of the session id),
+  without `toolbar-me`; the join page itself shows no session chip.
 - Session page grid: a side column of 340 px and a main column (32/48 px padding) from 720 px;
   below that one column with the side column under the main area. Side column and main area
   reserve the space of the scroll bar (`scrollbar-gutter: stable`), so the width of the content

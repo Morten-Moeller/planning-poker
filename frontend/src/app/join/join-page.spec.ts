@@ -93,11 +93,9 @@ describe('JoinPage', () => {
       );
   }
 
-  it('shows the session id as chip, the role and the name rule', () => {
-    expect(text('join-session-id')).toBe(SESSION_ID);
-    expect(spacedText(element('join-session-id')?.closest('.session-chip'))).toBe(
-      'Sitzung K7P2QX9M',
-    );
+  it('shows the role and the name rule without a session chip', () => {
+    expect(element('join-session-id')).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('.session-chip')).toBeNull();
     expect(text('join-role-hint')).toBe(
       'Du trittst als Entwickler bei. Der Name ist für alle sichtbar.',
     );
@@ -187,7 +185,6 @@ describe('JoinPage', () => {
 
   it('joins the session in capital letters from a link in small letters', async () => {
     await harness.navigateByUrl(`/session/${SESSION_ID.toLowerCase()}/join?invite=${INVITE}`);
-    expect(text('join-session-id')).toBe(SESSION_ID);
 
     await submitName('Ben');
     http

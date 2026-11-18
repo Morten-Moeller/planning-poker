@@ -1,10 +1,6 @@
 <section class="join">
   <app-card-hand class="hand" [size]="'large'" />
   <div class="head">
-    <span class="session-chip"
-      ><span i18n="@@join.sessionIdLabel">Sitzung</span>
-      <code data-testid="join-session-id">{{ sessionId() }}</code></span
-    >
     <h1 i18n="@@join.nameTitle">Mit welchem Namen?</h1>
     @if (invite() !== '' && !sessionNotFound() && !inviteInvalid()) {
       @if (viewer()) {

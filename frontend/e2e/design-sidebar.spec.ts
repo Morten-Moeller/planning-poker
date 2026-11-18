@@ -100,7 +100,12 @@ for (const scheme of ['light', 'dark'] as const) {
       expect(await background(cards.nth(index))).toBe(rgb(hex));
     }
     await expect(ben.getByTestId('join-card-backs')).toHaveCount(0);
-    await expect(ben.getByTestId('toolbar-motif')).toHaveCount(0);
+    await expect(ben.getByTestId('toolbar-motif')).toBeVisible();
+    expect(
+      await ben
+        .getByTestId('toolbar-motif')
+        .evaluate((element) => getComputedStyle(element).borderStyle),
+    ).toBe('dashed');
     const joinHand = (await hand.boundingBox())!;
     const form = (await ben.getByTestId('join-form').boundingBox())!;
     expect(

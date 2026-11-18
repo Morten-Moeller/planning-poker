@@ -1,11 +1,25 @@
 import { Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { MatIconButton } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltip } from '@angular/material/tooltip';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { SessionStore } from '../api/session-store';
 import { ErrorBanner } from './error-banner';
 import { ThemeService } from './theme.service';
+
+const JOIN_PATH = /^\/session\/([^/?#]+)\/join(?:[?#]|$)/;
+const SESSION_ID = /^[A-HJKMNP-Z2-9]{8}$/;
+
+function joinSessionId(url: string): string | null {
+  const match = JOIN_PATH.exec(url);
+  if (match === null) {
+    return null;
+  }
+  const id = match[1].toUpperCase();
+  return SESSION_ID.test(id) ? id : null;
+}
 
 @Component({
   selector: 'app-shell',
@@ -22,6 +36,16 @@ export class AppShell {
       : $localize`:@@shell.theme.dark:Dunkles Design`,
   );
   protected readonly session = this.store.session;
+  private readonly joinId = toSignal(
+    inject(Router).events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map((event) => joinSessionId(event.urlAfterRedirects)),
+    ),
+    { initialValue: null },
+  );
+  protected readonly sessionId = computed(
+    () => this.store.session()?.sessionId ?? this.joinId() ?? null,
+  );
   protected readonly myName = computed(() => {
     const session = this.store.session();
     if (session === null) {
