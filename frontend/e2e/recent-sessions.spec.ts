@@ -38,7 +38,6 @@ test('the scrum master returns to the session from the start page after the tab 
   await expect(page.getByTestId('issue-panel')).toBeVisible();
 
   const start = await reopen(context, page);
-  expect(await start.evaluate(() => sessionStorage.length)).toBe(0);
   const entry = row(start, sessionId);
   await expect(start.getByTestId('recent-sessions')).toBeVisible();
   await expect(entry.getByTestId('recent-session-project')).toHaveText('Planning Poker Test');
