@@ -28,6 +28,7 @@ import {
 } from '../api/api.service';
 import { formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
+import { DEFAULT_PREFERENCES, PreferencesStore } from '../api/preferences-store';
 import { SessionStore } from '../api/session-store';
 import { SwitchIssueData, SwitchIssueDialog } from './switch-issue-dialog';
 
@@ -37,9 +38,6 @@ const SEARCH_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
   'GITLAB_ACCESS_DENIED',
   'GITLAB_ERROR',
 ]);
-
-const DEFAULT_WEIGHT: WeightFilter = 'NONE';
-const DEFAULT_PERIOD: UpdatedPeriod = 'ALL';
 
 @Component({
   selector: 'app-issue-panel',
@@ -58,6 +56,8 @@ export class IssuePanel implements OnInit {
   private readonly api = inject(ApiService);
   private readonly dialog = inject(MatDialog);
   private readonly errorState = inject(ErrorState);
+  private readonly preferences = inject(PreferencesStore);
+  private readonly saved = this.preferences.read();
   protected readonly store = inject(SessionStore);
 
   readonly sessionId = input.required<string>();
@@ -73,8 +73,8 @@ export class IssuePanel implements OnInit {
   protected readonly failure = signal<string | null>(null);
   protected readonly failed = computed(() => this.failure() !== null);
   protected readonly releasing = signal(false);
-  protected readonly weight = signal<WeightFilter>(DEFAULT_WEIGHT);
-  protected readonly period = signal<UpdatedPeriod>(DEFAULT_PERIOD);
+  protected readonly weight = signal<WeightFilter>(this.saved.weightFilter);
+  protected readonly period = signal<UpdatedPeriod>(this.saved.periodFilter);
   private search: string | undefined;
   private listing: Subscription | null = null;
   private lastLoad: { query: IssueFilterQuery; append: boolean } = { query: {}, append: false };
@@ -123,11 +123,13 @@ export class IssuePanel implements OnInit {
 
   protected changeWeight(change: MatButtonToggleChange): void {
     this.weight.set(change.value as WeightFilter);
+    this.preferences.save({ weightFilter: this.weight() });
     this.load(this.query(), false);
   }
 
   protected changePeriod(change: MatSelectChange<UpdatedPeriod>): void {
     this.period.set(change.value);
+    this.preferences.save({ periodFilter: change.value });
     this.load(this.query(), false);
   }
 
@@ -138,8 +140,12 @@ export class IssuePanel implements OnInit {
   }
 
   protected resetFilters(): void {
-    this.weight.set(DEFAULT_WEIGHT);
-    this.period.set(DEFAULT_PERIOD);
+    this.weight.set(DEFAULT_PREFERENCES.weightFilter);
+    this.period.set(DEFAULT_PREFERENCES.periodFilter);
+    this.preferences.save({
+      weightFilter: DEFAULT_PREFERENCES.weightFilter,
+      periodFilter: DEFAULT_PREFERENCES.periodFilter,
+    });
     this.searchForm.controls.search.setValue('');
     this.search = undefined;
     this.load(this.query(), false);

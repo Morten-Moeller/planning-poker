@@ -7,6 +7,7 @@ import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { authInterceptor } from '../api/auth.interceptor';
 import { SessionView, lobbyScrumMaster } from '../api/examples';
 import { SessionStore } from '../api/session-store';
+import { PreferencesStore } from '../api/preferences-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
@@ -28,6 +29,7 @@ describe('TimerSetting', () => {
 
   beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     sockets = new FakeSocketFactory();
     TestBed.configureTestingModule({
       providers: [
@@ -128,5 +130,42 @@ describe('TimerSetting', () => {
     const request = http.expectOne(TIMER_URL);
     expect(request.request.body).toEqual({ seconds: null });
     request.flush(null, { status: 204, statusText: 'No Content' });
+  });
+
+  it('saves the value after a successful change', async () => {
+    await open(withTimer(null));
+
+    await select.open();
+    await select.clickOptions({ text: '30 s' });
+    expect(TestBed.inject(PreferencesStore).read().timerSeconds).toBe(0);
+    http.expectOne(TIMER_URL).flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(TestBed.inject(PreferencesStore).read().timerSeconds).toBe(30);
+  });
+
+  it('saves Aus after a successful change', async () => {
+    TestBed.inject(PreferencesStore).save({ timerSeconds: 60 });
+    await open(withTimer(60));
+
+    await select.open();
+    await select.clickOptions({ text: 'Aus' });
+    http.expectOne(TIMER_URL).flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(TestBed.inject(PreferencesStore).read().timerSeconds).toBe(0);
+  });
+
+  it('does not save the value when the change fails', async () => {
+    await open(withTimer(null));
+
+    await select.open();
+    await select.clickOptions({ text: '1 min' });
+    http
+      .expectOne(TIMER_URL)
+      .flush(
+        { errorCode: 'FORBIDDEN_ROLE', title: 'Forbidden', status: 403 },
+        { status: 403, statusText: 'Forbidden' },
+      );
+
+    expect(TestBed.inject(PreferencesStore).read().timerSeconds).toBe(0);
   });
 });
