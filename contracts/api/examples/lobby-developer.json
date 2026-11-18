@@ -41,5 +41,6 @@
   "round": null,
   "history": [],
   "timerSeconds": null,
-  "serverTime": "2026-11-16T09:14:00Z"
+  "serverTime": "2026-11-16T09:14:00Z",
+  "invites": null
 }

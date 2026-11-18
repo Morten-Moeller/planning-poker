@@ -38,7 +38,7 @@ test('the session page has no horizontal scroll bar at 375 px in every phase', a
   await anna.getByTestId('create-issue').fill('42');
   await anna.getByTestId('create-submit').click();
   await expect(anna).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  const link = (await anna.getByTestId('share-link').textContent()) ?? '';
+  const link = (await anna.getByTestId('share-link-developer').textContent()) ?? '';
   const ben = await (await browser.newContext({ viewport: VIEWPORT })).newPage();
   await ben.goto(link);
   await ben.getByTestId('join-name').fill('Ben');
@@ -93,7 +93,7 @@ test.describe('desktop', () => {
     await page.getByTestId('create-issue').fill('42');
     await page.getByTestId('create-submit').click();
     await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-    await expect(page.getByTestId('share-link')).toBeVisible();
+    await expect(page.getByTestId('share-link-developer')).toBeVisible();
 
     const side = await page.locator('app-session-page .side').boundingBox();
     expect(side?.width).toBe(340);
@@ -113,7 +113,7 @@ async function openLongIssue(
   await anna.getByTestId('create-issue').fill('45');
   await anna.getByTestId('create-submit').click();
   await expect(anna).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  const link = (await anna.getByTestId('share-link').textContent()) ?? '';
+  const link = (await anna.getByTestId('share-link-developer').textContent()) ?? '';
   const ben = await (await browser.newContext({ viewport })).newPage();
   await ben.goto(link);
   await ben.getByTestId('join-name').fill('Ben');

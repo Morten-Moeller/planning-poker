@@ -150,7 +150,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Join a session as developer. */
+        /** Join a session with an invite code; the code sets the role DEVELOPER or VIEWER. */
         post: operations["joinSession"];
         delete?: never;
         options?: never;
@@ -381,7 +381,7 @@ export interface components {
          * @description Stable error code. Clients branch on it, never on the detail text.
          * @enum {string}
          */
-        ErrorCode: "VALIDATION_ERROR" | "INVALID_CARD" | "UNAUTHORIZED" | "FORBIDDEN_ROLE" | "PROJECT_NOT_ALLOWED" | "SESSION_NOT_FOUND" | "ISSUE_NOT_FOUND" | "PROJECT_NOT_FOUND" | "NAME_TAKEN" | "INVALID_STATE" | "LIMIT_REACHED" | "GITLAB_ACCESS_DENIED" | "GITLAB_ERROR";
+        ErrorCode: "VALIDATION_ERROR" | "INVALID_CARD" | "UNAUTHORIZED" | "FORBIDDEN_ROLE" | "PROJECT_NOT_ALLOWED" | "INVITE_INVALID" | "SESSION_NOT_FOUND" | "ISSUE_NOT_FOUND" | "PROJECT_NOT_FOUND" | "NAME_TAKEN" | "INVALID_STATE" | "LIMIT_REACHED" | "GITLAB_ACCESS_DENIED" | "GITLAB_ERROR";
         /** @description Health of the backend. */
         HealthStatus: {
             /**
@@ -418,6 +418,19 @@ export interface components {
              * @example 2026-11-16T09:15:30Z
              */
             revealedAt: components["schemas"]["OffsetDateTime"];
+        };
+        /** @description Invite codes of the session for the invite links; only for the scrum master, null for every other receiver. */
+        Invites: {
+            /**
+             * @description Invite code for developers.
+             * @example q3Vx8LkP0aZ1bC2dE3fG4hI5jK6lM7nO
+             */
+            developer: string;
+            /**
+             * @description Invite code for viewers.
+             * @example Z9yX8wV7uT6sR5qP4oN3mL2kJ1iH0gFe
+             */
+            viewer: string;
         };
         /** @description One page of the issues of the project. */
         IssueListResponse: {
@@ -485,13 +498,18 @@ export interface components {
              */
             webUrl: string;
         };
-        /** @description Joins a session as developer. */
+        /** @description Joins a session. The invite code sets the role: DEVELOPER or VIEWER. */
         JoinSessionRequest: {
             /**
              * @description Name of the participant, 1 to 30 characters after trimming, unique per session.
              * @example Ben
              */
             name: string;
+            /**
+             * @description Invite code from the invite link of the scrum master. The code for developers gives DEVELOPER, the code for viewers gives VIEWER.
+             * @example q3Vx8LkP0aZ1bC2dE3fG4hI5jK6lM7nO
+             */
+            invite: string;
         };
         /** @description Id and token of the new participant. */
         JoinSessionResponse: {
@@ -628,10 +646,10 @@ export interface components {
             webUrl: string;
         };
         /**
-         * @description Role of a participant. The server takes it from the token.
+         * @description Role of a participant. The server takes it from the token; at the join the invite code sets DEVELOPER or VIEWER.
          * @enum {string}
          */
-        Role: "SCRUM_MASTER" | "DEVELOPER";
+        Role: "SCRUM_MASTER" | "DEVELOPER" | "VIEWER";
         /** @description Evaluation of a revealed round. */
         RoundStats: {
             /** @description Chosen cards with their count, in deck order. */
@@ -672,7 +690,7 @@ export interface components {
              */
             issueIid: number;
         };
-        /** @description Snapshot of the session, filtered for the receiver: hidden cards of other participants are missing until the reveal, preselectedIssueIid appears only for the scrum master. In phase LOBBY activeIssue and round are null. timerSeconds, serverTime and round.deadline are the same for both roles. */
+        /** @description Snapshot of the session, filtered for the receiver: hidden cards of other participants are missing until the reveal, preselectedIssueIid and invites appear only for the scrum master. In phase LOBBY activeIssue and round are null. timerSeconds, serverTime and round.deadline are the same for both roles. */
         SessionView: {
             /**
              * @description Session id, 8 characters.
@@ -712,6 +730,7 @@ export interface components {
              * @example 2026-11-16T09:15:00Z
              */
             serverTime: components["schemas"]["OffsetDateTime"];
+            invites: components["schemas"]["Invites"] | null;
         };
         /** @description Sets the timer of the session for every round that starts from now on; null switches it off. A running round keeps its deadline. */
         TimerRequest: {
@@ -1191,6 +1210,15 @@ export interface operations {
             };
             /** @description VALIDATION_ERROR */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description INVITE_INVALID */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

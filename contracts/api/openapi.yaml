@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Planning Poker API
-  version: 3.4.0
+  version: 4.0.0
   description: |
     Commands go over REST under /api and answer without state. The state reaches every participant
     over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
@@ -230,6 +230,7 @@ components:
       - UNAUTHORIZED
       - FORBIDDEN_ROLE
       - PROJECT_NOT_ALLOWED
+      - INVITE_INVALID
       - SESSION_NOT_FOUND
       - ISSUE_NOT_FOUND
       - PROJECT_NOT_FOUND
@@ -296,6 +297,24 @@ components:
           examples:
           - 2026-11-16T09:15:30Z
           $ref: "#/components/schemas/OffsetDateTime"
+    Invites:
+      type: object
+      required:
+      - developer
+      - viewer
+      description: "Invite codes of the session for the invite links; only for the\
+        \ scrum master, null for every other receiver."
+      properties:
+        developer:
+          type: string
+          description: Invite code for developers.
+          examples:
+          - q3Vx8LkP0aZ1bC2dE3fG4hI5jK6lM7nO
+        viewer:
+          type: string
+          description: Invite code for viewers.
+          examples:
+          - Z9yX8wV7uT6sR5qP4oN3mL2kJ1iH0gFe
     IssueListResponse:
       required:
       - items
@@ -391,10 +410,11 @@ components:
           examples:
           - https://gitlab.com/group/project/-/issues/42
     JoinSessionRequest:
-      description: Joins a session as developer.
+      description: "Joins a session. The invite code sets the role: DEVELOPER or VIEWER."
       type: object
       required:
       - name
+      - invite
       properties:
         name:
           type: string
@@ -404,6 +424,14 @@ components:
             \ unique per session."
           examples:
           - Ben
+          pattern: \S
+        invite:
+          type: string
+          minLength: 1
+          description: "Invite code from the invite link of the scrum master. The\
+            \ code for developers gives DEVELOPER, the code for viewers gives VIEWER."
+          examples:
+          - q3Vx8LkP0aZ1bC2dE3fG4hI5jK6lM7nO
           pattern: \S
     JoinSessionResponse:
       required:
@@ -595,11 +623,13 @@ components:
           examples:
           - https://gitlab.com/webshop/frontend
     Role:
-      description: Role of a participant. The server takes it from the token.
+      description: Role of a participant. The server takes it from the token; at the
+        join the invite code sets DEVELOPER or VIEWER.
       type: string
       enum:
       - SCRUM_MASTER
       - DEVELOPER
+      - VIEWER
     RoundStats:
       type: object
       required:
@@ -705,11 +735,12 @@ components:
       - history
       - timerSeconds
       - serverTime
+      - invites
       description: "Snapshot of the session, filtered for the receiver: hidden cards\
         \ of other participants are missing until the reveal, preselectedIssueIid\
-        \ appears only for the scrum master. In phase LOBBY activeIssue and round\
-        \ are null. timerSeconds, serverTime and round.deadline are the same for both\
-        \ roles."
+        \ and invites appear only for the scrum master. In phase LOBBY activeIssue\
+        \ and round are null. timerSeconds, serverTime and round.deadline are the\
+        \ same for both roles."
       type: object
       properties:
         sessionId:
@@ -776,6 +807,10 @@ components:
           examples:
           - 2026-11-16T09:15:00Z
           $ref: "#/components/schemas/OffsetDateTime"
+        invites:
+          anyOf:
+          - $ref: "#/components/schemas/Invites"
+          - type: "null"
     TimerRequest:
       required:
       - seconds
@@ -1200,7 +1235,8 @@ paths:
       - bearerToken: []
   /api/sessions/{id}/participants:
     post:
-      summary: Join a session as developer.
+      summary: Join a session with an invite code; the code sets the role DEVELOPER
+        or VIEWER.
       operationId: joinSession
       tags:
       - sessions
@@ -1226,6 +1262,12 @@ paths:
                 $ref: "#/components/schemas/JoinSessionResponse"
         "400":
           description: VALIDATION_ERROR
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: INVITE_INVALID
           content:
             application/problem+json:
               schema:

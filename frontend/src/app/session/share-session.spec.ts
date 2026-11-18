@@ -3,6 +3,9 @@ import { provideRouter } from '@angular/router';
 import { ShareSession } from './share-session';
 
 const SESSION_ID = 'K7P2QX9M';
+const INVITES = { developer: 'dev-Code_1', viewer: 'view-Code_2' };
+const DEVELOPER_LINK = `${location.origin}/session/${SESSION_ID}/join?invite=dev-Code_1`;
+const VIEWER_LINK = `${location.origin}/session/${SESSION_ID}/join?invite=view-Code_2&as=viewer`;
 
 describe('ShareSession', () => {
   let fixture: ComponentFixture<ShareSession>;
@@ -27,6 +30,7 @@ describe('ShareSession', () => {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     fixture = TestBed.createComponent(ShareSession);
     fixture.componentRef.setInput('sessionId', SESSION_ID);
+    fixture.componentRef.setInput('invites', INVITES);
     await fixture.whenStable();
   });
 
@@ -43,49 +47,57 @@ describe('ShareSession', () => {
   }
 
   it.each([
-    ['copy-link', 'Link kopieren'],
-    ['copy-session-id', 'Session-ID kopieren'],
+    ['copy-link-developer', 'Einladung Entwickler kopieren'],
+    ['copy-link-viewer', 'Einladung Zuschauer kopieren'],
   ])('labels the button %s and shows Kopieren', (id, label) => {
     expect(element(id)?.getAttribute('aria-label')).toBe(label);
     expect(normalized(element(id))).toBe('⧉ Kopieren');
   });
 
-  it('shows no Neue Sitzung to a developer', () => {
-    expect(element('new-session')).toBeNull();
+  it('names both invite rows and has no row for the session id', () => {
+    const labels = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.label'),
+    ).map((label) => normalized(label));
+
+    expect(labels).toEqual(['Einladung Entwickler', 'Einladung Zuschauer']);
+    expect(element('share-session-id')).toBeNull();
+    expect(element('copy-session-id')).toBeNull();
+    expect(element('share-link')).toBeNull();
   });
 
-  it('shows Neue Sitzung to the scrum master as a link to the start page', async () => {
-    fixture.componentRef.setInput('scrumMaster', true);
-    await fixture.whenStable();
-
+  it('shows Neue Sitzung as a link to the start page', () => {
     expect(normalized(element('new-session'))).toBe('＋ Neue Sitzung');
     expect(element('new-session')?.getAttribute('href')).toBe('/');
   });
 
-  it('shows the join link from the origin of the page and the session id', () => {
-    expect(element('share-link')?.textContent).toBe(
-      `${location.origin}/session/${SESSION_ID}/join`,
+  it('shows both invite links with the code from the origin of the page', () => {
+    expect(element('share-link-developer')?.textContent).toBe(DEVELOPER_LINK);
+    expect(element('share-link-viewer')?.textContent).toBe(VIEWER_LINK);
+  });
+
+  it('encodes the code in the link', async () => {
+    fixture.componentRef.setInput('invites', { developer: 'a+b/c', viewer: 'd&e' });
+    await fixture.whenStable();
+
+    expect(element('share-link-developer')?.textContent).toBe(
+      `${location.origin}/session/${SESSION_ID}/join?invite=a%2Bb%2Fc`,
     );
-    expect(element('share-session-id')?.textContent).toBe(SESSION_ID);
+    expect(element('share-link-viewer')?.textContent).toBe(
+      `${location.origin}/session/${SESSION_ID}/join?invite=d%26e&as=viewer`,
+    );
   });
 
-  it('copies the join link and shows Kopiert', async () => {
-    element('copy-link')?.click();
+  it.each([
+    ['developer', DEVELOPER_LINK, 'viewer'],
+    ['viewer', VIEWER_LINK, 'developer'],
+  ])('copies the %s link and shows Kopiert', async (target, link, other) => {
+    element(`copy-link-${target}`)?.click();
     await fixture.whenStable();
 
-    expect(written).toEqual([`${location.origin}/session/${SESSION_ID}/join`]);
-    expect(element('copy-link-done')?.textContent?.trim()).toBe('Kopiert');
-    expect(normalized(element('copy-link-done')?.parentElement)).toBe('✓ Kopiert');
-    expect(element('copy-session-id-done')).toBeNull();
-  });
-
-  it('copies the session id and shows Kopiert', async () => {
-    element('copy-session-id')?.click();
-    await fixture.whenStable();
-
-    expect(written).toEqual([SESSION_ID]);
-    expect(element('copy-session-id-done')?.textContent?.trim()).toBe('Kopiert');
-    expect(element('copy-link-done')).toBeNull();
+    expect(written).toEqual([link]);
+    expect(element(`copy-link-${target}-done`)?.textContent?.trim()).toBe('Kopiert');
+    expect(normalized(element(`copy-link-${target}-done`)?.parentElement)).toBe('✓ Kopiert');
+    expect(element(`copy-link-${other}-done`)).toBeNull();
   });
 
   describe('with fake timers', () => {
@@ -103,41 +115,41 @@ describe('ShareSession', () => {
     }
 
     it('hides Kopiert 3 s after the copy', async () => {
-      element('copy-link')?.click();
+      element('copy-link-developer')?.click();
       await after(0);
-      expect(element('copy-link-done')).not.toBeNull();
+      expect(element('copy-link-developer-done')).not.toBeNull();
 
       await after(2999);
-      expect(element('copy-link-done')).not.toBeNull();
+      expect(element('copy-link-developer-done')).not.toBeNull();
 
       await after(1);
-      expect(element('copy-link-done')).toBeNull();
-      expect(normalized(element('copy-link'))).toBe('⧉ Kopieren');
+      expect(element('copy-link-developer-done')).toBeNull();
+      expect(normalized(element('copy-link-developer'))).toBe('⧉ Kopieren');
     });
 
     it('starts the 3 s again with a second click', async () => {
-      element('copy-session-id')?.click();
+      element('copy-link-viewer')?.click();
       await after(2000);
-      element('copy-session-id')?.click();
+      element('copy-link-viewer')?.click();
       await after(0);
 
       await after(2999);
-      expect(element('copy-session-id-done')).not.toBeNull();
+      expect(element('copy-link-viewer-done')).not.toBeNull();
 
       await after(1);
-      expect(element('copy-session-id-done')).toBeNull();
+      expect(element('copy-link-viewer-done')).toBeNull();
     });
 
     it('keeps the failure status', async () => {
       rejects = true;
-      element('copy-link')?.click();
+      element('copy-link-developer')?.click();
       await after(10000);
 
-      expect(element('copy-link-failed')).not.toBeNull();
+      expect(element('copy-link-developer-failed')).not.toBeNull();
     });
 
     it('clears the timer when the component is destroyed', async () => {
-      element('copy-link')?.click();
+      element('copy-link-developer')?.click();
       await after(0);
       expect(vi.getTimerCount()).toBe(1);
 
@@ -147,8 +159,8 @@ describe('ShareSession', () => {
   });
 
   it.each([
-    ['copy-link', 'copy-link-failed', 'copy-link-done'],
-    ['copy-session-id', 'copy-session-id-failed', 'copy-session-id-done'],
+    ['copy-link-developer', 'copy-link-developer-failed', 'copy-link-developer-done'],
+    ['copy-link-viewer', 'copy-link-viewer-failed', 'copy-link-viewer-done'],
   ])('shows a status to copy by hand when %s fails', async (button, failed, done) => {
     rejects = true;
 

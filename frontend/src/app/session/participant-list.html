@@ -3,15 +3,16 @@
     Teilnehmer · {{ store.participants().length }}
   </h2>
   <ul data-testid="participant-list">
-    @for (participant of store.participants(); track participant.id) {
+    @for (participant of participants(); track participant.id) {
       @let scrumMaster = participant.role === 'SCRUM_MASTER';
-      @let voted = round() && !scrumMaster && participant.hasVoted;
+      @let viewer = participant.role === 'VIEWER';
+      @let voted = round() && !scrumMaster && !viewer && participant.hasVoted;
       <li
         data-testid="participant"
         [class.me]="participant.id === myId()"
         [class.disconnected]="!participant.connected"
       >
-        @if (!scrumMaster) {
+        @if (!scrumMaster && !viewer) {
           <span
             class="chip"
             data-testid="participant-chip"
@@ -34,6 +35,14 @@
                 ></span
               >
             }
+            @if (viewer) {
+              <span class="role"
+                ><span aria-hidden="true">👁 </span
+                ><span data-testid="participant-role" i18n="@@participants.viewer"
+                  >Zuschauer</span
+                ></span
+              >
+            }
           </span>
           @if (scrumMaster) {
             <span
@@ -42,6 +51,7 @@
               i18n="@@participants.moderates"
               >Moderiert, schätzt nicht mit</span
             >
+          } @else if (viewer) {
           } @else if (round()) {
             @if (participant.hasVoted) {
               <span class="activity voted"

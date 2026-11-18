@@ -17,6 +17,7 @@ import {
   votingScrumMaster,
 } from '../api/examples';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
+import { asViewer } from '../api/testing/viewer-snapshots';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
 import { motifFor } from './card-motif';
@@ -193,6 +194,29 @@ describe('SessionPage', () => {
     ]) {
       expect(side?.querySelector(`[data-testid="${id}"]`), id).not.toBeNull();
     }
+  });
+
+  it.each([
+    ['a developer', votingDeveloper],
+    ['a viewer', asViewer(votingDeveloper)],
+  ])('shows no share section to %s', async (_, snapshot) => {
+    await open(snapshot);
+
+    expect(count('session-share')).toBe(0);
+    expect(count('share-link-developer')).toBe(0);
+    expect(count('share-link-viewer')).toBe(0);
+  });
+
+  it('shows the cards to nobody but the round to a viewer while voting', async () => {
+    await open(asViewer(votingDeveloper));
+
+    expect(count('active-issue')).toBe(1);
+    expect(count('seat-table')).toBe(1);
+    expect(count('card-deck')).toBe(0);
+    expect(count('card-deck-locked')).toBe(0);
+    expect(count('issue-panel')).toBe(0);
+    expect(count('round-reveal')).toBe(0);
+    expect(text('viewer-hint')).toBe('Du schaust zu.');
   });
 
   it('shows the active issue and no waiting state to a developer while voting', async () => {

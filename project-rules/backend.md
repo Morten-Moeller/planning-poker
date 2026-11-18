@@ -53,11 +53,18 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   mapper to `SessionView`, from spec 0006) goes through `read(sessionId, query)` under the same
   lock, without an event. A command or read on a missing session throws
   `SessionException(SESSION_NOT_FOUND)`. A rejected command leaves `lastActivityAt` unchanged.
-- `Session` is the aggregate; only its methods change the state (A1.4): `join`, `connect`,
+- `Session` is the aggregate; only its methods change the state (A1.4): `joinAsScrumMaster`
+  (the creator, from `SessionRegistry.create`), `join(name, invite)`, `connect`,
   `disconnect`, `setTimer`, `selectIssue`, `startVoting`, `vote`, `reveal`, `revealIfDue`, `restart`, `beginConfirm`, `finishConfirm`,
   `failConfirm`. Role and phase checks live inside these methods and throw `SessionException`
   with the `ErrorCode` from `platform` (`FORBIDDEN_ROLE`, `INVALID_STATE`, `NAME_TAKEN`,
-  `VALIDATION_ERROR`, `UNAUTHORIZED`). The rules are listed in `docs/domain/invariants.md`.
+  `VALIDATION_ERROR`, `UNAUTHORIZED`, `INVITE_INVALID`).
+- Invite codes (spec 0040, ADR 0014): every `Session` creates a code for developers and one for
+  viewers with `Ids.token()` (24 bytes `SecureRandom`, Base64url). `join(name, invite)` compares
+  the given code with both codes through `MessageDigest.isEqual` and takes the role from it
+  (`DEVELOPER` or `VIEWER`); another code throws `INVITE_INVALID` (403) before the limit and the
+  name check. `JoinSessionRequest.invite` is `@NotBlank` (400 `VALIDATION_ERROR`). Viewers count
+  toward `max-participants`, never toward `allVoted`. The rules are listed in `docs/domain/invariants.md`.
 - A state check runs inside the lock and answers `INVALID_STATE` on an invalid transition. No
   read, change, save outside the lock.
 - No GitLab call and no slow I/O inside the lock (A3.3). Loading an issue happens before the
@@ -103,7 +110,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   Bean Validation failures to 400 `VALIDATION_ERROR`. Domain code throws typed exceptions; only
   the boundary maps them to HTTP (A3.5). GitLab error texts are never forwarded.
 - Logging: JBoss Logging through `quarkus-logging-json`, JSON lines on the console (`dev` profile
-  plain text). Never logged: the GitLab token, participant tokens, hidden card values.
+  plain text). Never logged: the GitLab token, participant tokens, invite codes, hidden card values.
 - Configuration: `backend/src/main/resources/application.properties` holds every
   `planningpoker.*` key with its default. The GitLab token comes from `GITLAB_TOKEN` and has no
   default; a missing token stops the start with the key name (A6.1): `GitLabConfig`
@@ -135,7 +142,8 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   checks the role again (A1.4). The frontend never sends a role.
 - Snapshots: `SessionViewMapper.toView(session, receiverId, serverTime)` builds the `SessionView` under the
   lock of `SessionRegistry.read` with the filter rules of the plan (4.6): no foreign card before
-  the reveal, `myVote` only for the receiver, `preselectedIssueIid` only for the scrum master,
+  the reveal, `myVote` only for the receiver, `preselectedIssueIid` and `invites` only for the
+  scrum master,
   `activeIssue` and `round` `null` in `LOBBY`, history newest first, `revealedAt` in UTC. Tokens
   never leave the domain: `Participant.token` has no view field.
 - `SessionException` reaches the client through `SessionExceptionMapper` as

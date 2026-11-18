@@ -79,7 +79,7 @@
             }
             <span class="recent-meta">
               <span data-testid="recent-session-role">
-                @switch (row.entry.role) {
+                @switch (row.view?.me?.role ?? row.entry.role) {
                   @case ('SCRUM_MASTER') {
                     <ng-container i18n="@@start.recent.role.SCRUM_MASTER"
                       >Scrum Master</ng-container
@@ -87,6 +87,9 @@
                   }
                   @case ('DEVELOPER') {
                     <ng-container i18n="@@start.recent.role.DEVELOPER">Entwickler</ng-container>
+                  }
+                  @case ('VIEWER') {
+                    <ng-container i18n="@@start.recent.role.VIEWER">Zuschauer</ng-container>
                   }
                 }
               </span>
@@ -292,59 +295,6 @@
       } @else {
         <ng-container i18n="@@start.create.submit">Sitzung erstellen</ng-container>
       }
-    </button>
-  </form>
-
-  <form
-    class="panel panel-join"
-    [formGroup]="joinForm"
-    (ngSubmit)="joinBySessionId()"
-    data-testid="join-form"
-  >
-    <div class="panel-head">
-      <h2 i18n="@@start.join.title">Sitzung beitreten</h2>
-      <span class="panel-sub" i18n="@@start.join.subtitle"
-        >Mit der Session-ID vom Scrum Master</span
-      >
-    </div>
-    <mat-form-field>
-      <mat-label i18n="@@start.join.sessionId">Session-ID</mat-label>
-      <input
-        matInput
-        class="session-id-input"
-        formControlName="sessionId"
-        data-testid="join-session-id-input"
-        autocomplete="off"
-        spellcheck="false"
-        (input)="uppercaseSessionId()"
-      />
-      <mat-hint i18n="@@start.join.sessionIdHint">8 Zeichen, z. B. K7P2QX9M</mat-hint>
-      @if (joinForm.controls.sessionId.invalid) {
-        <mat-error>
-          <span class="error-icon" aria-hidden="true">⚠</span>
-          <span data-testid="join-session-id-error">
-            @if (sessionIdLength() !== 8) {
-              <ng-container i18n="@@start.join.sessionIdLength"
-                >Die Session-ID hat 8 Zeichen ({{ sessionIdLength() }} eingegeben)</ng-container
-              >
-            } @else {
-              <ng-container i18n="@@start.join.sessionIdInvalid"
-                >Die Session-ID hat 8 Zeichen aus Großbuchstaben und Ziffern</ng-container
-              >
-            }
-          </span>
-        </mat-error>
-      }
-    </mat-form-field>
-    <button
-      mat-stroked-button
-      type="submit"
-      class="submit"
-      data-testid="join-session-id-submit"
-      [disabled]="backendDown()"
-      i18n="@@start.join.submit"
-    >
-      Weiter
     </button>
   </form>
 </div>

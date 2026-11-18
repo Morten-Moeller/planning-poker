@@ -65,6 +65,57 @@ class SessionViewMapperTest {
     }
 
     @Test
+    void showsTheInvitesOnlyToTheScrumMaster() {
+        Session session = SessionBuilder.session().viewers(1).build();
+
+        SessionView master =
+                mapper.toView(session, SessionBuilder.master(session).id(), SERVER_TIME);
+        SessionView developer =
+                mapper.toView(session, SessionBuilder.developer(session, 0).id(), SERVER_TIME);
+        SessionView viewer =
+                mapper.toView(session, SessionBuilder.viewers(session).get(0).id(), SERVER_TIME);
+
+        assertEquals(new SessionView.Invites(session.developerInvite(), session.viewerInvite()), master.invites());
+        assertNull(developer.invites());
+        assertNull(viewer.invites());
+        assertEquals(Role.VIEWER, viewer.me().role());
+        assertNull(viewer.preselectedIssueIid());
+    }
+
+    @Test
+    void keepsTheInvitesOutOfTheSnapshotOfOtherRoles() throws JsonProcessingException {
+        Session session = SessionBuilder.session().viewers(1).voting().build();
+
+        for (Participant receiver : List.of(
+                SessionBuilder.developer(session, 0),
+                SessionBuilder.viewers(session).get(0))) {
+            String json = JSON.writeValueAsString(mapper.toView(session, receiver.id(), SERVER_TIME));
+
+            assertFalse(json.contains(session.developerInvite()), "code for developers in " + json);
+            assertFalse(json.contains(session.viewerInvite()), "code for viewers in " + json);
+        }
+    }
+
+    @Test
+    void showsViewersWithoutAVote() {
+        Session session = SessionBuilder.session().viewers(1).revealed().build();
+        Participant viewerParticipant = SessionBuilder.viewers(session).get(0);
+
+        SessionView view = mapper.toView(session, viewerParticipant.id(), SERVER_TIME);
+
+        SessionView.ParticipantView viewer = view.participants().stream()
+                .filter(participant -> participant.id().equals(viewerParticipant.id()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(Role.VIEWER, viewer.role());
+        assertFalse(viewer.hasVoted());
+        assertNull(view.round().myVote());
+        assertTrue(view.round().allVoted());
+        assertTrue(view.round().votes().stream()
+                .noneMatch(vote -> vote.participantId().equals(viewerParticipant.id())));
+    }
+
+    @Test
     void hidesThePreselectedIssueFromDevelopers() {
         Session session = SessionBuilder.session().build();
 

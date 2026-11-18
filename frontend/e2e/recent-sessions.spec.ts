@@ -58,9 +58,10 @@ test('a developer returns to the session from the start page after the tab is cl
   await page.goto('/');
   const sessionId = await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
 
+  const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
   const developerContext = await browser.newContext();
   const developer = await developerContext.newPage();
-  await developer.goto(`/session/${sessionId}/join`);
+  await developer.goto(link);
   await developer.getByTestId('join-name').fill('Ben');
   await developer.getByTestId('join-submit').click();
   await expect(developer.getByTestId('lobby-waiting')).toBeVisible();
@@ -103,17 +104,21 @@ test('Neue Sitzung leads to the prefilled start page and both sessions stand in 
   );
 });
 
-test('a developer sees no Neue Sitzung in the room', async ({ browser, page }) => {
+test('a developer sees neither the invite links nor Neue Sitzung in the room', async ({
+  browser,
+  page,
+}) => {
   await page.goto('/');
   const sessionId = await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
 
+  const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
   const developerContext = await browser.newContext();
   const developer = await developerContext.newPage();
-  await developer.goto(`/session/${sessionId}/join`);
+  await developer.goto(link);
   await developer.getByTestId('join-name').fill('Ben');
   await developer.getByTestId('join-submit').click();
   await expect(developer.getByTestId('lobby-waiting')).toBeVisible();
-  await expect(developer.getByTestId('session-share')).toBeVisible();
+  await expect(developer.getByTestId('session-share')).toHaveCount(0);
   await expect(developer.getByTestId('new-session')).toHaveCount(0);
   await expect(developer.getByTestId('toolbar-home')).toHaveAttribute('href', '/');
   await developerContext.close();

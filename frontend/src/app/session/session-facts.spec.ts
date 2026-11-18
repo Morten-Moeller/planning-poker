@@ -13,6 +13,7 @@ import {
 } from '../api/examples';
 import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
+import { asViewer, withViewers } from '../api/testing/viewer-snapshots';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
 import { SessionFacts } from './session-facts';
@@ -80,6 +81,20 @@ describe('SessionFacts', () => {
 
     expect(text('session-participants')).toBe('6 (5 Entwickler)');
     expect(text('session-participant-count')).toBe('6');
+  });
+
+  it('shows seven participants with five developers and one viewer', async () => {
+    await open(withViewers(withDevelopers(lobbyScrumMaster, 5), 'Paula'));
+
+    expect(text('session-participants')).toBe('7 (5 Entwickler, 1 Zuschauer)');
+    expect(text('session-participant-count')).toBe('7');
+  });
+
+  it('shows the role Zuschauer to a viewer', async () => {
+    await open(asViewer(lobbyDeveloper));
+
+    expect(text('session-role')).toBe('Zuschauer');
+    expect(text('session-participants')).toBe('4 (2 Entwickler, 1 Zuschauer)');
   });
 
   it('shows the label Teilnehmer next to the count', async () => {

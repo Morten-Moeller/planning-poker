@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,10 +13,12 @@ import { formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
 import { participantNameValidators } from '../api/participant-name';
 import { PreferencesStore } from '../api/preferences-store';
+import type { ParticipantRole } from '../api/recent-sessions';
 import { TokenStore } from '../api/token-store';
 
 const JOIN_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
   'SESSION_NOT_FOUND',
+  'INVITE_INVALID',
   'NAME_TAKEN',
   'LIMIT_REACHED',
   'VALIDATION_ERROR',
@@ -49,6 +51,18 @@ export class JoinPage {
     { initialValue: '' },
   );
 
+  private readonly query = toSignal(
+    this.route.queryParamMap.pipe(
+      map((params) => ({
+        invite: (params.get('invite') ?? '').trim(),
+        viewer: params.get('as') === 'viewer',
+      })),
+    ),
+    { initialValue: { invite: '', viewer: false } },
+  );
+  protected readonly invite = computed(() => this.query().invite);
+  protected readonly viewer = computed(() => this.query().viewer);
+
   protected readonly joinForm = new FormGroup({
     name: new FormControl(this.preferences.read().name, {
       nonNullable: true,
@@ -59,6 +73,7 @@ export class JoinPage {
   protected readonly joinError = signal<string | null>(null);
   protected readonly joining = signal(false);
   protected readonly sessionNotFound = signal(false);
+  protected readonly inviteInvalid = signal(false);
 
   protected join(): void {
     this.joinError.set(null);
@@ -67,11 +82,16 @@ export class JoinPage {
       return;
     }
     const sessionId = this.sessionId();
+    const invite = this.invite();
+    if (invite === '') {
+      return;
+    }
     const name = this.joinForm.controls.name.value.trim();
+    const role: ParticipantRole = this.viewer() ? 'VIEWER' : 'DEVELOPER';
     this.joining.set(true);
-    this.api.joinSession(sessionId, { name }).subscribe({
+    this.api.joinSession(sessionId, { name, invite }).subscribe({
       next: ({ participantId, token }) => {
-        this.tokens.store(sessionId, { participantId, token }, { role: 'DEVELOPER', name });
+        this.tokens.store(sessionId, { participantId, token }, { role, name });
         this.preferences.save({ name });
         void this.router.navigate(['/session', sessionId]);
       },
@@ -85,6 +105,8 @@ export class JoinPage {
         const code = error instanceof ApiError ? error.errorCode : null;
         if (code === 'SESSION_NOT_FOUND') {
           this.sessionNotFound.set(true);
+        } else if (code === 'INVITE_INVALID') {
+          this.inviteInvalid.set(true);
         } else if (code === 'NAME_TAKEN') {
           const name = this.joinForm.controls.name;
           name.setErrors({ nameTaken: message });

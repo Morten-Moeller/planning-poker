@@ -28,7 +28,7 @@ final class RestCalls {
                                 + "\",\"labels\":[]}")));
     }
 
-    record Created(String sessionId, Participant scrumMaster) {}
+    record Created(String sessionId, Participant scrumMaster, String developerInvite, String viewerInvite) {}
 
     static Created createSession(String name) {
         Response response = given().contentType(ContentType.JSON)
@@ -36,16 +36,29 @@ final class RestCalls {
                 .when()
                 .post("/api/sessions");
         response.then().statusCode(201);
+        String sessionId = response.jsonPath().getString("sessionId");
+        String token = response.jsonPath().getString("token");
+        Response snapshot =
+                given().header("Authorization", "Bearer " + token).when().get("/api/sessions/" + sessionId);
+        snapshot.then().statusCode(200);
         return new Created(
-                response.jsonPath().getString("sessionId"),
-                new Participant(
-                        response.jsonPath().getString("participantId"),
-                        response.jsonPath().getString("token")));
+                sessionId,
+                new Participant(response.jsonPath().getString("participantId"), token),
+                snapshot.jsonPath().getString("invites.developer"),
+                snapshot.jsonPath().getString("invites.viewer"));
     }
 
-    static Participant join(String sessionId, String name) {
+    static Participant join(Created created, String name) {
+        return join(created.sessionId(), created.developerInvite(), name);
+    }
+
+    static Participant joinAsViewer(Created created, String name) {
+        return join(created.sessionId(), created.viewerInvite(), name);
+    }
+
+    static Participant join(String sessionId, String invite, String name) {
         Response response = given().contentType(ContentType.JSON)
-                .body("{\"name\":\"" + name + "\"}")
+                .body("{\"name\":\"" + name + "\",\"invite\":\"" + invite + "\"}")
                 .when()
                 .post("/api/sessions/" + sessionId + "/participants");
         response.then().statusCode(201);

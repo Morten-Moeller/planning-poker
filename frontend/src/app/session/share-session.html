@@ -1,70 +1,70 @@
 <section class="share" data-testid="session-share">
   <h2 i18n="@@share.title">Teilen</h2>
-  <span class="label" i18n="@@share.linkLabel">Beitrittslink</span>
+  <span class="label" i18n="@@share.developerLabel">Einladung Entwickler</span>
   <div class="field">
-    <code class="link" data-testid="share-link">{{ link() }}</code>
+    <code class="link" data-testid="share-link-developer">{{ links().developer }}</code>
     @if (canCopy) {
       <button
         mat-button
         type="button"
-        data-testid="copy-link"
-        i18n-aria-label="@@share.copyLink"
-        aria-label="Link kopieren"
-        (click)="copy('link')"
+        data-testid="copy-link-developer"
+        i18n-aria-label="@@share.copyDeveloperLink"
+        aria-label="Einladung Entwickler kopieren"
+        (click)="copy('developer')"
       >
         <span aria-hidden="true">⧉ </span><span i18n="@@share.copy">Kopieren</span>
       </button>
     }
   </div>
-  @if (copied() === 'link') {
+  @if (copied() === 'developer') {
     <span class="note done"
       ><span aria-hidden="true">✓ </span
-      ><span role="status" data-testid="copy-link-done" i18n="@@share.copied">Kopiert</span></span
-    >
-  }
-  @if (failed() === 'link') {
-    <span class="note failed"
-      ><span aria-hidden="true">⚠ </span
-      ><span role="status" data-testid="copy-link-failed" i18n="@@share.copyFailed"
-        >Kopieren nicht möglich, bitte von Hand kopieren</span
-      ></span
-    >
-  }
-  <span class="label" i18n="@@share.sessionIdLabel">Session-ID</span>
-  <div class="field">
-    <code class="id" data-testid="share-session-id">{{ sessionId() }}</code>
-    @if (canCopy) {
-      <button
-        mat-button
-        type="button"
-        data-testid="copy-session-id"
-        i18n-aria-label="@@share.copySessionId"
-        aria-label="Session-ID kopieren"
-        (click)="copy('sessionId')"
-      >
-        <span aria-hidden="true">⧉ </span><span i18n="@@share.copy">Kopieren</span>
-      </button>
-    }
-  </div>
-  @if (copied() === 'sessionId') {
-    <span class="note done"
-      ><span aria-hidden="true">✓ </span
-      ><span role="status" data-testid="copy-session-id-done" i18n="@@share.copied"
+      ><span role="status" data-testid="copy-link-developer-done" i18n="@@share.copied"
         >Kopiert</span
       ></span
     >
   }
-  @if (failed() === 'sessionId') {
+  @if (failed() === 'developer') {
     <span class="note failed"
       ><span aria-hidden="true">⚠ </span
-      ><span role="status" data-testid="copy-session-id-failed" i18n="@@share.copyFailed"
+      ><span role="status" data-testid="copy-link-developer-failed" i18n="@@share.copyFailed"
         >Kopieren nicht möglich, bitte von Hand kopieren</span
       ></span
     >
   }
-  @if (scrumMaster()) {
-    <a mat-stroked-button class="new-session" routerLink="/" data-testid="new-session"
-      ><span aria-hidden="true">＋ </span><span i18n="@@share.newSession">Neue Sitzung</span></a
+  <span class="label" i18n="@@share.viewerLabel">Einladung Zuschauer</span>
+  <div class="field">
+    <code class="link" data-testid="share-link-viewer">{{ links().viewer }}</code>
+    @if (canCopy) {
+      <button
+        mat-button
+        type="button"
+        data-testid="copy-link-viewer"
+        i18n-aria-label="@@share.copyViewerLink"
+        aria-label="Einladung Zuschauer kopieren"
+        (click)="copy('viewer')"
+      >
+        <span aria-hidden="true">⧉ </span><span i18n="@@share.copy">Kopieren</span>
+      </button>
+    }
+  </div>
+  @if (copied() === 'viewer') {
+    <span class="note done"
+      ><span aria-hidden="true">✓ </span
+      ><span role="status" data-testid="copy-link-viewer-done" i18n="@@share.copied"
+        >Kopiert</span
+      ></span
     >
   }
+  @if (failed() === 'viewer') {
+    <span class="note failed"
+      ><span aria-hidden="true">⚠ </span
+      ><span role="status" data-testid="copy-link-viewer-failed" i18n="@@share.copyFailed"
+        >Kopieren nicht möglich, bitte von Hand kopieren</span
+      ></span
+    >
+  }
+  <a mat-stroked-button class="new-session" routerLink="/" data-testid="new-session"
+    ><span aria-hidden="true">＋ </span><span i18n="@@share.newSession">Neue Sitzung</span></a
+  >
 </section>

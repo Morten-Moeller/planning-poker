@@ -42,7 +42,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `GET /api/config` (`rememberSessions`): the app initializer `loadRecentSessionsSetting`
   (`app.config.ts`, timeout 3 s) sets the signal `RecentSessions.enabled`; it stays `null` when
   the call fails. Only with `true`, `TokenStore.store` also writes the entry (create: role
-  `SCRUM_MASTER`, join: `DEVELOPER`) and `TokenStore.identity` falls back to the entry when
+  `SCRUM_MASTER`, join: `VIEWER` with `as=viewer`, else `DEVELOPER`; the list shows the role of
+  the checked snapshot and falls back to the stored one) and `TokenStore.identity` falls back to the entry when
   `sessionStorage` has none and copies it into `sessionStorage`; `TokenStore.remove` removes both.
   With `false` or `null` ADR 0003 applies unchanged. The start page with `true` checks every entry
   with `GET /api/sessions/{id}` and its token: `SESSION_NOT_FOUND` and `UNAUTHORIZED` remove the
@@ -85,7 +86,7 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `formErrorMessage` (`api/error-messages.ts`) at the form for the codes the form names (create:
   `ISSUE_NOT_FOUND`, `PROJECT_NOT_ALLOWED`, `LIMIT_REACHED`, `GITLAB_ACCESS_DENIED`,
   `GITLAB_ERROR`, `VALIDATION_ERROR`; confirm dialog: `GITLAB_ACCESS_DENIED`, `GITLAB_ERROR`;
-  join: `SESSION_NOT_FOUND`, `NAME_TAKEN`, `LIMIT_REACHED`, `VALIDATION_ERROR`), then clears
+  join: `SESSION_NOT_FOUND`, `INVITE_INVALID`, `NAME_TAKEN`, `LIMIT_REACHED`, `VALIDATION_ERROR`), then clears
   `ErrorState`; every other code stays in the banner (specs 0011, 0015). The issue search shows
   `GITLAB_ACCESS_DENIED` and `GITLAB_ERROR` in the panel as `issue-results-error` with the text
   of the code (`issue-results-error-message`) and the button `issue-results-retry`,
@@ -118,6 +119,13 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `health-retry`; the join page shows `join-role-hint` and, for `SESSION_NOT_FOUND`,
   `join-not-found` with the link `join-not-found-home` instead of the form. Above the title of the
   join page stands the card hand `card-hand` in the size `large`, centred (spec 0038).
+- Invite links (spec 0040, ADR 0014): the start page has no join form; joining goes only through
+  an invite link `…/session/<id>/join?invite=<code>`. The join page sends `invite` with the name;
+  with `as=viewer` it shows `join-viewer-hint` instead of `join-role-hint` (the server ignores
+  `as`). Without `invite` (or blank) it shows `join-invite-missing` and no form; `INVITE_INVALID`
+  replaces the form with `join-invite-invalid`. The room of a viewer has no card deck: the footer
+  shows `viewer-hint` („Du schaust zu.“) in `DISCUSSION` and `VOTING` and `result-waiting` in
+  `REVEALED`; toolbar and facts name the role „Zuschauer“.
 - Card hand (spec 0038): `CardHand` (`app-card-hand`, `frontend/src/app/api/card-hand.ts`, used by
   `session` and `join`) shows the five motif cards `card-hand-card` (Raster, Punkte, Zeilen,
   Ringe, Stufen, class `motif-0` to `motif-4`; no `data-motif`, because `app-shell.scss` reads the toolbar motif through `:has([data-motif])`) as a hand: close together at the bottom, fanned out at the
@@ -146,8 +154,7 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   schätzen oder übernimmt das Ergebnis.“). The restart leads straight to `VOTING`: the developer
   sees the open `card-deck` without `discussion-hint`, with a timer also the remaining time. The
   mock backend changes the phase from `REVEALED` to `VOTING` as well.
-- Session ids from the route of the join page are taken in capital letters, like the input on
-  the start page. The name rule of create and join is `api/participant-name.ts`.
+- Session ids from the route of the join page are taken in capital letters. The name rule of create and join is `api/participant-name.ts`.
 - Authentication: `authInterceptor` adds `Authorization: Bearer <token>` from the `TokenStore`
   (`sessionStorage`, key `planningpoker.session.<id>`, value `{ participantId, token }`) to
   every call under `/api/sessions/{id}` except the join (`POST …/participants`).
@@ -234,14 +241,18 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
     meaning; states always stand as text next to it.
   - Side column (part B): sections with a mono label (`--app-label-section`, upper case by CSS)
     in this order: „Timer“ (scrum master, with the hint „Gilt ab der nächsten Runde.“),
-    „Teilnehmer · n“, „Teilen“ (for the scrum master with the link „＋ Neue Sitzung“
+    „Teilnehmer · n“, „Teilen“ (`share-session`, only for the scrum master and only from
+    `invites` of the snapshot: „Einladung Entwickler“ `share-link-developer` and „Einladung
+    Zuschauer“ `share-link-viewer`, each with „Kopieren“ `copy-link-developer` or
+    `copy-link-viewer`, spec 0040; then the link „＋ Neue Sitzung“
     `new-session` to the start page at its end, spec 0039; leaving the room does not end the
     session), „Fakten“ (`session-facts`: Session-ID, Phase, Deine Rolle,
-    Teilnehmer „n (m Entwickler)“), „Sitzungsprotokoll“ (`session-history`, collapsed panel;
+    Teilnehmer „n (m Entwickler)“, with viewers „n (m Entwickler, k Zuschauer)“), „Sitzungsprotokoll“ (`session-history`, collapsed panel;
     head and content with 16 px padding left and right, spec 0038).
     A participant entry (design system, section 8) has a chip (filled with the motif after a
     vote, dashed otherwise; the scrum master has no chip and no empty column, spec 0038), the name with „(du)“ and a highlighted row
-    for the own entry, „★ Scrum Master“, a status („Moderiert, schätzt nicht mit“, „Bereit“ in
+    for the own entry, „★ Scrum Master“, „👁 Zuschauer“ (viewers stand below the developers,
+    without chip and without status, spec 0040), a status („Moderiert, schätzt nicht mit“, „Bereit“ in
     `LOBBY`, „Diskutiert“ in `DISCUSSION`, „✓ Hat geschätzt“ in `VOTING` and `REVEALED`,
     „○ Ausstehend“ in `VOTING`, „Nicht geschätzt“ (muted) in `REVEALED`, spec 0032) and „● verbunden“ or „○ getrennt“. Symbols stand in `aria-hidden` spans outside
     the element with the `data-testid`, so the selectors keep their text.
