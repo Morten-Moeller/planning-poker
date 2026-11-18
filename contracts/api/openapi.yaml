@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Planning Poker API
-  version: 3.3.0
+  version: 3.4.0
   description: |
     Commands go over REST under /api and answer without state. The state reaches every participant
     over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
@@ -148,6 +148,16 @@ components:
           description: How often the card was chosen.
           examples:
           - 2
+    ConfigResponse:
+      required:
+      - rememberSessions
+      description: Settings of the backend for the frontend.
+      type: object
+      properties:
+        rememberSessions:
+          type: boolean
+          description: Whether the browser keeps the last sessions with their token
+            in localStorage (planningpoker.session.remember).
     ConfirmRequest:
       description: Confirms a card as the final value of the revealed round and writes
         it to GitLab.
@@ -845,6 +855,19 @@ tags:
 - name: sessions
   description: "Sessions, participants and the commands of a round."
 paths:
+  /api/config:
+    get:
+      summary: Settings of the backend for the frontend.
+      operationId: getConfig
+      tags:
+      - platform
+      responses:
+        "200":
+          description: Settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigResponse"
   /api/health:
     get:
       summary: Whether the backend answers.
