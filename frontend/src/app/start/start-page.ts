@@ -1,6 +1,12 @@
 import { Component, DestroyRef, WritableSignal, inject, linkedSignal, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldModule } from '@angular/material/form-field';
@@ -28,6 +34,7 @@ import { ApiService, IssueSummary, ProjectSummary } from '../api/api.service';
 import { errorMessage, formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
 import { participantNameValidators } from '../api/participant-name';
+import { PreferencesStore, TIMER_OFF } from '../api/preferences-store';
 import { TokenStore } from '../api/token-store';
 import { HealthApi } from './health-api';
 
@@ -84,6 +91,8 @@ export class StartPage {
   private readonly healthApi = inject(HealthApi);
   private readonly api = inject(ApiService);
   private readonly tokens = inject(TokenStore);
+  private readonly preferences = inject(PreferencesStore);
+  private readonly saved = this.preferences.read();
   private readonly errorState = inject(ErrorState);
   private readonly router = inject(Router);
 
@@ -111,11 +120,11 @@ export class StartPage {
   }).asReadonly();
 
   protected readonly createForm = new FormGroup({
-    name: new FormControl('', {
+    name: new FormControl(this.saved.name, {
       nonNullable: true,
       validators: participantNameValidators,
     }),
-    gitlabProjectId: new FormControl('', {
+    gitlabProjectId: new FormControl(this.saved.projectId, {
       nonNullable: true,
       validators: [Validators.required, Validators.pattern(NOT_BLANK)],
     }),
@@ -145,8 +154,8 @@ export class StartPage {
 
   constructor() {
     const destroyRef = inject(DestroyRef);
-    const projectText = textOf(this.createForm.controls.gitlabProjectId.valueChanges);
-    const issueText = textOf(this.createForm.controls.issueIid.valueChanges);
+    const projectText = textOf(this.createForm.controls.gitlabProjectId);
+    const issueText = textOf(this.createForm.controls.issueIid);
 
     const projectField = this.createForm.controls.gitlabProjectId;
     merge(
@@ -246,18 +255,21 @@ export class StartPage {
       return;
     }
     const { name, gitlabProjectId, issueIid } = this.createForm.getRawValue();
+    const participantName = name.trim();
+    const projectId = gitlabProjectId.trim();
     const issue = issueIid.trim();
     this.creating.set(true);
     this.api
       .createSession({
-        name: name.trim(),
-        gitlabProjectId: gitlabProjectId.trim(),
+        name: participantName,
+        gitlabProjectId: projectId,
         ...(issue === '' ? {} : { issueIid: Number(issue) }),
       })
       .subscribe({
         next: ({ sessionId, participantId, token }) => {
           this.tokens.store(sessionId, { participantId, token });
-          void this.router.navigate(['/session', sessionId]);
+          this.preferences.save({ name: participantName, projectId });
+          this.applySavedTimer(sessionId);
         },
         error: (error: unknown) => {
           this.creating.set(false);
@@ -275,6 +287,16 @@ export class StartPage {
           }
         },
       });
+  }
+
+  private applySavedTimer(sessionId: string): void {
+    const enter = (): void => void this.router.navigate(['/session', sessionId]);
+    const seconds = this.preferences.read().timerSeconds;
+    if (seconds === TIMER_OFF) {
+      enter();
+      return;
+    }
+    this.api.setTimer(sessionId, { seconds }).subscribe({ next: enter, error: enter });
   }
 
   protected uppercaseSessionId(): void {
@@ -297,9 +319,9 @@ export class StartPage {
   }
 }
 
-function textOf(values: Observable<string>): Observable<string> {
-  return values.pipe(
-    startWith(''),
+function textOf(control: AbstractControl<string>): Observable<string> {
+  return control.valueChanges.pipe(
+    startWith(control.value),
     map((value) => value.trim()),
     distinctUntilChanged(),
   );

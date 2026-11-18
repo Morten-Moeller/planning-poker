@@ -14,6 +14,7 @@ import {
   SessionView,
   votingScrumMaster,
 } from '../api/examples';
+import { PreferencesStore } from '../api/preferences-store';
 import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { TokenStore } from '../api/token-store';
@@ -39,6 +40,7 @@ describe('IssuePanel', () => {
 
   beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     sockets = new FakeSocketFactory();
     TestBed.configureTestingModule({
       providers: [
@@ -70,7 +72,11 @@ describe('IssuePanel', () => {
     fixture.componentRef.setInput('sessionId', SESSION_ID);
     await fixture.whenStable();
     const request = http.expectOne((r) => r.url === ISSUES_URL);
-    expect(params(request.request.params)).toEqual({ weight: 'NONE', period: 'ALL' });
+    const saved = TestBed.inject(PreferencesStore).read();
+    expect(params(request.request.params)).toEqual({
+      weight: saved.weightFilter,
+      period: saved.periodFilter,
+    });
     request.flush({ items: page, nextPage });
     await fixture.whenStable();
   }
@@ -522,5 +528,47 @@ describe('IssuePanel', () => {
       'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.',
     ]);
     expect(texts('issue-results-retry')).toEqual(['↻ Erneut versuchen']);
+  });
+
+  it('starts with the saved filters and loads the issues with them', async () => {
+    TestBed.inject(PreferencesStore).save({ weightFilter: 'ANY', periodFilter: 'MONTH' });
+
+    await open(lobbyScrumMaster);
+
+    expect(one('issue-filter-weight-any').getAttribute('class')).toContain(
+      'mat-button-toggle-checked',
+    );
+    const select = await TestbedHarnessEnvironment.loader(fixture).getHarness(MatSelectHarness);
+    expect(await select.getValueText()).toBe('1 Monat');
+  });
+
+  it('saves every change of the filters', async () => {
+    await open(lobbyScrumMaster);
+    const preferences = TestBed.inject(PreferencesStore);
+
+    one('issue-filter-weight-any').querySelector('button')!.click();
+    await fixture.whenStable();
+    http.expectOne((r) => r.url === ISSUES_URL).flush({ items: [], nextPage: null });
+    expect(preferences.read().weightFilter).toBe('ANY');
+
+    const select = await TestbedHarnessEnvironment.loader(fixture).getHarness(MatSelectHarness);
+    await select.open();
+    await select.clickOptions({ text: '1 Jahr' });
+    await fixture.whenStable();
+    http.expectOne((r) => r.url === ISSUES_URL).flush({ items: [], nextPage: null });
+    expect(preferences.read().periodFilter).toBe('YEAR');
+  });
+
+  it('saves the defaults when the filters are reset', async () => {
+    TestBed.inject(PreferencesStore).save({ weightFilter: 'ALL', periodFilter: 'WEEK' });
+    await open(lobbyScrumMaster, []);
+
+    await click('issue-filter-reset');
+    http.expectOne((r) => r.url === ISSUES_URL).flush({ items: [], nextPage: null });
+
+    expect(TestBed.inject(PreferencesStore).read()).toMatchObject({
+      weightFilter: 'NONE',
+      periodFilter: 'ALL',
+    });
   });
 });

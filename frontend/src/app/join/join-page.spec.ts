@@ -6,6 +6,7 @@ import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { ErrorState } from '../api/error-state';
+import { PreferencesStore } from '../api/preferences-store';
 import { TokenStore } from '../api/token-store';
 import { JoinPage } from './join-page';
 
@@ -43,6 +44,7 @@ describe('JoinPage', () => {
 
   beforeEach(async () => {
     sessionStorage.clear();
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([apiErrorInterceptor])),
@@ -60,7 +62,10 @@ describe('JoinPage', () => {
     router = TestBed.inject(Router);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    localStorage.clear();
+  });
 
   function element(id: string): HTMLElement | null {
     return harness.routeNativeElement?.querySelector(`[data-testid="${id}"]`) ?? null;
@@ -112,6 +117,31 @@ describe('JoinPage', () => {
     expect(
       cards.map((card) => getComputedStyle(card).getPropertyValue('--app-card-pattern-size')),
     ).toEqual(['auto', '9px 9px', 'auto', 'auto', '12px 12px']);
+  });
+
+  it('saves the name after a successful join and fills it in on the join page of another session', async () => {
+    expect((element('join-name') as HTMLInputElement).value).toBe('');
+
+    await submitName('  Ben ');
+    http
+      .expectOne(JOIN_URL)
+      .flush(
+        { participantId: 'p-ben', token: 'token-ben' },
+        { status: 201, statusText: 'Created' },
+      );
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(PreferencesStore).read().name).toBe('Ben');
+
+    await harness.navigateByUrl('/session/M3N4P5Q6/join');
+    expect((element('join-name') as HTMLInputElement).value).toBe('Ben');
+  });
+
+  it('does not save the name after NAME_TAKEN', async () => {
+    await submitName('Ben');
+    fail('NAME_TAKEN', 409);
+    await harness.fixture.whenStable();
+
+    expect(TestBed.inject(PreferencesStore).read().name).toBe('');
   });
 
   it('shows NAME_TAKEN at the name field and clears it with a new name', async () => {
