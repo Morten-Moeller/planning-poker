@@ -102,7 +102,7 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   join page stands the card hand `card-hand` in the size `large`, centred (spec 0038).
 - Card hand (spec 0038): `CardHand` (`app-card-hand`, `frontend/src/app/api/card-hand.ts`, used by
   `session` and `join`) shows the five motif cards `card-hand-card` (Raster, Punkte, Zeilen,
-  Ringe, Stufen, `data-motif` 0 to 4) as a hand: close together at the bottom, fanned out at the
+  Ringe, Stufen, class `motif-0` to `motif-4`; no `data-motif`, because `app-shell.scss` reads the toolbar motif through `:has([data-motif])`) as a hand: close together at the bottom, fanned out at the
   top from −20° to +20° around a common point below the hand. The host carries `aria-hidden`,
   `data-testid="card-hand"` and the size `small` (default, lobby) or `large` (join page). The
   colours come from `_motifs.scss`, light and dark.
