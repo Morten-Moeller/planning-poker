@@ -74,6 +74,7 @@ class IssueSelectionTest {
 
     WireMockServer gitlab;
 
+    private SessionApiTest.Created created;
     private String session;
     private String scrumMasterToken;
     private String developerToken;
@@ -83,11 +84,10 @@ class IssueSelectionTest {
         gitlab.resetAll();
         GitLabStubs.defaultIssue(gitlab);
         String suffix = UUID.randomUUID().toString().substring(0, 8);
-        SessionApiTest.Created created = SessionApiTest.createSession("Anna " + suffix);
+        created = SessionApiTest.createSession("Anna " + suffix);
         session = "/api/sessions/" + created.sessionId();
         scrumMasterToken = created.token();
-        developerToken =
-                SessionApiTest.join(created.sessionId(), "Ben " + suffix).token();
+        developerToken = SessionApiTest.join(created, "Ben " + suffix).token();
     }
 
     private RequestSpecification asScrumMaster() {
@@ -574,14 +574,13 @@ class IssueSelectionTest {
     @Test
     void loadsTheIssueOutsideTheLockSoAJoinSucceedsMeanwhile() {
         GitLabStubs.issueDelayed(gitlab, GitLabStubs.PROJECT, 44, DELAY_BELOW_TIMEOUT_MILLIS);
-        String sessionId = session.substring("/api/sessions/".length());
 
         CompletableFuture<Long> selectFinished = CompletableFuture.supplyAsync(() -> {
             selectIssue(44, 204);
             return System.nanoTime();
         });
         awaitGitLabRequest(GitLabStubs.issuePath(GitLabStubs.PROJECT, 44));
-        SessionApiTest.join(sessionId, "Cem " + UUID.randomUUID().toString().substring(0, 8));
+        SessionApiTest.join(created, "Cem " + UUID.randomUUID().toString().substring(0, 8));
         long joinFinished = System.nanoTime();
 
         assertTrue(joinFinished < selectFinished.join(), "the join waited for the GitLab call");

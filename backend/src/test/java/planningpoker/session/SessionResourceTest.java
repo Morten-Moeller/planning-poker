@@ -3,6 +3,9 @@ package planningpoker.session;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,6 +38,9 @@ class SessionResourceTest {
     private String session;
     private String scrumMasterToken;
     private String developerToken;
+    private String viewerToken;
+    private SessionApiTest.Created created;
+    private String suffix;
 
     WireMockServer gitlab;
 
@@ -42,17 +48,144 @@ class SessionResourceTest {
     void createSessionWithOneDeveloper() {
         gitlab.resetAll();
         GitLabStubs.defaultIssue(gitlab);
-        String suffix = UUID.randomUUID().toString().substring(0, 8);
-        SessionApiTest.Created created = SessionApiTest.createSession("Anna " + suffix);
+        suffix = UUID.randomUUID().toString().substring(0, 8);
+        created = SessionApiTest.createSession("Anna " + suffix);
         session = "/api/sessions/" + created.sessionId();
         scrumMasterToken = created.token();
-        developerToken =
-                SessionApiTest.join(created.sessionId(), "Ben " + suffix).token();
+        developerToken = SessionApiTest.join(created, "Ben " + suffix).token();
+        viewerToken = SessionApiTest.joinAsViewer(created, "Paula " + suffix).token();
     }
 
     private RequestSpecification as(Role role) {
-        String token = role == Role.SCRUM_MASTER ? scrumMasterToken : developerToken;
+        String token =
+                switch (role) {
+                    case SCRUM_MASTER -> scrumMasterToken;
+                    case DEVELOPER -> developerToken;
+                    case VIEWER -> viewerToken;
+                };
         return given().header("Authorization", "Bearer " + token);
+    }
+
+    @Test
+    void joinsWithTheCodeForDevelopersAsDeveloper() {
+        String token = given().contentType(ContentType.JSON)
+                .body(SessionApiTest.joinBody("Cem " + suffix, created.developerInvite()))
+                .when()
+                .post(session + "/participants")
+                .then()
+                .statusCode(201)
+                .extract()
+                .path("token");
+
+        given().header("Authorization", "Bearer " + token)
+                .when()
+                .get(session)
+                .then()
+                .statusCode(200)
+                .body("me.role", equalTo("DEVELOPER"))
+                .body("invites", nullValue());
+    }
+
+    @Test
+    void joinsWithTheCodeForViewersAsViewer() {
+        String token = given().contentType(ContentType.JSON)
+                .body(SessionApiTest.joinBody("Dora " + suffix, created.viewerInvite()))
+                .when()
+                .post(session + "/participants")
+                .then()
+                .statusCode(201)
+                .extract()
+                .path("token");
+
+        given().header("Authorization", "Bearer " + token)
+                .when()
+                .get(session)
+                .then()
+                .statusCode(200)
+                .body("me.role", equalTo("VIEWER"))
+                .body("invites", nullValue());
+    }
+
+    @Test
+    void showsTheInvitesOnlyToTheScrumMaster() {
+        as(Role.SCRUM_MASTER)
+                .when()
+                .get(session)
+                .then()
+                .statusCode(200)
+                .body("invites.developer", equalTo(created.developerInvite()))
+                .body("invites.viewer", equalTo(created.viewerInvite()));
+        as(Role.DEVELOPER).when().get(session).then().statusCode(200).body("invites", nullValue());
+        as(Role.VIEWER).when().get(session).then().statusCode(200).body("invites", nullValue());
+    }
+
+    static Stream<Arguments> missingInvites() {
+        return Stream.of(
+                Arguments.of("missing invite", "{\"name\":\"Cem\"}"),
+                Arguments.of("null invite", "{\"name\":\"Cem\",\"invite\":null}"),
+                Arguments.of("empty invite", "{\"name\":\"Cem\",\"invite\":\"\"}"),
+                Arguments.of("blank invite", "{\"name\":\"Cem\",\"invite\":\"   \"}"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("missingInvites")
+    void rejectsAJoinWithoutInviteWithValidationError(String name, String body) {
+        given().contentType(ContentType.JSON)
+                .body(body)
+                .when()
+                .post(session + "/participants")
+                .then()
+                .statusCode(400)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("VALIDATION_ERROR"))
+                .body("detail", containsString("invite"));
+        as(Role.SCRUM_MASTER).when().get(session).then().body("participants", hasSize(3));
+    }
+
+    @Test
+    void rejectsAJoinWithAWrongInviteWithInviteInvalid() {
+        String wrong = created.developerInvite().substring(1) + "x";
+
+        given().contentType(ContentType.JSON)
+                .body(SessionApiTest.joinBody("Cem " + suffix, wrong))
+                .when()
+                .post(session + "/participants")
+                .then()
+                .statusCode(403)
+                .contentType(PROBLEM)
+                .body("status", equalTo(403))
+                .body("errorCode", equalTo("INVITE_INVALID"))
+                .body("detail", not(containsString(wrong)));
+        as(Role.SCRUM_MASTER).when().get(session).then().body("participants", hasSize(3));
+    }
+
+    @Test
+    void rejectsTheInviteOfAnotherSessionWithInviteInvalid() {
+        SessionApiTest.Created other = SessionApiTest.createSession("Olga " + suffix);
+
+        given().contentType(ContentType.JSON)
+                .body(SessionApiTest.joinBody("Cem " + suffix, other.developerInvite()))
+                .when()
+                .post(session + "/participants")
+                .then()
+                .statusCode(403)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("INVITE_INVALID"));
+    }
+
+    @ParameterizedTest(name = "{0} {1}")
+    @MethodSource("securedEndpoints")
+    void rejectsEveryCommandOfAViewerWithForbiddenRole(String method, String path, String body, Role role) {
+        RequestSpecification request = as(Role.VIEWER);
+        if (body != null) {
+            request = request.contentType(ContentType.JSON).body(body);
+        }
+        request.when()
+                .request(method, session + path)
+                .then()
+                .statusCode(403)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("FORBIDDEN_ROLE"));
     }
 
     static Stream<Arguments> securedEndpoints() {

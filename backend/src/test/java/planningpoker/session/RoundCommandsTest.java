@@ -2,8 +2,10 @@ package planningpoker.session;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -38,21 +40,23 @@ class RoundCommandsTest {
     private String session;
     private String scrumMasterToken;
     private List<SessionApiTest.Joined> developers;
+    private SessionApiTest.Created created;
+    private String suffix;
 
     @BeforeEach
     void createSessionWithThreeDevelopers() {
         gitlab.resetAll();
         GitLabStubs.defaultIssue(gitlab);
         GitLabStubs.issue(gitlab, GitLabStubs.PROJECT, 43, "Logout", "");
-        String suffix = UUID.randomUUID().toString().substring(0, 8);
-        SessionApiTest.Created created = SessionApiTest.createSession("Anna " + suffix);
+        suffix = UUID.randomUUID().toString().substring(0, 8);
+        created = SessionApiTest.createSession("Anna " + suffix);
         sessionId = created.sessionId();
         session = "/api/sessions/" + sessionId;
         scrumMasterToken = created.token();
         developers = List.of(
-                SessionApiTest.join(sessionId, "Ben " + suffix),
-                SessionApiTest.join(sessionId, "Cem " + suffix),
-                SessionApiTest.join(sessionId, "Dana " + suffix));
+                SessionApiTest.join(created, "Ben " + suffix),
+                SessionApiTest.join(created, "Cem " + suffix),
+                SessionApiTest.join(created, "Dana " + suffix));
     }
 
     private RequestSpecification asScrumMaster() {
@@ -442,5 +446,60 @@ class RoundCommandsTest {
                 .body("history[1].roundNumber", equalTo(1))
                 .body("history[1].stats.average", equalTo(8.7f))
                 .body("history[1].stats.mostFrequent", equalTo(List.of("5", "8", "13")));
+    }
+
+    private SessionApiTest.Joined connectedViewer() {
+        SessionApiTest.Joined viewer = SessionApiTest.joinAsViewer(created, "Paula " + suffix);
+        registry.update(sessionId, s -> {
+            s.connect(viewer.participantId());
+            return null;
+        });
+        return viewer;
+    }
+
+    @Test
+    void rejectsACardAndTheRevealOfAViewer() {
+        openVoting(GitLabStubs.ISSUE);
+        SessionApiTest.Joined viewer = connectedViewer();
+        RequestSpecification asViewer = given().header("Authorization", "Bearer " + viewer.token());
+
+        asViewer.contentType(ContentType.JSON)
+                .body("{\"card\":\"5\"}")
+                .when()
+                .put(session + "/vote")
+                .then()
+                .statusCode(403)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("FORBIDDEN_ROLE"));
+        given().header("Authorization", "Bearer " + viewer.token())
+                .when()
+                .post(session + "/round/reveal")
+                .then()
+                .statusCode(403)
+                .contentType(PROBLEM)
+                .body("errorCode", equalTo("FORBIDDEN_ROLE"));
+        snapshotOf(asScrumMaster()).body("phase", equalTo("VOTING")).body("round.allVoted", equalTo(false));
+    }
+
+    @Test
+    void completesAndRevealsTheRoundWithoutTheConnectedViewer() {
+        openVoting(GitLabStubs.ISSUE);
+        connectDevelopers();
+        SessionApiTest.Joined viewer = connectedViewer();
+
+        vote(0, "5").statusCode(204);
+        vote(1, "5").statusCode(204);
+        vote(2, "8").statusCode(204);
+
+        snapshotOf(asScrumMaster()).body("round.allVoted", equalTo(true));
+        assertEquals(List.of(1), completedRounds.roundsOf(sessionId));
+        reveal().statusCode(204);
+        snapshotOf(given().header("Authorization", "Bearer " + viewer.token()))
+                .body("me.role", equalTo("VIEWER"))
+                .body("round.myVote", nullValue())
+                .body("round.votes", hasSize(3))
+                .body("round.votes.participantId", not(hasItem(viewer.participantId())))
+                .body("participants.find { it.id == '" + viewer.participantId() + "' }.role", equalTo("VIEWER"))
+                .body("participants.find { it.id == '" + viewer.participantId() + "' }.hasVoted", equalTo(false));
     }
 }

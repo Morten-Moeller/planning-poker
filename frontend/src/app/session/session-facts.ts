@@ -12,4 +12,7 @@ export class SessionFacts {
     () =>
       this.store.participants().filter((participant) => participant.role === 'DEVELOPER').length,
   );
+  protected readonly viewers = computed(
+    () => this.store.participants().filter((participant) => participant.role === 'VIEWER').length,
+  );
 }

@@ -46,6 +46,7 @@ class SessionSocketTest {
     private final List<SocketClient> clients = new ArrayList<>();
     private String suffix;
     private String sessionId;
+    private String developerInvite;
     private RestCalls.Participant scrumMaster;
 
     @BeforeEach
@@ -55,6 +56,7 @@ class SessionSocketTest {
         suffix = UUID.randomUUID().toString().substring(0, 8);
         RestCalls.Created created = RestCalls.createSession("Anna " + suffix);
         sessionId = created.sessionId();
+        developerInvite = created.developerInvite();
         scrumMaster = created.scrumMaster();
     }
 
@@ -79,7 +81,7 @@ class SessionSocketTest {
     }
 
     private RestCalls.Participant join(String name) {
-        return RestCalls.join(sessionId, name + " " + suffix);
+        return RestCalls.join(sessionId, developerInvite, name + " " + suffix);
     }
 
     private static JsonNode participant(JsonNode view, RestCalls.Participant participant) {

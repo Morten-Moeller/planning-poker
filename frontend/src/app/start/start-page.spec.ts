@@ -276,48 +276,7 @@ describe('StartPage', () => {
     },
   );
 
-  it('writes the typed session id in capitals and opens the join page', async () => {
-    answerHealth();
-    type('join-session-id-input', 'k7p2qx9m');
-    await fixture.whenStable();
-
-    expect((element('join-session-id-input') as HTMLInputElement).value).toBe('K7P2QX9M');
-
-    element('join-session-id-submit')?.click();
-    await fixture.whenStable();
-
-    expect(router.url).toBe('/session/K7P2QX9M/join');
-  });
-
-  it.each([
-    ['K7P2QX', 'Die Session-ID hat 8 Zeichen (6 eingegeben)'],
-    ['K7P2QX9', 'Die Session-ID hat 8 Zeichen (7 eingegeben)'],
-    ['', 'Die Session-ID hat 8 Zeichen (0 eingegeben)'],
-    ['K7P2QX90', 'Die Session-ID hat 8 Zeichen aus Großbuchstaben und Ziffern'],
-  ])('blocks the join with the session id "%s"', async (sessionId, message) => {
-    answerHealth();
-    type('join-session-id-input', sessionId);
-
-    element('join-session-id-submit')?.click();
-    await fixture.whenStable();
-
-    expect(router.url).toBe('/');
-    expect(text('join-session-id-error')).toBe(message);
-    expect(spacedText(element('join-session-id-error')?.closest('mat-error'))).toBe(`⚠ ${message}`);
-  });
-
-  it('shows the session id hint and names the button Weiter', async () => {
-    answerHealth();
-    await fixture.whenStable();
-
-    expect(
-      element('join-session-id-input')?.closest('mat-form-field')?.querySelector('mat-hint')
-        ?.textContent,
-    ).toContain('8 Zeichen, z. B. K7P2QX9M');
-    expect(text('join-session-id-submit')).toBe('Weiter');
-  });
-
-  it('locks both forms without backend and frees them after a new check', async () => {
+  it('locks the create form without backend and frees it after a new check', async () => {
     http.expectOne('/api/health').flush(null, { status: 503, statusText: 'Service Unavailable' });
     await fixture.whenStable();
 
@@ -326,13 +285,11 @@ describe('StartPage', () => {
     );
     expect(text('create-submit')).toBe('Sitzung erstellen (Backend fehlt)');
     expect((element('create-submit') as HTMLButtonElement).disabled).toBe(true);
-    expect((element('join-session-id-submit') as HTMLButtonElement).disabled).toBe(true);
 
     element('health-retry')?.click();
     await fixture.whenStable();
     expect(text('health-status')).toBe('Backend wird geprüft …');
     expect((element('create-submit') as HTMLButtonElement).disabled).toBe(true);
-    expect((element('join-session-id-submit') as HTMLButtonElement).disabled).toBe(true);
     answerHealth();
     await fixture.whenStable();
 
@@ -340,7 +297,6 @@ describe('StartPage', () => {
     expect(element('health-down')).toBeNull();
     expect(text('create-submit')).toBe('Sitzung erstellen');
     expect((element('create-submit') as HTMLButtonElement).disabled).toBe(false);
-    expect((element('join-session-id-submit') as HTMLButtonElement).disabled).toBe(false);
   });
 
   it('keeps the forms locked when the new check fails again', async () => {
@@ -356,7 +312,7 @@ describe('StartPage', () => {
     expect((element('create-submit') as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('shows the intro and the two panels', async () => {
+  it('shows the intro and only the panel to create a session', async () => {
     answerHealth();
     await fixture.whenStable();
     const page = fixture.nativeElement as HTMLElement;
@@ -364,10 +320,15 @@ describe('StartPage', () => {
     expect(page.querySelector('h1')?.textContent?.trim()).toBe('Issues gemeinsam schätzen');
     expect(
       Array.from(page.querySelectorAll('.panel-head')).map((head) => spacedText(head)),
-    ).toEqual([
-      'Sitzung erstellen Für den Scrum Master',
-      'Sitzung beitreten Mit der Session-ID vom Scrum Master',
-    ]);
+    ).toEqual(['Sitzung erstellen Für den Scrum Master']);
+    for (const id of [
+      'join-form',
+      'join-session-id-input',
+      'join-session-id-submit',
+      'join-session-id-error',
+    ]) {
+      expect(element(id), id).toBeNull();
+    }
   });
 });
 
@@ -908,6 +869,30 @@ describe('StartPage recent sessions', () => {
     expect(field(second, 'recent-session-role')).toBe('Entwickler');
     expect(field(second, 'recent-session-last-used')).toBe('zuletzt vor 3 Stunden');
     expect(first.querySelector('a')?.getAttribute('href')).toBe('/session/K7P2QX9M');
+  });
+
+  it('shows a stored viewer as Zuschauer', async () => {
+    const viewerView = {
+      ...discussionDeveloper,
+      me: { ...discussionDeveloper.me, role: 'VIEWER' as const },
+    };
+    await openPage(true, [entry('K7P2QX9M', { role: 'VIEWER', name: 'Paula' })]);
+    http.expectOne('/api/sessions/K7P2QX9M').flush(viewerView);
+    await fixture.whenStable();
+
+    expect(recent.list()[0].role).toBe('VIEWER');
+    expect(field(rows()[0], 'recent-session-role')).toBe('Zuschauer');
+  });
+
+  it('shows the role of the snapshot when the stored role differs', async () => {
+    await openPage(true, [entry('K7P2QX9M', { role: 'DEVELOPER', name: 'Paula' })]);
+    http.expectOne('/api/sessions/K7P2QX9M').flush({
+      ...discussionDeveloper,
+      me: { ...discussionDeveloper.me, role: 'VIEWER' as const },
+    });
+    await fixture.whenStable();
+
+    expect(field(rows()[0], 'recent-session-role')).toBe('Zuschauer');
   });
 
   it('checks each entry with its own token', async () => {

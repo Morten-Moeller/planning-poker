@@ -6,6 +6,7 @@ import { authInterceptor } from '../api/auth.interceptor';
 import { revealedScrumMaster, SessionView, votingDeveloper } from '../api/examples';
 import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
+import { asViewer, withViewers } from '../api/testing/viewer-snapshots';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
 import { Card } from './cards';
@@ -139,6 +140,29 @@ describe('SeatTable', () => {
     ).toEqual(['Ben', 'Dana']);
     expect(texts('[data-testid="seat-name"]')).toEqual(['Finn']);
     expect(texts('[data-testid="seat-status"]')).toEqual(['getrennt']);
+  });
+
+  it('gives viewers no seat while the round runs', async () => {
+    await open(asViewer(withViewers(voting(), 'Quinn')));
+
+    expect(texts('[data-testid="seat-name"]')).toEqual(['Ben', 'Cem', 'Dana', 'Finn']);
+  });
+
+  it('lists no viewer as not voted after the reveal', async () => {
+    await open(
+      withViewers(
+        revealed([
+          ['Ben', '5'],
+          ['Cem', '8'],
+          ['Dana', '5'],
+        ]),
+        'Paula',
+      ),
+    );
+
+    expect(texts('[data-testid="result-vote-name"]')).toEqual(['Ben', 'Cem', 'Dana']);
+    expect(texts('[data-testid="seat-name"]')).toEqual(['Finn']);
+    expect(root().textContent).not.toContain('Paula');
   });
 
   it('keeps the seat of a developer who left after the vote', async () => {

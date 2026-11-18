@@ -138,7 +138,9 @@ public class SessionResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{id}/participants")
-    @Operation(operationId = "joinSession", summary = "Join a session as developer.")
+    @Operation(
+            operationId = "joinSession",
+            summary = "Join a session with an invite code; the code sets the role DEVELOPER or VIEWER.")
     @APIResponse(
             responseCode = "201",
             description = "Participant added.",
@@ -146,6 +148,10 @@ public class SessionResource {
     @APIResponse(
             responseCode = "400",
             description = "VALIDATION_ERROR",
+            content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
+    @APIResponse(
+            responseCode = "403",
+            description = "INVITE_INVALID",
             content = @Content(mediaType = PROBLEM, schema = @Schema(implementation = ProblemDetail.class)))
     @APIResponse(
             responseCode = "404",
@@ -158,7 +164,7 @@ public class SessionResource {
     public Response joinSession(
             @PathParam("id") @Parameter(description = SESSION_ID) String id,
             @NotNull @Valid JoinSessionRequest request) {
-        Participant participant = registry.update(id, session -> session.join(request.name()));
+        Participant participant = registry.update(id, session -> session.join(request.name(), request.invite()));
         return Response.status(Response.Status.CREATED)
                 .entity(new JoinSessionResponse(participant.id(), participant.token()))
                 .build();

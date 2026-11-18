@@ -16,7 +16,7 @@ export interface RecentSession {
 
 export const RECENT_SESSIONS_KEY = 'planningpoker.recent-sessions';
 export const RECENT_SESSIONS_MAX = 5;
-const ROLES: readonly ParticipantRole[] = ['SCRUM_MASTER', 'DEVELOPER'];
+const ROLES: readonly ParticipantRole[] = ['SCRUM_MASTER', 'DEVELOPER', 'VIEWER'];
 
 @Injectable({ providedIn: 'root' })
 export class RecentSessions {

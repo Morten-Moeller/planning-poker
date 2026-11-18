@@ -29,7 +29,8 @@ public final class SessionViewMapper {
                         .orElse(null),
                 session.history().stream().map(SessionViewMapper::historyView).toList(),
                 session.timerSeconds().orElse(null),
-                serverTime.atOffset(ZoneOffset.UTC));
+                serverTime.atOffset(ZoneOffset.UTC),
+                scrumMaster ? new SessionView.Invites(session.developerInvite(), session.viewerInvite()) : null);
     }
 
     private static SessionView.ParticipantView participantView(Session session, Participant participant) {

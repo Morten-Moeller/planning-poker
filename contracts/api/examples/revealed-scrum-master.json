@@ -100,5 +100,9 @@
     }
   ],
   "timerSeconds": 60,
-  "serverTime": "2026-11-16T09:15:31Z"
+  "serverTime": "2026-11-16T09:15:31Z",
+  "invites": {
+    "developer": "q3Vx8LkP0aZ1bC2dE3fG4hI5jK6lM7nO",
+    "viewer": "Z9yX8wV7uT6sR5qP4oN3mL2kJ1iH0gFe"
+  }
 }

@@ -78,8 +78,7 @@ class RoundTimerTest {
         SessionApiTest.Created created = SessionApiTest.createSession("Anna " + suffix);
         session = "/api/sessions/" + created.sessionId();
         scrumMasterToken = created.token();
-        developerToken =
-                SessionApiTest.join(created.sessionId(), "Ben " + suffix).token();
+        developerToken = SessionApiTest.join(created, "Ben " + suffix).token();
     }
 
     private RequestSpecification asScrumMaster() {

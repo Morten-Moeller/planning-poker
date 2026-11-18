@@ -20,6 +20,8 @@ test('the browser keeps name, project, timer and issue filters for the next sess
   await page.getByTestId('create-name').fill('Anna');
   await page.getByTestId('create-project').fill('1234');
   const first = await createSession(page);
+  const firstLink = (await page.getByTestId('share-link-developer').textContent()) ?? '';
+  expect(firstLink).toContain(`/session/${first}/join?invite=`);
 
   await page.getByTestId('timer-setting').click();
   await page.getByTestId('timer-option-30').click();
@@ -40,6 +42,6 @@ test('the browser keeps name, project, timer and issue filters for the next sess
   await expectSavedFilters(page);
 
   const developer = await page.context().newPage();
-  await developer.goto(`/session/${first}/join`);
+  await developer.goto(firstLink);
   await expect(developer.getByTestId('join-name')).toHaveValue('Anna');
 });

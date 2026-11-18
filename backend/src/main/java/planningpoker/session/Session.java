@@ -24,6 +24,8 @@ public final class Session {
     private final int maxParticipants;
     private final Project project;
     private final boolean writeWeight;
+    private final String developerInvite = Ids.token();
+    private final String viewerInvite = Ids.token();
     private final Map<String, Participant> participants = new LinkedHashMap<>();
     private final List<HistoryEntry> history = new ArrayList<>();
     private Phase phase = Phase.LOBBY;
@@ -64,6 +66,14 @@ public final class Session {
 
     public boolean writeWeight() {
         return writeWeight;
+    }
+
+    public String developerInvite() {
+        return developerInvite;
+    }
+
+    public String viewerInvite() {
+        return viewerInvite;
     }
 
     public Phase phase() {
@@ -120,7 +130,31 @@ public final class Session {
         lastActivityAt = now;
     }
 
-    public Participant join(String name) {
+    Participant joinAsScrumMaster(String name) {
+        if (!participants.isEmpty()) {
+            throw new IllegalStateException("The session has a scrum master.");
+        }
+        return add(name, Role.SCRUM_MASTER);
+    }
+
+    public Participant join(String name, String invite) {
+        return add(name, roleFor(invite));
+    }
+
+    private Role roleFor(String invite) {
+        byte[] given = invite == null ? new byte[0] : invite.getBytes(StandardCharsets.UTF_8);
+        boolean developer = MessageDigest.isEqual(developerInvite.getBytes(StandardCharsets.UTF_8), given);
+        boolean viewer = MessageDigest.isEqual(viewerInvite.getBytes(StandardCharsets.UTF_8), given);
+        if (developer) {
+            return Role.DEVELOPER;
+        }
+        if (viewer) {
+            return Role.VIEWER;
+        }
+        throw new SessionException(ErrorCode.INVITE_INVALID, "The invite code is not valid for this session.");
+    }
+
+    private Participant add(String name, Role role) {
         if (participants.size() >= maxParticipants) {
             throw new SessionException(
                     ErrorCode.LIMIT_REACHED, "The maximum number of participants in this session is reached.");
@@ -134,7 +168,6 @@ public final class Session {
         if (taken) {
             throw new SessionException(ErrorCode.NAME_TAKEN, "The name is already taken in this session.");
         }
-        Role role = participants.isEmpty() ? Role.SCRUM_MASTER : Role.DEVELOPER;
         Participant participant = new Participant(UuidV7.next(), trimmed, role, Ids.token());
         participants.put(participant.id(), participant);
         return participant;

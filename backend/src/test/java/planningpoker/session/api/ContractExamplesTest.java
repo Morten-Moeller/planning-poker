@@ -80,8 +80,10 @@ class ContractExamplesTest {
 
         if (role == Role.SCRUM_MASTER) {
             assertNotNull(view.preselectedIssueIid(), "scrum master sees the preselected issue");
+            assertNotNull(view.invites(), "scrum master sees the invites");
         } else {
             assertNull(view.preselectedIssueIid(), "developer does not see the preselected issue");
+            assertNull(view.invites(), "developer does not see the invites");
         }
         if (phase == Phase.LOBBY) {
             assertNull(view.activeIssue(), "no active issue in LOBBY");

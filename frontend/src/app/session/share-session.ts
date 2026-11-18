@@ -2,8 +2,10 @@ import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
+import type { SessionView } from '../api/api.service';
 
-export type ShareTarget = 'link' | 'sessionId';
+export type ShareTarget = 'developer' | 'viewer';
+export type SessionInvites = NonNullable<SessionView['invites']>;
 
 const COPIED_VISIBLE_MS = 3000;
 
@@ -18,11 +20,16 @@ export class ShareSession {
   private readonly clipboard = this.document.defaultView?.navigator.clipboard ?? null;
 
   readonly sessionId = input.required<string>();
-  readonly scrumMaster = input(false);
+  readonly invites = input.required<SessionInvites>();
 
-  protected readonly link = computed(
-    () => `${this.document.location.origin}/session/${encodeURIComponent(this.sessionId())}/join`,
-  );
+  protected readonly links = computed((): Record<ShareTarget, string> => {
+    const base = `${this.document.location.origin}/session/${encodeURIComponent(this.sessionId())}/join`;
+    const invites = this.invites();
+    return {
+      developer: `${base}?invite=${encodeURIComponent(invites.developer)}`,
+      viewer: `${base}?invite=${encodeURIComponent(invites.viewer)}&as=viewer`,
+    };
+  });
   protected readonly canCopy = this.clipboard !== null;
   protected readonly copied = signal<ShareTarget | null>(null);
   protected readonly failed = signal<ShareTarget | null>(null);
@@ -37,8 +44,7 @@ export class ShareSession {
     if (this.clipboard === null) {
       return;
     }
-    const value = target === 'link' ? this.link() : this.sessionId();
-    this.clipboard.writeText(value).then(
+    this.clipboard.writeText(this.links()[target]).then(
       () => {
         this.failed.set(null);
         this.copied.set(target);

@@ -1,7 +1,7 @@
 ---
 id: "0040"
 title: Zuschauer und Einladungslinks je Rolle
-status: approved
+status: Review
 risk: high
 adrs: ["0014"]
 owner: Morten Möller

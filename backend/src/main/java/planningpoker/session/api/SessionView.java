@@ -9,7 +9,7 @@ import planningpoker.session.Role;
 
 @Schema(
         description =
-                "Snapshot of the session, filtered for the receiver: hidden cards of other participants are missing until the reveal, preselectedIssueIid appears only for the scrum master. In phase LOBBY activeIssue and round are null. timerSeconds, serverTime and round.deadline are the same for both roles.",
+                "Snapshot of the session, filtered for the receiver: hidden cards of other participants are missing until the reveal, preselectedIssueIid and invites appear only for the scrum master. In phase LOBBY activeIssue and round are null. timerSeconds, serverTime and round.deadline are the same for both roles.",
         requiredProperties = {
             "sessionId",
             "gitlabProjectId",
@@ -23,7 +23,8 @@ import planningpoker.session.Role;
             "round",
             "history",
             "timerSeconds",
-            "serverTime"
+            "serverTime",
+            "invites"
         })
 public record SessionView(
         @Schema(description = "Session id, 8 characters.", examples = "K7P2QX9M") String sessionId,
@@ -55,7 +56,18 @@ public record SessionView(
                         description =
                                 "Time of the server when the snapshot was built, RFC 3339 with offset. Clients compute the remaining time of the round from it.",
                         examples = "2026-11-16T09:15:00Z")
-                OffsetDateTime serverTime) {
+                OffsetDateTime serverTime,
+        @Schema(nullable = true) Invites invites) {
+
+    @Schema(
+            description =
+                    "Invite codes of the session for the invite links; only for the scrum master, null for every other receiver.",
+            requiredProperties = {"developer", "viewer"})
+    public record Invites(
+            @Schema(description = "Invite code for developers.", examples = "q3Vx8LkP0aZ1bC2dE3fG4hI5jK6lM7nO")
+                    String developer,
+            @Schema(description = "Invite code for viewers.", examples = "Z9yX8wV7uT6sR5qP4oN3mL2kJ1iH0gFe")
+                    String viewer) {}
 
     @Schema(
             description =

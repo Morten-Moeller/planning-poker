@@ -57,6 +57,14 @@ describe('RecentSessions', () => {
     ]);
   });
 
+  it('keeps the role VIEWER', () => {
+    recent.save(entry('S1', { name: 'Paula', role: 'VIEWER' }));
+
+    expect(recent.list().map((e) => [e.sessionId, e.name, e.role])).toEqual([
+      ['S1', 'Paula', 'VIEWER'],
+    ]);
+  });
+
   it('stores the entries as JSON under one key', () => {
     recent.save(entry('S1'));
 

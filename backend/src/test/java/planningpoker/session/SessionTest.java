@@ -9,6 +9,7 @@ import static planningpoker.session.SessionBuilder.OTHER_ISSUE;
 import static planningpoker.session.SessionBuilder.developer;
 import static planningpoker.session.SessionBuilder.master;
 import static planningpoker.session.SessionBuilder.session;
+import static planningpoker.session.SessionBuilder.viewers;
 
 import java.time.Instant;
 import java.util.List;
@@ -193,7 +194,7 @@ class SessionTest {
             Session session = session().inPhase(phase).build();
             int before = session.participants().size();
 
-            Participant joined = session.join("Late");
+            Participant joined = session.join("Late", session.developerInvite());
 
             assertEquals(phase, session.phase());
             assertEquals(before + 1, session.participants().size());
@@ -400,9 +401,9 @@ class SessionTest {
             Session session =
                     new Session("K7P2QX9M", "4711", 42L, Instant.EPOCH, SessionBuilder.MAX_PARTICIPANTS, null, false);
 
-            Participant creator = session.join("Anna");
-            Participant second = session.join("Ben");
-            Participant third = session.join("Cleo");
+            Participant creator = session.joinAsScrumMaster("Anna");
+            Participant second = session.join("Ben", session.developerInvite());
+            Participant third = session.join("Cleo", session.developerInvite());
 
             assertEquals(Role.SCRUM_MASTER, creator.role());
             assertEquals(Role.DEVELOPER, second.role());
@@ -413,14 +414,17 @@ class SessionTest {
         @Test
         void a_join_beyond_the_participant_limit_is_rejected_before_the_name_check() {
             Session session = new Session("K7P2QX9M", "4711", 42L, Instant.EPOCH, 3, null, false);
-            session.join("Anna");
-            session.join("Ben");
-            session.join("Cleo");
+            session.joinAsScrumMaster("Anna");
+            session.join("Ben", session.developerInvite());
+            session.join("Cleo", session.developerInvite());
             List<Participant> before = session.participants();
 
-            SessionException limit = assertThrows(SessionException.class, () -> session.join("Dora"));
-            SessionException limitBeforeName = assertThrows(SessionException.class, () -> session.join("anna"));
-            SessionException limitBeforeLength = assertThrows(SessionException.class, () -> session.join(" "));
+            SessionException limit =
+                    assertThrows(SessionException.class, () -> session.join("Dora", session.developerInvite()));
+            SessionException limitBeforeName =
+                    assertThrows(SessionException.class, () -> session.join("anna", session.developerInvite()));
+            SessionException limitBeforeLength =
+                    assertThrows(SessionException.class, () -> session.join(" ", session.developerInvite()));
 
             assertEquals(ErrorCode.LIMIT_REACHED, limit.errorCode());
             assertEquals(ErrorCode.LIMIT_REACHED, limitBeforeName.errorCode());
@@ -432,22 +436,23 @@ class SessionTest {
         void a_join_up_to_the_participant_limit_counts_the_scrum_master() {
             Session session = new Session("K7P2QX9M", "4711", 42L, Instant.EPOCH, 2, null, false);
 
-            session.join("Anna");
-            Participant developer = session.join("Ben");
+            session.joinAsScrumMaster("Anna");
+            Participant developer = session.join("Ben", session.developerInvite());
 
             assertEquals(Role.DEVELOPER, developer.role());
             assertEquals(
                     ErrorCode.LIMIT_REACHED,
-                    assertThrows(SessionException.class, () -> session.join("Cleo"))
+                    assertThrows(SessionException.class, () -> session.join("Cleo", session.developerInvite()))
                             .errorCode());
         }
 
         @Test
         void a_taken_name_is_rejected_without_regard_to_case() {
             Session session = session().build();
-            session.join("Anna");
+            session.join("Anna", session.developerInvite());
 
-            SessionException exception = assertThrows(SessionException.class, () -> session.join("anna"));
+            SessionException exception =
+                    assertThrows(SessionException.class, () -> session.join("anna", session.developerInvite()));
 
             assertEquals(ErrorCode.NAME_TAKEN, exception.errorCode());
         }
@@ -456,12 +461,12 @@ class SessionTest {
         void names_are_trimmed_before_the_check_and_the_store() {
             Session session = session().build();
 
-            Participant joined = session.join("  Anna ");
+            Participant joined = session.join("  Anna ", session.developerInvite());
 
             assertEquals("Anna", joined.name());
             assertEquals(
                     ErrorCode.NAME_TAKEN,
-                    assertThrows(SessionException.class, () -> session.join("ANNA "))
+                    assertThrows(SessionException.class, () -> session.join("ANNA ", session.developerInvite()))
                             .errorCode());
         }
 
@@ -470,7 +475,8 @@ class SessionTest {
         void a_blank_or_too_long_name_is_a_validation_error(String name) {
             Session session = session().build();
 
-            SessionException exception = assertThrows(SessionException.class, () -> session.join(name));
+            SessionException exception =
+                    assertThrows(SessionException.class, () -> session.join(name, session.developerInvite()));
 
             assertEquals(ErrorCode.VALIDATION_ERROR, exception.errorCode());
         }
@@ -479,7 +485,7 @@ class SessionTest {
         void joined_participants_get_an_id_and_a_token() {
             Session session = session().build();
 
-            Participant joined = session.join("Anna");
+            Participant joined = session.join("Anna", session.developerInvite());
 
             assertEquals(36, joined.id().length());
             assertFalse(joined.token().isBlank());
@@ -488,13 +494,169 @@ class SessionTest {
         @Test
         void a_late_developer_may_vote_in_the_running_round() {
             Session session = session().voting().build();
-            Participant late = session.join("Late");
+            Participant late = session.join("Late", session.developerInvite());
 
             session.vote(late.id(), Card.THIRTEEN);
 
             assertEquals(
                     Optional.of(Card.THIRTEEN), session.round().orElseThrow().cardOf(late.id()));
         }
+    }
+
+    @Nested
+    class Invites {
+
+        private static final String BASE64URL_128_BITS = "[A-Za-z0-9_-]{22,}";
+
+        @Test
+        void a_new_session_has_two_different_codes_with_at_least_128_bits() {
+            Session session = session().build();
+
+            assertTrue(session.developerInvite().matches(BASE64URL_128_BITS), session.developerInvite());
+            assertTrue(session.viewerInvite().matches(BASE64URL_128_BITS), session.viewerInvite());
+            assertFalse(session.developerInvite().equals(session.viewerInvite()));
+        }
+
+        @Test
+        void two_sessions_have_different_codes() {
+            Session first = session().build();
+            Session second = session().build();
+
+            assertFalse(first.developerInvite().equals(second.developerInvite()));
+            assertFalse(first.viewerInvite().equals(second.viewerInvite()));
+        }
+
+        @Test
+        void the_code_for_developers_gives_the_role_developer() {
+            Session session = session().build();
+
+            Participant joined = session.join("Ben", session.developerInvite());
+
+            assertEquals(Role.DEVELOPER, joined.role());
+        }
+
+        @Test
+        void the_code_for_viewers_gives_the_role_viewer() {
+            Session session = session().build();
+
+            Participant joined = session.join("Paula", session.viewerInvite());
+
+            assertEquals(Role.VIEWER, joined.role());
+        }
+
+        @ParameterizedTest
+        @MethodSource("planningpoker.session.SessionTest#otherCodes")
+        void another_code_is_rejected_and_adds_nobody(String code) {
+            Session session = session().build();
+            List<Participant> before = session.participants();
+
+            SessionException exception = assertThrows(SessionException.class, () -> session.join("Ben", code));
+
+            assertEquals(ErrorCode.INVITE_INVALID, exception.errorCode());
+            assertEquals(before, session.participants());
+        }
+
+        @Test
+        void the_code_of_another_session_is_rejected() {
+            Session session = session().build();
+            Session other = session().build();
+
+            SessionException exception =
+                    assertThrows(SessionException.class, () -> session.join("Ben", other.developerInvite()));
+
+            assertEquals(ErrorCode.INVITE_INVALID, exception.errorCode());
+        }
+
+        @Test
+        void a_wrong_code_is_rejected_before_the_limit_and_the_name_check() {
+            Session session = new Session("K7P2QX9M", "4711", 42L, Instant.EPOCH, 1, null, false);
+            Participant master = session.joinAsScrumMaster("Anna");
+
+            SessionException exception =
+                    assertThrows(SessionException.class, () -> session.join(master.name(), "wrong"));
+
+            assertEquals(ErrorCode.INVITE_INVALID, exception.errorCode());
+        }
+
+        @Test
+        void viewers_count_toward_the_participant_limit() {
+            Session session = new Session("K7P2QX9M", "4711", 42L, Instant.EPOCH, 2, null, false);
+            session.joinAsScrumMaster("Anna");
+            session.join("Paula", session.viewerInvite());
+
+            SessionException exception =
+                    assertThrows(SessionException.class, () -> session.join("Ben", session.developerInvite()));
+
+            assertEquals(ErrorCode.LIMIT_REACHED, exception.errorCode());
+        }
+
+        @Test
+        void a_viewer_may_not_vote() {
+            Session session = session().viewers(1).voting().build();
+            Participant viewer = viewers(session).get(0);
+
+            SessionException exception =
+                    assertThrows(SessionException.class, () -> session.vote(viewer.id(), Card.FIVE));
+
+            assertEquals(ErrorCode.FORBIDDEN_ROLE, exception.errorCode());
+            assertTrue(session.round().orElseThrow().votes().isEmpty());
+        }
+
+        @ParameterizedTest
+        @MethodSource("planningpoker.session.SessionTest#scrumMasterCommands")
+        void a_viewer_may_not_give_commands_of_the_scrum_master(Phase phase, Consumer<CommandCall> command) {
+            Session session = session().viewers(1).inPhase(phase).build();
+            Participant viewer = viewers(session).get(0);
+
+            SessionException exception =
+                    assertThrows(SessionException.class, () -> command.accept(new CommandCall(session, viewer.id())));
+
+            assertEquals(ErrorCode.FORBIDDEN_ROLE, exception.errorCode());
+            assertEquals(phase, session.phase());
+        }
+
+        @Test
+        void all_voted_ignores_connected_viewers() {
+            Session session = session().viewers(2).voting().build();
+
+            session.vote(developer(session, 0).id(), Card.FIVE);
+
+            assertTrue(session.vote(developer(session, 1).id(), Card.EIGHT));
+            assertTrue(session.allVoted());
+        }
+
+        @Test
+        void the_revealed_votes_contain_no_viewer() {
+            Session session = session().viewers(1).revealed().build();
+            Participant viewer = viewers(session).get(0);
+
+            assertTrue(session.round().orElseThrow().votes().keySet().stream().noneMatch(id -> id.equals(viewer.id())));
+            assertTrue(session.history().get(0).votes().stream()
+                    .noneMatch(vote -> vote.participantId().equals(viewer.id())));
+            assertEquals(2, session.history().get(0).votes().size());
+        }
+    }
+
+    record CommandCall(Session session, String actorId) {}
+
+    static Stream<String> otherCodes() {
+        return Stream.of("", "wrong", "K7P2QX9M");
+    }
+
+    static Stream<Arguments> scrumMasterCommands() {
+        Consumer<CommandCall> select = call -> call.session().selectIssue(call.actorId(), OTHER_ISSUE);
+        Consumer<CommandCall> start = call -> call.session().startVoting(call.actorId(), SessionBuilder.CREATED_AT);
+        Consumer<CommandCall> reveal = call -> call.session().reveal(call.actorId());
+        Consumer<CommandCall> restart = call -> call.session().restart(call.actorId(), SessionBuilder.CREATED_AT);
+        Consumer<CommandCall> confirm = call -> call.session().beginConfirm(call.actorId(), Card.FIVE);
+        Consumer<CommandCall> timer = call -> call.session().setTimer(call.actorId(), 30);
+        return Stream.of(
+                Arguments.of(Phase.LOBBY, select),
+                Arguments.of(Phase.LOBBY, timer),
+                Arguments.of(Phase.DISCUSSION, start),
+                Arguments.of(Phase.VOTING, reveal),
+                Arguments.of(Phase.REVEALED, restart),
+                Arguments.of(Phase.REVEALED, confirm));
     }
 
     @Nested

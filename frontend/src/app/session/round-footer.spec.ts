@@ -17,6 +17,7 @@ import {
 } from '../api/examples';
 import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
+import { asViewer, withViewers } from '../api/testing/viewer-snapshots';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
 import { Card } from './cards';
@@ -37,6 +38,7 @@ const FOOTER_IDS = [
   'round-restart',
   'result-accept',
   'result-waiting',
+  'viewer-hint',
 ];
 
 type Participant = SessionView['participants'][number];
@@ -145,6 +147,10 @@ describe('RoundFooter', () => {
     ['VOTING', 'developer', votingDeveloper, ['card-deck']],
     ['REVEALED', 'scrum master', revealedScrumMaster, ['round-restart', 'result-accept']],
     ['REVEALED', 'developer', revealedDeveloper, ['result-waiting']],
+    ['LOBBY', 'viewer', asViewer(lobbyDeveloper), []],
+    ['DISCUSSION', 'viewer', asViewer(discussionDeveloper), ['viewer-hint']],
+    ['VOTING', 'viewer', asViewer(votingDeveloper), ['viewer-hint']],
+    ['REVEALED', 'viewer', asViewer(revealedDeveloper), ['result-waiting']],
   ])('shows in %s to the %s exactly its content', async (_phase, _role, snapshot, expected) => {
     await open(snapshot);
 
@@ -215,6 +221,25 @@ describe('RoundFooter', () => {
 
     expect(text('card-deck-hint')).toBe('Du kannst sie ändern, bis aufgelöst wird.');
     expect(all('card-COFFEE')).toHaveLength(1);
+  });
+
+  it.each([
+    ['DISCUSSION', discussionDeveloper],
+    ['VOTING', votingDeveloper],
+  ])('shows Du schaust zu. without cards to a viewer in %s', async (_phase, snapshot) => {
+    await open(asViewer(snapshot));
+
+    expect(text('viewer-hint')).toBe('Du schaust zu.');
+    expect(all('viewer-hint')[0].getAttribute('role')).toBe('status');
+    expect((fixture.nativeElement as HTMLElement).querySelectorAll('app-card')).toHaveLength(0);
+  });
+
+  it('counts no viewer in the pending votes of the scrum master', async () => {
+    await open(withViewers(votingScrumMaster, 'Paula', 'Quinn'));
+
+    expect(text('pending-hint')).toBe(
+      'Noch 1 Schätzung ausstehend. Du kannst auch vorher auflösen.',
+    );
   });
 
   it('shows no hint and the outlined reveal button before every developer voted', async () => {

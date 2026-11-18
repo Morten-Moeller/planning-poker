@@ -16,6 +16,7 @@ class SessionBuilder {
             new Project(4711, "Frontend", "webshop/frontend", "https://gitlab.example/webshop/frontend");
 
     private int developers = 2;
+    private int viewers;
     private Phase phase = Phase.LOBBY;
     private boolean confirming;
     private Integer timerSeconds;
@@ -29,6 +30,11 @@ class SessionBuilder {
 
     SessionBuilder developers(int developers) {
         this.developers = developers;
+        return this;
+    }
+
+    SessionBuilder viewers(int viewers) {
+        this.viewers = viewers;
         return this;
     }
 
@@ -78,11 +84,15 @@ class SessionBuilder {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         Session session = new Session(
                 "K7P2QX9M", "4711", preselectedIssueIid, CREATED_AT, MAX_PARTICIPANTS, project, writeWeight);
-        Participant master = session.join("Master " + suffix);
+        Participant master = session.joinAsScrumMaster("Master " + suffix);
         session.connect(master.id());
         for (int i = 1; i <= developers; i++) {
-            Participant developer = session.join("Dev" + i + " " + suffix);
+            Participant developer = session.join("Dev" + i + " " + suffix, session.developerInvite());
             session.connect(developer.id());
+        }
+        for (int i = 1; i <= viewers; i++) {
+            Participant viewer = session.join("Viewer" + i + " " + suffix, session.viewerInvite());
+            session.connect(viewer.id());
         }
         if (timerSeconds != null) {
             session.setTimer(master.id(), timerSeconds);
@@ -119,6 +129,12 @@ class SessionBuilder {
     static List<Participant> developers(Session session) {
         return session.participants().stream()
                 .filter(participant -> participant.role() == Role.DEVELOPER)
+                .toList();
+    }
+
+    static List<Participant> viewers(Session session) {
+        return session.participants().stream()
+                .filter(participant -> participant.role() == Role.VIEWER)
                 .toList();
     }
 

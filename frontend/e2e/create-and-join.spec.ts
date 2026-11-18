@@ -5,6 +5,8 @@ const ISSUE = '42';
 const MISSING_ISSUE = '404';
 const FORBIDDEN_ISSUE = '403';
 const SESSION_ID = /^[A-HJ-KM-NP-Z2-9]{8}$/;
+const INVITE = /^[A-Za-z0-9_-]{22,}$/;
+const VIEWER_SUFFIX = '&as=viewer';
 
 async function createSession(page: Page, name = 'Anna', issue = ISSUE): Promise<void> {
   await page.goto('/');
@@ -16,7 +18,7 @@ async function createSession(page: Page, name = 'Anna', issue = ISSUE): Promise<
 
 async function createdSessionId(page: Page): Promise<string> {
   await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  const sessionId = (await page.getByTestId('share-session-id').textContent()) ?? '';
+  const sessionId = (await page.getByTestId('session-id').textContent()) ?? '';
   expect(sessionId).toMatch(SESSION_ID);
   return sessionId;
 }
@@ -52,17 +54,25 @@ test('creates a session and opens the room as scrum master with the share block'
   const sessionId = await createdSessionId(page);
 
   await expect(page.getByTestId('session-role')).toHaveText('Scrum Master');
-  const link = `${baseURL}/session/${sessionId}/join`;
   await expect(page.getByTestId('session-share')).toBeVisible();
-  await expect(page.getByTestId('share-link')).toHaveText(link);
+  const prefix = `${baseURL}/session/${sessionId}/join?invite=`;
+  const developerLink = (await page.getByTestId('share-link-developer').textContent()) ?? '';
+  const viewerLink = (await page.getByTestId('share-link-viewer').textContent()) ?? '';
+  expect(developerLink.startsWith(prefix)).toBe(true);
+  expect(developerLink.slice(prefix.length)).toMatch(INVITE);
+  expect(viewerLink.startsWith(prefix)).toBe(true);
+  expect(viewerLink.endsWith(VIEWER_SUFFIX)).toBe(true);
+  expect(viewerLink.slice(prefix.length, -VIEWER_SUFFIX.length)).toMatch(INVITE);
+  expect(viewerLink).not.toContain(developerLink.slice(prefix.length));
+  await expect(page.getByTestId('share-session-id')).toHaveCount(0);
 
-  await page.getByTestId('copy-link').click();
-  await expect(page.getByTestId('copy-link-done')).toHaveText('Kopiert');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(link);
+  await page.getByTestId('copy-link-developer').click();
+  await expect(page.getByTestId('copy-link-developer-done')).toHaveText('Kopiert');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(developerLink);
 
-  await page.getByTestId('copy-session-id').click();
-  await expect(page.getByTestId('copy-session-id-done')).toHaveText('Kopiert');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(sessionId);
+  await page.getByTestId('copy-link-viewer').click();
+  await expect(page.getByTestId('copy-link-viewer-done')).toHaveText('Kopiert');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(viewerLink);
 });
 
 test('a developer joins through the link in a second browser context', async ({
@@ -71,34 +81,13 @@ test('a developer joins through the link in a second browser context', async ({
 }) => {
   await createSession(page);
   await createdSessionId(page);
-  const link = (await page.getByTestId('share-link').textContent()) ?? '';
+  const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
 
   const developer = await joinInNewContext(browser, link, 'Ben');
 
   await expect(developer.getByTestId('session-role')).toHaveText('Entwickler');
   await expect(developer.getByTestId('session-participant-count')).toHaveText('2');
   await expect(page.getByTestId('session-participant-count')).toHaveText('2');
-  await developer.context().close();
-});
-
-test('a developer joins through the session id typed in lower case on the start page', async ({
-  page,
-  browser,
-}) => {
-  await createSession(page);
-  const sessionId = await createdSessionId(page);
-  const developer = await (await browser.newContext()).newPage();
-
-  await developer.goto('/');
-  await developer.getByTestId('join-session-id-input').pressSequentially(sessionId.toLowerCase());
-  await expect(developer.getByTestId('join-session-id-input')).toHaveValue(sessionId);
-  await developer.getByTestId('join-session-id-submit').click();
-
-  await expect(developer).toHaveURL(`/session/${sessionId}/join`);
-  await expect(developer.getByTestId('join-session-id')).toHaveText(sessionId);
-  await developer.getByTestId('join-name').fill('Cem');
-  await developer.getByTestId('join-submit').click();
-  await expect(developer.getByTestId('session-role')).toHaveText('Entwickler');
   await developer.context().close();
 });
 
@@ -134,21 +123,21 @@ test('an issue that GitLab refuses shows the access denied text at the form', as
 test('a taken name shows the message on the join page', async ({ page, browser }) => {
   await createSession(page);
   await createdSessionId(page);
-  const link = (await page.getByTestId('share-link').textContent()) ?? '';
+  const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
 
   const developer = await joinInNewContext(browser, link, 'anna');
 
   await expect(developer.getByTestId('join-error')).toHaveText(
     'Der Name ist in dieser Sitzung schon vergeben.',
   );
-  await expect(developer).toHaveURL(/\/join$/);
+  await expect(developer).toHaveURL(/\/join\?invite=/);
   await developer.context().close();
 });
 
 test('an unknown session id replaces the join form with the state session not found', async ({
   page,
 }) => {
-  await page.goto('/session/ZZZZ2222/join');
+  await page.goto('/session/ZZZZ2222/join?invite=unknown-session-invite');
   await page.getByTestId('join-name').fill('Ben');
   await page.getByTestId('join-submit').click();
 
@@ -157,7 +146,7 @@ test('an unknown session id replaces the join form with the state session not fo
     'Der Link ist abgelaufen oder falsch.',
   );
   await expect(page.getByTestId('join-form')).toHaveCount(0);
-  await expect(page).toHaveURL(/\/session\/ZZZZ2222\/join$/);
+  await expect(page).toHaveURL(/\/session\/ZZZZ2222\/join\?invite=unknown-session-invite$/);
 
   await page.getByTestId('join-not-found-home').click();
   await expect(page).toHaveURL(/\/$/);
@@ -176,26 +165,18 @@ for (const colorScheme of ['light', 'dark'] as const) {
   test.describe(`at 375 px in ${colorScheme}`, () => {
     test.use({ viewport: { width: 375, height: 812 }, colorScheme });
 
-    test('the start page stacks the panels and the join page fits the width', async ({ page }) => {
+    test('the start page shows only the create form and the join page fits the width', async ({
+      page,
+    }) => {
       await page.goto('/');
       await expect(page.getByTestId('health-status')).toHaveText('Backend erreichbar');
 
-      const create = await page.getByTestId('create-form').boundingBox();
-      const join = await page.getByTestId('join-form').boundingBox();
-      expect(create).not.toBeNull();
-      expect(join).not.toBeNull();
-      expect(join!.y).toBeGreaterThanOrEqual(create!.y + create!.height);
-      expect(Math.abs(join!.x - create!.x)).toBeLessThan(1);
+      await expect(page.getByTestId('create-form')).toBeVisible();
+      await expect(page.getByTestId('join-form')).toHaveCount(0);
+      await expect(page.getByTestId('join-session-id-input')).toHaveCount(0);
       await expectNoHorizontalScroll(page);
 
-      await page.getByTestId('join-session-id-input').fill('K7P2QX');
-      await page.getByTestId('join-session-id-submit').click();
-      await expect(page.getByTestId('join-session-id-error')).toHaveText(
-        'Die Session-ID hat 8 Zeichen (6 eingegeben)',
-      );
-      await expectNoHorizontalScroll(page);
-
-      await page.goto('/session/K7P2QX9M/join');
+      await page.goto('/session/K7P2QX9M/join?invite=some-invite');
       await expect(page.getByTestId('join-session-id')).toHaveText('K7P2QX9M');
       await expect(page.getByTestId('join-form')).toBeVisible();
       await expectNoHorizontalScroll(page);

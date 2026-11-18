@@ -28,7 +28,7 @@ async function createSession(page: Page): Promise<string> {
   await page.getByTestId('create-issue').fill('42');
   await page.getByTestId('create-submit').click();
   await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  return (await page.getByTestId('share-link').textContent()) ?? '';
+  return (await page.getByTestId('share-link-developer').textContent()) ?? '';
 }
 
 async function join(
@@ -108,8 +108,9 @@ test('the toolbar shows the session id and name and role in the room only', asyn
 
 test('a button shows the focus ring for keyboard focus only', async ({ page }) => {
   await page.goto('/');
-  const input = page.getByTestId('join-session-id-input');
-  const button = page.getByTestId('join-session-id-submit');
+  await expect(page.getByTestId('health-status')).toHaveText('Backend erreichbar');
+  const input = page.getByTestId('create-issue');
+  const button = page.getByTestId('create-submit');
   const outline = () =>
     button.evaluate((element) => {
       const style = getComputedStyle(element);

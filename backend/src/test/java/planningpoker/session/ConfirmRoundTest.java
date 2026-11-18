@@ -225,8 +225,7 @@ class ConfirmRoundTest {
             return System.nanoTime();
         });
         awaitNoteRequest();
-        SessionApiTest.join(
-                flow.sessionId, "Late " + UUID.randomUUID().toString().substring(0, 8));
+        SessionApiTest.join(flow.created, "Late " + UUID.randomUUID().toString().substring(0, 8));
         long joinFinished = System.nanoTime();
         HeldResponses.release();
 

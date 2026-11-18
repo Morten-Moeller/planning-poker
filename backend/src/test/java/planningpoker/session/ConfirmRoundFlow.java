@@ -11,15 +11,17 @@ import java.util.UUID;
 
 final class ConfirmRoundFlow {
 
+    final SessionApiTest.Created created;
     final String sessionId;
     final String session;
     final String scrumMasterToken;
     final List<SessionApiTest.Joined> developers;
 
-    private ConfirmRoundFlow(String sessionId, String scrumMasterToken, List<SessionApiTest.Joined> developers) {
-        this.sessionId = sessionId;
+    private ConfirmRoundFlow(SessionApiTest.Created created, List<SessionApiTest.Joined> developers) {
+        this.created = created;
+        this.sessionId = created.sessionId();
         this.session = "/api/sessions/" + sessionId;
-        this.scrumMasterToken = scrumMasterToken;
+        this.scrumMasterToken = created.token();
         this.developers = developers;
     }
 
@@ -28,9 +30,9 @@ final class ConfirmRoundFlow {
         SessionApiTest.Created created = SessionApiTest.createSession("Anna " + suffix);
         List<SessionApiTest.Joined> developers = new ArrayList<>();
         for (int i = 0; i < developerCount; i++) {
-            developers.add(SessionApiTest.join(created.sessionId(), "Dev" + i + " " + suffix));
+            developers.add(SessionApiTest.join(created, "Dev" + i + " " + suffix));
         }
-        return new ConfirmRoundFlow(created.sessionId(), created.token(), List.copyOf(developers));
+        return new ConfirmRoundFlow(created, List.copyOf(developers));
     }
 
     RequestSpecification asScrumMaster() {

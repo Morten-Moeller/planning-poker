@@ -40,7 +40,6 @@ import { RecentSession, RecentSessions } from '../api/recent-sessions';
 import { TokenStore } from '../api/token-store';
 import { HealthApi } from './health-api';
 
-const SESSION_ID_PATTERN = /^[A-Z2-9]{8}$/;
 const NOT_BLANK = /\S/;
 const WHOLE_NUMBER = /^\d+$/;
 const ISSUE_NUMBER = /^\s*\d*\s*$/;
@@ -147,18 +146,6 @@ export class StartPage {
       validators: [Validators.min(1), Validators.pattern(ISSUE_NUMBER)],
     }),
   });
-
-  protected readonly joinForm = new FormGroup({
-    sessionId: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.pattern(SESSION_ID_PATTERN)],
-    }),
-  });
-
-  protected readonly sessionIdLength = toSignal(
-    this.joinForm.controls.sessionId.valueChanges.pipe(map((value) => value.length)),
-    { initialValue: 0 },
-  );
 
   protected readonly createError = signal<string | null>(null);
   protected readonly projectNotFound = errorMessage('PROJECT_NOT_FOUND');
@@ -367,25 +354,6 @@ export class StartPage {
       return;
     }
     this.api.setTimer(sessionId, { seconds }).subscribe({ next: enter, error: enter });
-  }
-
-  protected uppercaseSessionId(): void {
-    const control = this.joinForm.controls.sessionId;
-    const normalized = control.value.trim().toUpperCase();
-    if (normalized !== control.value) {
-      control.setValue(normalized);
-    }
-  }
-
-  protected joinBySessionId(): void {
-    if (this.backendDown()) {
-      return;
-    }
-    if (this.joinForm.invalid) {
-      this.joinForm.markAllAsTouched();
-      return;
-    }
-    void this.router.navigate(['/session', this.joinForm.controls.sessionId.value, 'join']);
   }
 }
 
