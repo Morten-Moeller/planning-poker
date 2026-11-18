@@ -33,6 +33,9 @@ wirkt dadurch einladender.
   prüfen“) wie heute, nur im Footer.
 - Oben mittig über der Überschrift „Issues gemeinsam schätzen“ steht `app-card-hand` in der Größe
   `large`, zentriert wie auf der Beitrittsseite (Spec 0038).
+- Überschrift und Einleitung stehen zentriert; das Formular „Sitzung erstellen“ und die Liste
+  „Letzte Sitzungen“ stehen mittig mit höchstens 600px Breite. Der Footer bleibt linksbündig
+  (Wunsch der Person nach Ansicht des Stands, 2026-11-18).
 - `project-rules/frontend.md` nennt Footer und Illustration der Startseite.
 
 ### Nicht enthalten
@@ -58,6 +61,7 @@ wirkt dadurch einladender.
 | A2 | `start-footer` ist das letzte Element der Startseite und steht im Browser unter dem Formular „Sitzung erstellen“, auch bei 375px Breite. | Test (e2e) |
 | A3 | Über der Überschrift steht `card-hand` in der Größe `large`, horizontal mittig zur Seite (Abweichung höchstens 1px). | Test, Test (e2e) |
 | A4 | „Erneut prüfen“ im Footer startet eine neue Prüfung; bei Erfolg verschwindet `health-down` und das Formular ist frei. | Test |
+| A6 | Überschrift, Einleitung und das Formular „Sitzung erstellen“ stehen horizontal mittig (Abweichung höchstens 1px), der Status im Footer beginnt am linken Rand der Seite. | Test (e2e) |
 | A5 | Startseite hell und dunkel, breit und 375px: Illustration oben mittig, Footer dezent am Ende, bei nicht erreichbarem Backend der rote Hinweis im Footer. | Browser |
 
 ## Contracts
@@ -118,6 +122,7 @@ Tests:
 | A3 | `frontend/src/app/start/start-page.spec.ts`: `card-hand` mit Klasse `large` vor `h1`; `frontend/e2e/health.spec.ts`: Mitte der Hand gleich Mitte der Seite ±1px |
 | A4 | `frontend/src/app/start/start-page.spec.ts`: bestehender Test „locks the create form without backend and frees it after a new check“ mit Retry im Footer |
 | A5 | Browser: Startseite hell, dunkel, 375px, Backend gestoppt |
+| A6 | `frontend/e2e/health.spec.ts`: Mitte von `h1`, Einleitung und Formular gleich Mitte der Seite ±1px; Status links |
 
 ## Offene Fragen
 

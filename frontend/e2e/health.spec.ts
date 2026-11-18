@@ -30,5 +30,16 @@ for (const width of [1280, 375]) {
     expect(Math.abs(handCentre - hostCentre)).toBeLessThanOrEqual(1);
     const title = await page.getByRole('heading', { level: 1 }).boundingBox();
     expect(hand!.y + hand!.height).toBeLessThanOrEqual(title!.y);
+
+    for (const locator of [
+      page.getByRole('heading', { level: 1 }),
+      page.locator('.lead'),
+      page.locator('.panel-create'),
+    ]) {
+      const box = await locator.boundingBox();
+      expect(Math.abs(box!.x + box!.width / 2 - hostCentre)).toBeLessThanOrEqual(1);
+    }
+    const status = await footer.locator('.health').boundingBox();
+    expect(Math.abs(status!.x - footerBox!.x)).toBeLessThanOrEqual(1);
   });
 }
