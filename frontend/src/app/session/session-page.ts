@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { CardHand } from '../api/card-hand';
 import { ErrorState } from '../api/error-state';
 import { SessionStore } from '../api/session-store';
 import { TokenStore } from '../api/token-store';
@@ -31,6 +32,7 @@ import { TimerSetting } from './timer-setting';
     SessionHistory,
     SessionFacts,
     LastResult,
+    CardHand,
   ],
   templateUrl: './session-page.html',
   styleUrl: './session-page.scss',

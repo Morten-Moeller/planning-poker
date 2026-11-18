@@ -87,6 +87,20 @@ describe('ActiveIssue', () => {
     expect(link.getAttribute('rel')).toBe('noopener');
   });
 
+  it('shows the arrow of the GitLab link larger in its own hidden span', async () => {
+    setUp();
+    await render(votingDeveloper);
+
+    const link = element('active-issue-link')!;
+    const symbol = link.querySelector<HTMLElement>('.symbol')!;
+    expect(link.textContent?.trim()).toBe('In GitLab öffnen ↗');
+    expect(symbol.textContent).toBe('↗');
+    expect(symbol.getAttribute('aria-hidden')).toBe('true');
+    expect(parseFloat(getComputedStyle(symbol).fontSize)).toBeGreaterThan(
+      parseFloat(getComputedStyle(fixture.nativeElement as HTMLElement).fontSize),
+    );
+  });
+
   it('renders Markdown and removes script elements and event attributes', async () => {
     setUp();
     await render(votingDeveloper);
@@ -121,6 +135,44 @@ describe('ActiveIssue', () => {
     expect(element('active-issue-expand')).toBeNull();
   });
 
+  it('collapses the description again after it was expanded in REVEALED', async () => {
+    setUp();
+    await render(revealedScrumMaster);
+    expect(element('active-issue-collapse')).toBeNull();
+    element('active-issue-expand')!.click();
+    await fixture.whenStable();
+    const collapse = element('active-issue-collapse')!;
+    expect(collapse.textContent?.trim()).toBe('▴ Beschreibung einklappen');
+    expect(collapse.getAttribute('aria-expanded')).toBe('true');
+    expect(collapse.getAttribute('aria-controls')).toBe('active-issue-description');
+
+    collapse.click();
+    await fixture.whenStable();
+
+    expect(frame().classList).toContain('collapsed');
+    expect(element('active-issue-collapse')).toBeNull();
+    expect(element('active-issue-expand')).not.toBeNull();
+  });
+
+  it('collapses the description again on a narrow screen during the round', async () => {
+    setUp(true);
+    await render(votingDeveloper);
+    element('active-issue-expand')!.click();
+    await fixture.whenStable();
+
+    element('active-issue-collapse')!.click();
+    await fixture.whenStable();
+
+    expect(frame().classList).toContain('collapsed');
+  });
+
+  it('shows no collapse button while the description cannot collapse', async () => {
+    setUp();
+    await render(votingDeveloper);
+
+    expect(element('active-issue-collapse')).toBeNull();
+  });
+
   it('collapses the description on a narrow screen during the round', async () => {
     setUp(true);
     await render(votingDeveloper);
@@ -135,5 +187,6 @@ describe('ActiveIssue', () => {
 
     expect(frame().classList).not.toContain('collapsed');
     expect(element('active-issue-expand')).toBeNull();
+    expect(element('active-issue-collapse')).toBeNull();
   });
 });

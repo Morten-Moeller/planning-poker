@@ -18,8 +18,8 @@
 :host:has(.room) {
   flex: 1;
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
 }
 
@@ -27,22 +27,25 @@
   display: contents;
 }
 
-h1 {
-  grid-column: 2;
-  grid-row: 1;
-  margin: 0;
-  padding: var(--app-space-xl) var(--app-space-2xl) 0;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .side {
   grid-column: 1;
-  grid-row: 1 / span 3;
+  grid-row: 1 / span 2;
   display: flex;
   flex-direction: column;
   gap: var(--app-space-l);
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   padding: var(--app-space-l);
   background-color: var(--mat-sys-surface-container-low);
   border-right: 1px solid var(--mat-sys-outline-variant);
@@ -50,31 +53,31 @@ h1 {
 
 .main {
   grid-column: 2;
-  grid-row: 2;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
   gap: 28px;
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--app-space-l) var(--app-space-2xl) var(--app-space-2xl);
+  scrollbar-gutter: stable;
+  padding: var(--app-space-xl) var(--app-space-2xl) var(--app-space-2xl);
 }
 
 .footer {
   grid-column: 2;
-  grid-row: 3;
+  grid-row: 2;
   min-width: 0;
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-surface);
 }
 
 @media (max-width: 719.98px) {
   :host:has(.room) {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto auto 1fr;
-  }
-
-  h1 {
-    grid-column: 1;
-    padding: var(--app-space-m) var(--app-space-m) 0;
+    grid-template-rows: auto auto 1fr;
   }
 
   .main {
@@ -85,15 +88,17 @@ h1 {
 
   .footer {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 2;
     position: sticky;
     bottom: 0;
     z-index: 1;
+    overflow: visible;
+    border-top: none;
   }
 
   .side {
     grid-column: 1;
-    grid-row: 4;
+    grid-row: 3;
     overflow-y: visible;
     padding: var(--app-space-l) var(--app-space-m) var(--app-space-xl);
     border-right: none;
@@ -131,32 +136,6 @@ h1 {
 
   p {
     margin: 0;
-  }
-}
-
-.stack {
-  display: flex;
-}
-
-.motif-card {
-  width: 48px;
-  height: 70px;
-  border-radius: var(--app-corner-control);
-  background-color: var(--app-card-accent);
-  background-image: var(--app-card-pattern);
-  background-size: var(--app-card-pattern-size);
-
-  & + & {
-    margin-left: -18px;
-    box-shadow: 0 0 0 2px var(--mat-sys-surface);
-  }
-
-  &:first-child {
-    transform: rotate(-8deg);
-  }
-
-  &:last-child {
-    transform: rotate(8deg);
   }
 }
 

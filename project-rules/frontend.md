@@ -99,7 +99,13 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
 - Start and join page (spec 0031): an unreachable backend shows `health-down` with the button
   `health-retry`; the join page shows `join-role-hint` and, for `SESSION_NOT_FOUND`,
   `join-not-found` with the link `join-not-found-home` instead of the form. Above the title of the
-  join page stands the row of the five card backs `join-card-backs` (`aria-hidden`, spec 0032).
+  join page stands the card hand `card-hand` in the size `large`, centred (spec 0038).
+- Card hand (spec 0038): `CardHand` (`app-card-hand`, `frontend/src/app/api/card-hand.ts`, used by
+  `session` and `join`) shows the five motif cards `card-hand-card` (Raster, Punkte, Zeilen,
+  Ringe, Stufen, `data-motif` 0 to 4) as a hand: close together at the bottom, fanned out at the
+  top from −20° to +20° around a common point below the hand. The host carries `aria-hidden`,
+  `data-testid="card-hand"` and the size `small` (default, lobby) or `large` (join page). The
+  colours come from `_motifs.scss`, light and dark.
 - Issue panel filters (spec 0023, ADR 0009): above the list a `mat-button-toggle-group`
   `issue-filter-weight` („Ohne Gewicht“ `issue-filter-weight-none`, „Mit Gewicht“
   `issue-filter-weight-any`, „Alle“ `issue-filter-weight-all`; default „Ohne Gewicht“) and a
@@ -117,7 +123,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   switch in `LOBBY` or `DISCUSSION` opens no dialog. The participant list shows the vote status
   only in `VOTING` and `REVEALED` (spec 0028).
 - Erneut schätzen (spec 0034, ADR 0012): in `REVEALED` the scrum master sees `round-restart`
-  („↻ Erneut schätzen“), the developer sees `result-waiting` („Der Scrum Master lässt erneut
+  („↻ Erneut schätzen“; the symbols ↻ and ↗ of „In GitLab öffnen ↗“ stand in their own
+  `aria-hidden` span at 1.25em, vertically centred, spec 0038), the developer sees `result-waiting` („Der Scrum Master lässt erneut
   schätzen oder übernimmt das Ergebnis.“). The restart leads straight to `VOTING`: the developer
   sees the open `card-deck` without `discussion-hint`, with a timer also the remaining time. The
   mock backend changes the phase from `REVEALED` to `VOTING` as well.
@@ -147,7 +154,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
 - Theme „Werkbank“ (spec 0027, design files in `docs/design/`): `mat.theme` with the blue palette
   and `theme-type: color-scheme`; `mat.theme-overrides` sets the fixed values of One Light and,
   for the dark design, of One Dark. Light and dark (spec 0037): the toggle `theme-toggle` at the
-  right end of the toolbar (🌙 in the light design, ☀️ in the dark one, `aria-pressed` true in the
+  right end of the toolbar (round button with the symbol centred, its distance to the right edge
+  equal to the left padding of the toolbar, spec 0038; 🌙 in the light design, ☀️ in the dark one, `aria-pressed` true in the
   dark one) switches from the visible design to the other one; `ThemeService` (`shell`) stores the
   choice as `theme` (`system`, `light`, `dark`) in the `PreferencesStore` and sets
   `data-theme="light|dark"` on `<html>` before the first render (`provideAppInitializer`); without
@@ -171,8 +179,11 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   motif field (`toolbar-motif`, 20 × 28 px, left of the title), the session id
   (`toolbar-session-id`, mono) and „Name · Rolle“ (`toolbar-me`, hidden below 600 px) from the
   `SessionStore`.
-- Session page grid: a side column of 320 px and a main column (32/48 px padding) from 720 px;
-  below that one column with the side column under the main area.
+- Session page grid: a side column of 340 px and a main column (32/48 px padding) from 720 px;
+  below that one column with the side column under the main area. Side column and main area
+  reserve the space of the scroll bar (`scrollbar-gutter: stable`), so the width of the content
+  does not change when a scroll bar appears. The page has no visible heading; the `h1`
+  „Sitzung“ has the class `visually-hidden` for screen readers (spec 0038).
 - Footer and scroll areas (spec 0035): `RoundFooter` (`round-footer`) stands in the DOM after
   the main area and holds the cards and round actions per phase and role: `DISCUSSION` the
   locked deck with `discussion-hint` (developer) or the box with `discussion-hint` and
@@ -183,6 +194,9 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   not scroll, side column and main area scroll on their own and the footer is the last row of
   the main column with a divider and `--mat-sys-surface`. Below 720 px the page scrolls and the
   footer sticks to the bottom of the window (`position: sticky`).
+  The description of the active issue is collapsed in `REVEALED` and below 720 px; „▾ Ganze
+  Beschreibung anzeigen“ (`active-issue-expand`) expands it, then „▴ Beschreibung einklappen“
+  (`active-issue-collapse`, `aria-expanded="true"`) collapses it again (spec 0038).
 - Design Werkbank (specs 0027 to 0030): the source is `docs/design/` (`Raum.dc.html`,
   `Design-System.dc.html`, `Sitzungsraum.dc.html`; read as source text, deviations in
   `docs/design/README.md`). Part A is theme and grid, B the side column and the card motif, C
@@ -196,21 +210,22 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
     sets `--app-card-accent`, `--app-card-on-accent`, `--app-card-pattern` and
     `--app-card-pattern-size`. `session-page.scss` uses it per `data-motif` of `.room`,
     `app-shell.scss` for `toolbar-motif` with `:host:has([data-motif='n'])` and
-    `join-page.scss` for the card backs. Components inside the room use these variables, with a
+    `card-hand.scss` for the card hand. Components inside the room use these variables, with a
     fallback where they also render outside of it. The motif carries no
     meaning; states always stand as text next to it.
   - Side column (part B): sections with a mono label (`--app-label-section`, upper case by CSS)
     in this order: „Timer“ (scrum master, with the hint „Gilt ab der nächsten Runde.“),
     „Teilnehmer · n“, „Teilen“, „Fakten“ (`session-facts`: Session-ID, Phase, Deine Rolle,
-    Teilnehmer „n (m Entwickler)“), „Sitzungsprotokoll“ (`session-history`, collapsed panel).
+    Teilnehmer „n (m Entwickler)“), „Sitzungsprotokoll“ (`session-history`, collapsed panel;
+    head and content with 16 px padding left and right, spec 0038).
     A participant entry (design system, section 8) has a chip (filled with the motif after a
-    vote, dashed otherwise, none for the scrum master), the name with „(du)“ and a highlighted row
+    vote, dashed otherwise; the scrum master has no chip and no empty column, spec 0038), the name with „(du)“ and a highlighted row
     for the own entry, „★ Scrum Master“, a status („Moderiert, schätzt nicht mit“, „Bereit“ in
     `LOBBY`, „Diskutiert“ in `DISCUSSION`, „✓ Hat geschätzt“ in `VOTING` and `REVEALED`,
     „○ Ausstehend“ in `VOTING`, „Nicht geschätzt“ (muted) in `REVEALED`, spec 0032) and „● verbunden“ or „○ getrennt“. Symbols stand in `aria-hidden` spans outside
     the element with the `data-testid`, so the selectors keep their text.
-  - Developer in `LOBBY` (part B): the waiting state `lobby-waiting` with a stack of three motif
-    cards, the title and „Die Seite aktualisiert sich von selbst.“; after a confirmation the
+  - Developer in `LOBBY` (part B): the waiting state `lobby-waiting` with the card hand
+    `card-hand` (spec 0038), the title and „Die Seite aktualisiert sich von selbst.“; after a confirmation the
     title reads „Das Ergebnis ist übernommen. …“ and `last-result` („Zuletzt geschätzt“, final
     card, issue, round, cards, „✓ Als Kommentar in GitLab gespeichert“) follows until the next
     release. With `project` in the snapshot it links the issue („In GitLab öffnen ↗“,
