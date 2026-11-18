@@ -17,3 +17,4 @@ Wann ein ADR nötig ist: `harness/policies/adr.md`. Format MADR aus `0000-templa
 | 0010 | Diskussionsphase vor der Schätzung; der Timer startet mit „Schätzung starten“ | accepted | 2026-11-17 |
 | 0011 | Das Issue beim Anlegen einer Sitzung ist optional | accepted | 2026-11-17 |
 | 0012 | „Erneut schätzen“ startet die neue Runde sofort (ersetzt den Punkt „Neue Runde führt nach DISCUSSION“ aus 0010) | accepted | 2026-11-17 |
+| 0013 | Letzte Sitzungen mit Zugang im localStorage, abschaltbar (ändert für das eingeschaltete Feature die Token-Ablage aus 0003) | accepted | 2026-11-18 |
