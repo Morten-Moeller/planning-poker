@@ -1,14 +1,14 @@
 ---
 id: "0042"
 title: Konfetti als ein durchgehender Regen
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-18
 updated: 2026-11-18
-pr: ""
-note: freigegeben in der Session
+pr: "#42"
+note: alle Kriterien erfüllt
 ---
 
 # Konfetti als ein durchgehender Regen
