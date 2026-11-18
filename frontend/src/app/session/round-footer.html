@@ -1,7 +1,7 @@
-@switch (store.phase()) {
-  @case ('DISCUSSION') {
-    <div class="footer" data-testid="round-footer">
-      @if (store.isScrumMaster()) {
+@if (store.phase() === 'DISCUSSION' || store.phase() === 'VOTING') {
+  <div class="footer" data-testid="round-footer">
+    @if (store.isScrumMaster()) {
+      @if (store.phase() === 'DISCUSSION') {
         <div class="box">
           <div class="box-text">
             <p
@@ -37,13 +37,6 @@
           </button>
         </div>
       } @else {
-        <app-card-deck [sessionId]="sessionId()" [locked]="true" />
-      }
-    </div>
-  }
-  @case ('VOTING') {
-    <div class="footer" data-testid="round-footer">
-      @if (store.isScrumMaster()) {
         <div class="box" [class.ready]="allVoted()">
           @if (allVoted()) {
             <p class="box-title" role="status" data-testid="all-voted-hint">
@@ -81,43 +74,42 @@
             Auflösen
           </button>
         </div>
-      } @else {
-        <app-card-deck [sessionId]="sessionId()" />
       }
-    </div>
-  }
-  @case ('REVEALED') {
-    <div class="footer" data-testid="round-footer">
-      @if (store.isScrumMaster()) {
-        <div class="actions">
-          <button
-            type="button"
-            mat-stroked-button
-            class="action"
-            data-testid="round-restart"
-            [disabled]="resultActionsDisabled()"
-            (click)="restart()"
-            i18n="@@roundResult.restart"
-          >
-            ↻ Erneut schätzen
-          </button>
-          <button
-            type="button"
-            mat-flat-button
-            class="action"
-            data-testid="result-accept"
-            [disabled]="resultActionsDisabled()"
-            (click)="openConfirm()"
-            i18n="@@roundResult.accept"
-          >
-            Ergebnis übernehmen …
-          </button>
-        </div>
-      } @else {
-        <p class="waiting" data-testid="result-waiting" i18n="@@roundResult.waiting">
-          Der Scrum Master lässt erneut schätzen oder übernimmt das Ergebnis.
-        </p>
-      }
-    </div>
-  }
+    } @else {
+      <app-card-deck [sessionId]="sessionId()" [locked]="store.phase() === 'DISCUSSION'" />
+    }
+  </div>
+} @else if (store.phase() === 'REVEALED') {
+  <div class="footer" data-testid="round-footer">
+    @if (store.isScrumMaster()) {
+      <div class="actions">
+        <button
+          type="button"
+          mat-stroked-button
+          class="action"
+          data-testid="round-restart"
+          [disabled]="resultActionsDisabled()"
+          (click)="restart()"
+        >
+          <span class="symbol" aria-hidden="true">↻</span>&ngsp;
+          <ng-container i18n="@@roundResult.restart">Erneut schätzen</ng-container>
+        </button>
+        <button
+          type="button"
+          mat-flat-button
+          class="action"
+          data-testid="result-accept"
+          [disabled]="resultActionsDisabled()"
+          (click)="openConfirm()"
+          i18n="@@roundResult.accept"
+        >
+          Ergebnis übernehmen …
+        </button>
+      </div>
+    } @else {
+      <p class="waiting" data-testid="result-waiting" i18n="@@roundResult.waiting">
+        Der Scrum Master lässt erneut schätzen oder übernimmt das Ergebnis.
+      </p>
+    }
+  </div>
 }

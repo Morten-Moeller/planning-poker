@@ -198,6 +198,18 @@ describe('RoundFooter', () => {
     }
   });
 
+  it('keeps the same deck for a developer from DISCUSSION to VOTING', async () => {
+    await open(discussionDeveloper);
+    const deck = (fixture.nativeElement as HTMLElement).querySelector('app-card-deck');
+    expect(deck?.querySelector('[data-testid="card-deck-locked"]')).not.toBeNull();
+
+    await receive(votingDeveloper);
+
+    const after = (fixture.nativeElement as HTMLElement).querySelector('app-card-deck');
+    expect(after).toBe(deck);
+    expect(after?.querySelector('[data-testid="card-deck"]')).not.toBeNull();
+  });
+
   it('shows the open deck to a developer while voting', async () => {
     await open(votingDeveloper);
 
@@ -284,6 +296,17 @@ describe('RoundFooter', () => {
     expect(text('result-accept')).toBe('Ergebnis übernehmen …');
     expect(button('round-restart').disabled).toBe(false);
     expect(button('result-accept').disabled).toBe(false);
+  });
+
+  it('shows the restart symbol larger in its own hidden span', async () => {
+    await open(revealedScrumMaster);
+
+    const symbol = button('round-restart').querySelector<HTMLElement>('.symbol')!;
+    expect(symbol.textContent).toBe('↻');
+    expect(symbol.getAttribute('aria-hidden')).toBe('true');
+    expect(parseFloat(getComputedStyle(symbol).fontSize)).toBeGreaterThan(
+      parseFloat(getComputedStyle(fixture.nativeElement as HTMLElement).fontSize),
+    );
   });
 
   it('disables both result actions while the result is written', async () => {

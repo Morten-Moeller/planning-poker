@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { RouterLink } from '@angular/router';
 
 export type ShareTarget = 'link' | 'sessionId';
 
@@ -8,7 +9,7 @@ const COPIED_VISIBLE_MS = 3000;
 
 @Component({
   selector: 'app-share-session',
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, RouterLink],
   templateUrl: './share-session.html',
   styleUrl: './share-session.scss',
 })
@@ -17,6 +18,7 @@ export class ShareSession {
   private readonly clipboard = this.document.defaultView?.navigator.clipboard ?? null;
 
   readonly sessionId = input.required<string>();
+  readonly scrumMaster = input(false);
 
   protected readonly link = computed(
     () => `${this.document.location.origin}/session/${encodeURIComponent(this.sessionId())}/join`,

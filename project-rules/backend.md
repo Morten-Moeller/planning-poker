@@ -24,7 +24,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   participants, rounds, history, commands, `SessionRegistry`, mapper to `SessionView`), `gitlab`
   (REST client, configuration, error mapping), `realtime` (WebSocket endpoint, connection
   registry, snapshot delivery), `platform` (code without business terms: health, token check,
-  error format, id generation).
+  error format, id generation, `ConfigResource`).
 - Dependency direction: `session` and `realtime` use `gitlab` and `platform`; `gitlab` uses
   `platform`; `platform` uses no feature package (A1.6). `realtime` reacts to the change event of
   `SessionRegistry` and is never called by `session`.
@@ -72,7 +72,8 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   master. A later card change in a complete round fires nothing.
 - Expiry: `SessionConfig` (`@ConfigMapping`, prefix `planningpoker.session`) holds `ttl`
   (default `12h`), `maxSessions` and `maxParticipants` (`@Min(1)`, defaults in the mapping) and
-  `allowedProjects` (`Optional<List<String>>`; an empty value counts as not set). `find` and `update` remove an expired session on access; a Vert.x timer in
+  `allowedProjects` (`Optional<List<String>>`; an empty value counts as not set) and `remember`
+  (default `true`, spec 0039, ADR 0013). `find` and `update` remove an expired session on access; a Vert.x timer in
   `SessionRegistryProducer` (every 10 minutes) calls `expire(now)` for the rest. No
   `quarkus-scheduler`.
 - Deadline (ADR 0010, replaces ADR 0006; ADR 0012): `selectIssue` starts a round in
@@ -192,6 +193,11 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   `planningpoker.session.max-participants` (default 50, the scrum master counts, checked first in
   `Session.join`) answer 409 `LIMIT_REACHED`. No rate limit per client IP and no limit for
   WebSocket connections before `auth`; both stay accepted risk.
+- Frontend settings (spec 0039, ADR 0013): `ConfigResource` (`platform`, `GET /api/config`, open,
+  no `@Authenticated`) answers `ConfigResponse { rememberSessions }` from
+  `planningpoker.session.remember` through `@ConfigProperty` with the default `true`, so
+  `platform` does not import `session`; `SessionConfig.remember()` maps the same key. `false`
+  switches the recent sessions of the browser off for an open environment.
 - Commands answer 204, or 201 with the new ids; the new state reaches clients through the
   WebSocket snapshot (ADR 0004).
 

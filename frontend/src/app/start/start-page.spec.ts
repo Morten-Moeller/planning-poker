@@ -4,9 +4,12 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { apiErrorInterceptor } from '../api/api-error.interceptor';
+import { authInterceptor } from '../api/auth.interceptor';
 import { mockBackendInterceptor } from '../api/mock/mock-backend.interceptor';
 import { ErrorState } from '../api/error-state';
 import { Preferences, PreferencesStore } from '../api/preferences-store';
+import { discussionDeveloper, lobbyScrumMaster } from '../api/examples';
+import { RECENT_SESSIONS_KEY, RecentSession, RecentSessions } from '../api/recent-sessions';
 import { TokenStore } from '../api/token-store';
 import { StartPage } from './start-page';
 
@@ -792,5 +795,192 @@ describe('StartPage preferences', () => {
     await fixture.whenStable();
 
     expect(router.url).toBe('/session/K7P2QX9M');
+  });
+});
+
+describe('StartPage recent sessions', () => {
+  let fixture: ComponentFixture<StartPage>;
+  let http: HttpTestingController;
+  let recent: RecentSessions;
+  let errorState: ErrorState;
+
+  const NOW = Date.parse('2026-11-18T10:00:00.000Z');
+
+  function entry(sessionId: string, changes: Partial<RecentSession> = {}): RecentSession {
+    return {
+      sessionId,
+      participantId: `p-${sessionId}`,
+      token: `token-${sessionId}`,
+      role: 'SCRUM_MASTER',
+      name: 'Anna',
+      lastUsedAt: new Date(NOW - 5 * 60_000).toISOString(),
+      ...changes,
+    };
+  }
+
+  beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+    vi.spyOn(Date, 'now').mockReturnValue(NOW);
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([authInterceptor, apiErrorInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([{ path: 'session/:id', component: EmptyPage }]),
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    recent = TestBed.inject(RecentSessions);
+    errorState = TestBed.inject(ErrorState);
+  });
+
+  afterEach(() => {
+    fixture.destroy();
+    http.verify();
+    vi.restoreAllMocks();
+    localStorage.clear();
+  });
+
+  async function openPage(enabled: boolean | null, entries: RecentSession[]): Promise<void> {
+    recent.enabled.set(enabled);
+    entries
+      .slice()
+      .reverse()
+      .forEach((e) => recent.save(e));
+    fixture = TestBed.createComponent(StartPage);
+    fixture.autoDetectChanges();
+    http.expectOne('/api/health').flush({ status: 'UP' });
+    await fixture.whenStable();
+  }
+
+  function rows(): HTMLElement[] {
+    return Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>(
+        '[data-testid="recent-session"]',
+      ),
+    );
+  }
+
+  function field(row: HTMLElement, id: string): string {
+    return (row.querySelector(`[data-testid="${id}"]`)?.textContent ?? '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function section(): HTMLElement | null {
+    return (fixture.nativeElement as HTMLElement).querySelector('[data-testid="recent-sessions"]');
+  }
+
+  function fail(sessionId: string, code: string, status: number): void {
+    http
+      .expectOne(`/api/sessions/${sessionId}`)
+      .flush(
+        { type: 'about:blank', title: 'Error', status, detail: 'detail', errorCode: code },
+        { status, statusText: 'Error' },
+      );
+  }
+
+  it('shows the checked entries with project, issue, role, name, session id and time', async () => {
+    await openPage(true, [
+      entry('K7P2QX9M'),
+      entry('M3N4P5Q6', {
+        role: 'DEVELOPER',
+        name: 'Ben',
+        lastUsedAt: new Date(NOW - 3 * 3_600_000).toISOString(),
+      }),
+    ]);
+    http.expectOne('/api/sessions/K7P2QX9M').flush(lobbyScrumMaster);
+    http
+      .expectOne('/api/sessions/M3N4P5Q6')
+      .flush({ ...discussionDeveloper, sessionId: 'M3N4P5Q6' });
+    await fixture.whenStable();
+
+    expect(section()?.querySelector('h2')?.textContent?.trim()).toBe('Letzte Sitzungen');
+    const [first, second] = rows();
+    expect(rows()).toHaveLength(2);
+    expect(field(first, 'recent-session-project')).toBe('Frontend');
+    expect(field(first, 'recent-session-issue')).toBe('Kein Issue aktiv');
+    expect(field(first, 'recent-session-role')).toBe('Scrum Master');
+    expect(field(first, 'recent-session-name')).toBe('Anna');
+    expect(field(first, 'recent-session-id')).toBe('K7P2QX9M');
+    expect(field(first, 'recent-session-last-used')).toBe('zuletzt vor 5 Minuten');
+    expect(field(second, 'recent-session-issue')).toBe('#42 Login page');
+    expect(field(second, 'recent-session-role')).toBe('Entwickler');
+    expect(field(second, 'recent-session-last-used')).toBe('zuletzt vor 3 Stunden');
+    expect(first.querySelector('a')?.getAttribute('href')).toBe('/session/K7P2QX9M');
+  });
+
+  it('checks each entry with its own token', async () => {
+    await openPage(true, [entry('K7P2QX9M')]);
+    const request = http.expectOne('/api/sessions/K7P2QX9M');
+
+    expect(request.request.method).toBe('GET');
+    expect(request.request.headers.get('Authorization')).toBe('Bearer token-K7P2QX9M');
+    request.flush(lobbyScrumMaster);
+  });
+
+  it.each([
+    ['SESSION_NOT_FOUND', 404],
+    ['UNAUTHORIZED', 401],
+  ])('removes an entry that answers %s without a banner', async (code, status) => {
+    await openPage(true, [entry('K7P2QX9M'), entry('M3N4P5Q6')]);
+    fail('K7P2QX9M', code, status);
+    http.expectOne('/api/sessions/M3N4P5Q6').flush({ ...lobbyScrumMaster, sessionId: 'M3N4P5Q6' });
+    await fixture.whenStable();
+
+    expect(rows().map((row) => field(row, 'recent-session-id'))).toEqual(['M3N4P5Q6']);
+    expect(recent.list().map((e) => e.sessionId)).toEqual(['M3N4P5Q6']);
+    expect(errorState.error()).toBeNull();
+  });
+
+  it('keeps an entry on another error and shows it without details', async () => {
+    await openPage(true, [entry('K7P2QX9M')]);
+    fail('K7P2QX9M', 'GITLAB_ERROR', 502);
+    await fixture.whenStable();
+
+    expect(rows()).toHaveLength(1);
+    expect(rows()[0].querySelector('[data-testid="recent-session-project"]')).toBeNull();
+    expect(field(rows()[0], 'recent-session-id')).toBe('K7P2QX9M');
+    expect(recent.list()).toHaveLength(1);
+    expect(errorState.error()).toBeNull();
+  });
+
+  it('removes an entry from the list with Aus Liste entfernen', async () => {
+    await openPage(true, [entry('K7P2QX9M'), entry('M3N4P5Q6')]);
+    http.expectOne('/api/sessions/K7P2QX9M').flush(lobbyScrumMaster);
+    http.expectOne('/api/sessions/M3N4P5Q6').flush({ ...lobbyScrumMaster, sessionId: 'M3N4P5Q6' });
+    await fixture.whenStable();
+
+    const remove = rows()[0].querySelector<HTMLButtonElement>(
+      '[data-testid="recent-session-remove"]',
+    );
+    expect(remove?.textContent?.trim()).toBe('Aus Liste entfernen');
+    remove?.click();
+    await fixture.whenStable();
+
+    expect(rows().map((row) => field(row, 'recent-session-id'))).toEqual(['M3N4P5Q6']);
+    expect(recent.list().map((e) => e.sessionId)).toEqual(['M3N4P5Q6']);
+  });
+
+  it('shows no section and clears the list when the feature is off', async () => {
+    await openPage(false, [entry('K7P2QX9M')]);
+    http.expectNone('/api/sessions/K7P2QX9M');
+
+    expect(section()).toBeNull();
+    expect(localStorage.getItem(RECENT_SESSIONS_KEY)).toBeNull();
+  });
+
+  it('shows no section without entries', async () => {
+    await openPage(true, []);
+
+    expect(section()).toBeNull();
+  });
+
+  it('shows no section and keeps the list while the setting is unknown', async () => {
+    await openPage(null, [entry('K7P2QX9M')]);
+    http.expectNone('/api/sessions/K7P2QX9M');
+
+    expect(section()).toBeNull();
+    expect(recent.list()).toHaveLength(1);
   });
 });

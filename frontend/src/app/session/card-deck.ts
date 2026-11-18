@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import {
   Component,
   ElementRef,
@@ -5,6 +6,7 @@ import {
   computed,
   inject,
   input,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -12,6 +14,7 @@ import { ApiService } from '../api/api.service';
 import { SessionStore } from '../api/session-store';
 import { CardState, PokerCard } from './card';
 import { CARDS, Card } from './cards';
+import { prefersReducedMotion } from './reduced-motion';
 
 const NEXT_KEYS = ['ArrowRight', 'ArrowDown'];
 const PREVIOUS_KEYS = ['ArrowLeft', 'ArrowUp'];
@@ -26,6 +29,7 @@ const CHOOSE_KEYS = ['Enter', ' '];
 export class CardDeck {
   private readonly api = inject(ApiService);
   private readonly store = inject(SessionStore);
+  private readonly motion = !prefersReducedMotion(inject(DOCUMENT));
 
   readonly sessionId = input.required<string>();
   readonly locked = input(false);
@@ -33,6 +37,10 @@ export class CardDeck {
   protected readonly cards = CARDS;
   protected readonly myVote = computed(() => this.store.round()?.myVote ?? null);
   protected readonly sending = signal(false);
+  protected readonly unlocking = linkedSignal<boolean, boolean>({
+    source: this.locked,
+    computation: (locked, previous) => this.motion && !locked && previous?.source === true,
+  });
   private readonly open = computed(() => !this.locked() && this.store.phase() === 'VOTING');
   private readonly list = viewChild.required<ElementRef<HTMLElement>>('list');
 

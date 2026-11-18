@@ -11,14 +11,15 @@
         [class.me]="participant.id === myId()"
         [class.disconnected]="!participant.connected"
       >
-        <span
-          class="chip"
-          data-testid="participant-chip"
-          aria-hidden="true"
-          [class.none]="scrumMaster"
-          [class.filled]="voted"
-          [class.empty]="!scrumMaster && !voted"
-        ></span>
+        @if (!scrumMaster) {
+          <span
+            class="chip"
+            data-testid="participant-chip"
+            aria-hidden="true"
+            [class.filled]="voted"
+            [class.empty]="!voted"
+          ></span>
+        }
         <span class="body">
           <span class="head">
             <span class="name" data-testid="participant-name">{{ participant.name }}</span>

@@ -1,4 +1,4 @@
-<h1 i18n="@@session.title">Sitzung</h1>
+<h1 class="visually-hidden" i18n="@@session.title">Sitzung</h1>
 @if (store.session(); as session) {
   <div class="room" [attr.data-motif]="motif()">
     <div class="side">
@@ -9,7 +9,7 @@
         </section>
       }
       <app-participant-list />
-      <app-share-session [sessionId]="session.sessionId" />
+      <app-share-session [sessionId]="session.sessionId" [scrumMaster]="store.isScrumMaster()" />
       <app-session-facts />
       @if (store.history().length > 0) {
         <app-session-history />
@@ -25,11 +25,7 @@
           data-testid="lobby-waiting"
           [class.after]="afterResult()"
         >
-          <div class="stack" aria-hidden="true">
-            <span class="motif-card"></span>
-            <span class="motif-card"></span>
-            <span class="motif-card"></span>
-          </div>
+          <app-card-hand />
           @if (afterResult()) {
             <p
               class="waiting-title"

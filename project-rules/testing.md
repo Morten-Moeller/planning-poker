@@ -127,21 +127,24 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   the start page, both in small letters) on issues 42 and 43, confirms issue 43 and counts its
   notes in the double, and opens an unknown session id with a stored token;
   `layout.spec.ts` (spec 0019) joins one developer at a viewport of 375×800 and checks the
-  320 px side column at 1440×900 (spec 0027); `theme.spec.ts` (spec 0027) reads the theme
+  340 px side column at 1440×900 (spec 0027, spec 0038); `theme.spec.ts` (spec 0027) reads the theme
   CSS variables under `emulateMedia({ colorScheme })`, the fonts and the keyboard focus on the start
   page and joins two developers (`Ben`, and `Cem` at 375×800) for the toolbar;
   `layout.spec.ts` also checks at 375×800 that the side column stands under the main area (spec
   0028); `design-sidebar.spec.ts` (spec 0028) joins `Ben` on issue 42, compares `data-motif` of
   both roles before and after „Erneut schätzen“, confirms the result `5` (notes mapping of issue 42)
   and checks `last-result` until the release of issue 43; it also compares the motif colours of
-  room, toolbar and the card backs of the join page light and dark (spec 0032).
+  room, toolbar and the card hand `card-hand` of the join page light and dark (spec 0032), the
+  card hand centred on the join page and larger than in the lobby (spec 0038).
   `voting-round.spec.ts` chooses a card with the keyboard and checks the table, the deck as one
   row at 375 px (spec 0029, spec 0035) and the deck of at most 1000 px with portrait cards at
   1920 px (spec 0032); `layout.spec.ts` creates a session on issue 45 and checks the footer at
   1440×900 in `DISCUSSION`, `VOTING` and `REVEALED` for both roles (footer in the window, no
   page scroll, the last line of the description reachable in the main area) and at 375×667 in
   `VOTING` (footer at the bottom of the window, one row of cards that scrolls sideways, the
-  chosen last card in the row; spec 0035);
+  chosen last card in the row; spec 0035); in `REVEALED` at 1440×900 it expands the description
+  of issue 45 and checks that the width of the main area stays the same when its scroll bar
+  appears (spec 0038);
   `consensus.spec.ts` checks the result under reduced motion (spec 0029);
   `issue-filter.spec.ts` checks the project name and „von N Issues“, `result-round.spec.ts` the
   error text in the confirm dialog (spec 0030); `create-and-join.spec.ts` checks the start and
@@ -155,7 +158,12 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   `theme-toggle.spec.ts` (spec 0037) clicks `theme-toggle` under `emulateMedia({ colorScheme })`
   light and dark, checks `--mat-sys-surface`, the page background, `aria-label` and the symbol
   before and after a reload, and in the room `--app-card-accent` of `.room` and the colour of
-  `toolbar-motif`. Every
+  `toolbar-motif`; `recent-sessions.spec.ts` (spec 0039) creates a session, closes the page and
+  opens `/` in a new page of the same browser context (`localStorage` stays, `sessionStorage` is
+  empty), returns as scrum master and, in a second context, as developer, opens „＋ Neue Sitzung“
+  and creates a second session on project `5678` („Release Notes Test“,
+  `project-5678.json`), and answers `GET /api/config` with `rememberSessions: false` through
+  `context.route` for the switched-off feature. Every
   Playwright test starts with a new browser context and so an empty `localStorage`.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.

@@ -63,3 +63,8 @@ code {
     color: var(--mat-sys-error);
   }
 }
+
+.new-session {
+  align-self: flex-start;
+  margin-top: var(--app-space-xs);
+}

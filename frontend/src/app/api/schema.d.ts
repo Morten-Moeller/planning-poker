@@ -5,6 +5,23 @@
  */
 
 export interface paths {
+    "/api/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Settings of the backend for the frontend. */
+        get: operations["getConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -312,6 +329,11 @@ export interface components {
              * @example 2
              */
             count: number;
+        };
+        /** @description Settings of the backend for the frontend. */
+        ConfigResponse: {
+            /** @description Whether the browser keeps the last sessions with their token in localStorage (planningpoker.session.remember). */
+            rememberSessions: boolean;
         };
         /** @description Confirms a card as the final value of the revealed round and writes it to GitLab. */
         ConfirmRequest: {
@@ -738,6 +760,26 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigResponse"];
+                };
+            };
+        };
+    };
     health: {
         parameters: {
             query?: never;

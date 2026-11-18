@@ -105,18 +105,23 @@ describe('JoinPage', () => {
     );
   });
 
-  it('shows the five card backs of the motifs above the title, hidden from assistive technology', () => {
-    const backs = element('join-card-backs');
-    const cards = Array.from(backs?.querySelectorAll<HTMLElement>('.back') ?? []);
+  it('shows the card hand large above the title, hidden from assistive technology', () => {
+    const hand = element('card-hand');
+    const cards = Array.from(
+      hand?.querySelectorAll<HTMLElement>('[data-testid="card-hand-card"]') ?? [],
+    );
 
-    expect(backs?.getAttribute('aria-hidden')).toBe('true');
-    expect(backs?.nextElementSibling?.querySelector('h1')).not.toBeNull();
-    expect(
-      cards.map((card) => getComputedStyle(card).getPropertyValue('--app-card-accent')),
-    ).toEqual(['#2f5fd0', '#0a6f8f', '#3a7a39', '#9a2299', '#8a5f00']);
-    expect(
-      cards.map((card) => getComputedStyle(card).getPropertyValue('--app-card-pattern-size')),
-    ).toEqual(['auto', '9px 9px', 'auto', 'auto', '12px 12px']);
+    expect(hand?.getAttribute('aria-hidden')).toBe('true');
+    expect(hand?.classList).toContain('large');
+    expect(hand?.nextElementSibling?.querySelector('h1')).not.toBeNull();
+    expect(cards.map((card) => card.className.match(/motif-(\d)/)?.[1])).toEqual([
+      '0',
+      '1',
+      '2',
+      '3',
+      '4',
+    ]);
+    expect(element('join-card-backs')).toBeNull();
   });
 
   it('saves the name after a successful join and fills it in on the join page of another session', async () => {

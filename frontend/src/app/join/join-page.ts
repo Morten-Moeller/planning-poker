@@ -8,6 +8,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { ApiError, type ErrorCode } from '../api/api-error';
 import { ApiService } from '../api/api.service';
+import { CardHand } from '../api/card-hand';
 import { formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
 import { participantNameValidators } from '../api/participant-name';
@@ -23,7 +24,14 @@ const JOIN_FORM_ERRORS: ReadonlySet<ErrorCode> = new Set<ErrorCode>([
 
 @Component({
   selector: 'app-join-page',
-  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    CardHand,
+  ],
   templateUrl: './join-page.html',
   styleUrl: './join-page.scss',
   providers: [{ provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } }],
@@ -63,7 +71,7 @@ export class JoinPage {
     this.joining.set(true);
     this.api.joinSession(sessionId, { name }).subscribe({
       next: ({ participantId, token }) => {
-        this.tokens.store(sessionId, { participantId, token });
+        this.tokens.store(sessionId, { participantId, token }, { role: 'DEVELOPER', name });
         this.preferences.save({ name });
         void this.router.navigate(['/session', sessionId]);
       },

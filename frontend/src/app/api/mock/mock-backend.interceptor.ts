@@ -10,6 +10,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { ErrorCode, ProblemDetail } from '../api-error';
 import { lobbyScrumMaster } from '../examples';
 import {
+  ConfigResponse,
   CreateSessionRequest,
   CreateSessionResponse,
   IssueListResponse,
@@ -89,6 +90,10 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
   const path = request.url.split('?')[0];
   if (path === '/api/health') {
     return ok({ status: 'UP' });
+  }
+  if (path === '/api/config') {
+    const config: ConfigResponse = { rememberSessions: true };
+    return ok(config);
   }
   if (path === '/api/projects') {
     const search = searchText(request);

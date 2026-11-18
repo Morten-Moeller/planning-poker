@@ -43,6 +43,7 @@ class ContractTest {
     static Stream<Arguments> endpoints() {
         return Stream.of(
                         new Endpoint("get", "/api/health", null, "200", "HealthStatus", List.of()),
+                        new Endpoint("get", "/api/config", null, "200", "ConfigResponse", List.of()),
                         new Endpoint(
                                 "post",
                                 "/api/sessions",
@@ -175,6 +176,7 @@ class ContractTest {
                     String name = operation.getKey() + " " + path.getKey();
                     boolean open = Set.of(
                                     "/api/health",
+                                    "/api/config",
                                     "/api/sessions",
                                     "/api/sessions/{id}/participants",
                                     "/api/projects",
@@ -220,7 +222,7 @@ class ContractTest {
 
     @Test
     void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
-        assertEquals("3.3.0", contract.at("/info/version").asText());
+        assertEquals("3.4.0", contract.at("/info/version").asText());
         assertEquals(
                 "PROJECT_NOT_ALLOWED",
                 contract.at("/paths/~1api~1sessions/post/responses/403/description")
@@ -233,6 +235,15 @@ class ContractTest {
                 "NAME_TAKEN, LIMIT_REACHED",
                 contract.at("/paths/~1api~1sessions~1{id}~1participants/post/responses/409/description")
                         .asText());
+    }
+
+    @Test
+    void describesTheConfigOfTheFrontend() {
+        assertEquals(
+                "getConfig", contract.at("/paths/~1api~1config/get/operationId").asText());
+        JsonNode config = contract.at("/components/schemas/ConfigResponse");
+        assertEquals(List.of("rememberSessions"), texts(config.get("required")));
+        assertEquals("boolean", config.at("/properties/rememberSessions/type").asText());
     }
 
     @Test

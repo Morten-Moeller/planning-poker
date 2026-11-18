@@ -62,4 +62,9 @@
       ></span
     >
   }
+  @if (scrumMaster()) {
+    <a mat-stroked-button class="new-session" routerLink="/" data-testid="new-session"
+      ><span aria-hidden="true">＋ </span><span i18n="@@share.newSession">Neue Sitzung</span></a
+    >
+  }
 </section>

@@ -34,6 +34,24 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `serverTime` of the last snapshot and the client clock; the remaining time of a round
   (`RoundTimer`) is `round.deadline` minus `serverNow()`, never the client clock alone (ADR 0006).
 - Client state: the token per session id in `sessionStorage`; locale is fixed to `de`.
+- Recent sessions (spec 0039, ADR 0013): `RecentSessions` in `frontend/src/app/api/` keeps at
+  most five entries in `localStorage` under the key `planningpoker.recent-sessions` as a JSON
+  array, newest first; an entry has `sessionId`, `participantId`, `token`, `role`, `name` and
+  `lastUsedAt`. Saving a session again moves it to the front. Invalid JSON, an invalid entry or an
+  exception of `localStorage` gives an empty list, never an error. The setting comes from
+  `GET /api/config` (`rememberSessions`): the app initializer `loadRecentSessionsSetting`
+  (`app.config.ts`, timeout 3 s) sets the signal `RecentSessions.enabled`; it stays `null` when
+  the call fails. Only with `true`, `TokenStore.store` also writes the entry (create: role
+  `SCRUM_MASTER`, join: `DEVELOPER`) and `TokenStore.identity` falls back to the entry when
+  `sessionStorage` has none and copies it into `sessionStorage`; `TokenStore.remove` removes both.
+  With `false` or `null` ADR 0003 applies unchanged. The start page with `true` checks every entry
+  with `GET /api/sessions/{id}` and its token: `SESSION_NOT_FOUND` and `UNAUTHORIZED` remove the
+  entry, another error keeps it without project and issue; every error of the check clears
+  `ErrorState`. The section `recent-sessions` („Letzte Sitzungen“) shows the checked entries as
+  `recent-session` (project name, `#iid Titel` or „Kein Issue aktiv“, role, own name, session id
+  `recent-session-id`, „zuletzt vor …“); the link of the row opens `/session/:id`,
+  `recent-session-remove` („Aus Liste entfernen“) removes only the entry in the browser. With
+  `false` the start page shows no section and clears the list.
 - Preferences (spec 0036): `PreferencesStore` in `frontend/src/app/api/` keeps the last inputs in
   `localStorage` under one key `planningpoker.preferences` as JSON with `name`, `projectId`,
   `timerSeconds` (one of `TIMER_SECONDS`, `0` = Aus), `weightFilter` and `periodFilter`. They only
@@ -99,7 +117,13 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
 - Start and join page (spec 0031): an unreachable backend shows `health-down` with the button
   `health-retry`; the join page shows `join-role-hint` and, for `SESSION_NOT_FOUND`,
   `join-not-found` with the link `join-not-found-home` instead of the form. Above the title of the
-  join page stands the row of the five card backs `join-card-backs` (`aria-hidden`, spec 0032).
+  join page stands the card hand `card-hand` in the size `large`, centred (spec 0038).
+- Card hand (spec 0038): `CardHand` (`app-card-hand`, `frontend/src/app/api/card-hand.ts`, used by
+  `session` and `join`) shows the five motif cards `card-hand-card` (Raster, Punkte, Zeilen,
+  Ringe, Stufen, class `motif-0` to `motif-4`; no `data-motif`, because `app-shell.scss` reads the toolbar motif through `:has([data-motif])`) as a hand: close together at the bottom, fanned out at the
+  top from −20° to +20° around a common point below the hand. The host carries `aria-hidden`,
+  `data-testid="card-hand"` and the size `small` (default, lobby) or `large` (join page). The
+  colours come from `_motifs.scss`, light and dark.
 - Issue panel filters (spec 0023, ADR 0009): above the list a `mat-button-toggle-group`
   `issue-filter-weight` („Ohne Gewicht“ `issue-filter-weight-none`, „Mit Gewicht“
   `issue-filter-weight-any`, „Alle“ `issue-filter-weight-all`; default „Ohne Gewicht“) and a
@@ -117,7 +141,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   switch in `LOBBY` or `DISCUSSION` opens no dialog. The participant list shows the vote status
   only in `VOTING` and `REVEALED` (spec 0028).
 - Erneut schätzen (spec 0034, ADR 0012): in `REVEALED` the scrum master sees `round-restart`
-  („↻ Erneut schätzen“), the developer sees `result-waiting` („Der Scrum Master lässt erneut
+  („↻ Erneut schätzen“; the symbols ↻ and ↗ of „In GitLab öffnen ↗“ stand in their own
+  `aria-hidden` span at 1.25em, vertically centred, spec 0038), the developer sees `result-waiting` („Der Scrum Master lässt erneut
   schätzen oder übernimmt das Ergebnis.“). The restart leads straight to `VOTING`: the developer
   sees the open `card-deck` without `discussion-hint`, with a timer also the remaining time. The
   mock backend changes the phase from `REVEALED` to `VOTING` as well.
@@ -130,7 +155,7 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   (`angular.json`, `fileReplacements` of `backend.providers.ts` by `backend.providers.mock.ts`).
   The mock answers REST through an `HttpInterceptorFn` and the WebSocket through a fake socket
   from the example snapshots; tokens carry the role (`mock-scrum-master-…`, `mock-developer-…`),
-  the session id is `K7P2QX9M`. The project list and the issues of every project come from fixed
+  the session id is `K7P2QX9M`; `GET /api/config` answers `rememberSessions: true`. The project list and the issues of every project come from fixed
   data (projects 1234 „Planning Poker“, 5678 „Poker Tools“, 9012 „Release Notes“; issues 42 and
   43 without weight, 46 with weight 3), filtered by `search` and, in the session, by `weight`. The
   mock keeps one phase (`mock-session.ts`, start `LOBBY`): release, `round/start`, reveal, restart
@@ -147,7 +172,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
 - Theme „Werkbank“ (spec 0027, design files in `docs/design/`): `mat.theme` with the blue palette
   and `theme-type: color-scheme`; `mat.theme-overrides` sets the fixed values of One Light and,
   for the dark design, of One Dark. Light and dark (spec 0037): the toggle `theme-toggle` at the
-  right end of the toolbar (🌙 in the light design, ☀️ in the dark one, `aria-pressed` true in the
+  right end of the toolbar (round button with the symbol centred, its distance to the right edge
+  equal to the left padding of the toolbar, spec 0038; 🌙 in the light design, ☀️ in the dark one, `aria-pressed` true in the
   dark one) switches from the visible design to the other one; `ThemeService` (`shell`) stores the
   choice as `theme` (`system`, `light`, `dark`) in the `PreferencesStore` and sets
   `data-theme="light|dark"` on `<html>` before the first render (`provideAppInitializer`); without
@@ -167,12 +193,16 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
 - Focus: a global rule in `styles.scss` draws a 3 px outline in `--mat-sys-primary` with 3 px
   offset on `:focus-visible` (not on inputs and selects inside form fields); filled buttons add a
   ring in `--mat-sys-surface`. Components do not remove the outline.
-- Toolbar (`shell`): 56 px, `surface-container-low` with a divider, title; in the room the
+- Toolbar (`shell`): 56 px, `surface-container-low` with a divider, title as a link to `/`
+  (`toolbar-home`, spec 0039) on every page and for every role; in the room the
   motif field (`toolbar-motif`, 20 × 28 px, left of the title), the session id
   (`toolbar-session-id`, mono) and „Name · Rolle“ (`toolbar-me`, hidden below 600 px) from the
   `SessionStore`.
-- Session page grid: a side column of 320 px and a main column (32/48 px padding) from 720 px;
-  below that one column with the side column under the main area.
+- Session page grid: a side column of 340 px and a main column (32/48 px padding) from 720 px;
+  below that one column with the side column under the main area. Side column and main area
+  reserve the space of the scroll bar (`scrollbar-gutter: stable`), so the width of the content
+  does not change when a scroll bar appears. The page has no visible heading; the `h1`
+  „Sitzung“ has the class `visually-hidden` for screen readers (spec 0038).
 - Footer and scroll areas (spec 0035): `RoundFooter` (`round-footer`) stands in the DOM after
   the main area and holds the cards and round actions per phase and role: `DISCUSSION` the
   locked deck with `discussion-hint` (developer) or the box with `discussion-hint` and
@@ -183,6 +213,9 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   not scroll, side column and main area scroll on their own and the footer is the last row of
   the main column with a divider and `--mat-sys-surface`. Below 720 px the page scrolls and the
   footer sticks to the bottom of the window (`position: sticky`).
+  The description of the active issue is collapsed in `REVEALED` and below 720 px; „▾ Ganze
+  Beschreibung anzeigen“ (`active-issue-expand`) expands it, then „▴ Beschreibung einklappen“
+  (`active-issue-collapse`, `aria-expanded="true"`) collapses it again (spec 0038).
 - Design Werkbank (specs 0027 to 0030): the source is `docs/design/` (`Raum.dc.html`,
   `Design-System.dc.html`, `Sitzungsraum.dc.html`; read as source text, deviations in
   `docs/design/README.md`). Part A is theme and grid, B the side column and the card motif, C
@@ -196,21 +229,24 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
     sets `--app-card-accent`, `--app-card-on-accent`, `--app-card-pattern` and
     `--app-card-pattern-size`. `session-page.scss` uses it per `data-motif` of `.room`,
     `app-shell.scss` for `toolbar-motif` with `:host:has([data-motif='n'])` and
-    `join-page.scss` for the card backs. Components inside the room use these variables, with a
+    `card-hand.scss` for the card hand. Components inside the room use these variables, with a
     fallback where they also render outside of it. The motif carries no
     meaning; states always stand as text next to it.
   - Side column (part B): sections with a mono label (`--app-label-section`, upper case by CSS)
     in this order: „Timer“ (scrum master, with the hint „Gilt ab der nächsten Runde.“),
-    „Teilnehmer · n“, „Teilen“, „Fakten“ (`session-facts`: Session-ID, Phase, Deine Rolle,
-    Teilnehmer „n (m Entwickler)“), „Sitzungsprotokoll“ (`session-history`, collapsed panel).
+    „Teilnehmer · n“, „Teilen“ (for the scrum master with the link „＋ Neue Sitzung“
+    `new-session` to the start page at its end, spec 0039; leaving the room does not end the
+    session), „Fakten“ (`session-facts`: Session-ID, Phase, Deine Rolle,
+    Teilnehmer „n (m Entwickler)“), „Sitzungsprotokoll“ (`session-history`, collapsed panel;
+    head and content with 16 px padding left and right, spec 0038).
     A participant entry (design system, section 8) has a chip (filled with the motif after a
-    vote, dashed otherwise, none for the scrum master), the name with „(du)“ and a highlighted row
+    vote, dashed otherwise; the scrum master has no chip and no empty column, spec 0038), the name with „(du)“ and a highlighted row
     for the own entry, „★ Scrum Master“, a status („Moderiert, schätzt nicht mit“, „Bereit“ in
     `LOBBY`, „Diskutiert“ in `DISCUSSION`, „✓ Hat geschätzt“ in `VOTING` and `REVEALED`,
     „○ Ausstehend“ in `VOTING`, „Nicht geschätzt“ (muted) in `REVEALED`, spec 0032) and „● verbunden“ or „○ getrennt“. Symbols stand in `aria-hidden` spans outside
     the element with the `data-testid`, so the selectors keep their text.
-  - Developer in `LOBBY` (part B): the waiting state `lobby-waiting` with a stack of three motif
-    cards, the title and „Die Seite aktualisiert sich von selbst.“; after a confirmation the
+  - Developer in `LOBBY` (part B): the waiting state `lobby-waiting` with the card hand
+    `card-hand` (spec 0038), the title and „Die Seite aktualisiert sich von selbst.“; after a confirmation the
     title reads „Das Ergebnis ist übernommen. …“ and `last-result` („Zuletzt geschätzt“, final
     card, issue, round, cards, „✓ Als Kommentar in GitLab gespeichert“) follows until the next
     release. With `project` in the snapshot it links the issue („In GitLab öffnen ↗“,
