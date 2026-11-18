@@ -1,4 +1,5 @@
 @use '../../styles/motifs';
+@use '../../styles/theme';
 
 :host {
   display: flex;
@@ -36,9 +37,9 @@ mat-toolbar {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  @each $motif in motifs.$ids {
-    :host:has([data-motif='#{$motif}']) .motif {
+@each $motif in motifs.$ids {
+  .motif {
+    @include theme.dark($has: "[data-motif='#{$motif}']") {
       @include motifs.card-variables($motif, dark);
     }
   }
@@ -59,6 +60,16 @@ mat-toolbar {
 
 .spacer {
   flex: 1;
+}
+
+.theme-toggle {
+  flex: none;
+  margin-left: auto;
+}
+
+.theme-symbol {
+  font-size: 20px;
+  line-height: 1;
 }
 
 .me {

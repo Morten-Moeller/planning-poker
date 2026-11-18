@@ -1,4 +1,5 @@
 @use '../../styles/motifs';
+@use '../../styles/theme';
 
 @each $motif in motifs.$ids {
   .room[data-motif='#{$motif}'] {
@@ -6,9 +7,9 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  @each $motif in motifs.$ids {
-    .room[data-motif='#{$motif}'] {
+@each $motif in motifs.$ids {
+  .room[data-motif='#{$motif}'] {
+    @include theme.dark {
       @include motifs.card-variables($motif, dark);
     }
   }

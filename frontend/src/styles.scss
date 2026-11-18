@@ -1,6 +1,7 @@
 @use 'sass:list';
 @use 'sass:map';
 @use '@angular/material' as mat;
+@use 'styles/theme';
 
 $plain: 'IBM Plex Sans', sans-serif;
 $mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -185,18 +186,24 @@ html {
   );
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    @include mat.theme-overrides($dark);
+html[data-theme='light'] {
+  color-scheme: light;
+}
 
-    --app-on-surface-muted: #9da5b4;
-    --app-success: #98c379;
-    --app-success-container: #2f3d2b;
-    --app-on-success-container: #d4ecc6;
-    --app-warning: #e5c07b;
-    --app-warning-container: #4a3d26;
-    --app-on-warning-container: #f7e3bd;
-  }
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+@include theme.dark {
+  @include mat.theme-overrides($dark);
+
+  --app-on-surface-muted: #9da5b4;
+  --app-success: #98c379;
+  --app-success-container: #2f3d2b;
+  --app-on-success-container: #d4ecc6;
+  --app-warning: #e5c07b;
+  --app-warning-container: #4a3d26;
+  --app-on-warning-container: #f7e3bd;
 }
 
 body {

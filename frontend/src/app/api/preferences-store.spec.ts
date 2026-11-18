@@ -23,16 +23,18 @@ describe('PreferencesStore', () => {
       timerSeconds: 0,
       weightFilter: 'NONE',
       periodFilter: 'ALL',
+      theme: 'system',
     });
   });
 
-  it('writes and reads the five fields under one key', () => {
+  it('writes and reads the six fields under one key', () => {
     preferences.save({
       name: 'Anna',
       projectId: '42',
       timerSeconds: 30,
       weightFilter: 'ANY',
       periodFilter: 'MONTH',
+      theme: 'dark',
     });
 
     expect(preferences.read()).toEqual({
@@ -41,6 +43,7 @@ describe('PreferencesStore', () => {
       timerSeconds: 30,
       weightFilter: 'ANY',
       periodFilter: 'MONTH',
+      theme: 'dark',
     });
     expect(JSON.parse(localStorage.getItem(KEY) ?? '')).toEqual(preferences.read());
   });
@@ -75,10 +78,17 @@ describe('PreferencesStore', () => {
         timerSeconds: 7,
         weightFilter: 'X',
         periodFilter: 'DAY',
+        theme: 'blue',
       }),
     );
 
     expect(preferences.read()).toEqual({ ...DEFAULT_PREFERENCES, projectId: '42' });
+  });
+
+  it.each([['light'], ['dark'], ['system']])('keeps the stored theme %s', (theme) => {
+    localStorage.setItem(KEY, JSON.stringify({ theme }));
+
+    expect(preferences.read().theme).toBe(theme);
   });
 
   it('returns the defaults and does not throw when localStorage throws', () => {
