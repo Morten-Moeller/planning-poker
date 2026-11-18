@@ -1,7 +1,7 @@
 ---
 id: "0035"
 title: Karten und Aktionen im festen Footer
-status: approved
+status: Review
 risk: medium
 adrs: []
 owner: Morten Möller

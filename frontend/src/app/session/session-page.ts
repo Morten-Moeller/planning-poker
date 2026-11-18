@@ -4,11 +4,11 @@ import { ErrorState } from '../api/error-state';
 import { SessionStore } from '../api/session-store';
 import { TokenStore } from '../api/token-store';
 import { ActiveIssue } from './active-issue';
-import { CardDeck } from './card-deck';
 import { LOBBY_MOTIF, motifFor } from './card-motif';
 import { IssuePanel } from './issue-panel';
 import { LastResult, lastConfirmed } from './last-result';
 import { ParticipantList } from './participant-list';
+import { RoundFooter } from './round-footer';
 import { RoundResult } from './round-result';
 import { RoundStatus } from './round-status';
 import { SessionFacts } from './session-facts';
@@ -26,8 +26,8 @@ import { TimerSetting } from './timer-setting';
     TimerSetting,
     ActiveIssue,
     RoundStatus,
-    CardDeck,
     RoundResult,
+    RoundFooter,
     SessionHistory,
     SessionFacts,
     LastResult,

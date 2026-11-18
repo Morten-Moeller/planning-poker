@@ -100,7 +100,9 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   „Planning Poker Test“ with path `group/project` (spec 0022). Issue 44 (spec 0012) has `**fett**`, a `<script>` element, an `<img onerror>` and an
   image from `https://tracker.example/pixel.gif` in its description for the check of the
   Markdown sanitizing and of the Content-Security-Policy (spec 0019); it is not part of the
-  issue search. The search text `kein Treffer` answers an empty list
+  issue search. Issue 45 „Monatsexport“ (`issue-45.json`, spec 0035) has a description of about
+  60 lines of Markdown ending with „Letzte Zeile der Beschreibung.“ for the layout checks of the
+  footer; it is not part of the issue search either. The search text `kein Treffer` answers an empty list
   (`issues-search-empty.json`, spec 0019). A flow that needs GitLab data with state adds it at
   run time through the admin API of the double with `frontend/e2e/gitlab-double.ts`:
   `stubIssueWithFailingFirstNote` stubs an issue with a unique iid (`uniqueIssueIid`) whose
@@ -133,8 +135,13 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   both roles before and after „Erneut schätzen“, confirms the result `5` (notes mapping of issue 42)
   and checks `last-result` until the release of issue 43; it also compares the motif colours of
   room, toolbar and the card backs of the join page light and dark (spec 0032).
-  `voting-round.spec.ts` chooses a card with the keyboard and checks the table, the 6 columns at
-  375 px (spec 0029) and the deck of at most 1000 px with portrait cards at 1920 px (spec 0032);
+  `voting-round.spec.ts` chooses a card with the keyboard and checks the table, the deck as one
+  row at 375 px (spec 0029, spec 0035) and the deck of at most 1000 px with portrait cards at
+  1920 px (spec 0032); `layout.spec.ts` creates a session on issue 45 and checks the footer at
+  1440×900 in `DISCUSSION`, `VOTING` and `REVEALED` for both roles (footer in the window, no
+  page scroll, the last line of the description reachable in the main area) and at 375×667 in
+  `VOTING` (footer at the bottom of the window, one row of cards that scrolls sideways, the
+  chosen last card in the row; spec 0035);
   `consensus.spec.ts` checks the result under reduced motion (spec 0029);
   `issue-filter.spec.ts` checks the project name and „von N Issues“, `result-round.spec.ts` the
   error text in the confirm dialog (spec 0030); `create-and-join.spec.ts` checks the start and

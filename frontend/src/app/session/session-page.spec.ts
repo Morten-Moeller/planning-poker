@@ -326,6 +326,54 @@ describe('SessionPage', () => {
     expect(count('history-entry')).toBe(1);
   });
 
+  it.each([
+    ['DISCUSSION', discussionScrumMaster, ['discussion-hint', 'round-start']],
+    ['DISCUSSION', discussionDeveloper, ['card-deck-locked', 'discussion-hint']],
+    ['VOTING', votingScrumMaster, ['round-reveal', 'pending-hint']],
+    [
+      'VOTING',
+      { ...votingScrumMaster, round: { ...votingScrumMaster.round!, allVoted: true } },
+      ['all-voted-hint'],
+    ],
+    ['VOTING', votingDeveloper, ['card-deck']],
+    ['REVEALED', revealedScrumMaster, ['round-restart', 'result-accept']],
+    ['REVEALED', revealedDeveloper, ['result-waiting']],
+  ])(
+    'puts the cards and actions of %s into the footer after the main area',
+    async (_phase, snapshot, ids) => {
+      await open(snapshot);
+
+      const root = fixture.nativeElement as HTMLElement;
+      const main = root.querySelector('.main')!;
+      const footer = root.querySelector('app-round-footer')!;
+      expect(main.compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      for (const id of ids) {
+        expect(footer.querySelectorAll(`[data-testid="${id}"]`)).toHaveLength(1);
+        expect(main.querySelectorAll(`[data-testid="${id}"]`)).toHaveLength(0);
+      }
+      if (snapshot.me.role === 'SCRUM_MASTER') {
+        http
+          .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
+          .flush({ items: [], nextPage: null });
+      }
+    },
+  );
+
+  it.each([
+    ['scrum master', lobbyScrumMaster],
+    ['developer', lobbyDeveloper],
+  ])('renders no footer for the %s in the lobby', async (_role, snapshot) => {
+    await open(snapshot);
+
+    expect(count('round-footer')).toBe(0);
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-round-footer')).toBeNull();
+    if (snapshot.me.role === 'SCRUM_MASTER') {
+      http
+        .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
+        .flush({ items: [], nextPage: null });
+    }
+  });
+
   it('renders no reveal button for the scrum master after the reveal', async () => {
     await open(revealedScrumMaster);
 

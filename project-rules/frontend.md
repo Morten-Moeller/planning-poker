@@ -98,7 +98,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   „ohne Gewicht“). When the phase changes from `REVEALED` to `LOBBY`, the panel loads page 1 again
   with the current filters. The filters live only in the component.
 - Discussion (spec 0026, ADR 0010): in `DISCUSSION` the session page shows the active issue and
-  `RoundStatus` with `discussion-hint` to both roles, no counter and no remaining time; the
+  `RoundStatus` without counter and remaining time, and `discussion-hint` to both roles in the
+  footer `RoundFooter` (spec 0035); the
   developer sees the locked card deck `card-deck-locked` (spec 0029), which sends no vote, and
   `card-deck` exists only in `VOTING`; the phase reads „Diskussion“. The scrum master sees `round-start` („Schätzung starten“,
   `ApiService.startVoting`) and, with a timer, `round-start-timer` („Timer: 1 min“). An issue
@@ -151,6 +152,16 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `SessionStore`.
 - Session page grid: a side column of 320 px and a main column (32/48 px padding) from 720 px;
   below that one column with the side column under the main area.
+- Footer and scroll areas (spec 0035): `RoundFooter` (`round-footer`) stands in the DOM after
+  the main area and holds the cards and round actions per phase and role: `DISCUSSION` the
+  locked deck with `discussion-hint` (developer) or the box with `discussion-hint` and
+  `round-start` (scrum master), `VOTING` the open `card-deck` (developer) or the box with
+  `pending-hint` or `all-voted-hint` and `round-reveal` (scrum master), `REVEALED`
+  `result-waiting` (developer) or `round-restart` and `result-accept` (scrum master); no footer
+  in `LOBBY`. From 720 px the room fills the window under the toolbar (`100dvh`), the page does
+  not scroll, side column and main area scroll on their own and the footer is the last row of
+  the main column with a divider and `--mat-sys-surface`. Below 720 px the page scrolls and the
+  footer sticks to the bottom of the window (`position: sticky`).
 - Design Werkbank (specs 0027 to 0030): the source is `docs/design/` (`Raum.dc.html`,
   `Design-System.dc.html`, `Sitzungsraum.dc.html`; read as source text, deviations in
   `docs/design/README.md`). Part A is theme and grid, B the side column and the card motif, C
@@ -192,7 +203,9 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
     `seat-table` in `VOTING`; `RoundResult` does the same in `REVEALED` and lists the
     distribution as `result-count` with `result-count-card` and `result-count-votes`. The open
     deck `card-deck` and the locked deck `card-deck-locked` are at most 1000 px wide and centred,
-    so the cards stay portrait; below 600 px the deck has 6 columns (spec 0032). The iid of the
+    so the cards stay portrait; below 600 px the deck is one row of eleven cards of 48 × 70 px
+    that scrolls sideways with `scroll-snap`, and the chosen card and the card with the focus
+    are scrolled into the row (spec 0035). The iid of the
     active issue (`active-issue-iid`) has the size of its title, in mono, muted and not bold.
     The seats of `seat-table` align at the top: cards of one row share top and height and
     the names one line; in `REVEALED` a seat without a vote shows „–“ and „nicht geschätzt“,
