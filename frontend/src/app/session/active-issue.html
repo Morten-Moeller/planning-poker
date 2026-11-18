@@ -4,7 +4,7 @@
     <h2 data-testid="active-issue-title">{{ issue().title }}</h2>
     <a data-testid="active-issue-link" [href]="issue().webUrl" target="_blank" [rel]="'noopener'"
       ><ng-container i18n="@@activeIssue.openInGitLab">In GitLab öffnen</ng-container>&ngsp;<span
-        class="symbol"
+        class="app-symbol"
         aria-hidden="true"
         >↗</span
       ></a
@@ -27,8 +27,10 @@
       aria-expanded="false"
       (click)="expand()"
     >
-      <span aria-hidden="true">▾ </span
-      ><ng-container i18n="@@activeIssue.expand">Ganze Beschreibung anzeigen</ng-container>
+      <span class="app-symbol" aria-hidden="true">▾</span>&ngsp;<ng-container
+        i18n="@@activeIssue.expand"
+        >Ganze Beschreibung anzeigen</ng-container
+      >
     </button>
   } @else if (collapsible()) {
     <button
@@ -39,8 +41,10 @@
       aria-expanded="true"
       (click)="collapse()"
     >
-      <span aria-hidden="true">▴ </span
-      ><ng-container i18n="@@activeIssue.collapse">Beschreibung einklappen</ng-container>
+      <span class="app-symbol" aria-hidden="true">▴</span>&ngsp;<ng-container
+        i18n="@@activeIssue.collapse"
+        >Beschreibung einklappen</ng-container
+      >
     </button>
   }
 </section>

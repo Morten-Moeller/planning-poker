@@ -222,3 +222,11 @@ body :focus-visible:not(.mat-mdc-input-element, .mat-mdc-select) {
 body :is(.mat-mdc-unelevated-button, .mat-mdc-raised-button):focus-visible {
   box-shadow: 0 0 0 3px var(--mat-sys-surface);
 }
+
+.app-symbol {
+  display: inline-block;
+  font-family: system-ui, sans-serif;
+  font-size: 1.25em;
+  line-height: 1;
+  vertical-align: middle;
+}

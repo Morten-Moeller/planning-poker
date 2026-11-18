@@ -285,6 +285,10 @@ describe('StartPage', () => {
     );
     expect(text('create-submit')).toBe('Sitzung erstellen (Backend fehlt)');
     expect((element('create-submit') as HTMLButtonElement).disabled).toBe(true);
+    expect(text('health-retry')).toBe('↻ Erneut prüfen');
+    expect(
+      element('health-retry')?.querySelector('.app-symbol[aria-hidden="true"]')?.textContent,
+    ).toBe('↻');
 
     element('health-retry')?.click();
     await fixture.whenStable();

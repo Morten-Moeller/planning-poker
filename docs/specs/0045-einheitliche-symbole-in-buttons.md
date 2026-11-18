@@ -1,7 +1,7 @@
 ---
 id: "0045"
 title: Einheitliche Symbolgröße in Buttons und Links
-status: approved
+status: Review
 risk: medium
 adrs: []
 owner: Morten Möller

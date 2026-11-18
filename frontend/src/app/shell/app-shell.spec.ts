@@ -158,7 +158,9 @@ describe('AppShell', () => {
     expect(toggle().textContent?.trim()).toBe('🌙');
     expect(toggle().getAttribute('aria-label')).toBe('Dunkles Design');
     expect(toggle().getAttribute('aria-pressed')).toBe('false');
-    expect(toggle().querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('🌙');
+    expect(toggle().querySelector('.app-symbol[aria-hidden="true"]')?.textContent?.trim()).toBe(
+      '🌙',
+    );
   });
 
   it('calls toggle on a click and shows the sun and „Helles Design“ in the dark design', async () => {

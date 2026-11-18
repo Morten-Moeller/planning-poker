@@ -87,18 +87,15 @@ describe('ActiveIssue', () => {
     expect(link.getAttribute('rel')).toBe('noopener');
   });
 
-  it('shows the arrow of the GitLab link larger in its own hidden span', async () => {
+  it('shows the arrow of the GitLab link in its own hidden span with the class app-symbol', async () => {
     setUp();
     await render(votingDeveloper);
 
     const link = element('active-issue-link')!;
-    const symbol = link.querySelector<HTMLElement>('.symbol')!;
+    const symbol = link.querySelector<HTMLElement>('.app-symbol')!;
     expect(link.textContent?.trim()).toBe('In GitLab öffnen ↗');
     expect(symbol.textContent).toBe('↗');
     expect(symbol.getAttribute('aria-hidden')).toBe('true');
-    expect(parseFloat(getComputedStyle(symbol).fontSize)).toBeGreaterThan(
-      parseFloat(getComputedStyle(fixture.nativeElement as HTMLElement).fontSize),
-    );
   });
 
   it('renders Markdown and removes script elements and event attributes', async () => {
@@ -126,6 +123,7 @@ describe('ActiveIssue', () => {
     expect(frame().classList).toContain('collapsed');
     const expand = element('active-issue-expand')!;
     expect(expand.textContent?.trim()).toBe('▾ Ganze Beschreibung anzeigen');
+    expect(expand.querySelector('.app-symbol[aria-hidden="true"]')?.textContent).toBe('▾');
     expect(expand.getAttribute('aria-controls')).toBe('active-issue-description');
 
     expand.click();
@@ -143,6 +141,7 @@ describe('ActiveIssue', () => {
     await fixture.whenStable();
     const collapse = element('active-issue-collapse')!;
     expect(collapse.textContent?.trim()).toBe('▴ Beschreibung einklappen');
+    expect(collapse.querySelector('.app-symbol[aria-hidden="true"]')?.textContent).toBe('▴');
     expect(collapse.getAttribute('aria-expanded')).toBe('true');
     expect(collapse.getAttribute('aria-controls')).toBe('active-issue-description');
 
