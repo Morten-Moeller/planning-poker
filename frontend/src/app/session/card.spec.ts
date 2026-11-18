@@ -72,6 +72,84 @@ describe('PokerCard', () => {
     expect(picked).toEqual([]);
   });
 
+  function animationEnd(name: string): Event {
+    const event = new Event('animationend');
+    Object.defineProperty(event, 'animationName', { value: name });
+    return event;
+  }
+
+  it.each([
+    ['a mouse move', (node: HTMLElement) => node.dispatchEvent(new Event('mousemove'))],
+    ['a click', (node: HTMLElement) => node.click()],
+  ])(
+    'wiggles a locked card on %s until the animation ends and emits no pick',
+    async (_case, act) => {
+      const root = await render({ card: '8', state: 'locked' });
+      const picked: Card[] = [];
+      fixture.componentInstance.picked.subscribe((card) => picked.push(card));
+
+      act(face(root));
+      await fixture.whenStable();
+
+      expect(face(root).classList).toContain('wiggle');
+      expect(picked).toEqual([]);
+
+      face(root).dispatchEvent(animationEnd('wiggle'));
+      await fixture.whenStable();
+
+      expect(face(root).classList).not.toContain('wiggle');
+    },
+  );
+
+  it('wiggles once per mouse pass over a locked card', async () => {
+    const root = await render({ card: '8', state: 'locked' });
+    const move = async (): Promise<void> => {
+      face(root).dispatchEvent(new Event('mousemove'));
+      await fixture.whenStable();
+    };
+
+    await move();
+    face(root).dispatchEvent(animationEnd('wiggle'));
+    await move();
+    expect(face(root).classList).not.toContain('wiggle');
+
+    face(root).dispatchEvent(new Event('mouseleave'));
+    await move();
+    expect(face(root).classList).toContain('wiggle');
+  });
+
+  it('does not wiggle an open card', async () => {
+    const root = await render({ card: '8', state: 'open' });
+
+    face(root).dispatchEvent(new Event('mousemove'));
+    await fixture.whenStable();
+
+    expect(face(root).classList).not.toContain('wiggle');
+  });
+
+  describe('under reduced motion', () => {
+    beforeEach(() => {
+      Object.defineProperty(document.defaultView!, 'matchMedia', {
+        configurable: true,
+        value: (query: string) => ({ matches: query === '(prefers-reduced-motion: reduce)' }),
+      });
+    });
+
+    afterEach(() => {
+      Reflect.deleteProperty(document.defaultView!, 'matchMedia');
+    });
+
+    it('does not wiggle a locked card', async () => {
+      const root = await render({ card: '8', state: 'locked' });
+
+      face(root).dispatchEvent(new Event('mousemove'));
+      face(root).click();
+      await fixture.whenStable();
+
+      expect(face(root).classList).not.toContain('wiggle');
+    });
+  });
+
   it('emits the card of an open card on click', async () => {
     const root = await render({ card: '13', state: 'open' });
     const picked: Card[] = [];

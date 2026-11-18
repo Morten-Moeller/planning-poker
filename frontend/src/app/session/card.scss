@@ -61,6 +61,10 @@ button.card {
   cursor: pointer;
 }
 
+button.card.locked {
+  cursor: not-allowed;
+}
+
 .band {
   flex: none;
   height: 6px;
@@ -140,7 +144,6 @@ button.card {
   border-style: dashed;
   background-color: var(--mat-sys-surface-container);
   color: var(--app-on-surface-muted);
-  cursor: not-allowed;
 }
 
 .locked .value {
@@ -189,6 +192,48 @@ button.card {
   }
 }
 
+.wiggle {
+  transition: none;
+  animation: wiggle 400ms ease-in-out;
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  20% {
+    transform: rotate(-4deg);
+  }
+
+  40% {
+    transform: rotate(3deg);
+  }
+
+  60% {
+    transform: rotate(-2deg);
+  }
+
+  80% {
+    transform: rotate(1deg);
+  }
+}
+
+.unlock {
+  animation: unlock 250ms ease-out backwards;
+  animation-delay: calc(var(--unlock-index, 0) * 60ms);
+}
+
+@keyframes unlock {
+  from {
+    border-color: var(--mat-sys-outline-variant);
+    background-color: var(--mat-sys-surface-container);
+    color: var(--app-on-surface-muted);
+    filter: grayscale(1);
+  }
+}
+
 @media (max-width: 599px) {
   :host(.deck) {
     --card-height: 70px;
@@ -232,7 +277,9 @@ button.card {
     transform: none;
   }
 
-  .flip {
+  .flip,
+  .wiggle,
+  .unlock {
     animation: none;
   }
 }

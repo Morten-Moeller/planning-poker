@@ -12,11 +12,17 @@
     type="button"
     class="card"
     [class]="state()"
+    [class.wiggle]="wiggling()"
+    [class.unlock]="unlockIndex() !== null"
+    [style.--unlock-index]="unlockIndex()"
     [attr.data-testid]="testId()"
     [attr.aria-label]="label()"
     [attr.aria-pressed]="state() === 'chosen'"
     [attr.aria-disabled]="disabled() ? 'true' : null"
     (click)="pick()"
+    (mousemove)="onMouseMove()"
+    (mouseleave)="onMouseLeave()"
+    (animationend)="onAnimationEnd($event)"
   >
     <ng-container [ngTemplateOutlet]="face" />
   </button>
