@@ -17,7 +17,7 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
 - One folder per feature under `frontend/src/app/`: `start` (start page, create), `join`,
   `session` (room, cards, result, history). `shell` holds the layout: toolbar, `router-outlet`
   and the `ErrorBanner`. Generated API types and the shared services (`ApiService`,
-  `RealtimeService`, `SessionStore`, `TokenStore`, `PreferencesStore`, `ErrorState`) live in `frontend/src/app/api/`;
+  `RealtimeService`, `SessionStore`, `TokenStore`, `ErrorState`) live in `frontend/src/app/api/`;
   the mock backend for development in `frontend/src/app/api/mock/`; test doubles for the
   WebSocket in `frontend/src/app/api/testing/` (spec 0005).
 - Shared code goes to `frontend/src/app/api/` only when two features use it (A1.3).
@@ -34,10 +34,11 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `serverTime` of the last snapshot and the client clock; the remaining time of a round
   (`RoundTimer`) is `round.deadline` minus `serverNow()`, never the client clock alone (ADR 0006).
 - Client state: the token per session id in `sessionStorage`; locale is fixed to `de`.
-- Preferences (spec 0036): `PreferencesStore` keeps the last inputs in `localStorage` under one
+- Preferences (spec 0036): `PreferencesStore` in `frontend/src/app/api/` keeps the last inputs in `localStorage` under one
   key `planningpoker.preferences` as JSON with `name`, `projectId`, `timerSeconds` (one of
   `TIMER_SECONDS`, `0` = Aus), `weightFilter` and `periodFilter`. They only fill in fields, never
-  the state of a session, and never hold a token. A missing entry, invalid JSON, an unknown value
+  the state of a session; the entry holds only the values listed above, session credentials stay
+  in `sessionStorage`. A missing entry, invalid JSON, an unknown value
   or an exception of `localStorage` gives the default (`''`, `''`, `0`, `NONE`, `ALL`), never an
   error. Written after success only: name and project after a created session (start page), the
   name after a join (one name for both pages, independent of the session id), the timer after a

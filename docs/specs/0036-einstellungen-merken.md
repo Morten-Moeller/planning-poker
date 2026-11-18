@@ -127,6 +127,7 @@ Contracts zu regenerieren: keine.
 
 - [x] Welche Zeit-Einstellung wird gemerkt? → Der Timer und die Issue-Filter („Geändert in“, dazu das Gewicht). (Morten Möller, 2026-11-18)
 - [x] Wird der Name gemerkt? → Ja, ein Name für Startseite und Beitrittsseite, unabhängig von der Session-ID. (Morten Möller, 2026-11-18)
+- [x] `risk-level.sh` meldet high, weil zwei Doku-Zeilen in `project-rules/frontend.md` das Wort „token“ enthalten. Mit high weiter oder umformulieren? → Umformulieren: `PreferencesStore` in einer eigenen Zeile, die Zeile mit `TokenStore` bleibt unberührt, die Aussage bleibt („holds only the values listed above; session credentials stay in sessionStorage“). Die Stufe bleibt medium. (Morten Möller, 2026-11-18)
 
 ## Verifikationsplan
 
