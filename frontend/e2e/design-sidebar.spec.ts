@@ -92,16 +92,27 @@ for (const scheme of ['light', 'dark'] as const) {
     const link = (await page.getByTestId('share-link').textContent()) ?? '';
     const ben = await (await browser.newContext({ colorScheme: scheme })).newPage();
     await ben.goto(link);
-    const backs = ben.getByTestId('join-card-backs').locator('.back');
-    await expect(backs).toHaveCount(5);
+    const hand = ben.getByTestId('card-hand');
+    const cards = hand.getByTestId('card-hand-card');
+    await expect(cards).toHaveCount(5);
     for (const [index, hex] of ACCENTS[scheme].entries()) {
-      expect(await accent(backs.nth(index))).toBe(hex);
-      expect(await background(backs.nth(index))).toBe(rgb(hex));
+      expect(await accent(cards.nth(index))).toBe(hex);
+      expect(await background(cards.nth(index))).toBe(rgb(hex));
     }
+    await expect(ben.getByTestId('join-card-backs')).toHaveCount(0);
     await expect(ben.getByTestId('toolbar-motif')).toHaveCount(0);
+    const joinHand = (await hand.boundingBox())!;
+    const form = (await ben.getByTestId('join-form').boundingBox())!;
+    expect(
+      Math.abs(joinHand.x + joinHand.width / 2 - (form.x + form.width / 2)),
+    ).toBeLessThanOrEqual(1);
 
     await ben.getByTestId('join-name').fill('Ben');
     await ben.getByTestId('join-submit').click();
+    const lobbyHand = ben.getByTestId('lobby-waiting').getByTestId('card-hand');
+    await expect(lobbyHand.getByTestId('card-hand-card')).toHaveCount(5);
+    expect((await lobbyHand.boundingBox())!.width).toBeLessThan(joinHand.width);
+    expect(await background(ben.getByTestId('toolbar-motif'))).toBe(rgb(ACCENTS[scheme][0]));
     await page.getByTestId('issue-release').click();
     await expectPhase([page, ben], 'Diskussion');
     await playRound({ anna: page, ben });

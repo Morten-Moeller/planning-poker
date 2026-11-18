@@ -127,6 +127,38 @@ describe('SessionPage', () => {
     expect(nodes).toEqual(['lobby-waiting', 'last-result']);
   });
 
+  it('shows the card hand in the waiting state of a developer in the lobby', async () => {
+    await open(lobbyDeveloper);
+
+    const waiting = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="lobby-waiting"]',
+    );
+    const hand = waiting?.querySelector('[data-testid="card-hand"]');
+    expect(hand?.classList).toContain('small');
+    expect(hand?.querySelectorAll('[data-testid="card-hand-card"]').length).toBe(5);
+    expect(waiting?.querySelectorAll('.motif-card').length).toBe(0);
+  });
+
+  it.each([
+    ['developer', lobbyDeveloper],
+    ['scrum master', lobbyScrumMaster],
+  ])('has only a visually hidden h1 Sitzung for the %s', async (_role, snapshot) => {
+    await open(snapshot);
+    if (snapshot === lobbyScrumMaster) {
+      http
+        .expectOne((request) => request.url === `/api/sessions/${SESSION_ID}/issues`)
+        .flush({ items: [], nextPage: null });
+    }
+
+    const headings = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('h1'),
+    );
+    expect(headings.map((heading) => heading.textContent?.trim())).toEqual(['Sitzung']);
+    expect(headings[0].classList).toContain('visually-hidden');
+    expect(getComputedStyle(headings[0]).position).toBe('absolute');
+    expect(getComputedStyle(headings[0]).width).toBe('1px');
+  });
+
   it('sets motif 0 at the room in the lobby', async () => {
     await open(lobbyDeveloper);
 

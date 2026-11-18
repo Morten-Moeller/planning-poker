@@ -2,13 +2,12 @@
   <div class="head">
     <span class="iid" data-testid="active-issue-iid">#{{ issue().iid }}</span>
     <h2 data-testid="active-issue-title">{{ issue().title }}</h2>
-    <a
-      data-testid="active-issue-link"
-      [href]="issue().webUrl"
-      target="_blank"
-      [rel]="'noopener'"
-      i18n="@@activeIssue.openInGitLab"
-      >In GitLab öffnen ↗</a
+    <a data-testid="active-issue-link" [href]="issue().webUrl" target="_blank" [rel]="'noopener'"
+      ><ng-container i18n="@@activeIssue.openInGitLab">In GitLab öffnen</ng-container>&ngsp;<span
+        class="symbol"
+        aria-hidden="true"
+        >↗</span
+      ></a
     >
   </div>
   <div class="description-frame" [class.collapsed]="collapsed()">
@@ -30,6 +29,18 @@
     >
       <span aria-hidden="true">▾ </span
       ><ng-container i18n="@@activeIssue.expand">Ganze Beschreibung anzeigen</ng-container>
+    </button>
+  } @else if (collapsible()) {
+    <button
+      type="button"
+      class="expand"
+      data-testid="active-issue-collapse"
+      [attr.aria-controls]="'active-issue-description'"
+      aria-expanded="true"
+      (click)="collapse()"
+    >
+      <span aria-hidden="true">▴ </span
+      ><ng-container i18n="@@activeIssue.collapse">Beschreibung einklappen</ng-container>
     </button>
   }
 </section>

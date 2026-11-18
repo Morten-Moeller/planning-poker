@@ -286,6 +286,17 @@ describe('RoundFooter', () => {
     expect(button('result-accept').disabled).toBe(false);
   });
 
+  it('shows the restart symbol larger in its own hidden span', async () => {
+    await open(revealedScrumMaster);
+
+    const symbol = button('round-restart').querySelector<HTMLElement>('.symbol')!;
+    expect(symbol.textContent).toBe('↻');
+    expect(symbol.getAttribute('aria-hidden')).toBe('true');
+    expect(parseFloat(getComputedStyle(symbol).fontSize)).toBeGreaterThan(
+      parseFloat(getComputedStyle(fixture.nativeElement as HTMLElement).fontSize),
+    );
+  });
+
   it('disables both result actions while the result is written', async () => {
     await open(withRound(revealedScrumMaster, { confirming: true }));
 

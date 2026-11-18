@@ -10,7 +10,11 @@
 }
 
 mat-expansion-panel-header {
-  padding: 0;
+  padding: 0 var(--app-space-m);
+}
+
+.history ::ng-deep .mat-expansion-panel-body {
+  padding: 0 var(--app-space-m) var(--app-space-m);
 }
 
 h2 {
@@ -21,8 +25,16 @@ h2 {
   color: var(--app-on-surface-muted);
 }
 
+mat-panel-title {
+  flex: none;
+}
+
 mat-panel-description {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  margin-right: var(--app-space-s);
   font: var(--mat-sys-body-small);
+  text-align: end;
   color: var(--app-on-surface-muted);
 }
 

@@ -36,14 +36,19 @@ export class ActiveIssue {
     computation: () => false,
   });
 
-  protected readonly collapsed = computed(
+  protected readonly collapsible = computed(
     () =>
-      !this.expanded() &&
       this.issue().description.trim() !== '' &&
       (this.store.phase() === 'REVEALED' || this.narrow()),
   );
 
+  protected readonly collapsed = computed(() => this.collapsible() && !this.expanded());
+
   protected expand(): void {
     this.expanded.set(true);
+  }
+
+  protected collapse(): void {
+    this.expanded.set(false);
   }
 }

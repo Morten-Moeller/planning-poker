@@ -52,8 +52,11 @@
             [href]="url"
             target="_blank"
             [rel]="'noopener noreferrer'"
-            i18n="@@lastResult.open"
-            >In GitLab öffnen ↗</a
+            ><ng-container i18n="@@lastResult.open">In GitLab öffnen</ng-container>&ngsp;<span
+              class="symbol"
+              aria-hidden="true"
+              >↗</span
+            ></a
           >
         }
       </div>

@@ -86,7 +86,7 @@ test('the session page has no horizontal scroll bar at 375 px in every phase', a
 test.describe('desktop', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test('the side column of the session page is 320 px wide', async ({ page }) => {
+  test('the side column of the session page is 340 px wide', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('create-name').fill('Anna');
     await page.getByTestId('create-project').fill('1234');
@@ -96,7 +96,7 @@ test.describe('desktop', () => {
     await expect(page.getByTestId('share-link')).toBeVisible();
 
     const side = await page.locator('app-session-page .side').boundingBox();
-    expect(side?.width).toBe(320);
+    expect(side?.width).toBe(340);
     await expectNoHorizontalScroll(page);
   });
 });
@@ -139,6 +139,11 @@ async function expectFooterInWindowAndLastLineReachable(page: Page): Promise<voi
   expect(footer.top).toBeGreaterThanOrEqual(0);
   expect(footer.bottom).toBeLessThanOrEqual(height + 0.5);
 
+  const expand = page.getByTestId('active-issue-expand');
+  if (await expand.isVisible()) {
+    await expand.click();
+    await expect(page.getByTestId('active-issue-collapse')).toBeVisible();
+  }
   const scroll = await page.evaluate(() => {
     const main = document.querySelector<HTMLElement>('app-session-page .main')!;
     return {
@@ -150,11 +155,6 @@ async function expectFooterInWindowAndLastLineReachable(page: Page): Promise<voi
   expect(scroll.page, JSON.stringify(scroll)).toBeLessThanOrEqual(0);
   expect(scroll.main, JSON.stringify(scroll)).toBeGreaterThan(0);
   expect(scroll.overflow).toBe('auto');
-
-  const expand = page.getByTestId('active-issue-expand');
-  if (await expand.isVisible()) {
-    await expand.click();
-  }
   const lastLine = page
     .getByTestId('active-issue-description')
     .getByText('Letzte Zeile der Beschreibung.');
@@ -165,6 +165,38 @@ async function expectFooterInWindowAndLastLineReachable(page: Page): Promise<voi
   expect(line.bottom).toBeLessThanOrEqual(footer.top + 0.5);
   expect((await box(page.getByTestId('round-footer'))).top).toBe(footer.top);
 }
+
+test.describe('scroll bar', () => {
+  test('the main content keeps its width at 1440 x 900 when a scroll bar appears', async ({
+    page: anna,
+    browser,
+  }) => {
+    const ben = await openLongIssue(anna, browser, { width: 1440, height: 900 });
+    await startVoting(anna);
+    await ben.getByTestId('card-deck').getByTestId('card-5').click();
+    await expect(anna.getByTestId('all-voted-hint')).toBeVisible();
+    await anna.getByTestId('round-reveal').click();
+    await expect(ben.getByTestId('result-waiting')).toBeVisible();
+
+    const main = ben.locator('app-session-page .main');
+    const measure = (): Promise<{ client: number; scroll: number; issue: number }> =>
+      main.evaluate((node) => ({
+        client: node.clientWidth,
+        scroll: node.scrollHeight - node.clientHeight,
+        issue: node.querySelector('[data-testid="active-issue"]')!.getBoundingClientRect().width,
+      }));
+    const before = await measure();
+    expect(before.scroll, JSON.stringify(before)).toBeLessThanOrEqual(0);
+
+    await ben.getByTestId('active-issue-expand').click();
+    await expect(ben.getByTestId('active-issue-collapse')).toBeVisible();
+    const after = await measure();
+
+    expect(after.scroll, JSON.stringify(after)).toBeGreaterThan(0);
+    expect(after.client).toBe(before.client);
+    expect(after.issue).toBe(before.issue);
+  });
+});
 
 test.describe('footer', () => {
   test('the footer stays in the window at 1440 x 900 with a long issue description', async ({
