@@ -1,0 +1,7 @@
+@for (card of cards; track card.motif) {
+  <span
+    class="card motif-{{ card.motif }}"
+    data-testid="card-hand-card"
+    [style.--card-angle]="card.angle + 'deg'"
+  ></span>
+}
