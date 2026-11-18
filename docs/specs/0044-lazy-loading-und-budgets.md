@@ -1,7 +1,7 @@
 ---
 id: "0044"
 title: Lazy Loading der Routen und geprüfte Budgets
-status: in Arbeit
+status: Review
 risk: medium
 adrs: []
 owner: Morten Möller
