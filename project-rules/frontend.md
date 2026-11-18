@@ -9,7 +9,9 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
 - Angular 22 (current stable), standalone components, signals, zoneless; `@angular/build`.
 - Package manager pnpm 12 (`frontend/pnpm-workspace.yaml` sets `minimumReleaseAge`,
   `blockExoticSubdeps`, `trustPolicy`), Node from `.nvmrc`.
-- Build and dev server: Angular CLI (`pnpm -C frontend start`, `build`); Dev-Proxy
+- Build and dev server: Angular CLI (`pnpm -C frontend start`, `build`); `pnpm typecheck`
+  (`make typecheck`) runs the production build, so the budgets in `frontend/angular.json` fail
+  the gate (spec 0044); Dev-Proxy
   `frontend/proxy.conf.mjs` for `/api` and `/ws`; the backend port comes from `BACKEND_PORT` (default 8080).
 
 ## Structure
@@ -25,6 +27,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   imports no feature. No feature imports another feature.
 - Routes: `/` (start), `/session/:id/join`, `/session/:id` (room, `sessionGuard`: without a
   token for the session id the router goes to `/session/:id/join`).
+  `/` is in the initial bundle; `/session/:id/join` and `/session/:id` load their page with
+  `loadComponent` (spec 0044).
 
 ## State and data
 

@@ -1,20 +1,3 @@
-@use 'sass:list';
-@use 'sass:math';
-
-$pieces: 46;
-$delay-span: 1.2;
-$duration-min: 2.2;
-$duration-span: 1;
-$start-min: 40;
-$start-span: 80;
-$colors: (
-  var(--mat-sys-primary),
-  var(--app-success),
-  var(--app-warning),
-  var(--app-card-accent, var(--mat-sys-primary-container)),
-  var(--mat-sys-error)
-);
-
 :host {
   position: absolute;
   inset: 0;
@@ -31,28 +14,6 @@ $colors: (
   border-radius: 1px;
   opacity: 0;
   animation: fall 2.6s cubic-bezier(0.3, 0.6, 0.5, 1) 1 forwards;
-}
-
-@for $i from 0 to $pieces {
-  $width: 6px + ($i % 3) * 2px;
-  $delay: math.div(math.round(($i * 0.618034 % 1) * $delay-span * 1000), 1000);
-  $duration: math.div(
-    math.round(($duration-min + ($i * 0.414214 % 1) * $duration-span) * 1000),
-    1000
-  );
-  $start: math.round($start-min + ($i * 0.754878 % 1) * $start-span);
-
-  .piece:nth-child(#{$i + 1}) {
-    --dx: #{($i * 53) % 120 - 60}px;
-    --start: #{-$start}px;
-
-    left: ($i * 37) % 100 * 1%;
-    width: $width;
-    height: $width * 1.6;
-    background-color: list.nth($colors, ($i % list.length($colors)) + 1);
-    animation-duration: #{$duration}s;
-    animation-delay: #{$delay}s;
-  }
 }
 
 @keyframes fall {

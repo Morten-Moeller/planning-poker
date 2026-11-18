@@ -7,7 +7,7 @@
     "start:mock": "ng serve --configuration mock",
     "build": "ng build",
     "test": "ng test",
-    "typecheck": "ng build --configuration development",
+    "typecheck": "ng build",
     "lint": "ng lint && prettier --check .",
     "format": "prettier --write .",
     "e2e": "playwright test"
