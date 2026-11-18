@@ -1,14 +1,14 @@
 ---
 id: "0038"
 title: Design-Feinschliff aus dem Test
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-18
 updated: 2026-11-18
-pr: ""
-note: freigegeben in der Session
+pr: "#39"
+note: alle Kriterien erfüllt
 ---
 
 # Design-Feinschliff aus dem Test
