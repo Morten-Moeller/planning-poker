@@ -6,11 +6,13 @@ vorkommen sollen. Quelle: `docs/umsetzungsplan.md`, Abschnitte 4.2 bis 4.6.
 | Begriff | Definition | Im Code | Nicht verwenden |
 |---|---|---|---|
 | Sitzung | Gemeinsamer Schätzraum eines Teams für ein GitLab-Projekt; hat eine Session-ID, eine Phase, Teilnehmer, ein aktives Issue, eine Runde und ein Protokoll. | `Session`, `session` | Raum, Spiel, Meeting |
-| Session-ID | Kennung der Sitzung aus 8 Zeichen (Großbuchstaben und Ziffern ohne 0, O, 1, I, L), die Teilnehmer abtippen oder per Link öffnen. | `Session.id`, `sessionId` | Sitzungscode, Raumnummer |
+| Session-ID | Kennung der Sitzung aus 8 Zeichen (Großbuchstaben und Ziffern ohne 0, O, 1, I, L); steht im Einladungslink, in den Fakten und in der Toolbar. Beitreten nur mit der Session-ID geht nicht (ADR 0014). | `Session.id`, `sessionId` | Sitzungscode, Raumnummer |
 | Teilnehmer | Person in einer Sitzung mit Name, Rolle, Token und Verbindungsstatus. | `Participant` | Nutzer, Spieler, Mitglied |
 | Scrum Master | Rolle des Erstellers der Sitzung; steuert Issue-Auswahl, Freigabe, Auflösung, erneutes Schätzen und Bestätigung; schätzt nicht mit. | `Role.SCRUM_MASTER` | Moderator, Host, Admin |
-| Entwickler | Rolle jedes Beitretenden; wählt in der Runde verdeckt eine Karte. | `Role.DEVELOPER` | Spieler, Voter, Schätzer |
-| Rolle | Scrum Master oder Entwickler; wird vom Server aus dem Token bestimmt. | `Role` | Rechte, Berechtigung |
+| Entwickler | Rolle eines Teilnehmers, der über den Einladungslink für Entwickler beitritt; wählt in der Runde verdeckt eine Karte. | `Role.DEVELOPER` | Spieler, Voter, Schätzer |
+| Zuschauer | Rolle eines Teilnehmers, der über den Einladungslink für Zuschauer beitritt; sieht die Runde, schätzt nicht, steuert nicht und zählt nicht bei „Alle haben geschätzt“ und „Nicht geschätzt“, aber zur Obergrenze (ADR 0014). | `Role.VIEWER`, `viewer-hint` | Beobachter, Gast, Observer |
+| Rolle | Scrum Master, Entwickler oder Zuschauer; wird vom Server aus dem Token bestimmt, beim Beitreten aus dem Einladungscode. | `Role` | Rechte, Berechtigung |
+| Einladungslink | Link `…/session/<id>/join?invite=<code>` aus dem Bereich „Teilen“ des Scrum Masters, je einer für Entwickler und für Zuschauer (dieser mit `&as=viewer` nur für den Hinweistext); der Einladungscode hat mindestens 128 Bit, der Server leitet die Rolle aus ihm ab (ADR 0014). | `invite`, `SessionView.invites`, `share-link-developer`, `share-link-viewer`, `INVITE_INVALID` | Beitrittslink, Einladungscode-URL, Token |
 | Token | Zufallswert je Teilnehmer, mit dem der Server Aufrufe und die WebSocket-Verbindung dem Teilnehmer zuordnet; nur serverseitig und im `sessionStorage` des Browsers, bei eingeschalteten Letzten Sitzungen zusätzlich im `localStorage` (ADR 0013). | `Participant.token` | Passwort, Session-Cookie, API-Key |
 | Issue | GitLab-Issue des Projekts der Sitzung mit `iid`, Titel, Beschreibung (Markdown) und Link. | `Issue` | Ticket, Story, Aufgabe |
 | Gewicht | Feld `weight` eines GitLab-Issues (A-07), eine ganze Zahl oder leer; die Bestätigung setzt es mit `write-weight` auf den Endwert. Die Issue-Liste zeigt es je Eintrag und filtert nach „Ohne Gewicht“, „Mit Gewicht“ oder „Alle“ (ADR 0009); GitLab Free kennt kein Gewicht. | `IssueSummary.weight`, `WeightFilter`, `write-weight` | Punkte, Aufwand |

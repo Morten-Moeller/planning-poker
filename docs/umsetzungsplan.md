@@ -32,7 +32,7 @@ Die IDs sind stabil und dienen der Nachverfolgung in Specs und Tests. FE = Front
 | ID | Anforderung | Quelle |
 | --- | --- | --- |
 | R-01 | Der Scrum Master legt eine Sitzung an und gibt GitLab-Projekt-ID und das zu schätzende Issue an. Der Ersteller erhält automatisch die Scrum-Master-Rolle. Das Issue ist beim Anlegen optional (A-18). | FE, BE |
-| R-02 | Teilnehmer treten über einen generierten Link oder eine Session-ID bei. | FE |
+| R-02 | Teilnehmer treten über einen generierten Link oder eine Session-ID bei. Erfüllt über den Einladungslink (A-19). | FE |
 | R-03 | Beim Beitreten gibt jeder einen Namen ein, der während der Sitzung sichtbar bleibt. | FE, BE |
 | R-04 | Es gibt zwei Rollen: Scrum Master und Entwickler. Die Scrum-Master-Rolle ist für alle sichtbar gekennzeichnet. | FE |
 | R-05 | Steuerungsaktionen sind dem Scrum Master vorbehalten; das Backend erzwingt das. Entwickler können ausschließlich schätzen. | FE, BE |
@@ -85,6 +85,7 @@ Die READMEs lassen 17 Punkte offen; die folgenden Festlegungen gelten als verbin
 | A-16 | Nach der Bestätigung | Die Sitzung kehrt in den Zustand ohne aktives Issue zurück. Der Scrum Master wählt das nächste Issue aus demselben Projekt. |
 | A-17 | Session-ID | 8 Zeichen aus Großbuchstaben und Ziffern ohne verwechselbare Zeichen (0, O, 1, I, L), weil Teilnehmer sie abtippen (R-02). Teilnehmer-IDs sind UUIDv7. |
 | A-18 | Issue beim Anlegen | Das Issue beim Anlegen ist optional; R-01 ist mit angegebenem Issue erfüllt. Ohne Issue prüft das Backend, dass es das Projekt gibt (ADR 0011). |
+| A-19 | Beitreten | Beitreten nur über den Einladungslink; R-02 ist über den generierten Link erfüllt. Es gibt einen Link für Entwickler und einen für Zuschauer, die Rolle folgt aus dem Einladungscode im Link. Zuschauer schätzen nicht und steuern nicht (ADR 0014). A-17 gilt für die Session-ID weiter, weil sie in Links, Fakten und Toolbar steht. |
 
 **Offene Fragen**
 

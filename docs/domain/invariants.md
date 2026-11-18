@@ -9,7 +9,7 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 | Nr | Regel | Durchgesetzt in | Fehlercode |
 |---|---|---|---|
 | I1 | Nur der Scrum Master gibt ein Issue frei, startet die Schätzung, löst auf, lässt erneut schätzen und bestätigt. | `Session.selectIssue`, `Session.startVoting`, `Session.reveal`, `Session.restart`, `Session.beginConfirm` über `requireRole` | `FORBIDDEN_ROLE` |
-| I2 | Nur ein Entwickler wählt eine Karte. | `Session.vote` über `requireRole` | `FORBIDDEN_ROLE` |
+| I2 | Nur ein Entwickler wählt eine Karte; ein Zuschauer wählt keine und gibt keinen Befehl des Scrum Masters (ADR 0014). | `Session.vote` über `requireRole` | `FORBIDDEN_ROLE` |
 | I3 | Eine Karte wird nur in `VOTING` gewählt oder geändert (A-12). | `Session.vote` über `requirePhase` | `INVALID_STATE` |
 | I4 | Auflösen nur in `VOTING`; die Auswertung entsteht bei der Auflösung, der Protokolleintrag ohne Endwert dazu. | `Session.reveal` | `INVALID_STATE` |
 | I5 | Erneut schätzen und Bestätigung nur in `REVEALED`; die neue Runde trägt Nummer plus 1, keine Karten und beginnt in `VOTING` (ADR 0012). | `Session.restart`, `Session.beginConfirm` über `requirePhase` | `INVALID_STATE` |
@@ -23,9 +23,9 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 
 | Nr | Regel | Durchgesetzt in | Fehlercode |
 |---|---|---|---|
-| I11 | Der erste Teilnehmer ist der Scrum Master, jeder weitere ein Entwickler. | `Session.join` | – |
+| I11 | Der Ersteller ist der Scrum Master. Die Rolle jedes weiteren Teilnehmers folgt nur aus dem Einladungscode: der Code für Entwickler gibt `DEVELOPER`, der Code für Zuschauer `VIEWER`, jeder andere Code wird abgelehnt, bevor Obergrenze und Name geprüft werden. Der Vergleich hat konstante Laufzeit (ADR 0014). | `Session.joinAsScrumMaster`, `Session.join` | `INVITE_INVALID` |
 | I12 | Namen sind getrimmt, 1 bis 30 Zeichen lang und je Sitzung eindeutig ohne Beachtung der Groß- und Kleinschreibung. Die Grenze prüft die Länge zuerst (`CreateSessionRequest`, `JoinSessionRequest`). | `Session.join` | `VALIDATION_ERROR`, `NAME_TAKEN` |
-| I13 | `allVoted` ist wahr, sobald jeder verbundene Entwickler gewählt hat; ohne verbundene Entwickler nie; ein getrennter Entwickler blockiert nicht, seine Stimme bleibt (A-02, A-10). | `Session.allVoted` | – |
+| I13 | `allVoted` ist wahr, sobald jeder verbundene Entwickler gewählt hat; ohne verbundene Entwickler nie; ein getrennter Entwickler blockiert nicht, seine Stimme bleibt (A-02, A-10). Zuschauer zählen weder hier noch bei „Nicht geschätzt“ (ADR 0014). | `Session.allVoted` | – |
 | I14 | `Session.vote` meldet genau den Aufruf, der `allVoted` von falsch auf wahr setzt. | `Session.vote` | – |
 
 ## Auswertung (A-06)
@@ -52,7 +52,7 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 | I25 | Jeder Aufruf außer Erstellen und Beitreten trägt ein Bearer-Token; ohne Token keine Zuordnung. | `platform.BearerTokenFilter` an `@Authenticated` | `UNAUTHORIZED` |
 | I26 | Das Token wird dem Teilnehmer der Sitzung aus dem Pfad zugeordnet; ein Token einer anderen Sitzung gilt nicht; eine unbekannte Sitzung antwortet wie eine fehlende. | `session.ActorFilter` über `SessionRegistry.read` | `UNAUTHORIZED`, `SESSION_NOT_FOUND` |
 | I27 | Die Rolle des Endpunkts (`@RequiresRole`) wird vor der Methode geprüft; die Domäne prüft sie erneut. | `session.ActorFilter`, `Session.requireRole` | `FORBIDDEN_ROLE` |
-| I28 | Kein Snapshot enthält ein Token oder vor der Auflösung eine fremde Karte; `preselectedIssueIid` sieht nur der Scrum Master. | `session.SessionViewMapper` | – |
+| I28 | Kein Snapshot enthält ein Token oder vor der Auflösung eine fremde Karte; `preselectedIssueIid` und `invites` sieht nur der Scrum Master. Kein Log enthält einen Einladungscode. | `session.SessionViewMapper` | – |
 | I29 | `RoundCompleted` feuert genau einmal je Vollständigkeit, wenn der letzte verbundene Entwickler gewählt hat (I13, I14); eine spätere Kartenänderung feuert nicht erneut. | `session.SessionResource.vote` über den Rückgabewert von `Session.vote` | – |
 
 ## Obergrenzen und Projekt-Allowlist (Spec 0015, ADR 0005)
@@ -60,7 +60,7 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 | Nr | Regel | Durchgesetzt in | Fehlercode |
 |---|---|---|---|
 | I35 | Die Instanz hält höchstens `planningpoker.session.max-sessions` lebende Sitzungen; abgelaufene Sitzungen zählen nicht. Die Zählung und das Anlegen laufen unter einer Sperre. | `SessionRegistry.create` | `LIMIT_REACHED` |
-| I36 | Eine Sitzung hat höchstens `planningpoker.session.max-participants` Teilnehmer, der Scrum Master zählt mit; die Grenze wird vor der Namensprüfung geprüft, ein abgelehnter Beitritt ändert nichts und löst kein `SessionChanged` aus (I19). | `Session.join` | `LIMIT_REACHED` |
+| I36 | Eine Sitzung hat höchstens `planningpoker.session.max-participants` Teilnehmer, der Scrum Master und die Zuschauer zählen mit; die Grenze wird vor der Namensprüfung geprüft, ein abgelehnter Beitritt ändert nichts und löst kein `SessionChanged` aus (I19). | `Session.join` | `LIMIT_REACHED` |
 | I37 | Ist `planningpoker.session.allowed-projects` gesetzt, entsteht eine Sitzung nur für eine Projekt-ID der Liste (exakter Vergleich nach dem Trimmen); die Prüfung läuft vor dem GitLab-Aufruf. Ohne den Schlüssel ist jedes Projekt erlaubt. | `SessionResource.createSession` | `PROJECT_NOT_ALLOWED` |
 
 ## Timer und Frist (Spec 0016, Spec 0026, Spec 0034, ADR 0010, ADR 0012)
@@ -87,5 +87,5 @@ Annahmen A-02, A-06, A-13. Jede Regel hat einen Test in `backend/src/test/java/p
 | Nr | Regel | Durchgesetzt in |
 |---|---|---|
 | I22 | Session-IDs haben 8 Zeichen aus `ABCDEFGHJKMNPQRSTUVWXYZ23456789`; eine Kollision wird neu gewürfelt. | `Ids.sessionId`, `SessionRegistry.create` |
-| I23 | Tokens haben 24 Bytes aus `SecureRandom` als Base64url ohne Padding. | `Ids.token` |
+| I23 | Tokens und die zwei Einladungscodes je Sitzung haben 24 Bytes aus `SecureRandom` als Base64url ohne Padding. | `Ids.token`, `Session` |
 | I24 | Teilnehmer-IDs sind UUIDv7 mit Version 7, Variante 2 und zeitlicher Ordnung. | `UuidV7.next` |
