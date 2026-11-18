@@ -1,14 +1,14 @@
 ---
 id: "0040"
 title: Zuschauer und Einladungslinks je Rolle
-status: Review
+status: done
 risk: high
 adrs: ["0014"]
 owner: Morten Möller
 created: 2026-11-18
 updated: 2026-11-18
-pr: ""
-note: freigegeben in der Session
+pr: "#43"
+note: alle Kriterien erfüllt
 ---
 
 # Zuschauer und Einladungslinks je Rolle
