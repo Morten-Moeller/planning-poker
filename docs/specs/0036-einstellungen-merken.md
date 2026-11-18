@@ -1,7 +1,7 @@
 ---
 id: "0036"
 title: Name, Projekt, Timer und Issue-Filter im Browser merken
-status: in Arbeit
+status: Review
 risk: medium
 adrs: []
 owner: Morten Möller
