@@ -24,8 +24,7 @@ make frontend           # Frontend auf http://localhost:4200 (FRONTEND_PORT)
 `make backend` und `make frontend` lesen `.env` je in ihrer eigenen Shell und geben keine Werte
 daraus aus; kein anderes Make-Ziel lädt `.env`. Nur das Backend bekommt alle Werte, das Frontend
 nur `BACKEND_PORT` und `FRONTEND_PORT`. Die Shell liest `.env` als Skript: Werte mit Leerzeichen,
-`$` oder `;` stehen in einfachen Anführungszeichen. `QUARKUS_HTTP_PORT` gilt für `make backend`
-nicht mehr; der Port kommt aus `BACKEND_PORT`.
+`$` oder `;` stehen in einfachen Anführungszeichen.
 
 Danach `http://localhost:4200` öffnen; die Startseite zeigt, ob das Backend erreichbar ist
 (`GET /api/health`). Ohne `GITLAB_TOKEN` startet das Backend nicht und nennt den fehlenden
@@ -316,6 +315,26 @@ Dieses Repository verwendet den AI Development Harness. Einstieg: `AGENTS.md` un
 | eine Änderung vorschlagen | `/spec <Thema>` in Claude Code, dann Freigabe durch eine Person |
 | eine freigegebene Spec umsetzen | `/implement <Nummer>` |
 | alle Ziele sehen | `make help` |
+
+### Risikostufen und Freigaben
+
+Jede Änderung am Verhalten beginnt mit einer Spec in `docs/specs/`. Eine Person gibt sie mit ihrem
+Umsetzungsplan frei (G0, G1). Für jeden Pull Request bestimmt `harness/scripts/risk-level.sh`
+aus den geänderten Dateien eine Risikostufe: `low`, `medium` oder `high`. CI rechnet sie nach und
+setzt das Label `risk:<stufe>`. Mehr als 200 geänderte Zeilen, Abhängigkeiten oder bestimmte
+Schlüsselwörter heben die Stufe an (`harness/policies/risk.md`, `harness/risk-matrix.yml`).
+
+| Stufe | Beispiele | Reviews | Merge |
+|---|---|---|---|
+| low | Doku, reine Testdateien | KI-Review Code | automatisch, sobald die Pflicht-Checks grün sind |
+| medium | Code unter `frontend/src/` oder `backend/src/`, `project-rules/` | KI-Review Code und Sicherheit | eine Person liest den PR und setzt nach dem letzten Push das Label `human-approved` (G2); danach merged GitHub |
+| high | `contracts/`, Authentifizierung und Rollen, `.env*`, `.github/workflows/`, `harness/policies/` | KI-Review Code, Sicherheit und Architektur | zusätzlich der Status `verified` auf dem Head (G3), gesetzt von `/verify`; dann das Label `human-approved` |
+
+Der Pflicht-Check `human-gate` bleibt bei `medium` und `high` rot, bis das Label gesetzt ist.
+Ein neuer Push macht das Label ungültig: Nach dem Lesen der neuen Commits wird es neu gesetzt.
+Eine Änderung, die von einer Grundregel abweicht oder einen Vertrag bricht, braucht zusätzlich
+ein ADR in `docs/adr/`. Die Regeln stehen in `harness/policies/human-approval.md`; die Stufe, ab
+der `verified` Pflicht ist, steht in `harness/config.yml` (`verify_required_for`).
 
 ```text
 backend/         Quarkus (Java 21): session, gitlab, realtime, platform
