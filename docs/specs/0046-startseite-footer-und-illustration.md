@@ -1,14 +1,14 @@
 ---
 id: "0046"
 title: Backend-Status im Footer und Karten-Illustration auf der Startseite
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-18
 updated: 2026-11-18
-pr: ""
-note: freigegeben in der Session; Umsetzung nach Merge von #46
+pr: "#48"
+note: alle Kriterien erfüllt
 ---
 
 # Backend-Status im Footer und Karten-Illustration auf der Startseite
