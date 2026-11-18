@@ -7,11 +7,11 @@ import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { authInterceptor } from '../api/auth.interceptor';
 import { SessionView, lobbyScrumMaster } from '../api/examples';
 import { SessionStore } from '../api/session-store';
-import { PreferencesStore } from '../api/preferences-store';
+import { PreferencesStore, TIMER_SECONDS } from '../api/preferences-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { TokenStore } from '../api/token-store';
 import { WEB_SOCKET_FACTORY } from '../api/web-socket-factory';
-import { TimerSetting } from './timer-setting';
+import { TIMER_OPTIONS, TimerSetting } from './timer-setting';
 
 const SESSION_ID = 'K7P2QX9M';
 const TIMER_URL = `/api/sessions/${SESSION_ID}/timer`;
@@ -167,5 +167,11 @@ describe('TimerSetting', () => {
       );
 
     expect(TestBed.inject(PreferencesStore).read().timerSeconds).toBe(0);
+  });
+
+  it('offers exactly the durations the preferences accept', () => {
+    fixture = TestBed.createComponent(TimerSetting);
+
+    expect(TIMER_OPTIONS.map((option) => option.seconds)).toEqual(TIMER_SECONDS);
   });
 });
