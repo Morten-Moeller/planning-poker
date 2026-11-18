@@ -1,7 +1,7 @@
 ---
 id: "0046"
 title: Backend-Status im Footer und Karten-Illustration auf der Startseite
-status: approved
+status: Review
 risk: medium
 adrs: []
 owner: Morten Möller

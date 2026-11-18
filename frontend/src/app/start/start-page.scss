@@ -25,6 +25,18 @@
   gap: var(--app-space-m);
 }
 
+.hand {
+  align-self: center;
+}
+
+.start-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-s);
+  padding-top: var(--app-space-m);
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
 .health {
   display: flex;
   align-items: center;

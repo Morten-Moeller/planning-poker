@@ -1,56 +1,5 @@
 <div class="intro">
-  <div
-    class="health"
-    role="status"
-    [class.up]="backendReachable() === true"
-    [class.down]="backendDown()"
-  >
-    <span class="health-icon" aria-hidden="true">
-      @switch (backendReachable()) {
-        @case (true) {
-          ●
-        }
-        @case (false) {
-          ✕
-        }
-        @default {
-          ◌
-        }
-      }
-    </span>
-    <span data-testid="health-status">
-      @switch (backendReachable()) {
-        @case (true) {
-          <ng-container i18n="@@start.backendReachable">Backend erreichbar</ng-container>
-        }
-        @case (false) {
-          <ng-container i18n="@@start.backendUnreachable">Backend nicht erreichbar</ng-container>
-        }
-        @default {
-          <ng-container i18n="@@start.backendChecking">Backend wird geprüft …</ng-container>
-        }
-      }
-    </span>
-  </div>
-  @if (backendDown()) {
-    <div class="note note-error health-note" role="alert" data-testid="health-down">
-      <span class="health-note-text" i18n="@@start.backendDownHint">
-        Ohne Backend lassen sich keine Sitzungen erstellen oder betreten.
-      </span>
-      <button
-        mat-stroked-button
-        type="button"
-        class="retry"
-        data-testid="health-retry"
-        (click)="checkBackend()"
-      >
-        <span class="app-symbol" aria-hidden="true">↻</span>&ngsp;<ng-container
-          i18n="@@start.backendRetry"
-          >Erneut prüfen</ng-container
-        >
-      </button>
-    </div>
-  }
+  <app-card-hand class="hand" [size]="'large'" />
   <h1 i18n="@@start.title">Issues gemeinsam schätzen</h1>
   <p class="lead" i18n="@@start.lead">
     Der Scrum Master erstellt die Sitzung und teilt den Link. Das Team tritt mit Namen bei und
@@ -300,3 +249,58 @@
     </button>
   </form>
 </div>
+
+<footer class="start-footer" data-testid="start-footer">
+  <div
+    class="health"
+    role="status"
+    [class.up]="backendReachable() === true"
+    [class.down]="backendDown()"
+  >
+    <span class="health-icon" aria-hidden="true">
+      @switch (backendReachable()) {
+        @case (true) {
+          ●
+        }
+        @case (false) {
+          ✕
+        }
+        @default {
+          ◌
+        }
+      }
+    </span>
+    <span data-testid="health-status">
+      @switch (backendReachable()) {
+        @case (true) {
+          <ng-container i18n="@@start.backendReachable">Backend erreichbar</ng-container>
+        }
+        @case (false) {
+          <ng-container i18n="@@start.backendUnreachable">Backend nicht erreichbar</ng-container>
+        }
+        @default {
+          <ng-container i18n="@@start.backendChecking">Backend wird geprüft …</ng-container>
+        }
+      }
+    </span>
+  </div>
+  @if (backendDown()) {
+    <div class="note note-error health-note" role="alert" data-testid="health-down">
+      <span class="health-note-text" i18n="@@start.backendDownHint">
+        Ohne Backend lassen sich keine Sitzungen erstellen oder betreten.
+      </span>
+      <button
+        mat-stroked-button
+        type="button"
+        class="retry"
+        data-testid="health-retry"
+        (click)="checkBackend()"
+      >
+        <span class="app-symbol" aria-hidden="true">↻</span>&ngsp;<ng-container
+          i18n="@@start.backendRetry"
+          >Erneut prüfen</ng-container
+        >
+      </button>
+    </div>
+  }
+</footer>

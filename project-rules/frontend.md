@@ -123,6 +123,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `health-retry`; the join page shows `join-role-hint` and, for `SESSION_NOT_FOUND`,
   `join-not-found` with the link `join-not-found-home` instead of the form. Above the title of the
   join page stands the card hand `card-hand` in the size `large`, centred (spec 0038).
+  The start page shows the same card hand above its title, centred, and ends with the footer
+  `start-footer` that holds `health-status` and, without backend, `health-down` (spec 0046).
 - Invite links (spec 0040, ADR 0014): the start page has no join form; joining goes only through
   an invite link `…/session/<id>/join?invite=<code>`. The join page sends `invite` with the name;
   with `as=viewer` it shows `join-viewer-hint` instead of `join-role-hint` (the server ignores
