@@ -78,6 +78,17 @@ mat-toolbar {
   }
 }
 
+@media (min-width: 720px) {
+  :host:has(.content.room) {
+    height: 100dvh;
+  }
+
+  .content.room {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
 @media (max-width: 599.98px) {
   mat-toolbar {
     padding: 0 var(--app-space-m);

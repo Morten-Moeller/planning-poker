@@ -13,12 +13,14 @@
     }
   </div>
   <div
+    #list
     class="cards"
     role="group"
     aria-label="Deine Karte"
     i18n-aria-label="@@cardDeck.groupLabel"
     (keydown)="onKeydown($event)"
     (keyup)="onKeyup($event)"
+    (focusin)="onFocusin($event)"
   >
     @for (card of cards; track card) {
       <app-card

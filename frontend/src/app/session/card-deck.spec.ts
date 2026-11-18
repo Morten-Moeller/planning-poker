@@ -171,6 +171,53 @@ describe('CardDeck', () => {
     request.flush(null, { status: 204, statusText: 'No Content' });
   });
 
+  function rect(left: number, width: number): DOMRect {
+    return {
+      left,
+      right: left + width,
+      width,
+      top: 0,
+      bottom: 70,
+      height: 70,
+      x: left,
+      y: 0,
+    } as DOMRect;
+  }
+
+  function placeInRow(list: HTMLElement): void {
+    list.getBoundingClientRect = () => rect(0, 200);
+    cards().forEach((node, index) => {
+      node.getBoundingClientRect = () => rect(index * 56 - list.scrollLeft, 48);
+    });
+  }
+
+  it('moves the focus to the last card, chooses it with Enter and scrolls it into the row', async () => {
+    await open(withMyVote(null));
+    const list = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      '[role="group"]',
+    )!;
+    placeInRow(list);
+    card('0').focus();
+
+    for (let step = 1; step < CARD_IDS.length; step++) {
+      key(document.activeElement as HTMLElement, 'ArrowRight');
+    }
+    expect(document.activeElement).toBe(card('COFFEE'));
+    expect(list.scrollLeft).toBe(10 * 56 + 48 - 200);
+
+    key(card('COFFEE'), 'Enter');
+    await fixture.whenStable();
+    const request = http.expectOne(VOTE_URL);
+    expect(request.request.body).toEqual({ card: 'COFFEE' });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    list.scrollLeft = 0;
+
+    await receive(withMyVote('COFFEE'));
+
+    expect(pressed()).toEqual(['card-COFFEE']);
+    expect(list.scrollLeft).toBe(10 * 56 + 48 - 200);
+  });
+
   it('shows the locked deck in DISCUSSION and sends no vote on click or key', async () => {
     await open(discussionDeveloper, true);
 

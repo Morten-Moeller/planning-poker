@@ -39,8 +39,24 @@ h2 {
 }
 
 @media (max-width: 599px) {
+  .deck {
+    gap: var(--app-space-xs);
+    padding-top: 0;
+  }
+
   .cards {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(11, 48px);
     gap: var(--app-space-s);
+    margin-inline: calc(-1 * var(--app-space-m));
+    padding: 14px var(--app-space-m) var(--app-space-s);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--app-space-m);
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
+
+  .cards > app-card {
+    scroll-snap-align: start;
   }
 }

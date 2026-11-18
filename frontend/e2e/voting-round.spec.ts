@@ -278,7 +278,7 @@ test('a developer chooses a card with the keyboard and the table shows it hidden
   }
 });
 
-test('the card deck has six columns of at least 44 px and no horizontal scrolling at 375 px', async ({
+test('the card deck is one row of cards of at least 44 px and no horizontal page scrolling at 375 px', async ({
   page,
   browser,
 }) => {
@@ -291,15 +291,16 @@ test('the card deck has six columns of at least 44 px and no horizontal scrollin
   const columns = await group.evaluate(
     (node) => getComputedStyle(node).gridTemplateColumns.split(' ').length,
   );
-  expect(columns).toBe(6);
+  expect(columns).toBe(11);
   const boxes = await ben.page
     .getByTestId('card-deck')
     .locator('button')
-    .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect()));
+    .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().toJSON() as DOMRect));
   expect(boxes).toHaveLength(11);
   for (const box of boxes) {
     expect(box.width).toBeGreaterThanOrEqual(44);
     expect(box.height).toBeGreaterThanOrEqual(44);
+    expect(Math.abs(box.top - boxes[0].top)).toBeLessThanOrEqual(0.5);
   }
   expect(
     await ben.page.evaluate(
