@@ -32,6 +32,7 @@ import {
 } from 'rxjs';
 import { ApiError, type ErrorCode } from '../api/api-error';
 import { ApiService, IssueSummary, ProjectSummary, SessionView } from '../api/api.service';
+import { CardHand } from '../api/card-hand';
 import { errorMessage, formErrorMessage } from '../api/error-messages';
 import { ErrorState } from '../api/error-state';
 import { participantNameValidators } from '../api/participant-name';
@@ -94,6 +95,7 @@ interface SearchQuery {
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
+    CardHand,
   ],
   templateUrl: './start-page.html',
   styleUrl: './start-page.scss',

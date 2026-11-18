@@ -167,6 +167,31 @@ describe('StartPage', () => {
     expect(text('health-status')).toBe('Backend nicht erreichbar');
   });
 
+  it('shows the status and the hint without backend in the footer, not in the intro', async () => {
+    http.expectOne('/api/health').flush(null, { status: 503, statusText: 'Service Unavailable' });
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+    const footer = element('start-footer');
+
+    for (const id of ['health-status', 'health-down', 'health-retry']) {
+      expect(footer?.querySelector(`[data-testid="${id}"]`), id).not.toBeNull();
+      expect(page.querySelector(`.intro [data-testid="${id}"]`), id).toBeNull();
+    }
+    expect(page.lastElementChild).toBe(footer);
+  });
+
+  it('shows the card hand large above the title, hidden from assistive technology', async () => {
+    answerHealth();
+    await fixture.whenStable();
+    const intro = (fixture.nativeElement as HTMLElement).querySelector('.intro');
+    const hand = element('card-hand');
+
+    expect(intro?.firstElementChild).toBe(hand);
+    expect(hand?.nextElementSibling?.tagName).toBe('H1');
+    expect(hand?.classList).toContain('large');
+    expect(hand?.getAttribute('aria-hidden')).toBe('true');
+  });
+
   it.each(invalidCases)('blocks the submit with $name', async ({ values, errorId, text: t }) => {
     answerHealth();
     fillCreateForm(values);

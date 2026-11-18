@@ -6,6 +6,7 @@
   gap: calc(var(--app-space-xl) + var(--app-space-s));
   width: 100%;
   max-width: 1080px;
+  min-height: calc(100dvh - 56px - 2 * var(--app-space-m));
   margin: 0 auto;
   padding: calc(var(--app-space-l) + var(--app-space-m)) var(--app-space-xl)
     calc(var(--app-space-3xl) - var(--app-space-s));
@@ -22,7 +23,18 @@
 .intro {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--app-space-m);
+  text-align: center;
+}
+
+.start-footer {
+  display: flex;
+  margin-top: auto;
+  flex-direction: column;
+  gap: var(--app-space-s);
+  padding-top: var(--app-space-m);
+  border-top: 1px solid var(--mat-sys-outline-variant);
 }
 
 .health {
@@ -99,6 +111,9 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: var(--app-space-s);
+  width: 100%;
+  max-width: 600px;
+  align-self: center;
 
   h2 {
     margin: 0;
@@ -181,7 +196,8 @@ h1 {
 
 .panels {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-columns: minmax(0, 600px);
+  justify-content: center;
   gap: var(--app-space-l);
   align-items: start;
 }
