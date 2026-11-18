@@ -34,12 +34,12 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   `serverTime` of the last snapshot and the client clock; the remaining time of a round
   (`RoundTimer`) is `round.deadline` minus `serverNow()`, never the client clock alone (ADR 0006).
 - Client state: the token per session id in `sessionStorage`; locale is fixed to `de`.
-- Preferences (spec 0036): `PreferencesStore` in `frontend/src/app/api/` keeps the last inputs in `localStorage` under one
-  key `planningpoker.preferences` as JSON with `name`, `projectId`, `timerSeconds` (one of
-  `TIMER_SECONDS`, `0` = Aus), `weightFilter` and `periodFilter`. They only fill in fields, never
-  the state of a session; the entry holds only the values listed above, session credentials stay
-  in `sessionStorage`. A missing entry, invalid JSON, an unknown value
-  or an exception of `localStorage` gives the default (`''`, `''`, `0`, `NONE`, `ALL`), never an
+- Preferences (spec 0036): `PreferencesStore` in `frontend/src/app/api/` keeps the last inputs in
+  `localStorage` under one key `planningpoker.preferences` as JSON with `name`, `projectId`,
+  `timerSeconds` (one of `TIMER_SECONDS`, `0` = Aus), `weightFilter` and `periodFilter`. They only
+  fill in fields, never the state of a session; the entry holds only the values listed above,
+  session credentials stay in `sessionStorage`. A missing entry, invalid JSON, an unknown value or
+  an exception of `localStorage` gives the default (`''`, `''`, `0`, `NONE`, `ALL`), never an
   error. Written after success only: name and project after a created session (start page), the
   name after a join (one name for both pages, independent of the session id), the timer after a
   successful `PUT …/timer`, the issue filters on every change and the defaults on „Filter
