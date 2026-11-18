@@ -153,7 +153,7 @@ describe('ParticipantList', () => {
     expect(text(row('Anna').querySelector<HTMLElement>('[data-testid="participant-role"]')!)).toBe(
       'Scrum Master',
     );
-    expect(chip('Anna').classList).toContain('none');
+    expect(row('Anna').querySelector('[data-testid="participant-chip"]')).toBeNull();
     expect(row('Anna').querySelector('[data-testid="participant-vote-status"]')).toBeNull();
     expect(row('Ben').querySelector('[data-testid="participant-role"]')).toBeNull();
   });

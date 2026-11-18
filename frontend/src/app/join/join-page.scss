@@ -1,6 +1,4 @@
 @use '@angular/material' as mat;
-@use '../../styles/motifs';
-@use '../../styles/theme';
 
 :host {
   display: flex;
@@ -23,32 +21,8 @@
   max-width: 440px;
 }
 
-.backs {
-  display: flex;
-  gap: 6px;
-}
-
-.back {
-  width: 28px;
-  height: 40px;
-  border-radius: 5px;
-  background-color: var(--app-card-accent);
-  background-image: var(--app-card-pattern);
-  background-size: var(--app-card-pattern-size);
-}
-
-@each $motif in motifs.$ids {
-  .back-#{$motif} {
-    @include motifs.card-variables($motif, light);
-  }
-}
-
-@each $motif in motifs.$ids {
-  .back-#{$motif} {
-    @include theme.dark {
-      @include motifs.card-variables($motif, dark);
-    }
-  }
+.hand {
+  align-self: center;
 }
 
 .head {
