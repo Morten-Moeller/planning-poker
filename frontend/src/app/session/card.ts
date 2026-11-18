@@ -1,7 +1,8 @@
-import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, inject, input, output } from '@angular/core';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
+import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
 import { CardGlyphs, isGlyphCard } from './card-glyphs';
 import { Card, cardLabel, cardSymbol } from './cards';
+import { prefersReducedMotion } from './reduced-motion';
 
 export type CardState = 'open' | 'chosen' | 'locked' | 'hidden' | 'pending' | 'revealed';
 export type CardSize = 'deck' | 'seat';
@@ -19,6 +20,7 @@ const INTERACTIVE: readonly CardState[] = ['open', 'chosen', 'locked'];
 })
 export class PokerCard {
   private readonly glyphs = inject(CardGlyphs);
+  private readonly document = inject(DOCUMENT);
 
   readonly card = input<Card | null>(null);
   readonly state = input<CardState>('open');
@@ -29,9 +31,12 @@ export class PokerCard {
   readonly flipDelay = input(0);
   readonly pendingText = input('…');
   readonly testId = input<string | null>(null);
+  readonly unlockIndex = input<number | null>(null);
 
   readonly picked = output<Card>();
 
+  private hovered = false;
+  protected readonly wiggling = linkedSignal({ source: this.state, computation: () => false });
   protected readonly interactive = computed(() => INTERACTIVE.includes(this.state()));
   protected readonly disabled = computed(() => this.state() === 'locked' || this.busy());
   protected readonly showsValue = computed(
@@ -57,6 +62,30 @@ export class PokerCard {
     const card = this.card();
     if (card !== null && !this.disabled()) {
       this.picked.emit(card);
+    }
+    this.wiggle();
+  }
+
+  protected onMouseMove(): void {
+    if (!this.hovered) {
+      this.hovered = true;
+      this.wiggle();
+    }
+  }
+
+  protected onMouseLeave(): void {
+    this.hovered = false;
+  }
+
+  private wiggle(): void {
+    if (this.state() === 'locked' && !prefersReducedMotion(this.document)) {
+      this.wiggling.set(true);
+    }
+  }
+
+  protected onAnimationEnd(event: AnimationEvent): void {
+    if (event.animationName.endsWith('wiggle')) {
+      this.wiggling.set(false);
     }
   }
 }

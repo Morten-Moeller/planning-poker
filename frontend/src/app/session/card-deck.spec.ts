@@ -218,6 +218,56 @@ describe('CardDeck', () => {
     expect(list.scrollLeft).toBe(10 * 56 + 48 - 200);
   });
 
+  function unlockIndexes(): (string | null)[] {
+    return cards().map((node) =>
+      node.classList.contains('unlock') ? node.style.getPropertyValue('--unlock-index') : null,
+    );
+  }
+
+  it('unlocks the cards one after another when the same deck changes from locked to open', async () => {
+    await open(discussionDeveloper, true);
+    expect(unlockIndexes().every((index) => index === null)).toBe(true);
+
+    fixture.componentRef.setInput('locked', false);
+    await receive(votingDeveloper);
+
+    expect(unlockIndexes()).toEqual(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
+    expect(cards().every((node) => node.getAttribute('aria-disabled') === null)).toBe(true);
+
+    card('5').click();
+    await fixture.whenStable();
+
+    http.expectOne(VOTE_URL).flush(null, { status: 204, statusText: 'No Content' });
+  });
+
+  it('shows no unlock animation on the first render of an open deck', async () => {
+    await open(votingDeveloper);
+
+    expect(unlockIndexes().every((index) => index === null)).toBe(true);
+  });
+
+  describe('under reduced motion', () => {
+    beforeEach(() => {
+      Object.defineProperty(document.defaultView!, 'matchMedia', {
+        configurable: true,
+        value: (query: string) => ({ matches: query === '(prefers-reduced-motion: reduce)' }),
+      });
+    });
+
+    afterEach(() => {
+      Reflect.deleteProperty(document.defaultView!, 'matchMedia');
+    });
+
+    it('opens the cards without the unlock animation', async () => {
+      await open(discussionDeveloper, true);
+
+      fixture.componentRef.setInput('locked', false);
+      await receive(votingDeveloper);
+
+      expect(unlockIndexes().every((index) => index === null)).toBe(true);
+    });
+  });
+
   it('shows the locked deck in DISCUSSION and sends no vote on click or key', async () => {
     await open(discussionDeveloper, true);
 

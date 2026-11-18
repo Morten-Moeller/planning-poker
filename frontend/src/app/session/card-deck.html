@@ -28,6 +28,7 @@
         [state]="stateOf(card)"
         [busy]="sending()"
         [testId]="'card-' + card"
+        [unlockIndex]="unlocking() ? $index : null"
         (picked)="choose($event)"
       />
     }
