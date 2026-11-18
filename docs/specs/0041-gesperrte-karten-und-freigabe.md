@@ -1,14 +1,14 @@
 ---
 id: "0041"
 title: Gesperrte Karten und Animation bei der Freigabe
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-18
 updated: 2026-11-18
-pr: ""
-note: freigegeben in der Session
+pr: "#40"
+note: alle Kriterien erfüllt
 ---
 
 # Gesperrte Karten und Animation bei der Freigabe
