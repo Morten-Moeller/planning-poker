@@ -11,7 +11,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/api/health")
-@Tag(name = "platform", description = "Health of the backend.")
+@Tag(name = "platform", description = "Health and settings of the backend.")
 public class HealthResource {
 
     @Schema(description = "Health of the backend.", requiredProperties = "status")

@@ -12,7 +12,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/api/config")
-@Tag(name = "platform", description = "Health of the backend.")
+@Tag(name = "platform", description = "Health and settings of the backend.")
 public class ConfigResource {
 
     @Schema(description = "Settings of the backend for the frontend.", requiredProperties = "rememberSessions")

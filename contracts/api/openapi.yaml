@@ -849,7 +849,7 @@ components:
       scheme: bearer
 tags:
 - name: platform
-  description: Health of the backend.
+  description: Health and settings of the backend.
 - name: projects
   description: GitLab projects and their open issues before a session exists.
 - name: sessions
