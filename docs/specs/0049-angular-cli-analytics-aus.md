@@ -1,14 +1,14 @@
 ---
 id: "0049"
 title: Angular CLI ohne Nutzungsstatistik
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-23
 updated: 2026-11-23
-pr: ""
-note: ""
+pr: "#57"
+note: alle Kriterien erfüllt
 ---
 
 # Angular CLI ohne Nutzungsstatistik
