@@ -21,7 +21,7 @@
         <handlebars.version>4.5.8</handlebars.version>
         <guava.version>33.8.0-jre</guava.version>
         <json-smart.version>2.6.1</json-smart.version>
-        <spotless-plugin.version>2.44.5</spotless-plugin.version>
+        <spotless-plugin.version>3.11.0</spotless-plugin.version>
         <palantir-java-format.version>2.103.0</palantir-java-format.version>
     </properties>
 
