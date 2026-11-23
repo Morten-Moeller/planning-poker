@@ -19,3 +19,4 @@ Wann ein ADR nötig ist: `harness/policies/adr.md`. Format MADR aus `0000-templa
 | 0012 | „Erneut schätzen“ startet die neue Runde sofort (ersetzt den Punkt „Neue Runde führt nach DISCUSSION“ aus 0010) | accepted | 2026-11-17 |
 | 0013 | Letzte Sitzungen mit Zugang im localStorage, abschaltbar (ändert für das eingeschaltete Feature die Token-Ablage aus 0003) | accepted | 2026-11-18 |
 | 0014 | Dritte Rolle „Zuschauer“, Beitreten nur über Einladungscodes je Rolle | accepted | 2026-11-18 |
+| 0015 | Java 25 (Temurin) als Laufzeit und Sprachstand des Backends (ändert den Punkt „Java 21“ aus 0001) | accepted | 2026-11-23 |

@@ -6,9 +6,10 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
 
 ## Stack
 
-- Java 21 (`maven.compiler.release`), Maven Wrapper (`backend/mvnw`), Quarkus 3.x from the
-  platform BOM in `backend/pom.xml`. Build and tests run with JDK 21 (`JAVA_HOME`); the Makefile
-  picks JDK 21 on macOS when `JAVA_HOME` is empty.
+- Java 25, distribution Temurin (`maven.compiler.release`, ADR 0015), Maven Wrapper
+  (`backend/mvnw`), Quarkus 3.x from the platform BOM in `backend/pom.xml`. Build and tests run
+  with JDK 25 (`JAVA_HOME`); the Makefile picks JDK 25 on macOS when `JAVA_HOME` is not set.
+  `make java-version` prints the version in use.
 - Jakarta REST with `quarkus-rest-jackson`, Jakarta Validation, Jakarta CDI;
   `quarkus-websockets-next` for the WebSocket; MicroProfile REST Client with
   `quarkus-rest-client-jackson` for GitLab; `quarkus-smallrye-openapi` for the contract;

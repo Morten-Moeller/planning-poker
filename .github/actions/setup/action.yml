@@ -1,6 +1,6 @@
 name: Setup
 description: >-
-  Project-owned toolchain setup for the quality gates: JDK 21 with Maven cache, Node from .nvmrc,
+  Project-owned toolchain setup for the quality gates: JDK 25 with Maven cache, Node from .nvmrc,
   pnpm with the frontend dependencies and the Playwright browser. The last steps install the
   stack-neutral tools for make sast and make deps.
 
@@ -10,7 +10,7 @@ runs:
     - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
       with:
         distribution: temurin
-        java-version: "21"
+        java-version: "25"
         cache: maven
         cache-dependency-path: backend/pom.xml
 

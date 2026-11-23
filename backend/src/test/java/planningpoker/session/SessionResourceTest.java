@@ -57,12 +57,11 @@ class SessionResourceTest {
     }
 
     private RequestSpecification as(Role role) {
-        String token =
-                switch (role) {
-                    case SCRUM_MASTER -> scrumMasterToken;
-                    case DEVELOPER -> developerToken;
-                    case VIEWER -> viewerToken;
-                };
+        String token = switch (role) {
+            case SCRUM_MASTER -> scrumMasterToken;
+            case DEVELOPER -> developerToken;
+            case VIEWER -> viewerToken;
+        };
         return given().header("Authorization", "Bearer " + token);
     }
 

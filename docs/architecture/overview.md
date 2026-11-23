@@ -16,7 +16,7 @@ Verbindliche Beschreibung: `docs/umsetzungsplan.md`, Abschnitt 4. Entscheidungen
 | Container | Technik | Verantwortung | Spricht mit |
 |---|---|---|---|
 | Frontend | Angular (Standalone Components, Signals, Angular Material), pnpm, Dev-Server auf Port 4200 | Oberfläche auf Deutsch; Befehle per REST, Zustand per WebSocket-Snapshot in einem Signals-Store | Backend über `/api` und `/ws` (Dev-Proxy, derselbe Origin) |
-| Backend | Quarkus 3 auf Java 21, Port 8080 | Einzige Quelle der Wahrheit: Sitzungen im Arbeitsspeicher, Rollen- und Zustandsprüfung, GitLab-Zugriff, Snapshots | GitLab (REST-Client), Frontend (REST, WebSocket) |
+| Backend | Quarkus 3 auf Java 25, Port 8080 | Einzige Quelle der Wahrheit: Sitzungen im Arbeitsspeicher, Rollen- und Zustandsprüfung, GitLab-Zugriff, Snapshots | GitLab (REST-Client), Frontend (REST, WebSocket) |
 | GitLab-Double | WireMock Standalone mit festen Mappings (ab Spec 0011) | Ersatz für GitLab in End-to-End-Tests | Backend im Profil `e2e` |
 
 ## Modulgrenzen

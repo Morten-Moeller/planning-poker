@@ -30,9 +30,12 @@ public class ActorFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext context) {
         String sessionId = context.getUriInfo().getPathParameters().getFirst("id");
         String token = (String) context.getProperty(BearerTokenFilter.TOKEN_PROPERTY);
-        Actor actor = registry.get().read(sessionId, session -> session.participantByToken(token)
-                .map(participant -> new Actor(sessionId, participant.id(), participant.role()))
-                .orElseThrow(() -> new SessionException(ErrorCode.UNAUTHORIZED, "Unknown token.")));
+        Actor actor = registry.get()
+                .read(
+                        sessionId,
+                        session -> session.participantByToken(token)
+                                .map(participant -> new Actor(sessionId, participant.id(), participant.role()))
+                                .orElseThrow(() -> new SessionException(ErrorCode.UNAUTHORIZED, "Unknown token.")));
         RequiresRole required = resourceInfo.getResourceMethod().getAnnotation(RequiresRole.class);
         if (required != null && actor.role() != required.value()) {
             throw new SessionException(

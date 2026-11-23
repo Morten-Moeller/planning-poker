@@ -92,10 +92,12 @@ public class SessionSocket {
     private void authenticate(WebSocketConnection connection, String token) {
         String sessionId = connection.pathParam("sessionId");
         try {
-            ConnectionRegistry.Entry entry = registry.read(sessionId, session -> session.participantByToken(token)
-                    .map(participant ->
-                            new ConnectionRegistry.Entry(connection, sessionId, participant.id(), participant.role()))
-                    .orElseThrow(() -> new SessionException(ErrorCode.UNAUTHORIZED, "Unknown token.")));
+            ConnectionRegistry.Entry entry = registry.read(
+                    sessionId,
+                    session -> session.participantByToken(token)
+                            .map(participant -> new ConnectionRegistry.Entry(
+                                    connection, sessionId, participant.id(), participant.role()))
+                            .orElseThrow(() -> new SessionException(ErrorCode.UNAUTHORIZED, "Unknown token.")));
             cancelTimer(connection);
             connections.register(entry);
             registry.update(sessionId, session -> {
