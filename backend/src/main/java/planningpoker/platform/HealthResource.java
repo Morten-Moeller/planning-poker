@@ -15,7 +15,9 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 public class HealthResource {
 
     @Schema(description = "Health of the backend.", requiredProperties = "status")
-    public record HealthStatus(@Schema(description = "UP while the backend answers.", examples = "UP") String status) {}
+    public record HealthStatus(
+            @Schema(description = "UP while the backend answers.", examples = "UP")
+            String status) {}
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

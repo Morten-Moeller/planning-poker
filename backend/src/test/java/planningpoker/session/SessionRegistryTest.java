@@ -59,8 +59,9 @@ class SessionRegistryTest {
         List<String> developers = new ArrayList<>();
         for (int i = 0; i < DEVELOPERS; i++) {
             String name = "Dev" + i;
-            developers.add(registry.update(sessionId, session -> session.join(name, session.developerInvite())
-                    .id()));
+            developers.add(registry.update(
+                    sessionId,
+                    session -> session.join(name, session.developerInvite()).id()));
         }
         registry.update(sessionId, session -> {
             session.selectIssue(created.scrumMaster().id(), SessionBuilder.ISSUE);
@@ -116,8 +117,9 @@ class SessionRegistryTest {
     void a_rejected_command_fires_no_event_and_changes_nothing() {
         SessionRegistry.Created created = registry.create("4711", 42L, "Master", null, false);
         String sessionId = created.session().id();
-        String developer = registry.update(sessionId, session -> session.join("Anna", session.developerInvite())
-                .id());
+        String developer = registry.update(
+                sessionId,
+                session -> session.join("Anna", session.developerInvite()).id());
         events.clear();
         Instant lastActivity = created.session().lastActivityAt();
         clock.advance(Duration.ofMinutes(5));

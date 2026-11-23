@@ -16,11 +16,12 @@ public class ProjectAllowlist {
     }
 
     public Optional<List<String>> projects() {
-        return config.allowedProjects().map(projects -> projects.stream()
-                .map(String::strip)
-                .filter(project -> !project.isEmpty())
-                .distinct()
-                .toList());
+        return config.allowedProjects()
+                .map(projects -> projects.stream()
+                        .map(String::strip)
+                        .filter(project -> !project.isEmpty())
+                        .distinct()
+                        .toList());
     }
 
     public void requireAllowed(String projectId) {

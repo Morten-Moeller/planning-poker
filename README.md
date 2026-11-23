@@ -9,7 +9,7 @@ Kommentar an das GitLab-Issue. Lösung der Coding Challenge Planning Poker
 
 ## Schnellstart
 
-Voraussetzungen: JDK 21 (`JAVA_HOME`), Node in der Version aus `.nvmrc`, pnpm 12, Git und ein
+Voraussetzungen: JDK 25 (`JAVA_HOME`), Node in der Version aus `.nvmrc`, pnpm 12, Git und ein
 GitLab-Token mit Scope `api` (Abschnitt GitLab, Absatz Token). Aus einem frischen Klon starten
 fünf Befehle die Anwendung; die letzten beiden laufen je in einem eigenen Terminal:
 
@@ -337,7 +337,7 @@ ein ADR in `docs/adr/`. Die Regeln stehen in `harness/policies/human-approval.md
 der `verified` Pflicht ist, steht in `harness/config.yml` (`verify_required_for`).
 
 ```text
-backend/         Quarkus (Java 21): session, gitlab, realtime, platform
+backend/         Quarkus (Java 25): session, gitlab, realtime, platform
 frontend/        Angular (pnpm): src/app je Feature, e2e/ Playwright
 contracts/api/   generierter OpenAPI-Vertrag und Beispiele (ab Spec 0002)
 docs/            Umsetzungsplan, Roadmap, Specs, ADRs, Glossar, Architektur

@@ -126,12 +126,11 @@ public class GitLabClient {
     }
 
     private static GitLabException fromStatus(String operation, String projectId, int status) {
-        GitLabException.Reason reason =
-                switch (status) {
-                    case 401, 403 -> GitLabException.Reason.UNAUTHORIZED;
-                    case 404 -> GitLabException.Reason.NOT_FOUND;
-                    default -> GitLabException.Reason.UNAVAILABLE;
-                };
+        GitLabException.Reason reason = switch (status) {
+            case 401, 403 -> GitLabException.Reason.UNAUTHORIZED;
+            case 404 -> GitLabException.Reason.NOT_FOUND;
+            default -> GitLabException.Reason.UNAVAILABLE;
+        };
         logFailure(operation, projectId, status, reason);
         return new GitLabException(operation, status, reason);
     }

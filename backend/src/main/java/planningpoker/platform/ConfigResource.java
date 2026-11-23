@@ -18,9 +18,9 @@ public class ConfigResource {
     @Schema(description = "Settings of the backend for the frontend.", requiredProperties = "rememberSessions")
     public record ConfigResponse(
             @Schema(
-                            description =
-                                    "Whether the browser keeps the last sessions with their token in localStorage (planningpoker.session.remember).")
-                    boolean rememberSessions) {}
+                    description =
+                            "Whether the browser keeps the last sessions with their token in localStorage (planningpoker.session.remember).")
+            boolean rememberSessions) {}
 
     private final boolean rememberSessions;
 
