@@ -21,8 +21,8 @@ keine Komponente, die Java 25 ausschließt: Quarkus 3.40 verlangt JDK 17 oder ne
 - Vorteile: erfüllt V1 ohne Ausnahme; Support bis 2031-09-30; eine Version für Build, Test und
   Betrieb; neue Sprachmittel stehen späteren Specs offen.
 - Nachteile: jeder Entwicklungsrechner und CI brauchen JDK 25; der Formatter
-  (`palantir-java-format` 2.68.0) ist unter JDK 25 nicht geprüft und braucht möglicherweise eine
-  neuere Version.
+  `palantir-java-format` 2.68.0 läuft unter JDK 25 nicht (`NoSuchMethodError` in
+  `com.sun.tools.javac.util.Log`) und braucht eine neuere Version.
 
 ### Option B: Bei Java 21 bleiben, mit ADR nach V3
 
@@ -52,5 +52,7 @@ Punkt "Java 21"; die übrigen Entscheidungen von ADR 0001 gelten weiter.
 - `harness/config.yml`, Liste `stack`: `eclipse-temurin 25` ohne `adr:`-Zusatz. Den Eintrag setzt
   die Person mit dem Harness-Update 0.8.0.
 - Entwicklungsrechner brauchen ein JDK 25 (`brew install --cask temurin@25` unter macOS).
-- Der Quellcode bleibt unverändert; neue Sprachmittel von Java 22 bis 25 sind ab dieser ADR
-  erlaubt.
+- `palantir-java-format` 2.103.0 statt 2.68.0 (neueste Version am 2026-11-23, Maven Central). Die
+  Version bricht Zeilen anders um: 21 Java-Dateien sind neu formatiert, ohne Änderung am
+  Verhalten. Ein späteres Update des Formatters kann den Umbruch wieder ändern.
+- Neue Sprachmittel von Java 22 bis 25 sind ab dieser ADR erlaubt.
