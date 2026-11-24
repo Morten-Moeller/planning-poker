@@ -1,14 +1,14 @@
 ---
 id: "0052"
 title: Maven-Build ohne Abfrage der Prefix-Dateien der Repositories
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-24
 updated: 2026-11-24
-pr: ""
-note: ""
+pr: "#60"
+note: alle Kriterien erfüllt
 ---
 
 # Maven-Build ohne Abfrage der Prefix-Dateien der Repositories
