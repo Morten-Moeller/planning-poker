@@ -32,16 +32,20 @@ async function joinInNewContext(browser: Browser, url: string, name: string): Pr
   return page;
 }
 
-test('blocks an incomplete create form and keeps the start page', async ({ page }) => {
-  await page.goto('/');
+test(
+  'blocks an incomplete create form and keeps the start page',
+  { tag: '@react' },
+  async ({ page }) => {
+    await page.goto('/');
 
-  await page.getByTestId('create-submit').click();
+    await page.getByTestId('create-submit').click();
 
-  await expect(page.getByTestId('create-name-error')).toHaveText('Bitte einen Namen eingeben');
-  await expect(page.getByTestId('create-project-error')).toBeVisible();
-  await expect(page.getByTestId('create-issue-error')).toHaveCount(0);
-  await expect(page).toHaveURL(/\/$/);
-});
+    await expect(page.getByTestId('create-name-error')).toHaveText('Bitte einen Namen eingeben');
+    await expect(page.getByTestId('create-project-error')).toBeVisible();
+    await expect(page.getByTestId('create-issue-error')).toHaveCount(0);
+    await expect(page).toHaveURL(/\/$/);
+  },
+);
 
 test('creates a session and opens the room as scrum master with the share block', async ({
   page,
@@ -91,34 +95,42 @@ test('a developer joins through the link in a second browser context', async ({
   await developer.context().close();
 });
 
-test('an unknown issue shows the message at the form and creates no session', async ({ page }) => {
-  await createSession(page, 'Anna', MISSING_ISSUE);
+test(
+  'an unknown issue shows the message at the form and creates no session',
+  { tag: '@react' },
+  async ({ page }) => {
+    await createSession(page, 'Anna', MISSING_ISSUE);
 
-  await expect(page.getByTestId('create-error')).toHaveText(
-    'Das Issue wurde im GitLab-Projekt nicht gefunden.',
-  );
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByTestId('create-name')).toHaveValue('Anna');
-  await expect(page.getByTestId('create-project')).toHaveValue(PROJECT);
-  await expect(page.getByTestId('create-issue')).toHaveValue(MISSING_ISSUE);
-  await expect(page.getByTestId('error-banner')).toHaveCount(0);
-  expect(
-    await page.evaluate(() =>
-      Object.keys(sessionStorage).filter((key) => key.startsWith('planningpoker.session.')),
-    ),
-  ).toEqual([]);
-});
+    await expect(page.getByTestId('create-error')).toHaveText(
+      'Das Issue wurde im GitLab-Projekt nicht gefunden.',
+    );
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByTestId('create-name')).toHaveValue('Anna');
+    await expect(page.getByTestId('create-project')).toHaveValue(PROJECT);
+    await expect(page.getByTestId('create-issue')).toHaveValue(MISSING_ISSUE);
+    await expect(page.getByTestId('error-banner')).toHaveCount(0);
+    expect(
+      await page.evaluate(() =>
+        Object.keys(sessionStorage).filter((key) => key.startsWith('planningpoker.session.')),
+      ),
+    ).toEqual([]);
+  },
+);
 
-test('an issue that GitLab refuses shows the access denied text at the form', async ({ page }) => {
-  await createSession(page, 'Anna', FORBIDDEN_ISSUE);
+test(
+  'an issue that GitLab refuses shows the access denied text at the form',
+  { tag: '@react' },
+  async ({ page }) => {
+    await createSession(page, 'Anna', FORBIDDEN_ISSUE);
 
-  await expect(page.getByTestId('create-error')).toHaveText(
-    'GitLab verweigert den Zugriff. Der GitLab-Token des Backends braucht Scope api und Rechte im Projekt.',
-  );
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByTestId('create-issue')).toHaveValue(FORBIDDEN_ISSUE);
-  await expect(page.getByTestId('error-banner')).toHaveCount(0);
-});
+    await expect(page.getByTestId('create-error')).toHaveText(
+      'GitLab verweigert den Zugriff. Der GitLab-Token des Backends braucht Scope api und Rechte im Projekt.',
+    );
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByTestId('create-issue')).toHaveValue(FORBIDDEN_ISSUE);
+    await expect(page.getByTestId('error-banner')).toHaveCount(0);
+  },
+);
 
 test('a taken name shows the message on the join page', async ({ page, browser }) => {
   await createSession(page);

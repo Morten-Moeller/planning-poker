@@ -1,3 +1,10 @@
+import {
+  Autocomplete,
+  AutocompleteContent,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from '@ui-sdk/react/autocomplete';
 import { useState, useSyncExternalStore } from 'react';
 import type { ThemeStore } from '../../shell/theme-store';
 import { AppButton } from '../app-button';
@@ -25,6 +32,7 @@ const TEXT = {
   large: 'large',
 } as const;
 
+const SUGGESTIONS: readonly string[] = ['Ada Lovelace', 'Alan Turing', 'Grace Hopper'];
 const SYMBOL_DARK = '☀️';
 const SYMBOL_LIGHT = '🌙';
 const VARIANTS: readonly AppButtonVariant[] = ['filled', 'outlined', 'text'];
@@ -84,6 +92,7 @@ function TextFields() {
   const [withHint, setWithHint] = useState('');
   const [withError, setWithError] = useState('');
   const [disabled, setDisabled] = useState('Ada Lovelace');
+  const [ownInput, setOwnInput] = useState('');
 
   return (
     <div className={styles.fields}>
@@ -117,6 +126,31 @@ function TextFields() {
         onChange={setDisabled}
         disabled
         data-testid="gallery-field-disabled"
+      />
+      <TextField
+        label="Eigene Eingabe (Autocomplete)"
+        hint="Das Feature ersetzt die Eingabe über renderInput."
+        value={ownInput}
+        onChange={setOwnInput}
+        data-testid="gallery-field-own-input"
+        renderInput={(input) => (
+          <Autocomplete value={input.value} onValueChange={(next) => input.onChange(next)}>
+            <AutocompleteInput className={input.className} data-testid={input['data-testid']} />
+            <AutocompleteContent className={styles.suggestions}>
+              <AutocompleteList>
+                {SUGGESTIONS.map((suggestion) => (
+                  <AutocompleteItem
+                    key={suggestion}
+                    className={styles.suggestion}
+                    value={suggestion}
+                  >
+                    {suggestion}
+                  </AutocompleteItem>
+                ))}
+              </AutocompleteList>
+            </AutocompleteContent>
+          </Autocomplete>
+        )}
       />
     </div>
   );

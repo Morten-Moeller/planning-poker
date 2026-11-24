@@ -1,7 +1,7 @@
 ---
 id: "0056"
 title: "React-Frontend: Startseite mit Sitzung anlegen und letzten Sitzungen"
-status: approved
+status: Review
 risk: high
 adrs: ["0003", "0008", "0011", "0013", "0016"]
 owner: Morten Möller

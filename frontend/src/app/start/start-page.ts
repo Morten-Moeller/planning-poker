@@ -99,6 +99,7 @@ interface SearchQuery {
   ],
   templateUrl: './start-page.html',
   styleUrl: './start-page.scss',
+  host: { 'data-testid': 'start-page' },
   providers: [{ provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } }],
 })
 export class StartPage {

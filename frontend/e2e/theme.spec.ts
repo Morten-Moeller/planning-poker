@@ -110,28 +110,32 @@ test('the toolbar shows the session id and name and role in the room only', asyn
   await expect(small.getByTestId('toolbar-me')).toBeHidden();
 });
 
-test('a button shows the focus ring for keyboard focus only', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.getByTestId('health-status')).toHaveText('Backend erreichbar');
-  const input = page.getByTestId('create-issue');
-  const button = page.getByTestId('create-submit');
-  const outline = () =>
-    button.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return { style: style.outlineStyle, width: style.outlineWidth, color: style.outlineColor };
-    });
-  const primary = await rgb(page, await token(page, '--mat-sys-primary'));
+test(
+  'a button shows the focus ring for keyboard focus only',
+  { tag: '@react' },
+  async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByTestId('health-status')).toHaveText('Backend erreichbar');
+    const input = page.getByTestId('create-issue');
+    const button = page.getByTestId('create-submit');
+    const outline = () =>
+      button.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return { style: style.outlineStyle, width: style.outlineWidth, color: style.outlineColor };
+      });
+    const primary = await rgb(page, await token(page, '--mat-sys-primary'));
 
-  await input.click();
-  await page.keyboard.press('Tab');
-  await expect(button).toBeFocused();
-  expect(await outline()).toEqual({ style: 'solid', width: '3px', color: primary });
+    await input.click();
+    await page.keyboard.press('Tab');
+    await expect(button).toBeFocused();
+    expect(await outline()).toEqual({ style: 'solid', width: '3px', color: primary });
 
-  await page.getByTestId('create-name').click();
-  await button.click();
-  await expect(button).toBeFocused();
-  expect((await outline()).style).toBe('none');
-});
+    await page.getByTestId('create-name').click();
+    await button.click();
+    await expect(button).toBeFocused();
+    expect((await outline()).style).toBe('none');
+  },
+);
 
 test('the page links the favicon in three formats and serves them', async ({ page, request }) => {
   await page.goto('/');
