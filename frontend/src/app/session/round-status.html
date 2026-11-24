@@ -5,9 +5,7 @@
         ><span data-testid="round-phase" i18n="@@roundStatus.phaseDiscussion">Diskussion</span>
         @if (store.round(); as round) {
           ·
-          <span data-testid="round-number" i18n="@@roundStatus.number"
-            >Runde {{ round.number }}</span
-          >
+          <span data-testid="round-number"><ng-container [ngTemplateOutlet]="roundNumber" /></span>
         }
       </span>
       @if (discussionTimer(); as time) {
@@ -20,9 +18,9 @@
       }
     } @else {
       @if (store.round(); as round) {
-        <span class="phase" data-testid="round-number" i18n="@@roundStatus.number"
-          >Runde {{ round.number }}</span
-        >
+        <span class="phase" data-testid="round-number"
+          ><ng-container [ngTemplateOutlet]="roundNumber"
+        /></span>
       }
       <span class="counter" role="status" data-testid="vote-counter" i18n="@@roundStatus.counter"
         ><strong>{{ voted() }} von {{ total() }}</strong> haben geschätzt</span
@@ -55,3 +53,8 @@
     <app-seat-table />
   }
 </section>
+<ng-template #roundNumber
+  ><ng-container i18n="@@roundStatus.number"
+    >Runde {{ store.round()?.number }}</ng-container
+  ></ng-template
+>
