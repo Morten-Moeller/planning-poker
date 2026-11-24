@@ -1,14 +1,14 @@
 ---
 id: "0055"
 title: "React-Frontend: gemeinsame Bausteine Button, Textfeld und Kartenhand"
-status: Review
+status: done
 risk: medium
 adrs: ["0016"]
 owner: Morten Möller
 created: 2026-11-24
 updated: 2026-11-24
-pr: ""
-note: freigegeben in der Session
+pr: "#63"
+note: alle Kriterien erfüllt
 ---
 
 # React-Frontend: gemeinsame Bausteine Button, Textfeld und Kartenhand
