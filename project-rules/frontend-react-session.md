@@ -30,7 +30,8 @@ and Design Werkbank part B).
   divider on top, and the page scrolls.
 - The room sets the layout of the shell itself with `:has()` in `session-page.module.css`: the
   `main` element that holds the room loses its padding and becomes a flex column, and from 720 px
-  the element around `main` is `100dvh` high and `main` hides its overflow. `shell/` has no rule
+  the element around `main` is `100dvh` high (with `flex: none`, because its `flex: 1` would take
+  the height of the content) and `main` hides its overflow. `shell/` has no rule
   for the room. A change of the elements around `main` in `shell/app-shell.tsx` needs a look at
   these two selectors.
 - In `DISCUSSION`, `VOTING` and `REVEALED`, and for the scrum master in `LOBBY`, the main area is
@@ -60,8 +61,11 @@ and Design Werkbank part B).
   and the options are also passed as `items`, so the trigger shows the label of a value that
   comes with a later snapshot. The value is `timerSeconds` of the snapshot. A choice sends
   `PUT …/timer` (`null` for „Aus“), disables the select until the answer and saves `timerSeconds`
-  in the `PreferencesStore` after success only. The trigger keeps the focus outline of
-  `global.css`.
+  in the `PreferencesStore` after success only. The look is the filled field of the Angular
+  room: a box of 212 × 60 px in `--mat-sys-surface-variant` with the label inside at the top, a
+  line of 1 px below (2 px in `--mat-sys-primary` while open or focused), the list of the same
+  width directly under it and a check mark at the chosen option. The trigger keeps the focus
+  outline of `global.css`.
 - `ParticipantList` (`participant-list.tsx`): scrum master and developers first, viewers after
   them. The own row has „(du)“ and `data-me="true"`. Only a developer has `participant-chip`
   (`data-filled="true"` after a vote in `VOTING` and `REVEALED`); the scrum master and a viewer

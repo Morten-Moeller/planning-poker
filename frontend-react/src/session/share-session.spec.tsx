@@ -12,15 +12,27 @@ const VIEWER_LINK = `${window.location.origin}/session/K7P2QX9M/join?invite=view
 interface ClipboardDouble {
   written: string[];
   fail: boolean;
+  hold: boolean;
+  release: () => void;
 }
 
 function installClipboard(): ClipboardDouble {
-  const double: ClipboardDouble = { written: [], fail: false };
+  const double: ClipboardDouble = {
+    written: [],
+    fail: false,
+    hold: false,
+    release: () => undefined,
+  };
   Object.defineProperty(window.navigator, 'clipboard', {
     configurable: true,
     value: {
       writeText(text: string) {
         double.written.push(text);
+        if (double.hold) {
+          return new Promise<void>((resolve) => {
+            double.release = resolve;
+          });
+        }
         return double.fail ? Promise.reject(new Error('denied')) : Promise.resolve();
       },
     },
@@ -185,6 +197,22 @@ describe('ShareSession', () => {
     await copy('developer');
     expect(screen.queryByTestId('copy-link-developer-failed')).toBeNull();
     expect(screen.queryByTestId('copy-link-developer-done')).not.toBeNull();
+  });
+
+  it('starts no timer when the copy ends after the part is removed', async () => {
+    clipboard.hold = true;
+    const view = renderShare();
+    await copy('developer');
+    view.unmount();
+    const timers = vi.getTimerCount();
+
+    await act(async () => {
+      clipboard.release();
+      await Promise.resolve();
+    });
+
+    expect(clipboard.written).toEqual([DEVELOPER_LINK]);
+    expect(vi.getTimerCount()).toBe(timers);
   });
 
   it('shows Neue Sitzung as an outlined link to the start page at the end', () => {

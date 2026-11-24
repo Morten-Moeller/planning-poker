@@ -3,6 +3,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectItemIndicator,
   SelectTrigger,
   SelectValue,
 } from '@ui-sdk/react/select';
@@ -28,8 +29,6 @@ export const TIMER_OPTIONS: readonly TimerOption[] = [
   { seconds: 300, label: 'timerSetting.5min' },
 ];
 
-const SYMBOL_OPEN = '▾';
-
 export function TimerSetting({ sessionId }: { sessionId: string }) {
   const { api, preferences } = useBackend();
   const session = useSession();
@@ -53,36 +52,37 @@ export function TimerSetting({ sessionId }: { sessionId: string }) {
 
   return (
     <Field className={styles.field}>
-      <FieldLabel className={styles.label}>{t('timerSetting.label')}</FieldLabel>
-      <Select
-        items={items}
-        value={String(value)}
-        disabled={sending}
-        onValueChange={(next) => {
-          if (next !== null && next !== String(value)) {
-            change(Number(next));
-          }
-        }}
-      >
-        <SelectTrigger className={styles.trigger} data-testid="timer-setting">
-          <SelectValue />
-          <span className={styles.arrow} aria-hidden="true">
-            {SYMBOL_OPEN}
-          </span>
-        </SelectTrigger>
-        <SelectContent className={styles.content}>
-          {items.map((item) => (
-            <SelectItem
-              key={item.value}
-              className={styles.item}
-              value={item.value}
-              data-testid={`timer-option-${item.value}`}
-            >
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className={styles.box}>
+        <FieldLabel className={styles.label}>{t('timerSetting.label')}</FieldLabel>
+        <Select
+          items={items}
+          value={String(value)}
+          disabled={sending}
+          onValueChange={(next) => {
+            if (next !== null && next !== String(value)) {
+              change(Number(next));
+            }
+          }}
+        >
+          <SelectTrigger className={styles.trigger} data-testid="timer-setting">
+            <SelectValue className={styles.value} />
+            <span className={styles.arrow} aria-hidden="true" />
+          </SelectTrigger>
+          <SelectContent className={styles.content} align="start" sideOffset={0}>
+            {items.map((item) => (
+              <SelectItem
+                key={item.value}
+                className={styles.item}
+                value={item.value}
+                data-testid={`timer-option-${item.value}`}
+              >
+                {item.label}
+                <SelectItemIndicator className={styles.check} aria-hidden="true" />
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <FieldDescription className={styles.hint} data-testid="timer-setting-hint">
         {t('timerSetting.hint')}
       </FieldDescription>

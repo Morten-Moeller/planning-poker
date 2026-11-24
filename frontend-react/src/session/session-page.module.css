@@ -52,6 +52,7 @@ main:has(> .room) {
 
 @media (min-width: 720px) {
   div:has(> main > .room) {
+    flex: none;
     height: 100dvh;
     min-height: 0;
   }
