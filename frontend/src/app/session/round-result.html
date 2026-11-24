@@ -61,8 +61,7 @@
     <p class="not-voted" data-testid="not-voted">
       <span i18n="@@roundResult.notVoted">Nicht geschätzt:</span>{{ ' ' }}
       @for (developer of notVoted(); track developer.id; let last = $last) {
-        <span data-testid="not-voted-name">{{ developer.label }}</span
-        >{{ last ? '' : ',' }}
+        <span data-testid="not-voted-name">{{ developer.label }}</span>{{ last ? '' : ',' }}
       }
     </p>
   }
