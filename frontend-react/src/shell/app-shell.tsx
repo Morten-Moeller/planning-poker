@@ -3,6 +3,7 @@ import { useSyncExternalStore } from 'react';
 import { Link, Outlet } from 'react-router';
 import { t } from '../i18n/messages';
 import styles from './app-shell.module.css';
+import { ErrorBanner } from './error-banner';
 import type { ThemeStore } from './theme-store';
 
 const SYMBOL_DARK = '☀️';
@@ -29,6 +30,7 @@ export function AppShell({ theme }: { theme: ThemeStore }) {
           </span>
         </Toggle>
       </header>
+      <ErrorBanner />
       <main className={styles.content}>
         <Outlet />
       </main>
