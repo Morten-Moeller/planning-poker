@@ -65,14 +65,9 @@
 }
 
 .healthNote {
-  display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--app-space-s) var(--app-space-m);
-  padding: var(--app-space-s) var(--app-space-m);
-  border-radius: var(--app-corner-control);
-  background-color: var(--mat-sys-error-container);
-  color: var(--mat-sys-on-error-container);
   font: var(--mat-sys-body-medium);
 }
 

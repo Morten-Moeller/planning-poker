@@ -3,6 +3,7 @@ import type { ThemeStore } from '../../shell/theme-store';
 import { AppButton } from '../app-button';
 import type { AppButtonTone, AppButtonVariant } from '../app-button';
 import { CardHand } from '../card-hand';
+import { ErrorNote } from '../error-note';
 import { TextField } from '../text-field';
 import styles from './ui-gallery.module.css';
 
@@ -13,6 +14,9 @@ const TEXT = {
   buttons: 'Buttons',
   textFields: 'Textfeld',
   cardHands: 'Kartenhand',
+  errorNotes: 'Fehlerhinweis',
+  noteWithIcon: 'Der Einladungslink ist ungültig. Bitte den Scrum Master um einen neuen.',
+  noteWithoutIcon: 'Ohne Backend lassen sich keine Sitzungen erstellen oder betreten.',
   action: 'Aktion',
   disabled: 'Gesperrt',
   pending: 'Wartend (3 s)',
@@ -143,6 +147,17 @@ export function UiGallery({ theme }: { theme: ThemeStore }) {
       <section className={styles.section}>
         <h2 className={styles.heading}>{TEXT.textFields}</h2>
         <TextFields />
+      </section>
+      <section className={styles.section}>
+        <h2 className={styles.heading}>{TEXT.errorNotes}</h2>
+        <div className={styles.fields}>
+          <ErrorNote data-testid="gallery-note-icon">
+            <span>{TEXT.noteWithIcon}</span>
+          </ErrorNote>
+          <ErrorNote icon={false} data-testid="gallery-note-plain">
+            <span>{TEXT.noteWithoutIcon}</span>
+          </ErrorNote>
+        </div>
       </section>
       <section className={styles.section}>
         <h2 className={styles.heading}>{TEXT.cardHands}</h2>

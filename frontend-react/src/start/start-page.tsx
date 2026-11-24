@@ -1,7 +1,8 @@
 import { Button } from '@ui-sdk/react/button';
 import { useEffect, useState } from 'react';
-import { t } from '../i18n/messages';
-import type { MessageKey } from '../i18n/messages';
+import { ErrorNote } from '../ui/error-note';
+import { t } from './messages';
+import type { MessageKey } from './messages';
 import { backendReachable } from './health-api';
 import styles from './start-page.module.css';
 
@@ -61,7 +62,7 @@ export function StartPage() {
           <span data-testid="health-status">{t(STATUS_TEXT[state])}</span>
         </div>
         {backendDown && (
-          <div className={styles.healthNote} role="alert" data-testid="health-down">
+          <ErrorNote icon={false} className={styles.healthNote} data-testid="health-down">
             <span className={styles.healthNoteText}>{t('start.backendDownHint')}</span>
             <Button
               className={styles.retry}
@@ -73,7 +74,7 @@ export function StartPage() {
               </span>{' '}
               {t('start.backendRetry')}
             </Button>
-          </div>
+          </ErrorNote>
         )}
       </footer>
     </div>

@@ -1,7 +1,7 @@
 ---
 id: "0063"
 title: "React-Frontend: Textkatalog je Feature, Fehlerhinweis und Regeln je Bereich"
-status: approved
+status: Review
 risk: medium
 adrs: ["0016"]
 owner: Morten Möller
@@ -106,6 +106,7 @@ Dateien:
 - `frontend-react/src/ui/error-note.module.css`: neu
 - `frontend-react/src/ui/error-note.spec.tsx`: neu
 - `frontend-react/src/ui/gallery/ui-gallery.tsx`: ändern, Beispiel für `ErrorNote`
+- `frontend-react/src/ui/gallery/main.tsx`: ändern, `createThemeStore` mit `PreferencesStore` (behebt den Typfehler auf `main`)
 - `project-rules/frontend-react.md`: ändern
 - `project-rules/frontend-react-ui.md`: ändern, `ErrorNote`
 - `project-rules/testing.md`: ändern, eine Zeile für die Feature-Ordner
@@ -141,7 +142,10 @@ Testdaten: keine.
 
 ## Offene Fragen
 
-keine
+- [x] `make typecheck` scheitert auf `main`: `frontend-react/src/ui/gallery/main.tsx` ruft
+  `createThemeStore(window)` mit einem Argument auf (Spec 0055), Spec 0054 hat den Parameter
+  `preferences` eingeführt. Wo wird das behoben? → In dieser Spec, die Datei kommt in den Plan.
+  (Morten Möller, 2026-11-24)
 
 ## Verifikationsplan
 

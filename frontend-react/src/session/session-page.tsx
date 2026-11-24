@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useBackend } from '../api/backend';
-import { t } from '../i18n/messages';
+import { t } from './messages';
 import styles from './session-page.module.css';
 
 const SESSION_NOT_FOUND = 'SESSION_NOT_FOUND';

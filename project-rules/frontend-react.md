@@ -43,9 +43,15 @@ design holds here as well, unless this file names another way.
   the room; until spec 0058 only the states `session-loading` and `session-gone`), `shell`
   (toolbar, theme, error banner, main area), `api` (generated types, calls, stores, realtime,
   error texts, route guard), `i18n` (texts), `styles` (tokens, global rules). `join` and the
-  shared controls in `ui` come with their specs.
-- Import boundaries: features and `shell` import from `api`, `i18n` and packages; `api` imports
-  `i18n` and no feature; `i18n` imports nothing. No feature imports another feature.
+  later parts of the room come with their specs. The shared controls are in `ui`
+  (`project-rules/frontend-react-ui.md`), the card motifs in `styles/motifs.css`; `i18n` holds
+  `defineMessages` and the error texts per `errorCode`.
+- Rules per feature: a feature writes its rules into `project-rules/frontend-react-<feature>.md`
+  with `sources:` on its folder (`frontend-react/src/<feature>/**`), after the pattern of
+  `frontend-react-ui.md`. This file holds only what every feature follows.
+- Import boundaries: features and `shell` import from `api`, `ui`, `i18n` and packages; `api`
+  imports `i18n` and no feature; `ui` imports `styles` and no feature; `i18n` imports nothing. No
+  feature imports another feature.
 - `main.tsx` is the only file with effects at load: it calls `createBackend(window)`
   (`api/backend.tsx`) once, creates and starts the theme store, waits for
   `backend.loadSetting()` (at most 3 s) and renders `App`. Every service is a factory
@@ -121,8 +127,8 @@ design holds here as well, unless this file names another way.
 - Styling: one CSS Module per component (`*.module.css`), passed through `className`; states
   through the attributes of the UI SDK (`[data-pressed]`, `[data-disabled]`, `[data-pending]`).
   `frontend-react/src/styles/global.css` starts with `@layer ui-sdk;` so that own rules win over
-  the CSS that the UI SDK adds at run time. Global classes are only `app-symbol` and the rules of
-  `global.css`.
+  the CSS that the UI SDK adds at run time. Global classes are only `app-symbol`, the rules of
+  `global.css` and the motif classes `motif-0` to `motif-4` of `styles/motifs.css`.
 - Tokens: `frontend-react/src/styles/tokens.css` has every `--mat-sys-*` and `--app-*` variable of
   the Angular frontend with the same name and value, light and dark (taken from the compiled
   Angular stylesheet). Dark values stand for `html[data-theme='dark']` and, under
@@ -132,11 +138,19 @@ design holds here as well, unless this file names another way.
 - Fonts: IBM Plex Sans and IBM Plex Mono from Google Fonts in `frontend-react/index.html`.
 - Focus: `global.css` draws a 3 px outline in `--mat-sys-primary` with 3 px offset on
   `:focus-visible`. Components do not remove it.
-- i18n: every text for users comes from `frontend-react/src/i18n/messages.ts` through `t(key)`;
-  the keys are the ids of the Angular templates without `@@` (`start.title`). An unknown key fails
-  `make typecheck`, a key without a use fails `make test` (`i18n/messages.spec.ts`), a text with
-  letters in JSX or in `aria-label`, `alt`, `title` or `placeholder` fails `make lint` (geprüft:
-  eslint `no-restricted-syntax`). Symbols without letters stand in constants.
+- i18n (spec 0063): every text for users comes from a catalog through `t(key)`. Each feature
+  folder has its own catalog `messages.ts`: `export const MESSAGES = { … } as const` and
+  `export const t = defineMessages(MESSAGES)` (`i18n/messages.ts`); a component imports `t` from
+  the catalog of its own folder. `frontend-react/src/i18n/messages.ts` holds only the texts
+  `error.<CODE>` and `error.unknown` for `api/error-messages.ts`. The keys are the ids of the
+  Angular templates without `@@` (`start.title`). A value is written as `{name}` in the text and
+  passed as `t(key, { name })`. A text with a number form is an entry `{ one, other }`;
+  `t(key, { count })` takes `one` for 1 and `other` for every other number. An unknown key, and a
+  number form without `count`, fail `make typecheck`. `i18n/messages.spec.ts` finds every
+  `messages.ts` under `src/` and fails `make test` for a key without a use, a key in two catalogs
+  and a file without `MESSAGES`. A text with letters in JSX or in `aria-label`, `alt`, `title` or
+  `placeholder` fails `make lint` (geprüft: eslint `no-restricted-syntax`). Symbols without
+  letters stand in constants.
 - Accessibility: keyboard reachable, labelled controls (geprüft: eslint `jsx-a11y` strict). Symbols
   stand in `aria-hidden` spans.
 - Elements that end-to-end tests drive carry the `data-testid` of the Angular frontend (A7.6).

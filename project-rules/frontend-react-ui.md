@@ -61,6 +61,17 @@ The shared controls of the React frontend in `frontend-react/src/ui/` (spec 0055
 - The input has no outline on `:focus-visible`; the border shows the focus, as in the Angular
   frontend. This is the only control without the outline of `global.css`.
 
+## `ErrorNote` (`ui/error-note.tsx`)
+
+- A box with `role="alert"` in `--mat-sys-error-container` and `--mat-sys-on-error-container`,
+  radius `--app-corner-control`, font `--mat-sys-label-large` at weight 400 (the classes `note`
+  and `note-error` of the Angular frontend). Own HTML and CSS; the UI SDK has no such part.
+- The symbol ⚠ stands before the content in an `aria-hidden` span; `icon={false}` leaves it out.
+- `data-testid` and `className` go to the box. The base rule has no specificity (`:where`), so a
+  class of the caller changes layout and font without regard to the order of the stylesheets.
+- The content is the children; the caller puts the `data-testid` of the text on its own span when
+  the Angular frontend has it there.
+
 ## `CardHand` (`ui/card-hand.tsx`)
 
 - Five cards with the classes `motif-0` to `motif-4`, fanned from −20° to +20°; decoration with

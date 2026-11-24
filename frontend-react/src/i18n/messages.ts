@@ -1,15 +1,39 @@
+export interface PluralMessage {
+  readonly one: string;
+  readonly other: string;
+}
+
+export type Message = string | PluralMessage;
+export type Catalog = Readonly<Record<string, Message>>;
+export type MessageValues = Readonly<Record<string, string | number>>;
+export type PluralValues = MessageValues & { readonly count: number };
+
+type PluralKey<C extends Catalog> = {
+  [K in keyof C]: C[K] extends PluralMessage ? K : never;
+}[keyof C];
+type PlainKey<C extends Catalog> = Exclude<keyof C, PluralKey<C>>;
+
+export interface Translate<C extends Catalog> {
+  (key: PlainKey<C>, values?: MessageValues): string;
+  (key: PluralKey<C>, values: PluralValues): string;
+}
+
+function textOf(message: Message, values: MessageValues): string {
+  if (typeof message === 'string') {
+    return message;
+  }
+  return values['count'] === 1 ? message.one : message.other;
+}
+
+export function defineMessages<const C extends Catalog>(catalog: C): Translate<C> {
+  return (key: keyof C, values: MessageValues = {}) =>
+    Object.entries(values).reduce<string>(
+      (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
+      textOf(catalog[key] as Message, values),
+    );
+}
+
 export const MESSAGES = {
-  'shell.title': 'Planning Poker',
-  'shell.theme.light': 'Helles Design',
-  'shell.theme.dark': 'Dunkles Design',
-  'start.title': 'Issues gemeinsam schätzen',
-  'start.lead':
-    'Der Scrum Master erstellt die Sitzung und teilt den Link. Das Team tritt mit Namen bei und schätzt verdeckt.',
-  'start.backendReachable': 'Backend erreichbar',
-  'start.backendUnreachable': 'Backend nicht erreichbar',
-  'start.backendChecking': 'Backend wird geprüft …',
-  'start.backendDownHint': 'Ohne Backend lassen sich keine Sitzungen erstellen oder betreten.',
-  'start.backendRetry': 'Erneut prüfen',
   'error.VALIDATION_ERROR': 'Die Eingabe ist ungültig.',
   'error.INVALID_CARD': 'Diese Karte gibt es nicht.',
   'error.UNAUTHORIZED': 'Der Zugang zur Sitzung ist nicht mehr gültig.',
@@ -26,21 +50,8 @@ export const MESSAGES = {
     'GitLab verweigert den Zugriff. Der GitLab-Token des Backends braucht Scope api und Rechte im Projekt.',
   'error.GITLAB_ERROR': 'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.',
   'error.unknown': 'Es ist ein Fehler aufgetreten.',
-  'error.close': 'Schließen',
-  'connection.lost': 'Verbindung zum Server unterbrochen.',
-  'connection.retryIn': 'Neuer Versuch in {seconds} s. Deine Karte bleibt erhalten.',
-  'connection.connecting': 'Verbindung wird aufgebaut … Deine Karte bleibt erhalten.',
-  'connection.reconnect': 'Jetzt verbinden',
-  'session.loading': 'Sitzung wird geladen',
-  'session.gone': 'Diese Sitzung ist abgelaufen oder existiert nicht.',
-  'session.goneHome': 'Zur Startseite',
 } as const;
 
 export type MessageKey = keyof typeof MESSAGES;
 
-export function t(key: MessageKey, values: Readonly<Record<string, string | number>> = {}): string {
-  return Object.entries(values).reduce<string>(
-    (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
-    MESSAGES[key],
-  );
-}
+export const t = defineMessages(MESSAGES);

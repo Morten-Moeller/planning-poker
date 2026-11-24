@@ -2,7 +2,7 @@ import { Button } from '@ui-sdk/react/button';
 import { useCallback, useSyncExternalStore } from 'react';
 import { useBackend, useConnection, useLastError } from '../api/backend';
 import { errorMessage } from '../api/error-messages';
-import { t } from '../i18n/messages';
+import { t } from './messages';
 import styles from './error-banner.module.css';
 
 const TICK_MS = 250;
