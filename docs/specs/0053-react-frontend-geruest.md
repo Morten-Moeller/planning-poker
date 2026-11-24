@@ -1,14 +1,14 @@
 ---
 id: "0053"
 title: "React-Frontend: Gerüst mit Gates, Theme, Shell und Health"
-status: Review
+status: done
 risk: high
 adrs: ["0016"]
 owner: Morten Möller
 created: 2026-11-24
 updated: 2026-11-24
-pr: ""
-note: freigegeben in der Session
+pr: "#61"
+note: alle Kriterien erfüllt
 ---
 
 # React-Frontend: Gerüst mit Gates, Theme, Shell und Health
