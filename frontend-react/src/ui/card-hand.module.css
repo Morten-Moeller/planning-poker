@@ -1,0 +1,31 @@
+.hand {
+  --card-width: 44px;
+  --card-height: 64px;
+
+  position: relative;
+  display: block;
+  flex: none;
+  width: calc(var(--card-width) * 3.4);
+  height: calc(var(--card-height) * 1.3);
+}
+
+.hand[data-size='large'] {
+  --card-width: 64px;
+  --card-height: 92px;
+}
+
+.card {
+  position: absolute;
+  bottom: 0;
+  left: calc(50% - var(--card-width) / 2);
+  box-sizing: border-box;
+  width: var(--card-width);
+  height: var(--card-height);
+  border-radius: var(--app-corner-control);
+  background-color: var(--app-card-accent);
+  background-image: var(--app-card-pattern);
+  background-size: var(--app-card-pattern-size);
+  box-shadow: 0 0 0 2px var(--mat-sys-surface);
+  transform-origin: 50% 190%;
+  transform: rotate(var(--card-angle));
+}

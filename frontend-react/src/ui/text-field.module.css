@@ -1,0 +1,79 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+  min-width: 0;
+}
+
+.label {
+  font: var(--mat-sys-label-large);
+  letter-spacing: var(--mat-sys-label-large-tracking);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.label[data-invalid] {
+  color: var(--mat-sys-error);
+}
+
+.label[data-disabled] {
+  color: color-mix(in srgb, var(--mat-sys-on-surface) 38%, transparent);
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 56px;
+  margin: 0;
+  padding: 0 var(--app-space-m);
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: var(--app-corner-control);
+  background-color: transparent;
+  color: var(--mat-sys-on-surface);
+  caret-color: var(--mat-sys-primary);
+  font: var(--mat-sys-body-large);
+  letter-spacing: var(--mat-sys-body-large-tracking);
+}
+
+.input:hover {
+  border-color: var(--mat-sys-on-surface);
+}
+
+.input:focus {
+  padding: 0 calc(var(--app-space-m) - 1px);
+  border: 2px solid var(--mat-sys-primary);
+}
+
+.input:focus-visible {
+  outline: none;
+}
+
+.input[data-invalid] {
+  border-color: var(--mat-sys-error);
+  caret-color: var(--mat-sys-error);
+}
+
+.input[data-disabled] {
+  border-color: color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
+  color: color-mix(in srgb, var(--mat-sys-on-surface) 38%, transparent);
+}
+
+.hint,
+.error {
+  margin: 0;
+  padding: 0 var(--app-space-m);
+  font: var(--mat-sys-body-small);
+  letter-spacing: var(--mat-sys-body-small-tracking);
+}
+
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error {
+  color: var(--mat-sys-error);
+}
+
+.errorSymbol {
+  font-family: var(--app-font-mono);
+  font-weight: 600;
+}
