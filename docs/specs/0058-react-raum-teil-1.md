@@ -1,14 +1,14 @@
 ---
 id: "0058"
 title: "React-Frontend: Raum Teil 1 mit Seitenleiste und Lobby"
-status: Review
+status: done
 risk: high
 adrs: ["0004", "0014", "0016"]
 owner: Morten Möller
 created: 2026-11-24
 updated: 2026-11-24
-pr: ""
-note: freigegeben in der Session
+pr: "#68"
+note: alle Kriterien erfüllt
 ---
 
 # React-Frontend: Raum Teil 1 mit Seitenleiste und Lobby
