@@ -1,0 +1,115 @@
+.participants {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.title {
+  margin: 0 0 var(--app-space-xs);
+  font: var(--app-label-section);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-on-surface-muted);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-s);
+  padding: var(--app-space-s);
+  border-radius: var(--mat-sys-corner-small);
+}
+
+.me {
+  background-color: var(--mat-sys-surface-container);
+}
+
+.chip {
+  flex: none;
+  width: 16px;
+  height: 22px;
+  border-radius: var(--mat-sys-corner-extra-small);
+}
+
+.filled {
+  background-color: var(--app-card-accent);
+  background-image: var(--app-card-pattern);
+  background-size: var(--app-card-pattern-size);
+}
+
+.empty {
+  border: 1.5px dashed var(--mat-sys-outline);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-s);
+}
+
+.name {
+  font: var(--mat-sys-body-medium);
+  font-weight: 500;
+  color: var(--mat-sys-on-surface);
+  overflow-wrap: anywhere;
+}
+
+.you {
+  font: var(--mat-sys-body-small);
+  color: var(--app-on-surface-muted);
+}
+
+.role {
+  padding: 0 var(--app-space-s);
+  border-radius: var(--mat-sys-corner-extra-small);
+  background-color: var(--app-warning-container);
+  color: var(--app-on-warning-container);
+  font: var(--mat-sys-label-medium);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.activity {
+  font: var(--mat-sys-body-small);
+  color: var(--app-on-surface-muted);
+}
+
+.voted {
+  color: var(--app-success);
+}
+
+.pending {
+  color: var(--app-warning);
+}
+
+.connection {
+  flex: none;
+  font: var(--mat-sys-label-medium);
+  color: var(--app-on-surface-muted);
+  white-space: nowrap;
+}
+
+.disconnected .name {
+  color: var(--app-on-surface-muted);
+}
+
+.disconnected .connection {
+  color: var(--mat-sys-error);
+}

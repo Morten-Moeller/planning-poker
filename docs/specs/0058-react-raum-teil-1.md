@@ -1,7 +1,7 @@
 ---
 id: "0058"
 title: "React-Frontend: Raum Teil 1 mit Seitenleiste und Lobby"
-status: approved
+status: Review
 risk: high
 adrs: ["0004", "0014", "0016"]
 owner: Morten Möller

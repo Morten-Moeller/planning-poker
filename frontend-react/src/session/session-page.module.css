@@ -1,3 +1,131 @@
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+main:has(> .room) {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.room {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+}
+
+.side {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-l);
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: var(--app-space-l);
+  background-color: var(--mat-sys-surface-container-low);
+  border-right: 1px solid var(--mat-sys-outline-variant);
+}
+
+.main {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: var(--app-space-xl) var(--app-space-2xl) var(--app-space-2xl);
+}
+
+@media (min-width: 720px) {
+  div:has(> main > .room) {
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  main:has(> .room) {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 719.98px) {
+  .room {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .main {
+    grid-column: 1;
+    overflow-y: visible;
+    padding: var(--app-space-m) var(--app-space-m) var(--app-space-l);
+  }
+
+  .side {
+    grid-column: 1;
+    grid-row: 3;
+    overflow-y: visible;
+    padding: var(--app-space-l) var(--app-space-m) var(--app-space-xl);
+    border-right: none;
+    border-top: 1px solid var(--mat-sys-outline-variant);
+  }
+}
+
+.timer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-s);
+}
+
+.sectionTitle {
+  margin: 0;
+  font: var(--app-label-section);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-on-surface-muted);
+}
+
+.waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-l);
+  padding: var(--app-space-3xl) var(--app-space-l);
+  border: 1px dashed var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-large);
+  text-align: center;
+}
+
+.after {
+  padding: var(--app-space-xl) var(--app-space-l);
+}
+
+.waitingTitle {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-on-surface);
+  text-wrap: balance;
+}
+
+.waitingHint {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--app-on-surface-muted);
+}
+
 .gone {
   display: flex;
   flex-direction: column;
