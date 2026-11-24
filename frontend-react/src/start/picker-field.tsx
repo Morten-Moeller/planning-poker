@@ -54,6 +54,7 @@ export function PickerField({
       error={error}
       value={value}
       onChange={onChange}
+      onBlur={onBlur}
       autoComplete="off"
       data-testid={testId}
       errorTestId={errorTestId}
@@ -69,7 +70,7 @@ export function PickerField({
             autoComplete={input.autoComplete}
             data-testid={input['data-testid']}
             onFocus={onFocus}
-            onBlur={onBlur}
+            onBlur={input.onBlur}
           />
           <AutocompleteContent className={styles.panel} sideOffset={4}>
             <AutocompleteList className={styles.list}>
