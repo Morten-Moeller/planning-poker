@@ -13,6 +13,7 @@ default_branch: main
 # Directories with source code. The Stop hook reminds about uncommitted changes under them.
 source_paths:
   - frontend/src
+  - frontend-react/src
   - backend/src/main
 
 # Make target that regenerates the committed generated files (contracts, API types). The gate
@@ -73,6 +74,7 @@ stack:
   - "nodejs 26"
   - "angular 22"
   - "quarkus-framework 3.40"
+  - "react 19"
 
 # Days after a line became LTS before `make deps` fails for a stack entry on an older line.
 stack_lts_grace_days: 30
