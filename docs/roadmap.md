@@ -106,7 +106,7 @@ Hinweise zu den Wellen:
 
 # Roadmap Teil 2: React-Frontend mit UI SDK
 
-Stand: 2026-11-24
+Stand: 2026-11-24 (Welle 2 geschrieben)
 
 Teil 1 oben ist abgeschlossen (Specs 0001 bis 0019) und bleibt unverändert.
 
@@ -163,21 +163,29 @@ bestehen (ADR 0001, R-26).
 | Spec | Titel | Welle | Hängt ab von | Bereiche | Risiko |
 |---|---|---|---|---|---|
 | 0053 | React-Frontend: Gerüst mit Gates, Theme, Shell und Health | 1 | – | `frontend-react/` (neu), `Makefile`, `frontend/playwright.config.ts`, `frontend/e2e/health.spec.ts`, `.github/actions/setup/`, `.github/dependabot.yml`, `project-rules/`, `docs/`, `README.md`, `.env.example` | high |
-| 0054 | API-Schicht und Zustand: `ApiService`, Fehlerpfad mit `ErrorBanner`, `RealtimeService`, `SessionStore`, `TokenStore`, `PreferencesStore`, `RecentSessions`, Routen mit Guard | 2 | 0053 | `frontend-react/src/api/`, `frontend-react/src/shell/` (Banner), `frontend-react/src/app.tsx` | medium |
-| 0055 | Bedienelemente im Werkbank-Design: Button, Textfeld mit Field, Select, Autocomplete, Segmented Control, Dialog, Toast, Collapsible, Kartenhand | 2 | 0053 | `frontend-react/src/ui/` | medium |
-| 0056 | Startseite: Sitzung anlegen, Projekt- und Issue-Auswahl, Einstellungen merken, letzte Sitzungen | 3 | 0054, 0055 | `frontend-react/src/start/`, `frontend/e2e/` (Tags) | medium |
-| 0057 | Beitrittsseite: Einladung, Rollenhinweise, Fehlerzustände, Sitzung in der Toolbar | 3 | 0054, 0055 | `frontend-react/src/join/`, `frontend-react/src/shell/` (Toolbar) | medium |
-| 0058 | Raum, Teil 1: Raster, Seitenleiste (Timer, Teilnehmer, Teilen, Fakten), Lobby, Kartenmotiv | 3 | 0054, 0055 | `frontend-react/src/session/` | medium |
-| 0059 | Raum, Teil 2: Issue-Auswahl mit Filtern, aktives Issue mit Markdown, Wechsel-Dialog | 4 | 0058 | `frontend-react/src/session/`, `frontend-react/package.json` (`marked`, Sanitizer), `frontend/e2e/` (Tags) | medium |
-| 0060 | Raum, Teil 3: Diskussion und Schätzrunde: Kartensatz, Tisch, Rundenstatus, Timer, Footer | 5 | 0059 | `frontend-react/src/session/`, `frontend/e2e/` (Tags) | medium |
-| 0061 | Raum, Teil 4: Auflösung und Abschluss: Ergebnis, Ausreißer, Konsens, Konfetti, Bestätigen, letztes Ergebnis, Protokoll, erneut schätzen, Zuschauer | 6 | 0060 | `frontend-react/src/session/`, `frontend/e2e/` (Tags) | medium |
+| 0054 | API-Schicht, Zustand und Fehlerbanner: `Api`, `TokenStore`, `RecentSessions`, `PreferencesStore`, `Realtime`, `SessionStore`, `ErrorBanner`, Route `/session/:id` mit `session-loading` und `session-gone` | 2 | 0053 | `frontend-react/src/api/`, `frontend-react/src/session/` (Seite mit zwei Zuständen), `frontend-react/src/shell/`, `frontend-react/src/app.tsx`, `frontend-react/src/main.tsx`, `frontend-react/src/i18n/`, `frontend/e2e/session-access.spec.ts`, `project-rules/frontend-react.md`, `project-rules/testing.md` | high |
+| 0055 | Gemeinsame Bausteine: Button, Textfeld, Kartenhand, Motive, Musterseite `ui.html` | 2 | 0053 | `frontend-react/src/ui/`, `frontend-react/src/styles/motifs.css`, `frontend-react/ui.html`, `project-rules/frontend-react-ui.md` | medium |
+| 0056 | Startseite: Sitzung anlegen, Projekt- und Issue-Auswahl (Autocomplete), Einstellungen merken, letzte Sitzungen | 3 | 0054, 0055 | `frontend-react/src/start/`, `frontend/e2e/` (Tags) | medium |
+| 0057 | Beitrittsseite mit Route `/session/:id/join`: Einladung, Rollenhinweise, Fehlerzustände; Sitzung in der Toolbar; Banner mit `AppButton` | 3 | 0054, 0055 | `frontend-react/src/join/`, `frontend-react/src/shell/`, `frontend-react/src/app.tsx` | medium |
+| 0058 | Raum, Teil 1: Raster, Seitenleiste (Timer mit Select, Teilnehmer, Teilen, Fakten), Lobby, Kartenmotiv | 3 | 0054, 0055 | `frontend-react/src/session/` | medium |
+| 0059 | Raum, Teil 2: Issue-Auswahl mit Filtern (Segmented Control, Select), aktives Issue mit Markdown, Wechsel-Dialog | 4 | 0058 | `frontend-react/src/session/`, `frontend-react/package.json` (`marked`, Sanitizer), `frontend/e2e/` (Tags) | medium |
+| 0060 | Raum, Teil 3: Diskussion und Schätzrunde: Karte, Kartensatz, Tisch, Rundenstatus mit Fortschrittsbalken, Timer, Footer | 5 | 0059 | `frontend-react/src/session/`, `frontend/e2e/` (Tags) | medium |
+| 0061 | Raum, Teil 4: Auflösung und Abschluss: Ergebnis, Ausreißer, Konsens, Konfetti, Bestätigen (Dialog, Toast), letztes Ergebnis, Protokoll (Collapsible), erneut schätzen, Zuschauer | 6 | 0060 | `frontend-react/src/session/`, `frontend-react/src/shell/` (Toast-Region), `frontend/e2e/` (Tags) | medium |
 | 0062 | Parität: ganze Suite ohne Tag gegen React, Bundle-Grenze, README und Architektur final | 7 | 0056, 0057, 0061 | `frontend/e2e/`, `frontend/playwright.config.ts`, `frontend-react/vite.config.ts`, `README.md`, `docs/` | medium |
 
 Hinweise zu den Wellen:
 
 - Welle 1 ist das Gerüst allein. 0053 trägt ADR 0016.
-- Welle 2: 0054 ändert `api/`, das Banner und die Routen, 0055 nur `ui/`; beide ändern
-  `frontend-react/package.json` nicht (die Abhängigkeiten stehen seit 0053 fest).
+- Welle 2: 0054 ändert `api/`, `shell/`, die Routen und den Textkatalog, 0055 nur `ui/`,
+  `styles/motifs.css` und die Musterseite; beide ändern `frontend-react/package.json` nicht.
+  `wave-check.sh` meldet keine Überschneidung. 0055 schreibt seine Regeln in
+  `project-rules/frontend-react-ui.md`, damit beide Specs keine gemeinsame Datei ändern. Das
+  Banner aus 0054 hat eigenes Button-CSS; 0057 stellt es auf `AppButton` um.
+- Ein Bedienelement mit nur einem Feature als Nutzer (Select, Autocomplete, Segmented Control,
+  Dialog, Toast, Collapsible, Fortschrittsbalken) entsteht in diesem Feature, nicht in `ui/`
+  (A1.3).
+- Die Schlüsselwort-Regel der Risikomatrix (`token`) hebt 0054 auf high. Dasselbe ist für 0056
+  und 0057 zu erwarten, sobald ihr Code den `TokenStore` aufruft.
 - Welle 3: drei Feature-Ordner. Eine Testdatei in `frontend/e2e/`, die zwei Specs einer Welle mit
   `@react` versehen würden (`create-and-join.spec.ts`), bekommt ihre Tags von der Spec der
   nächsten Welle, die den Ablauf vollständig hat.
