@@ -46,6 +46,7 @@ export function ShareSession({
   const [copied, setCopied] = useState<ShareTarget | null>(null);
   const [failed, setFailed] = useState<ShareTarget | null>(null);
   const copiedTimer = useRef<number | null>(null);
+  const mounted = useRef(false);
   const links = inviteLinks(sessionId, invites);
   const canCopy = browserClipboard() !== null;
 
@@ -56,20 +57,25 @@ export function ShareSession({
     }
   };
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
       if (copiedTimer.current !== null) {
         window.clearTimeout(copiedTimer.current);
+        copiedTimer.current = null;
       }
-    },
-    [],
-  );
+    };
+  }, []);
 
   const copy = (target: ShareTarget) => {
     browserClipboard()
       ?.writeText(links[target])
       .then(
         () => {
+          if (!mounted.current) {
+            return;
+          }
           setFailed(null);
           setCopied(target);
           stopCopiedTimer();
@@ -79,6 +85,9 @@ export function ShareSession({
           }, COPIED_VISIBLE_MS);
         },
         () => {
+          if (!mounted.current) {
+            return;
+          }
           stopCopiedTimer();
           setCopied(null);
           setFailed(target);
