@@ -1,23 +1,66 @@
 import { Toggle } from '@ui-sdk/react/toggle';
 import { useSyncExternalStore } from 'react';
-import { Link, Outlet } from 'react-router';
+import { Link, Outlet, useLocation } from 'react-router';
+import { useBackend } from '../api/backend';
+import type { ParticipantRole } from '../api/recent-sessions';
 import { t } from './messages';
+import type { MessageKey } from './messages';
 import styles from './app-shell.module.css';
 import { ErrorBanner } from './error-banner';
 import type { ThemeStore } from './theme-store';
 
 const SYMBOL_DARK = '☀️';
 const SYMBOL_LIGHT = '🌙';
+const NAME_ROLE_SEPARATOR = ' · ';
+const JOIN_PATH = /^\/session\/([^/]+)\/join\/?$/;
+const SESSION_ID = /^[A-HJKMNP-Z2-9]{8}$/;
+
+const ROLE_TEXT: Record<ParticipantRole, MessageKey> = {
+  SCRUM_MASTER: 'shell.role.SCRUM_MASTER',
+  DEVELOPER: 'shell.role.DEVELOPER',
+  VIEWER: 'shell.role.VIEWER',
+};
+
+function joinSessionId(pathname: string): string | null {
+  const id = JOIN_PATH.exec(pathname)?.[1]?.toUpperCase();
+  return id !== undefined && SESSION_ID.test(id) ? id : null;
+}
 
 export function AppShell({ theme }: { theme: ThemeStore }) {
+  const { sessions } = useBackend();
   const dark = useSyncExternalStore(theme.subscribe, theme.dark);
+  const session = useSyncExternalStore(sessions.subscribe, sessions.session);
+  const { pathname } = useLocation();
+
+  const sessionId = session?.sessionId ?? joinSessionId(pathname);
+  const myName =
+    session?.participants.find((participant) => participant.id === session.me.participantId)
+      ?.name ?? null;
 
   return (
     <div className={styles.shell}>
       <header className={styles.toolbar} data-testid="toolbar">
+        {sessionId !== null && (
+          <span className={styles.motif} data-testid="toolbar-motif" aria-hidden="true" />
+        )}
         <Link className={styles.title} to="/" data-testid="toolbar-home">
           {t('shell.title')}
         </Link>
+        {sessionId !== null && (
+          <>
+            <span className={styles.sessionId} data-testid="toolbar-session-id">
+              {sessionId}
+            </span>
+            <span className={styles.spacer} />
+          </>
+        )}
+        {session !== null && myName !== null && (
+          <span className={styles.me} data-testid="toolbar-me">
+            {myName}
+            {NAME_ROLE_SEPARATOR}
+            {t(ROLE_TEXT[session.me.role])}
+          </span>
+        )}
         <Toggle
           className={styles.themeToggle}
           data-testid="theme-toggle"

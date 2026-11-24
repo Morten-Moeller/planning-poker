@@ -1,7 +1,7 @@
-import { Button } from '@ui-sdk/react/button';
 import { useCallback, useSyncExternalStore } from 'react';
 import { useBackend, useConnection, useLastError } from '../api/backend';
 import { errorMessage } from '../api/error-messages';
+import { AppButton } from '../ui/app-button';
 import { t } from './messages';
 import styles from './error-banner.module.css';
 
@@ -46,22 +46,28 @@ export function ErrorBanner() {
               : t('connection.retryIn', { seconds: secondsLeft })}
           </span>
           <span className={styles.spacer} />
-          <Button
-            className={styles.reconnect}
+          <AppButton
+            variant="outlined"
+            tone="on-error"
             data-testid="connection-reconnect"
             disabled={secondsLeft === null}
             onClick={() => realtime.reconnectNow()}
           >
             {t('connection.reconnect')}
-          </Button>
+          </AppButton>
         </div>
       )}
       {error !== null && (
         <div className={styles.banner} role="alert" data-testid="error-banner">
           <span data-testid="error-message">{errorMessage(error.errorCode)}</span>
-          <Button className={styles.close} data-testid="error-close" onClick={() => errors.clear()}>
+          <AppButton
+            variant="text"
+            tone="on-error"
+            data-testid="error-close"
+            onClick={() => errors.clear()}
+          >
             {t('error.close')}
-          </Button>
+          </AppButton>
         </div>
       )}
     </>

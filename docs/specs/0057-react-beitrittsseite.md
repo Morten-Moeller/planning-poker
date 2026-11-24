@@ -1,7 +1,7 @@
 ---
 id: "0057"
 title: "React-Frontend: Beitrittsseite und Sitzung in der Toolbar"
-status: approved
+status: Review
 risk: high
 adrs: ["0003", "0013", "0014", "0016"]
 owner: Morten Möller
