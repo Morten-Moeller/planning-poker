@@ -1,0 +1,15 @@
+:where(.note) {
+  display: flex;
+  gap: var(--app-space-s);
+  padding: var(--app-space-s) var(--app-space-m);
+  border-radius: var(--app-corner-control);
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+  font: var(--mat-sys-label-large);
+  font-weight: 400;
+}
+
+.icon {
+  font-family: var(--app-font-mono);
+  font-weight: 600;
+}

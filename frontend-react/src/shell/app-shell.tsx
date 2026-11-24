@@ -1,7 +1,7 @@
 import { Toggle } from '@ui-sdk/react/toggle';
 import { useSyncExternalStore } from 'react';
 import { Link, Outlet } from 'react-router';
-import { t } from '../i18n/messages';
+import { t } from './messages';
 import styles from './app-shell.module.css';
 import { ErrorBanner } from './error-banner';
 import type { ThemeStore } from './theme-store';
