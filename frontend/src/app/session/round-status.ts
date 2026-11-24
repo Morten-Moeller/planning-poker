@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
 import { SessionStore } from '../api/session-store';
 import { motifName } from './motif-name';
@@ -7,7 +8,7 @@ import { voteProgress } from './vote-progress';
 
 @Component({
   selector: 'app-round-status',
-  imports: [SeatTable, RoundTimer],
+  imports: [NgTemplateOutlet, SeatTable, RoundTimer],
   templateUrl: './round-status.html',
   styleUrl: './round-status.scss',
 })

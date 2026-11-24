@@ -12,27 +12,25 @@
         aria-label="Einladung Entwickler kopieren"
         (click)="copy('developer')"
       >
-        <span class="app-symbol" aria-hidden="true">⧉</span>&ngsp;<span i18n="@@share.copy"
-          >Kopieren</span
-        >
+        <span class="app-symbol" aria-hidden="true">⧉</span>&ngsp;<ng-container
+          [ngTemplateOutlet]="copyText"
+        />
       </button>
     }
   </div>
   @if (copied() === 'developer') {
     <span class="note done"
       ><span aria-hidden="true">✓ </span
-      ><span role="status" data-testid="copy-link-developer-done" i18n="@@share.copied"
-        >Kopiert</span
-      ></span
-    >
+      ><span role="status" data-testid="copy-link-developer-done"
+        ><ng-container [ngTemplateOutlet]="copiedText" /></span
+    ></span>
   }
   @if (failed() === 'developer') {
     <span class="note failed"
       ><span aria-hidden="true">⚠ </span
-      ><span role="status" data-testid="copy-link-developer-failed" i18n="@@share.copyFailed"
-        >Kopieren nicht möglich, bitte von Hand kopieren</span
-      ></span
-    >
+      ><span role="status" data-testid="copy-link-developer-failed"
+        ><ng-container [ngTemplateOutlet]="copyFailedText" /></span
+    ></span>
   }
   <span class="label" i18n="@@share.viewerLabel">Einladung Zuschauer</span>
   <div class="field">
@@ -46,29 +44,34 @@
         aria-label="Einladung Zuschauer kopieren"
         (click)="copy('viewer')"
       >
-        <span class="app-symbol" aria-hidden="true">⧉</span>&ngsp;<span i18n="@@share.copy"
-          >Kopieren</span
-        >
+        <span class="app-symbol" aria-hidden="true">⧉</span>&ngsp;<ng-container
+          [ngTemplateOutlet]="copyText"
+        />
       </button>
     }
   </div>
   @if (copied() === 'viewer') {
     <span class="note done"
       ><span aria-hidden="true">✓ </span
-      ><span role="status" data-testid="copy-link-viewer-done" i18n="@@share.copied"
-        >Kopiert</span
-      ></span
-    >
+      ><span role="status" data-testid="copy-link-viewer-done"
+        ><ng-container [ngTemplateOutlet]="copiedText" /></span
+    ></span>
   }
   @if (failed() === 'viewer') {
     <span class="note failed"
       ><span aria-hidden="true">⚠ </span
-      ><span role="status" data-testid="copy-link-viewer-failed" i18n="@@share.copyFailed"
-        >Kopieren nicht möglich, bitte von Hand kopieren</span
-      ></span
-    >
+      ><span role="status" data-testid="copy-link-viewer-failed"
+        ><ng-container [ngTemplateOutlet]="copyFailedText" /></span
+    ></span>
   }
   <a mat-stroked-button class="new-session" routerLink="/" data-testid="new-session"
     ><span aria-hidden="true">＋ </span><span i18n="@@share.newSession">Neue Sitzung</span></a
   >
 </section>
+<ng-template #copyText><span i18n="@@share.copy">Kopieren</span></ng-template>
+<ng-template #copiedText><ng-container i18n="@@share.copied">Kopiert</ng-container></ng-template>
+<ng-template #copyFailedText
+  ><ng-container i18n="@@share.copyFailed"
+    >Kopieren nicht möglich, bitte von Hand kopieren</ng-container
+  ></ng-template
+>

@@ -1,4 +1,4 @@
-import { DOCUMENT } from '@angular/common';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
@@ -11,7 +11,7 @@ const COPIED_VISIBLE_MS = 3000;
 
 @Component({
   selector: 'app-share-session',
-  imports: [MatButtonModule, RouterLink],
+  imports: [MatButtonModule, NgTemplateOutlet, RouterLink],
   templateUrl: './share-session.html',
   styleUrl: './share-session.scss',
 })
