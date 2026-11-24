@@ -101,3 +101,97 @@ Hinweise zu den Wellen:
 - [x] Gibt es einen Abgabetermin, der die Reihenfolge der Wellen ändert? → Nein; M14 bleibt der letzte Meilenstein. (Morten Möller, 2026-11-16)
 - [x] Testprojekt für die manuelle Prüfung in M13? → Ein eigenes Projekt auf gitlab.com mit Personal Access Token (Scope `api`) liegt vor. (Morten Möller, 2026-11-16)
 - [x] Welcher GitLab-Tarif liegt vor: ist `weight` nutzbar (A-07)? → Premium oder Ultimate; `write-weight` wird in 0010 umgesetzt und in der Checkliste von 0015 gegen das echte Projekt geprüft. Der Standardwert bleibt `false` (A-07). (Morten Möller, 2026-11-16)
+
+---
+
+# Roadmap Teil 2: React-Frontend mit UI SDK
+
+Stand: 2026-11-24
+
+Teil 1 oben ist abgeschlossen (Specs 0001 bis 0019) und bleibt unverändert.
+
+## Ziel
+
+Die Anwendung bekommt ein zweites Frontend in `frontend-react/`: React 19 mit den Komponenten des
+UI SDK (<https://ui-sdk.dev>), gegen dasselbe Backend und denselben Vertrag. Am Ende hat es alle
+Seiten, Rollen und Zustände des Angular-Frontends im Design „Werkbank“, und die Playwright-Suite in
+`frontend/e2e/` läuft ohne Einschränkung gegen beide Frontends. Das Angular-Frontend bleibt
+bestehen (ADR 0001, R-26).
+
+## Nutzer
+
+| Nutzer | Was sie damit tun |
+|---|---|
+| Scrum Master, Entwickler, Zuschauer | dasselbe wie im Angular-Frontend, unter einer zweiten Adresse (`make frontend-react`) |
+| Die Person, die das Projekt führt | vergleicht Angular mit Angular Material und React mit UI SDK an derselben Anwendung |
+
+## Nicht-Ziele
+
+- Ablösung oder Änderung des Angular-Frontends; Änderungen dort nur an Selektoren der
+  End-to-End-Tests, die sonst nur für Angular gelten
+- Änderungen am Backend oder am Vertrag in `contracts/`
+- Ein neues Design; Abweichungen von `docs/design/` nur dort, wo das Angular-Frontend sie auch hat
+- Tailwind CSS, ein Zustands-Paket, ein i18n-Paket, Server-Rendering
+- Ein Mock-Backend wie `pnpm -C frontend start:mock`; Browser-Prüfungen des React-Frontends laufen
+  gegen das Backend
+- Vue, Svelte, Solid oder Web Components des UI SDK
+
+## Qualitätsziele
+
+- Gleichheit: Jeder Test der Playwright-Suite, der gegen Angular läuft, läuft am Ende auch gegen
+  React. Bis dahin trägt jeder freigeschaltete Test das Tag `@react`.
+- Gleiche `data-testid`, gleiche deutsche Texte, gleiche Token-Namen (`--mat-sys-*`, `--app-*`)
+  und gleiche Schlüssel in `localStorage` und `sessionStorage` wie im Angular-Frontend.
+- Barrierefreiheit: Tastatur, Beschriftungen, Fokusring der Werkbank; `eslint-plugin-jsx-a11y` in
+  `make lint`.
+- Sprache: Oberfläche auf Deutsch aus einem typisierten Katalog; ein Test meldet unbenutzte
+  Schlüssel, der Compiler fehlende.
+- Die Gates `test`, `typecheck`, `lint`, `deps` und `e2e` schließen `frontend-react/` ein.
+- Bedienelemente kommen aus dem UI SDK, wo es eine passende Komponente hat; Tabelle, Karte und
+  Chip sind eigenes HTML und CSS.
+
+## Grundentscheidungen
+
+| Thema | Entscheidung | ADR |
+|---|---|---|
+| Stack des zweiten Frontends | React 19, Vite 8, TypeScript 6.0, React Router 8, UI SDK (Beta, exakte Version), CSS Modules mit den Werkbank-Tokens, vitest und React Testing Library, ESLint 10 mit `jsx-a11y`; eigenes pnpm-Projekt `frontend-react/` (weicht für die Oberfläche von A1.7 ab) | `docs/adr/0016-zweites-frontend-mit-react-und-ui-sdk.md` |
+| Echtzeit und Zustand | unverändert ADR 0004: Befehle per REST, Snapshot per WebSocket in einen Store (`useSyncExternalStore`) | `docs/adr/0004-rest-befehle-websocket-snapshot.md` |
+| Identität und Ablage | unverändert ADR 0003, 0013 und 0014 | – |
+
+## Specs
+
+| Spec | Titel | Welle | Hängt ab von | Bereiche | Risiko |
+|---|---|---|---|---|---|
+| 0053 | React-Frontend: Gerüst mit Gates, Theme, Shell und Health | 1 | – | `frontend-react/` (neu), `Makefile`, `frontend/playwright.config.ts`, `frontend/e2e/health.spec.ts`, `.github/actions/setup/`, `.github/dependabot.yml`, `project-rules/`, `docs/`, `README.md`, `.env.example` | high |
+| 0054 | API-Schicht und Zustand: `ApiService`, Fehlerpfad mit `ErrorBanner`, `RealtimeService`, `SessionStore`, `TokenStore`, `PreferencesStore`, `RecentSessions`, Routen mit Guard | 2 | 0053 | `frontend-react/src/api/`, `frontend-react/src/shell/` (Banner), `frontend-react/src/app.tsx` | medium |
+| 0055 | Bedienelemente im Werkbank-Design: Button, Textfeld mit Field, Select, Autocomplete, Segmented Control, Dialog, Toast, Collapsible, Kartenhand | 2 | 0053 | `frontend-react/src/ui/` | medium |
+| 0056 | Startseite: Sitzung anlegen, Projekt- und Issue-Auswahl, Einstellungen merken, letzte Sitzungen | 3 | 0054, 0055 | `frontend-react/src/start/`, `frontend/e2e/` (Tags) | medium |
+| 0057 | Beitrittsseite: Einladung, Rollenhinweise, Fehlerzustände, Sitzung in der Toolbar | 3 | 0054, 0055 | `frontend-react/src/join/`, `frontend-react/src/shell/` (Toolbar) | medium |
+| 0058 | Raum, Teil 1: Raster, Seitenleiste (Timer, Teilnehmer, Teilen, Fakten), Lobby, Kartenmotiv | 3 | 0054, 0055 | `frontend-react/src/session/` | medium |
+| 0059 | Raum, Teil 2: Issue-Auswahl mit Filtern, aktives Issue mit Markdown, Wechsel-Dialog | 4 | 0058 | `frontend-react/src/session/`, `frontend-react/package.json` (`marked`, Sanitizer), `frontend/e2e/` (Tags) | medium |
+| 0060 | Raum, Teil 3: Diskussion und Schätzrunde: Kartensatz, Tisch, Rundenstatus, Timer, Footer | 5 | 0059 | `frontend-react/src/session/`, `frontend/e2e/` (Tags) | medium |
+| 0061 | Raum, Teil 4: Auflösung und Abschluss: Ergebnis, Ausreißer, Konsens, Konfetti, Bestätigen, letztes Ergebnis, Protokoll, erneut schätzen, Zuschauer | 6 | 0060 | `frontend-react/src/session/`, `frontend/e2e/` (Tags) | medium |
+| 0062 | Parität: ganze Suite ohne Tag gegen React, Bundle-Grenze, README und Architektur final | 7 | 0056, 0057, 0061 | `frontend/e2e/`, `frontend/playwright.config.ts`, `frontend-react/vite.config.ts`, `README.md`, `docs/` | medium |
+
+Hinweise zu den Wellen:
+
+- Welle 1 ist das Gerüst allein. 0053 trägt ADR 0016.
+- Welle 2: 0054 ändert `api/`, das Banner und die Routen, 0055 nur `ui/`; beide ändern
+  `frontend-react/package.json` nicht (die Abhängigkeiten stehen seit 0053 fest).
+- Welle 3: drei Feature-Ordner. Eine Testdatei in `frontend/e2e/`, die zwei Specs einer Welle mit
+  `@react` versehen würden (`create-and-join.spec.ts`), bekommt ihre Tags von der Spec der
+  nächsten Welle, die den Ablauf vollständig hat.
+- Welle 4 bis 6 ändern denselben Ordner `session/` und laufen nacheinander. 0059 fügt `marked`
+  und einen Sanitizer hinzu; die Wahl des Sanitizers steht in der Spec.
+- Selektoren der Suite, die nur im Angular-Frontend existieren (`app-start-page`,
+  `app-session-page .room`, `mat-button-toggle-checked`), ersetzt die Spec, die den Test
+  freischaltet, in beiden Frontends durch `data-testid` oder ein ARIA-Attribut.
+- Die Specs ab Welle 2 werden mit `/roadmap next` aus dem dann vorhandenen Code geschrieben.
+
+## Offene Fragen
+
+- [x] Umfang? → Volle Parität in Wellen, als zweites Projekt neben dem Angular-Frontend. (Morten Möller, 2026-11-24)
+- [x] Design? → Werkbank übernehmen. (Morten Möller, 2026-11-24)
+- [x] Styling? → CSS Modules und CSS-Variablen, kein Tailwind. (Morten Möller, 2026-11-24)
+- [x] End-to-End-Tests? → Die bestehende Playwright-Suite wiederverwenden. (Morten Möller, 2026-11-24)
+- [x] Wann setzt die Person `"react 19"` in `stack` und `frontend-react/src` in `source_paths` von `harness/config.yml`: vor oder nach dem Merge von 0053? → Nach dem Merge von 0053, in einem eigenen Pull Request auf `main`. (Morten Möller, 2026-11-24)

@@ -1,0 +1,258 @@
+html {
+  color-scheme: light dark;
+  --mat-sys-background: light-dark(#fcf8fd, #131316);
+  --mat-sys-error: #b8352a;
+  --mat-sys-error-container: #fbe2df;
+  --mat-sys-inverse-on-surface: light-dark(#f3eff4, #303034);
+  --mat-sys-inverse-primary: light-dark(#bec2ff, #343dff);
+  --mat-sys-inverse-surface: light-dark(#303034, #e5e1e6);
+  --mat-sys-on-background: light-dark(#1b1b1f, #e5e1e6);
+  --mat-sys-on-error: light-dark(#ffffff, #690005);
+  --mat-sys-on-error-container: #6e1a12;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-on-primary-container: #142f6e;
+  --mat-sys-on-primary-fixed: light-dark(#00006e, #00006e);
+  --mat-sys-on-primary-fixed-variant: light-dark(#0000ef, #0000ef);
+  --mat-sys-on-secondary: light-dark(#ffffff, #2e2f42);
+  --mat-sys-on-secondary-container: light-dark(#444559, #e1e0f9);
+  --mat-sys-on-secondary-fixed: light-dark(#191a2c, #191a2c);
+  --mat-sys-on-secondary-fixed-variant: light-dark(#444559, #444559);
+  --mat-sys-on-surface: #232428;
+  --mat-sys-on-surface-variant: #383a42;
+  --mat-sys-on-tertiary: light-dark(#ffffff, #0001ac);
+  --mat-sys-on-tertiary-container: light-dark(#0000ef, #e0e0ff);
+  --mat-sys-on-tertiary-fixed: light-dark(#00006e, #00006e);
+  --mat-sys-on-tertiary-fixed-variant: light-dark(#0000ef, #0000ef);
+  --mat-sys-outline: #8a8d96;
+  --mat-sys-outline-variant: #d4d5d9;
+  --mat-sys-primary: #2f5fd0;
+  --mat-sys-primary-container: #dbe6fc;
+  --mat-sys-primary-fixed: light-dark(#e0e0ff, #e0e0ff);
+  --mat-sys-primary-fixed-dim: light-dark(#bec2ff, #bec2ff);
+  --mat-sys-scrim: light-dark(#000000, #000000);
+  --mat-sys-secondary: light-dark(#5c5d72, #c5c4dd);
+  --mat-sys-secondary-container: light-dark(#e1e0f9, #444559);
+  --mat-sys-secondary-fixed: light-dark(#e1e0f9, #e1e0f9);
+  --mat-sys-secondary-fixed-dim: light-dark(#c5c4dd, #c5c4dd);
+  --mat-sys-shadow: light-dark(#000000, #000000);
+  --mat-sys-surface: #fafafa;
+  --mat-sys-surface-bright: light-dark(#fcf8fd, #3a393c);
+  --mat-sys-surface-container: #ececee;
+  --mat-sys-surface-container-high: #e5e5e6;
+  --mat-sys-surface-container-highest: light-dark(#e5e1e6, #353438);
+  --mat-sys-surface-container-low: #f3f3f4;
+  --mat-sys-surface-container-lowest: #ffffff;
+  --mat-sys-surface-dim: light-dark(#dcd9dd, #131316);
+  --mat-sys-surface-tint: light-dark(#343dff, #bec2ff);
+  --mat-sys-surface-variant: light-dark(#e4e1ec, #46464f);
+  --mat-sys-tertiary: light-dark(#343dff, #bec2ff);
+  --mat-sys-tertiary-container: light-dark(#e0e0ff, #0000ef);
+  --mat-sys-tertiary-fixed: light-dark(#e0e0ff, #e0e0ff);
+  --mat-sys-tertiary-fixed-dim: light-dark(#bec2ff, #bec2ff);
+  --mat-sys-neutral-variant20: #303038;
+  --mat-sys-neutral10: #1b1b1f;
+  --mat-sys-level0:
+    0px 0px 0px 0px rgba(0, 0, 0, 0.2), 0px 0px 0px 0px rgba(0, 0, 0, 0.14),
+    0px 0px 0px 0px rgba(0, 0, 0, 0.12);
+  --mat-sys-level1:
+    0px 2px 1px -1px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 3px 0px rgba(0, 0, 0, 0.12);
+  --mat-sys-level2:
+    0px 3px 3px -2px rgba(0, 0, 0, 0.2), 0px 3px 4px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 8px 0px rgba(0, 0, 0, 0.12);
+  --mat-sys-level3:
+    0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 6px 10px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 18px 0px rgba(0, 0, 0, 0.12);
+  --mat-sys-level4:
+    0px 5px 5px -3px rgba(0, 0, 0, 0.2), 0px 8px 10px 1px rgba(0, 0, 0, 0.14),
+    0px 3px 14px 2px rgba(0, 0, 0, 0.12);
+  --mat-sys-level5:
+    0px 7px 8px -4px rgba(0, 0, 0, 0.2), 0px 12px 17px 2px rgba(0, 0, 0, 0.14),
+    0px 5px 22px 4px rgba(0, 0, 0, 0.12);
+  --mat-sys-body-large: 400 17px / 28px 'IBM Plex Sans', sans-serif;
+  --mat-sys-body-large-font: 'IBM Plex Sans', sans-serif;
+  --mat-sys-body-large-line-height: 28px;
+  --mat-sys-body-large-size: 17px;
+  --mat-sys-body-large-tracking: 0;
+  --mat-sys-body-medium: 400 15px / 24px 'IBM Plex Sans', sans-serif;
+  --mat-sys-body-medium-font: 'IBM Plex Sans', sans-serif;
+  --mat-sys-body-medium-line-height: 24px;
+  --mat-sys-body-medium-size: 15px;
+  --mat-sys-body-medium-tracking: 0;
+  --mat-sys-body-small: 400 13px / 20px 'IBM Plex Sans', sans-serif;
+  --mat-sys-body-small-font: 'IBM Plex Sans', sans-serif;
+  --mat-sys-body-small-line-height: 20px;
+  --mat-sys-body-small-size: 13px;
+  --mat-sys-body-small-tracking: 0;
+  --mat-sys-display-large: 400 3.562rem / 4rem 'IBM Plex Sans';
+  --mat-sys-display-large-font: 'IBM Plex Sans';
+  --mat-sys-display-large-line-height: 4rem;
+  --mat-sys-display-large-size: 3.562rem;
+  --mat-sys-display-large-tracking: -0.016rem;
+  --mat-sys-display-large-weight: 400;
+  --mat-sys-display-medium: 400 2.812rem / 3.25rem 'IBM Plex Sans';
+  --mat-sys-display-medium-font: 'IBM Plex Sans';
+  --mat-sys-display-medium-line-height: 3.25rem;
+  --mat-sys-display-medium-size: 2.812rem;
+  --mat-sys-display-medium-tracking: 0;
+  --mat-sys-display-medium-weight: 400;
+  --mat-sys-display-small: 600 40px / 48px 'IBM Plex Sans', sans-serif;
+  --mat-sys-display-small-font: 'IBM Plex Sans', sans-serif;
+  --mat-sys-display-small-line-height: 48px;
+  --mat-sys-display-small-size: 40px;
+  --mat-sys-display-small-tracking: -0.01em;
+  --mat-sys-display-small-weight: 600;
+  --mat-sys-headline-large: 400 2rem / 2.5rem 'IBM Plex Sans';
+  --mat-sys-headline-large-font: 'IBM Plex Sans';
+  --mat-sys-headline-large-line-height: 2.5rem;
+  --mat-sys-headline-large-size: 2rem;
+  --mat-sys-headline-large-tracking: 0;
+  --mat-sys-headline-large-weight: 400;
+  --mat-sys-headline-medium: 400 1.75rem / 2.25rem 'IBM Plex Sans';
+  --mat-sys-headline-medium-font: 'IBM Plex Sans';
+  --mat-sys-headline-medium-line-height: 2.25rem;
+  --mat-sys-headline-medium-size: 1.75rem;
+  --mat-sys-headline-medium-tracking: 0;
+  --mat-sys-headline-medium-weight: 400;
+  --mat-sys-headline-small: 600 26px / 32px 'IBM Plex Sans', sans-serif;
+  --mat-sys-headline-small-font: 'IBM Plex Sans', sans-serif;
+  --mat-sys-headline-small-line-height: 32px;
+  --mat-sys-headline-small-size: 26px;
+  --mat-sys-headline-small-weight: 600;
+  --mat-sys-label-large: 500 14px / 20px 'IBM Plex Sans', sans-serif;
+  --mat-sys-label-large-font: 'IBM Plex Sans', sans-serif;
+  --mat-sys-label-large-line-height: 20px;
+  --mat-sys-label-large-size: 14px;
+  --mat-sys-label-large-tracking: 0;
+  --mat-sys-label-large-weight-prominent: 700;
+  --mat-sys-label-medium: 500 0.75rem / 1rem 'IBM Plex Sans';
+  --mat-sys-label-medium-font: 'IBM Plex Sans';
+  --mat-sys-label-medium-line-height: 1rem;
+  --mat-sys-label-medium-size: 0.75rem;
+  --mat-sys-label-medium-tracking: 0.031rem;
+  --mat-sys-label-medium-weight: 500;
+  --mat-sys-label-medium-weight-prominent: 700;
+  --mat-sys-label-small: 500 0.688rem / 1rem 'IBM Plex Sans';
+  --mat-sys-label-small-font: 'IBM Plex Sans';
+  --mat-sys-label-small-line-height: 1rem;
+  --mat-sys-label-small-size: 0.688rem;
+  --mat-sys-label-small-tracking: 0.031rem;
+  --mat-sys-label-small-weight: 500;
+  --mat-sys-title-large: 600 20px / 28px 'IBM Plex Sans', sans-serif;
+  --mat-sys-title-large-font: 'IBM Plex Sans', sans-serif;
+  --mat-sys-title-large-line-height: 28px;
+  --mat-sys-title-large-size: 20px;
+  --mat-sys-title-large-weight: 600;
+  --mat-sys-title-medium: 600 16px / 24px 'IBM Plex Sans', sans-serif;
+  --mat-sys-title-medium-font: 'IBM Plex Sans', sans-serif;
+  --mat-sys-title-medium-line-height: 24px;
+  --mat-sys-title-medium-size: 16px;
+  --mat-sys-title-medium-tracking: 0;
+  --mat-sys-title-medium-weight: 600;
+  --mat-sys-title-small: 500 0.875rem / 1.25rem 'IBM Plex Sans';
+  --mat-sys-title-small-font: 'IBM Plex Sans';
+  --mat-sys-title-small-line-height: 1.25rem;
+  --mat-sys-title-small-size: 0.875rem;
+  --mat-sys-title-small-tracking: 0.006rem;
+  --mat-sys-title-small-weight: 500;
+  --mat-sys-corner-extra-large: 16px;
+  --mat-sys-corner-extra-large-top: 28px 28px 0 0;
+  --mat-sys-corner-extra-small-top: 4px 4px 0 0;
+  --mat-sys-corner-full: 9999px;
+  --mat-sys-corner-large: 12px;
+  --mat-sys-corner-large-end: 0 16px 16px 0;
+  --mat-sys-corner-large-start: 16px 0 0 16px;
+  --mat-sys-corner-large-top: 16px 16px 0 0;
+  --mat-sys-corner-medium: 10px;
+  --mat-sys-corner-none: 0;
+  --mat-sys-corner-small: 6px;
+  --mat-sys-dragged-state-layer-opacity: 0.16;
+  --mat-sys-focus-state-layer-opacity: 0.12;
+  --mat-sys-hover-state-layer-opacity: 0.08;
+  --mat-sys-pressed-state-layer-opacity: 0.12;
+  --mat-sys-corner-extra-small: 4px;
+  --mat-sys-headline-small-tracking: 0;
+  --mat-sys-title-large-tracking: 0;
+  --mat-sys-body-large-weight: 400;
+  --mat-sys-body-medium-weight: 400;
+  --mat-sys-body-small-weight: 400;
+  --mat-sys-label-large-weight: 500;
+  --app-space-xs: 4px;
+  --app-space-s: 8px;
+  --app-space-m: 16px;
+  --app-space-l: 24px;
+  --app-space-xl: 32px;
+  --app-space-2xl: 48px;
+  --app-space-3xl: 64px;
+  --app-corner-control: 8px;
+  --app-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --app-label-section: 500 12px / 16px 'IBM Plex Mono', ui-monospace, monospace;
+  --app-value-card: 600 38px / 38px 'IBM Plex Mono', ui-monospace, monospace;
+  --app-value-id: 400 15px / 24px 'IBM Plex Mono', ui-monospace, monospace;
+  --app-on-surface-muted: #5d606b;
+  --app-success: #3a7a39;
+  --app-success-container: #dcefd9;
+  --app-on-success-container: #1f4a1e;
+  --app-warning: #8a5f00;
+  --app-warning-container: #fbedc9;
+  --app-on-warning-container: #4f3600;
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --mat-sys-primary: #61afef;
+  --mat-sys-on-primary: #1d2026;
+  --mat-sys-primary-container: #284566;
+  --mat-sys-on-primary-container: #d3e7fb;
+  --mat-sys-surface: #282c34;
+  --mat-sys-surface-container-lowest: #1d2026;
+  --mat-sys-surface-container-low: #21252b;
+  --mat-sys-surface-container: #2c313a;
+  --mat-sys-surface-container-high: #323844;
+  --mat-sys-on-surface: #e6e9ef;
+  --mat-sys-on-surface-variant: #abb2bf;
+  --mat-sys-outline: #7f8794;
+  --mat-sys-outline-variant: #3e4451;
+  --mat-sys-error: #ef8a92;
+  --mat-sys-error-container: #4a2a2f;
+  --mat-sys-on-error-container: #ffd9dc;
+  --app-on-surface-muted: #9da5b4;
+  --app-success: #98c379;
+  --app-success-container: #2f3d2b;
+  --app-on-success-container: #d4ecc6;
+  --app-warning: #e5c07b;
+  --app-warning-container: #4a3d26;
+  --app-on-warning-container: #f7e3bd;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']) {
+    --mat-sys-primary: #61afef;
+    --mat-sys-on-primary: #1d2026;
+    --mat-sys-primary-container: #284566;
+    --mat-sys-on-primary-container: #d3e7fb;
+    --mat-sys-surface: #282c34;
+    --mat-sys-surface-container-lowest: #1d2026;
+    --mat-sys-surface-container-low: #21252b;
+    --mat-sys-surface-container: #2c313a;
+    --mat-sys-surface-container-high: #323844;
+    --mat-sys-on-surface: #e6e9ef;
+    --mat-sys-on-surface-variant: #abb2bf;
+    --mat-sys-outline: #7f8794;
+    --mat-sys-outline-variant: #3e4451;
+    --mat-sys-error: #ef8a92;
+    --mat-sys-error-container: #4a2a2f;
+    --mat-sys-on-error-container: #ffd9dc;
+    --app-on-surface-muted: #9da5b4;
+    --app-success: #98c379;
+    --app-success-container: #2f3d2b;
+    --app-on-success-container: #d4ecc6;
+    --app-warning: #e5c07b;
+    --app-warning-container: #4a3d26;
+    --app-on-warning-container: #f7e3bd;
+  }
+}

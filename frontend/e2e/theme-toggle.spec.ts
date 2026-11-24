@@ -51,22 +51,24 @@ const cases: { system: Scheme; other: Scheme }[] = [
 ];
 
 for (const { system, other } of cases) {
-  test(`with a ${system} system a click switches to ${other} and the choice stays after a reload`, async ({
-    page,
-  }) => {
-    await page.emulateMedia({ colorScheme: system });
-    await page.goto('/');
-    await expect(page.getByTestId('create-form')).toBeVisible();
-    await expectScheme(page, system);
+  test(
+    `with a ${system} system a click switches to ${other} and the choice stays after a reload`,
+    { tag: '@react' },
+    async ({ page }) => {
+      await page.emulateMedia({ colorScheme: system });
+      await page.goto('/');
+      await expect(page.getByTestId('theme-toggle')).toBeVisible();
+      await expectScheme(page, system);
 
-    await page.getByTestId('theme-toggle').click();
-    await expectScheme(page, other);
-    await expect(page.locator('html')).toHaveAttribute('data-theme', other);
+      await page.getByTestId('theme-toggle').click();
+      await expectScheme(page, other);
+      await expect(page.locator('html')).toHaveAttribute('data-theme', other);
 
-    await page.reload();
-    await expect(page.getByTestId('create-form')).toBeVisible();
-    await expectScheme(page, other);
-  });
+      await page.reload();
+      await expect(page.getByTestId('theme-toggle')).toBeVisible();
+      await expectScheme(page, other);
+    },
+  );
 
   test(`with a ${system} system a click switches the card motif and the toolbar motif in the room`, async ({
     page,

@@ -16,6 +16,7 @@ Verbindliche Beschreibung: `docs/umsetzungsplan.md`, Abschnitt 4. Entscheidungen
 | Container | Technik | Verantwortung | Spricht mit |
 |---|---|---|---|
 | Frontend | Angular (Standalone Components, Signals, Angular Material), pnpm, Dev-Server auf Port 4200 | Oberfläche auf Deutsch; Befehle per REST, Zustand per WebSocket-Snapshot in einem Signals-Store | Backend über `/api` und `/ws` (Dev-Proxy, derselbe Origin) |
+| Frontend (React) | React 19 mit UI SDK, Vite, pnpm, Dev-Server auf Port 4300 (`frontend-react/`, ADR 0016; im Aufbau nach Roadmap Teil 2) | dieselbe Oberfläche wie das Angular-Frontend mit denselben `data-testid`, Texten und Tokens; Stand je Spec | Backend über `/api` und `/ws` (Vite-Proxy, derselbe Origin) |
 | Backend | Quarkus 3 auf Java 25, Port 8080 | Einzige Quelle der Wahrheit: Sitzungen im Arbeitsspeicher, Rollen- und Zustandsprüfung, GitLab-Zugriff, Snapshots | GitLab (REST-Client), Frontend (REST, WebSocket) |
 | GitLab-Double | WireMock Standalone mit festen Mappings (ab Spec 0011) | Ersatz für GitLab in End-to-End-Tests | Backend im Profil `e2e` |
 
@@ -35,6 +36,10 @@ die generierten Typen und die Dienste `ApiService`, `RealtimeService`, `SessionS
 0005). Komponenten lesen den Zustand aus dem `SessionStore` und senden Befehle über den
 `ApiService`; Einzelabfragen wie die Issue-Suche bleiben in der Komponente (ADR 0004).
 
+Zweites Frontend, `frontend-react/src`, ein Ordner je Feature (`start`, `shell`, ab ihren Specs
+`join` und `session`), dazu `api` (generierte Typen), `i18n` (Texte) und `styles` (Tokens). Regeln:
+`project-rules/frontend-react.md`.
+
 Jeder Befehl läuft über `SessionRegistry.update(…)`: Sperre je Sitzung, Ausführung,
 Änderungs-Event (ADR 0002). GitLab-Aufrufe laufen nie unter der Sperre.
 
@@ -52,4 +57,4 @@ Jeder Befehl läuft über `SessionRegistry.update(…)`: Sperre je Sitzung, Ausf
   `GITLAB_TOKEN`), `planningpoker.gitlab.write-weight`, `planningpoker.session.ttl` in
   `backend/src/main/resources/application.properties` (A6.1).
 - Vertrag: `contracts/api/openapi.yaml` aus den Java-DTOs, TypeScript-Typen aus dem Vertrag
-  (ab Spec 0002, A2.1).
+  (ab Spec 0002, A2.1), für beide Frontends von `make contracts` geschrieben.
