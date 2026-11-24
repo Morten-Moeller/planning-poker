@@ -1,14 +1,14 @@
 ---
 id: "0063"
 title: "React-Frontend: Textkatalog je Feature, Fehlerhinweis und Regeln je Bereich"
-status: Review
+status: done
 risk: medium
 adrs: ["0016"]
 owner: Morten Möller
 created: 2026-11-24
 updated: 2026-11-24
-pr: ""
-note: freigegeben in der Session
+pr: "#65"
+note: alle Kriterien erfüllt; Status nach dem Merge nachgetragen
 ---
 
 # React-Frontend: Textkatalog je Feature, Fehlerhinweis und Regeln je Bereich
