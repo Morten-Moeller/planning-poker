@@ -8,6 +8,7 @@ cannot be followed, here or in the baseline, needs an ADR that names it (`harnes
 | File | Covers |
 |---|---|
 | `frontend.md` | UI code: framework, state, styling, i18n, accessibility |
+| `frontend-react.md` | the second frontend in `frontend-react/`: React, UI SDK, tokens, texts (ADR 0016) |
 | `backend.md` | services, data access, errors, logging, configuration |
 | `testing.md` | test levels, areas, end-to-end tests, test data, what `make test` runs |
 

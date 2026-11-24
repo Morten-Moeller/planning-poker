@@ -9,6 +9,7 @@ osv-scanner-results.json
 .env
 backend/target/
 frontend/dist/
+frontend-react/dist/
 frontend/.angular/
 frontend/test-results/
 frontend/playwright-report/

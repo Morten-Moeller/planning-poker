@@ -1,0 +1,13 @@
+packages:
+  - '.'
+
+minimumReleaseAge: 10080
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
+
+peerDependencyRules:
+  allowedVersions:
+    'eslint-plugin-jsx-a11y>eslint': '10'
+
+allowBuilds:
+  esbuild: false

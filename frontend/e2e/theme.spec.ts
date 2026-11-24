@@ -57,17 +57,21 @@ const schemes = [
 ];
 
 for (const scheme of schemes) {
-  test(`the start page uses the ${scheme.colorScheme} theme of the system`, async ({ page }) => {
-    await page.emulateMedia({ colorScheme: scheme.colorScheme });
-    await page.goto('/');
-    await expect(page.getByTestId('create-form')).toBeVisible();
+  test(
+    `the start page uses the ${scheme.colorScheme} theme of the system`,
+    { tag: '@react' },
+    async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme.colorScheme });
+      await page.goto('/');
+      await expect(page.getByTestId('theme-toggle')).toBeVisible();
 
-    expect(await token(page, '--mat-sys-surface')).toBe(scheme.surface);
-    expect(await token(page, '--mat-sys-primary')).toBe(scheme.primary);
-    expect(await token(page, '--app-success')).toBe(scheme.success);
-    const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-    expect(background).toBe(await rgb(page, scheme.surface));
-  });
+      expect(await token(page, '--mat-sys-surface')).toBe(scheme.surface);
+      expect(await token(page, '--mat-sys-primary')).toBe(scheme.primary);
+      expect(await token(page, '--app-success')).toBe(scheme.success);
+      const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+      expect(background).toBe(await rgb(page, scheme.surface));
+    },
+  );
 }
 
 test('text uses IBM Plex Sans and the session id in the toolbar IBM Plex Mono', async ({

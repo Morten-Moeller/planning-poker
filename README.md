@@ -41,6 +41,15 @@ Ist Port 8080 oder 4200 belegt: in `.env` zum Beispiel `BACKEND_PORT=18080` und
 `make e2e` liest `.env` nicht; es nimmt dieselben Variablen `BACKEND_PORT` und `FRONTEND_PORT`,
 dazu `GITLAB_DOUBLE_PORT` für das GitLab-Double, aus der Umgebung des Aufrufs.
 
+### Zweites Frontend mit React (im Aufbau)
+
+Neben dem Angular-Frontend entsteht in `frontend-react/` dieselbe Oberfläche mit React 19 und den
+Komponenten des UI SDK (ADR 0016, Roadmap Teil 2 in `docs/roadmap.md`). Es nutzt dasselbe Backend
+und denselben Vertrag. `make frontend-react` startet es auf `http://localhost:4300`
+(`FRONTEND_REACT_PORT`) mit einem Proxy auf `BACKEND_PORT`. Stand: Startseite mit dem Zustand des
+Backends, Toolbar und Hell-Dunkel-Umschalter; die weiteren Seiten folgen mit den Specs 0054 bis
+0062. Das Angular-Frontend bleibt das Frontend der Abgabe.
+
 ## Variante
 
 Gebaut ist Variante A: ein Angular-Frontend und ein Quarkus-Backend. Der Server erzwingt verdeckte
@@ -123,7 +132,8 @@ Ablauf von `POST /api/sessions/{id}/round/confirm`:
 Der Server ist die einzige Quelle der Wahrheit. Der Vertrag liegt generiert in
 `contracts/api/openapi.yaml` (Quelle: die Java-DTOs unter `backend/src/main/java/planningpoker/`
 und `backend/src/main/resources/META-INF/openapi.yaml`); `make contracts` schreibt ihn und die
-TypeScript-Typen `frontend/src/app/api/schema.d.ts`, `make drift` meldet einen veralteten Stand.
+TypeScript-Typen `frontend/src/app/api/schema.d.ts` und `frontend-react/src/api/schema.d.ts`,
+`make drift` meldet einen veralteten Stand.
 Im Dev-Modus zeigt `http://localhost:8080/q/swagger-ui` den Vertrag. Acht Beispiel-Snapshots je
 Phase und Rolle liegen unter `contracts/api/examples/`; Backend-Test und Frontend-Typen prüfen sie.
 Version des Vertrags: `4.0.0` (ADR 0014: Beitreten nur mit Einladungscode).
@@ -308,10 +318,12 @@ Dieses Repository verwendet den AI Development Harness. Einstieg: `AGENTS.md` un
 |---|---|
 | Git-Hooks einrichten (einmal je Klon) | `make setup` |
 | Anwendung lokal starten | `make backend`, `make frontend` (je ein Terminal; Ports aus `.env`) |
+| React-Frontend starten | `make frontend-react` (Port `FRONTEND_REACT_PORT`, Standard 4300) |
 | alle Gates laufen lassen | `make check` (test, typecheck, lint, sast, deps, drift) |
-| End-to-End-Tests | `make e2e` (startet Backend und Frontend selbst; Ports über `BACKEND_PORT`, `FRONTEND_PORT`) |
+| End-to-End-Tests | `make e2e` (startet Backend und Frontend selbst; Ports über `BACKEND_PORT`, `FRONTEND_PORT`); erst die ganze Suite gegen Angular, dann die Tests mit dem Tag `@react` gegen React |
+| End-to-End-Tests nur gegen React | `E2E_FRONTEND=react pnpm -C frontend exec playwright test` |
 | Formatierer anwenden | `make format` |
-| nur ein Projekt testen | `make test-backend`, `make test-frontend` |
+| nur ein Projekt testen | `make test-backend`, `make test-frontend`, `make test-frontend-react` |
 | eine Änderung vorschlagen | `/spec <Thema>` in Claude Code, dann Freigabe durch eine Person |
 | eine freigegebene Spec umsetzen | `/implement <Nummer>` |
 | alle Ziele sehen | `make help` |
@@ -338,7 +350,8 @@ der `verified` Pflicht ist, steht in `harness/config.yml` (`verify_required_for`
 
 ```text
 backend/         Quarkus (Java 25): session, gitlab, realtime, platform
-frontend/        Angular (pnpm): src/app je Feature, e2e/ Playwright
+frontend/        Angular (pnpm): src/app je Feature, e2e/ Playwright für beide Frontends
+frontend-react/  React 19 mit UI SDK (pnpm, Vite): src je Feature (ADR 0016, im Aufbau)
 contracts/api/   generierter OpenAPI-Vertrag und Beispiele (ab Spec 0002)
 docs/            Umsetzungsplan, Roadmap, Specs, ADRs, Glossar, Architektur
 project-rules/   Stack-Regeln für Frontend, Backend, Tests

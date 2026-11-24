@@ -1,7 +1,7 @@
 name: Setup
 description: >-
   Project-owned toolchain setup for the quality gates: JDK 25 with Maven cache, Node from .nvmrc,
-  pnpm with the frontend dependencies and the Playwright browser. The last steps install the
+  pnpm with the dependencies of both frontends and the Playwright browser. The last steps install the
   stack-neutral tools for make sast and make deps.
 
 runs:
@@ -22,11 +22,17 @@ runs:
       with:
         node-version-file: .nvmrc
         cache: pnpm
-        cache-dependency-path: frontend/pnpm-lock.yaml
+        cache-dependency-path: |
+          frontend/pnpm-lock.yaml
+          frontend-react/pnpm-lock.yaml
 
     - name: Install frontend dependencies
       shell: bash
       run: pnpm -C frontend install --frozen-lockfile
+
+    - name: Install React frontend dependencies
+      shell: bash
+      run: pnpm -C frontend-react install --frozen-lockfile
 
     - name: Install Playwright browser
       shell: bash

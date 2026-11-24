@@ -11,14 +11,16 @@ database engine; integration tests run against the real `SessionRegistry` in mem
 
 | Level       | Tool                                                                                     | Runs in                                  | Scope (harness/testing.md T1)                                                                                              |
 | ----------- | ---------------------------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| unit        | JUnit 5 (backend), vitest with jsdom (frontend)                                          | `make test`                              | pure calculations and isolated mechanisms, table-driven: domain transitions, round evaluation, store, guards               |
+| unit        | JUnit 5 (backend), vitest with jsdom (frontend; React frontend with React Testing Library) | `make test`                              | pure calculations and isolated mechanisms, table-driven: domain transitions, round evaluation, store, guards               |
 | integration | JUnit 5 with `@QuarkusTest`, REST Assured, WireMock for GitLab, Quarkus WebSocket client | `make test`                              | one feature through its public interface (HTTP route, WebSocket), real `SessionRegistry` in memory, no database (ADR 0002) |
-| end-to-end  | Playwright (Chromium) in `frontend/e2e/`                                                 | `make e2e`, in CI with `e2e_in_ci: true` | user flows in the browser against backend profile `e2e` and the GitLab double                                              |
+| end-to-end  | Playwright (Chromium) in `frontend/e2e/`                                                 | `make e2e`, in CI with `e2e_in_ci: true` | user flows in the browser against backend profile `e2e` and the GitLab double, for both frontends                          |
 
 ## Additions
 
 - File layout: backend tests mirror the package under `backend/src/test/java/planningpoker/`;
-  frontend unit tests next to the file as `*.spec.ts`; end-to-end specs in `frontend/e2e/`.
+  frontend unit tests next to the file as `*.spec.ts`; unit tests of the React frontend next to
+  the file as `*.spec.ts` or `*.spec.tsx` under `frontend-react/src/`; end-to-end specs in
+  `frontend/e2e/` for both frontends.
 - Builders: backend integration tests build sessions through the HTTP flow (create, join) with
   helpers in the test package (`SessionApiTest.createSession` and `RestCalls.createSession` read
   the invite codes from the snapshot of the scrum master; `join` and `joinAsViewer` send them,
@@ -49,6 +51,9 @@ change touches.
 | `frontend/src/app/shell/`, `frontend/src/styles.scss`, `frontend/src/styles/`, `frontend/src/index.html` | `frontend/src/app/shell/*.spec.ts`                                                                             | `frontend/e2e/theme.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/design-sidebar.spec.ts`, `frontend/e2e/theme-toggle.spec.ts`                                                                                                                                                                                                                                                                                                 |
 | `frontend/src/app/join/`                                                                                 | `frontend/src/app/join/*.spec.ts`                                                                              | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/preferences.spec.ts`, `frontend/e2e/viewer.spec.ts`                                                                                                                                                                                                                                                                                             |
 | `frontend/src/app/session/`                                                                              | `frontend/src/app/session/*.spec.ts`                                                                           | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/confetti.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/issue-filter.spec.ts`, `frontend/e2e/theme.spec.ts`, `frontend/e2e/design-sidebar.spec.ts`, `frontend/e2e/viewer.spec.ts` |
+| `frontend-react/src/start/`, `frontend-react/src/api/` | `frontend-react/src/start/*.spec.tsx` | `frontend/e2e/health.spec.ts` (`@react`) |
+| `frontend-react/src/shell/`, `frontend-react/src/styles/`, `frontend-react/index.html` | `frontend-react/src/shell/*.spec.ts`, `frontend-react/src/shell/*.spec.tsx` | `frontend/e2e/theme.spec.ts`, `frontend/e2e/theme-toggle.spec.ts` (`@react`) |
+| `frontend-react/src/i18n/` | `frontend-react/src/i18n/messages.spec.ts` | – |
 
 ## End-to-end
 
@@ -69,6 +74,16 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   fails the start.
 - One spec: `pnpm -C frontend exec playwright test e2e/health.spec.ts`; Playwright starts the
   servers for this run as well.
+- React frontend (spec 0053, ADR 0016): with `E2E_FRONTEND=react` the third `webServer` is the
+  Vite server of `frontend-react/` on `FRONTEND_PORT`, and only tests with the tag `@react` run
+  (`grep` in `frontend/playwright.config.ts`). `make e2e` runs the suite against the Angular
+  frontend and then, when that run passed, the tagged tests against the React frontend, both
+  under one application lock. React alone:
+  `E2E_FRONTEND=react pnpm -C frontend exec playwright test`. A spec of the React frontend tags
+  the tests its screens pass (`test('…', { tag: '@react' }, …)`); a test never gets another
+  expectation for one frontend. A selector that exists only in the Angular frontend (an element
+  name such as `app-start-page`, a class of Angular Material) is replaced by a `data-testid` or
+  an ARIA attribute in the spec that tags the test.
 - Session setup (T6.2): there is no login. A flow creates its session through the start page or
   the REST API in a `beforeEach`; the token lands in `sessionStorage` through the application.
 - Environment check (T4.3): Playwright waits for `/api/health` of the backend and for the
@@ -181,9 +196,11 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
 ## What `/verify` runs
 
 - Automated: `make check` and the tests of the touched areas (table Areas), `make e2e` for
-  changes under `frontend/src/app/` or at an endpoint.
+  changes under `frontend/src/app/`, under `frontend-react/src/` or at an endpoint.
 - Browser checks: `http://localhost:4200/` with backend and frontend running
-  (`README.md`, Schnellstart); no login; test data as the spec names it.
+  (`README.md`, Schnellstart); no login; test data as the spec names it. The React frontend:
+  `make frontend-react`, `http://localhost:4300/`; it has no mock backend, its checks run against
+  the backend.
 - Browser checks without backend: `pnpm -C frontend start:mock` serves the frontend with the
   mock backend (`project-rules/frontend.md`, Mock backend) on port 4200, under the application
   lock like `make e2e`. The mock session is `K7P2QX9M`; a token in `sessionStorage` under
