@@ -1,14 +1,14 @@
 ---
 id: "0051"
 title: Wiederholte i18n-Texte je Template nur einmal
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-24
 updated: 2026-11-24
-pr: ""
-note: ""
+pr: "#59"
+note: alle Kriterien erfüllt
 ---
 
 # Wiederholte i18n-Texte je Template nur einmal
