@@ -1,14 +1,14 @@
 ---
 id: "0050"
 title: Zeilenenden von backend/mvnw.cmd im Repository normalisieren
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-24
 updated: 2026-11-24
-pr: ""
-note: ""
+pr: "#58"
+note: alle Kriterien erfüllt
 ---
 
 # Zeilenenden von backend/mvnw.cmd im Repository normalisieren
