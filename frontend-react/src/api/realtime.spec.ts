@@ -229,14 +229,20 @@ describe('realtime', () => {
       expect(sockets.sockets).toHaveLength(opened);
     });
 
-    it('treats a message that is no JSON like a lost connection', () => {
-      const { sockets, realtime, snapshots, connect } = setup();
+    it.each([
+      { name: 'no JSON', data: '{not json' },
+      { name: 'JSON without a type', data: '{"payload":{}}' },
+      { name: 'an error without a payload', data: '{"type":"error"}' },
+      { name: 'a snapshot with the payload null', data: '{"type":"session.state","payload":null}' },
+    ])('treats a message that is $name like a lost connection', ({ data }) => {
+      const { sockets, errors, realtime, snapshots, connect } = setup();
       connect();
       sockets.last().open();
 
-      sockets.last().receiveText('{not json');
+      sockets.last().receiveText(data);
 
       expect(snapshots).toEqual([]);
+      expect(errors.error()).toBeNull();
       expect(sockets.last().closed()).toBe(true);
       expect(realtime.connection()).toEqual({ status: 'WAITING', retryAt: Date.now() + 1_000 });
     });

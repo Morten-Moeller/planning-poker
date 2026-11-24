@@ -7,7 +7,11 @@ function SessionAccess({ sessionId, children }: { sessionId: string; children: R
   const { tokens } = useBackend();
   const [allowed] = useState(() => tokens.identity(sessionId) !== null);
 
-  return allowed ? children : <Navigate to={`/session/${sessionId}/join`} replace />;
+  return allowed ? (
+    children
+  ) : (
+    <Navigate to={`/session/${encodeURIComponent(sessionId)}/join`} replace />
+  );
 }
 
 export function RequireSession({ children }: { children: ReactNode }) {

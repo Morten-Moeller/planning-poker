@@ -74,12 +74,23 @@ export function sessionSocketUrl(
   return `${scheme}://${location.host}/ws/sessions/${encodeURIComponent(sessionId)}`;
 }
 
+const TYPES_WITH_PAYLOAD: readonly string[] = ['session.state', 'round.allVoted', 'error'];
+
+function isServerMessage(message: unknown): message is WsServerMessage {
+  if (typeof message !== 'object' || message === null) {
+    return false;
+  }
+  const { type, payload } = message as Record<string, unknown>;
+  if (typeof type !== 'string') {
+    return false;
+  }
+  return !TYPES_WITH_PAYLOAD.includes(type) || (typeof payload === 'object' && payload !== null);
+}
+
 function parse(data: string): WsServerMessage | null {
   try {
     const message: unknown = JSON.parse(data);
-    return typeof message === 'object' && message !== null && 'type' in message
-      ? (message as WsServerMessage)
-      : null;
+    return isServerMessage(message) ? message : null;
   } catch {
     return null;
   }

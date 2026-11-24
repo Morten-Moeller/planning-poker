@@ -60,6 +60,14 @@ describe('RequireSession', () => {
     expect(screen.getByTestId('path').textContent).toBe(`/session/${ID}/join`);
   });
 
+  it('encodes the session id in the path of the join page', () => {
+    const { backend } = createTestBackend();
+
+    renderRoute(backend, '/session/a%3Fb');
+
+    expect(screen.getByTestId('path').textContent).toBe('/session/a%3Fb/join');
+  });
+
   it('shows the route with an entry of the recent sessions and copies the token', async () => {
     const { backend } = createTestBackend(() => Response.json({ rememberSessions: true }));
     await backend.loadSetting();

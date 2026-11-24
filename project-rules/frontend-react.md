@@ -1,5 +1,13 @@
 ---
-sources: [frontend-react/package.json, frontend-react/pnpm-workspace.yaml, frontend-react/vite.config.ts, frontend-react/eslint.config.js, frontend-react/index.html, frontend-react/src/**]
+sources:
+  [
+    frontend-react/package.json,
+    frontend-react/pnpm-workspace.yaml,
+    frontend-react/vite.config.ts,
+    frontend-react/eslint.config.js,
+    frontend-react/index.html,
+    frontend-react/src/**,
+  ]
 ---
 
 # React frontend rules
@@ -79,7 +87,7 @@ design holds here as well, unless this file names another way.
   each; a snapshot starts the sequence again. `connection()` is `OPEN`, `WAITING` with `retryAt`
   or `CONNECTING`; the banner `connection-banner` shows every state but `OPEN`. A message `error`
   is reported to the `ErrorState` and ends the connection without a new attempt. A message that
-  is no JSON counts as a lost connection.
+  is no JSON, or has no `payload` where its type needs one, counts as a lost connection.
 - Session gone: when `getSession` or the WebSocket reports `SESSION_NOT_FOUND`, the session page
   removes the token, leaves the `SessionStore`, clears the `ErrorState` in the same step (the
   banner does not appear) and shows `session-gone`.
