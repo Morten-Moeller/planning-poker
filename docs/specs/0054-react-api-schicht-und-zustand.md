@@ -1,7 +1,7 @@
 ---
 id: "0054"
 title: "React-Frontend: API-Schicht, Zustand und Fehlerbanner"
-status: approved
+status: Review
 risk: high
 adrs: ["0003", "0004", "0013", "0016"]
 owner: Morten Möller

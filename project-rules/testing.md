@@ -51,8 +51,10 @@ change touches.
 | `frontend/src/app/shell/`, `frontend/src/styles.scss`, `frontend/src/styles/`, `frontend/src/index.html` | `frontend/src/app/shell/*.spec.ts`                                                                             | `frontend/e2e/theme.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/design-sidebar.spec.ts`, `frontend/e2e/theme-toggle.spec.ts`                                                                                                                                                                                                                                                                                                 |
 | `frontend/src/app/join/`                                                                                 | `frontend/src/app/join/*.spec.ts`                                                                              | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/preferences.spec.ts`, `frontend/e2e/viewer.spec.ts`                                                                                                                                                                                                                                                                                             |
 | `frontend/src/app/session/`                                                                              | `frontend/src/app/session/*.spec.ts`                                                                           | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/confetti.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/issue-filter.spec.ts`, `frontend/e2e/theme.spec.ts`, `frontend/e2e/design-sidebar.spec.ts`, `frontend/e2e/viewer.spec.ts` |
-| `frontend-react/src/start/`, `frontend-react/src/api/` | `frontend-react/src/start/*.spec.tsx` | `frontend/e2e/health.spec.ts` (`@react`) |
-| `frontend-react/src/shell/`, `frontend-react/src/styles/`, `frontend-react/index.html` | `frontend-react/src/shell/*.spec.ts`, `frontend-react/src/shell/*.spec.tsx` | `frontend/e2e/theme.spec.ts`, `frontend/e2e/theme-toggle.spec.ts` (`@react`) |
+| `frontend-react/src/start/` | `frontend-react/src/start/*.spec.tsx` | `frontend/e2e/health.spec.ts` (`@react`) |
+| `frontend-react/src/api/` | `frontend-react/src/api/*.spec.ts`, `frontend-react/src/api/*.spec.tsx` | `frontend/e2e/session-access.spec.ts` (`@react`) |
+| `frontend-react/src/session/` | `frontend-react/src/session/*.spec.tsx` | `frontend/e2e/session-access.spec.ts` (`@react`) |
+| `frontend-react/src/shell/`, `frontend-react/src/styles/`, `frontend-react/index.html` | `frontend-react/src/shell/*.spec.ts`, `frontend-react/src/shell/*.spec.tsx` | `frontend/e2e/theme.spec.ts`, `frontend/e2e/theme-toggle.spec.ts`, `frontend/e2e/session-access.spec.ts` (`@react`) |
 | `frontend-react/src/i18n/` | `frontend-react/src/i18n/messages.spec.ts` | – |
 
 ## End-to-end
@@ -188,7 +190,10 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   empty), returns as scrum master and, in a second context, as developer, opens „＋ Neue Sitzung“
   and creates a second session on project `5678` („Release Notes Test“,
   `project-5678.json`), and answers `GET /api/config` with `rememberSessions: false` through
-  `context.route` for the switched-off feature. Every
+  `context.route` for the switched-off feature;
+  `session-access.spec.ts` (spec 0054) needs no session: it opens `/session/ABCDEFGH` without a
+  stored token, and it writes a token for an unknown session id into `sessionStorage` with
+  `page.addInitScript` before it opens that room; both tests run against both frontends. Every
   Playwright test starts with a new browser context and so an empty `localStorage`.
 - Never write rows by hand, never call internal endpoints, never click through the application to
   make data that a command makes.

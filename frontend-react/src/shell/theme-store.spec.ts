@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createPreferencesStore } from '../api/preferences-store';
 import { createThemeStore } from './theme-store';
 
 const KEY = 'planningpoker.preferences';
@@ -23,6 +24,13 @@ function stubSystemScheme(dark: boolean): SystemScheme {
   };
 }
 
+function createStore() {
+  return createThemeStore(
+    window,
+    createPreferencesStore(() => localStorage),
+  );
+}
+
 function storedPreferences(): unknown {
   return JSON.parse(localStorage.getItem(KEY) ?? 'null');
 }
@@ -45,7 +53,7 @@ describe('theme store', () => {
     'switches from a system scheme with dark $system to $next and stores the choice',
     ({ system, next, darkAfter }) => {
       stubSystemScheme(system);
-      const store = createThemeStore(window);
+      const store = createStore();
       store.start();
       expect(store.dark()).toBe(system);
       expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
@@ -61,7 +69,7 @@ describe('theme store', () => {
   it('keeps the other fields of the stored preferences', () => {
     stubSystemScheme(false);
     localStorage.setItem(KEY, JSON.stringify({ name: 'Anna', timerSeconds: 30, theme: 'system' }));
-    const store = createThemeStore(window);
+    const store = createStore();
     store.start();
 
     store.toggle();
@@ -72,7 +80,7 @@ describe('theme store', () => {
   it('applies a stored choice at the start, against the system scheme', () => {
     stubSystemScheme(true);
     localStorage.setItem(KEY, JSON.stringify({ theme: 'light' }));
-    const store = createThemeStore(window);
+    const store = createStore();
 
     store.start();
 
@@ -87,7 +95,7 @@ describe('theme store', () => {
   ])('follows the system scheme with $name in the storage', ({ value }) => {
     stubSystemScheme(true);
     localStorage.setItem(KEY, value);
-    const store = createThemeStore(window);
+    const store = createStore();
 
     store.start();
 
@@ -103,7 +111,7 @@ describe('theme store', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('denied');
     });
-    const store = createThemeStore(window);
+    const store = createStore();
 
     store.start();
     expect(store.dark()).toBe(false);
@@ -115,7 +123,7 @@ describe('theme store', () => {
 
   it('follows a change of the system scheme without a choice and reports it', () => {
     const system = stubSystemScheme(false);
-    const store = createThemeStore(window);
+    const store = createStore();
     store.start();
     const listener = vi.fn();
     store.subscribe(listener);
@@ -128,7 +136,7 @@ describe('theme store', () => {
 
   it('keeps a choice when the system scheme changes', () => {
     const system = stubSystemScheme(false);
-    const store = createThemeStore(window);
+    const store = createStore();
     store.start();
     store.toggle();
 
@@ -142,7 +150,7 @@ describe('theme store', () => {
 
   it('starts light without matchMedia', () => {
     vi.stubGlobal('matchMedia', undefined);
-    const store = createThemeStore(window);
+    const store = createStore();
 
     store.start();
 

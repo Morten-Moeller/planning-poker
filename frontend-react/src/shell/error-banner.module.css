@@ -1,0 +1,50 @@
+.banner {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-s) var(--app-space-m);
+  padding: var(--app-space-s) var(--app-space-m);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+  font: var(--mat-sys-body-medium);
+}
+
+.title {
+  font-weight: 600;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.close,
+.reconnect {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 var(--app-space-l);
+  border: 1px solid transparent;
+  border-radius: var(--app-corner-control);
+  background-color: transparent;
+  color: var(--mat-sys-on-error-container);
+  font: var(--mat-sys-label-large);
+  cursor: pointer;
+}
+
+.reconnect {
+  border-color: var(--mat-sys-on-error-container);
+}
+
+.close:hover,
+.reconnect:hover {
+  background-color: color-mix(in srgb, var(--mat-sys-on-error-container) 8%, transparent);
+}
+
+.reconnect[data-disabled] {
+  opacity: 0.38;
+  cursor: default;
+}

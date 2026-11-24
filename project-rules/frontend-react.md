@@ -31,32 +31,84 @@ design holds here as well, unless this file names another way.
 
 ## Structure
 
-- One folder per feature under `frontend-react/src/`: `start` (start page), `shell` (toolbar,
-  theme, main area), `api` (generated types), `i18n` (texts), `styles` (tokens, global rules).
-  `join`, `session` and the shared controls in `ui` come with their specs.
-- Import boundaries: features and `shell` import from `api`, `i18n` and packages; `api` and `i18n`
-  import no feature. No feature imports another feature.
-- `main.tsx` is the only file with effects at load: it creates the stores, starts them and renders
-  `App`. A store is a factory (`createThemeStore(window)`) and reaches components as a prop or
-  through `useSyncExternalStore`, never as a module-level instance (A6.3).
-- Routes: `/` (start). `/session/:id/join` and `/session/:id` come with their specs.
+- One folder per feature under `frontend-react/src/`: `start` (start page), `session` (page of
+  the room; until spec 0058 only the states `session-loading` and `session-gone`), `shell`
+  (toolbar, theme, error banner, main area), `api` (generated types, calls, stores, realtime,
+  error texts, route guard), `i18n` (texts), `styles` (tokens, global rules). `join` and the
+  shared controls in `ui` come with their specs.
+- Import boundaries: features and `shell` import from `api`, `i18n` and packages; `api` imports
+  `i18n` and no feature; `i18n` imports nothing. No feature imports another feature.
+- `main.tsx` is the only file with effects at load: it calls `createBackend(window)`
+  (`api/backend.tsx`) once, creates and starts the theme store, waits for
+  `backend.loadSetting()` (at most 3 s) and renders `App`. Every service is a factory
+  (`createApi`, `createTokenStore`, `createRealtime`, …) that takes its platform parts (`fetch`,
+  socket factory, `Storage` access, clock) as parameters. Components reach the services through
+  `BackendProvider` and `useBackend()` and read stores with `useSyncExternalStore`
+  (`useLastError()`, `useConnection()`), never a module-level instance (A6.3).
+- Routes: `/` (start) and `/session/:id` (room, `React.lazy`, its own chunk) inside
+  `RequireSession` (`api/require-session.tsx`): without a stored token for the session it leads to
+  `/session/:id/join`. The check runs once per session id when the route is entered. The route
+  `/session/:id/join` comes with spec 0057; until then an unknown path shows the shell with an
+  empty main area.
 
 ## State and data
 
 - Generated API types: `frontend-react/src/api/schema.d.ts`, written by `make contracts` as a copy
   of the Angular file; never edited by hand. A contract type is taken as
   `components['schemas']['<Name>']`.
-- HTTP through `fetch`. A test replaces `fetch` (`vi.stubGlobal`), never an own module.
-- Theme: `createThemeStore` in `shell/theme-store.ts` keeps the choice `system`, `light` or `dark`
-  as `theme` in `localStorage` under `planningpoker.preferences` (the key and format of the
-  Angular `PreferencesStore`; other fields of the entry stay), sets `data-theme` on `<html>` before
-  the first render and follows `prefers-color-scheme` without a choice. Invalid JSON or an
-  exception of `localStorage` gives `system`, never an error.
+- HTTP: `createApi` in `api/api.ts` has every call of the contract over `fetch`; a component never
+  calls `fetch` itself (the health call of the start page in `start/health-api.ts` is the one
+  exception from spec 0053). A call under `/api/sessions/{id}`, except `POST …/participants`,
+  sends `Authorization: Bearer <token>` from the `TokenStore`. An answer 204 gives `undefined`.
+- Error path: an answer with `errorCode` in the body is thrown as `ApiError` (`errorCode`,
+  `status`, `detail`) and reported to the `ErrorState` (`api/error-state.ts`); another failed
+  answer and a network failure throw an `Error` that is no `ApiError` and report nothing.
+  `ErrorBanner` in `shell/error-banner.tsx` shows the text of `errorMessage(errorCode)` under the
+  toolbar, never `detail`. The texts stand in the catalog as `error.<CODE>`;
+  `api/error-messages.ts` maps every `ErrorCode` in a `Record<ErrorCode, MessageKey>`, so a new
+  code without a text fails `make typecheck`. A form shows its own codes with
+  `formErrorMessage(error, codes)`.
+- Session state (ADR 0004): `createSessionStore` in `api/session-store.ts` loads the snapshot
+  with `getSession`, then takes every snapshot of the WebSocket as a whole; `leave`, a failed load
+  and the end of the connection set it to `null`. No component keeps a copy of a part of the
+  snapshot, and no command reloads it. `serverNow()` is the client clock plus the distance to
+  `serverTime` of the last snapshot.
+- Realtime: `createRealtime` in `api/realtime.ts` opens `ws(s)://<host>/ws/sessions/<id>`, sends
+  `auth` with the token as the first message (the token is never part of the URL, ADR 0003) and
+  `ping` every 30 s. After a lost connection it connects again after 1, 2, 4, 8, 16 and then 30 s
+  each; a snapshot starts the sequence again. `connection()` is `OPEN`, `WAITING` with `retryAt`
+  or `CONNECTING`; the banner `connection-banner` shows every state but `OPEN`. A message `error`
+  is reported to the `ErrorState` and ends the connection without a new attempt. A message that
+  is no JSON counts as a lost connection.
+- Session gone: when `getSession` or the WebSocket reports `SESSION_NOT_FOUND`, the session page
+  removes the token, leaves the `SessionStore`, clears the `ErrorState` in the same step (the
+  banner does not appear) and shows `session-gone`.
+- Token (ADR 0003, ADR 0013): `createTokenStore` in `api/token-store.ts` keeps
+  `{ participantId, token }` in `sessionStorage` under `planningpoker.session.<id>`. With
+  `RecentSessions.enabled()` `true` it also writes the entry of the recent sessions
+  (`planningpoker.recent-sessions` in `localStorage`, at most five, newest first) and reads it
+  back when `sessionStorage` has no value. `enabled()` comes from `GET /api/config` and stays
+  `null` after a failure or 3 s; that failure is not reported to the `ErrorState`. A token never
+  appears in a log, a URL or a text for users.
+- Preferences: `createPreferencesStore` in `api/preferences-store.ts` reads and saves
+  `planningpoker.preferences` in `localStorage` with the fields, values and defaults of the
+  Angular `PreferencesStore`; `save` keeps the other stored fields. Invalid JSON or an exception
+  of `localStorage` gives the defaults, never an error.
+- Theme: `createThemeStore` in `shell/theme-store.ts` reads and saves the choice `system`, `light`
+  or `dark` as `theme` only through the `PreferencesStore`, sets `data-theme` on `<html>` before
+  the first render and follows `prefers-color-scheme` without a choice.
+- Participant name: `participantNameError` in `api/participant-name.ts` (empty or only white
+  space, more than 30 characters) is the one rule for every form with a name.
+- Tests of this layer build the services with `createTestBackend` (`api/testing/test-backend.tsx`):
+  the real services over a recorded `fetch` and the socket double of
+  `api/testing/fake-web-socket.ts`; the clock is the fake clock of vitest. Example snapshots come
+  from `api/examples.ts`, which checks the eight files of `contracts/api/examples/` against
+  `SessionView` at compile time. No double of an own module (T1.4).
 
 ## UI
 
 - Controls come from the UI SDK where it has the component (`Toggle` for `theme-toggle`, `Button`
-  for buttons). Import each component from its own entry (`@ui-sdk/react/toggle`). Table, card and
+  for buttons, also `error-close` and `connection-reconnect` of the banner). Import each component from its own entry (`@ui-sdk/react/toggle`). Table, card and
   chip are own HTML and CSS.
 - Styling: one CSS Module per component (`*.module.css`), passed through `className`; states
   through the attributes of the UI SDK (`[data-pressed]`, `[data-disabled]`, `[data-pending]`).
