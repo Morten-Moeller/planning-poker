@@ -1,6 +1,6 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { SessionView } from '../api/api';
 import {
   discussionDeveloper,
@@ -14,6 +14,7 @@ import {
 import { problem } from '../api/testing/test-backend';
 import type { Answer, FetchCall } from '../api/testing/test-backend';
 import { RoundFooter } from './round-footer';
+import { installPopupAnimations } from './testing/popup-animations';
 import {
   SessionPart,
   asViewer,
@@ -28,7 +29,9 @@ const ID = lobbyScrumMaster.sessionId;
 
 function show(snapshot: SessionView, command?: Answer) {
   return renderInSession(
-    <SessionPart render={(session) => <RoundFooter session={session} />} />,
+    <SessionPart
+      render={(session) => <RoundFooter session={session} onConfirmed={() => undefined} />}
+    />,
     snapshot,
     command,
   );
@@ -64,14 +67,109 @@ describe('RoundFooter', () => {
     sessionStorage.clear();
   });
 
-  it.each([
-    { name: 'LOBBY', snapshot: lobbyScrumMaster },
-    { name: 'REVEALED as scrum master', snapshot: revealedScrumMaster },
-    { name: 'REVEALED as developer', snapshot: revealedDeveloper },
-  ])('shows nothing in $name', async ({ snapshot }) => {
-    await show(snapshot);
+  it('shows nothing in LOBBY', async () => {
+    await show(lobbyScrumMaster);
 
     expect(screen.queryByTestId('round-footer')).toBeNull();
+  });
+
+  describe('in REVEALED', () => {
+    beforeAll(() => {
+      installPopupAnimations();
+    });
+
+    it.each([
+      { name: 'a developer', snapshot: revealedDeveloper },
+      { name: 'a viewer', snapshot: asViewer(revealedDeveloper) },
+    ])('shows only the waiting text to $name', async ({ snapshot }) => {
+      await show(snapshot);
+
+      expect(text('result-waiting')).toBe(
+        'Der Scrum Master lässt erneut schätzen oder übernimmt das Ergebnis.',
+      );
+      expect(screen.getByTestId('round-footer').children).toHaveLength(1);
+      expect(screen.queryByRole('button')).toBeNull();
+    });
+
+    it('offers Erneut schätzen and Ergebnis übernehmen to the scrum master', async () => {
+      await show(revealedScrumMaster);
+
+      expect(text('round-restart')).toBe('↻ Erneut schätzen');
+      expect(button('round-restart').getAttribute('data-variant')).toBe('outlined');
+      expect(button('round-restart').querySelector('.app-symbol')?.textContent).toBe('↻');
+      expect(text('result-accept')).toBe('Ergebnis übernehmen …');
+      expect(button('result-accept').getAttribute('data-variant')).toBe('filled');
+      expect(button('round-restart').disabled).toBe(false);
+      expect(button('result-accept').disabled).toBe(false);
+      expect(screen.queryByTestId('result-waiting')).toBeNull();
+    });
+
+    it('restarts the round once and disables both actions until the answer', async () => {
+      const user = userEvent.setup();
+      const command = held();
+      const { calls } = await show(revealedScrumMaster, command.answer);
+
+      await user.click(button('round-restart'));
+
+      expect(commands(calls)).toEqual([`POST /api/sessions/${ID}/round/restart`]);
+      expect(button('round-restart').disabled).toBe(true);
+      expect(button('result-accept').disabled).toBe(true);
+
+      act(() => command.release(new Response(null, { status: 204 })));
+
+      await waitFor(() => expect(button('round-restart').disabled).toBe(false));
+      expect(button('result-accept').disabled).toBe(false);
+    });
+
+    it('enables the actions again after a failed restart', async () => {
+      const user = userEvent.setup();
+      await show(revealedScrumMaster, () => problem(409, 'INVALID_STATE'));
+
+      await user.click(button('round-restart'));
+
+      await waitFor(() => expect(button('round-restart').disabled).toBe(false));
+    });
+
+    it('disables both actions while the result is written', async () => {
+      const test = await show(revealedScrumMaster);
+
+      receiveSnapshot(test, withRound(revealedScrumMaster, { confirming: true }));
+
+      expect(button('round-restart').disabled).toBe(true);
+      expect(button('result-accept').disabled).toBe(true);
+    });
+
+    it('opens the confirm dialog and disables both actions while it is open', async () => {
+      const user = userEvent.setup();
+      const { calls } = await show(revealedScrumMaster);
+      expect(screen.queryByTestId('confirm-dialog')).toBeNull();
+
+      await user.click(button('result-accept'));
+
+      expect(screen.getByTestId('confirm-dialog')).toBeTruthy();
+      expect(button('round-restart').disabled).toBe(true);
+      expect(button('result-accept').disabled).toBe(true);
+      expect(commands(calls)).toHaveLength(0);
+
+      await user.click(screen.getByTestId('confirm-cancel'));
+
+      await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).toBeNull());
+      expect(button('round-restart').disabled).toBe(false);
+      expect(button('result-accept').disabled).toBe(false);
+    });
+
+    it('preselects the consensus in the dialog', async () => {
+      const user = userEvent.setup();
+      await show(
+        withRound(revealedScrumMaster, {
+          votes: (revealedScrumMaster.round?.votes ?? []).map((vote) => ({ ...vote, card: '5' })),
+        }),
+      );
+
+      await user.click(button('result-accept'));
+
+      expect(text('confirm-lead')).toContain('Konsens: 5 ist vorausgewählt.');
+    });
   });
 
   describe('scrum master in DISCUSSION', () => {

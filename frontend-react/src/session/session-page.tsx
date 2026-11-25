@@ -4,6 +4,7 @@ import type { SessionView } from '../api/api';
 import { useBackend } from '../api/backend';
 import '../styles/motifs.css';
 import { CardHand } from '../ui/card-hand';
+import { ConfirmSuccessRegion, createConfirmToaster, showConfirmSuccess } from './confirm-success';
 import { ActiveIssue } from './active-issue';
 import { IssuePanel } from './issue-panel';
 import { motifOf } from '../api/card-motif';
@@ -11,8 +12,9 @@ import { LastResult, lastConfirmed } from './last-result';
 import { t } from './messages';
 import { ParticipantList } from './participant-list';
 import { RoundFooter } from './round-footer';
+import { RoundResult } from './round-result';
 import { RoundStatus } from './round-status';
-import { SeatTable } from './seat-table';
+import { SessionHistory } from './session-history';
 import { SessionFacts } from './session-facts';
 import styles from './session-page.module.css';
 import { ShareSession } from './share-session';
@@ -46,6 +48,8 @@ function Room({ session }: { session: SessionView }) {
   const scrumMaster = session.me.role === 'SCRUM_MASTER';
   const motif = motifOf(session);
   const invites = session.invites ?? null;
+  const [toaster] = useState(createConfirmToaster);
+  useEffect(() => () => toaster.dismiss(), [toaster]);
   const inRound = session.phase === 'DISCUSSION' || session.phase === 'VOTING';
   const activeIssue = session.activeIssue !== null && (
     <ActiveIssue issue={session.activeIssue} phase={session.phase} />
@@ -63,24 +67,32 @@ function Room({ session }: { session: SessionView }) {
         <ParticipantList />
         {invites !== null && <ShareSession sessionId={session.sessionId} invites={invites} />}
         <SessionFacts />
+        {session.history.length > 0 && <SessionHistory session={session} />}
       </div>
       <div className={styles.main} data-testid="room-main">
         {scrumMaster && <IssuePanel session={session} />}
         {!scrumMaster && session.phase === 'LOBBY' && <LobbyWaiting session={session} />}
-        {inRound ? (
+        {inRound && (
           <RoundStatus session={session} motif={motif}>
             {activeIssue}
           </RoundStatus>
-        ) : (
-          activeIssue
         )}
-        {session.phase === 'REVEALED' && <SeatTable session={session} />}
+        {session.phase === 'REVEALED' && (
+          <RoundResult session={session} motif={motif}>
+            {activeIssue}
+          </RoundResult>
+        )}
+        {session.phase === 'LOBBY' && activeIssue}
       </div>
-      {inRound && (
+      {session.phase !== 'LOBBY' && (
         <div className={styles.footer}>
-          <RoundFooter session={session} />
+          <RoundFooter
+            session={session}
+            onConfirmed={(data) => showConfirmSuccess(toaster, data)}
+          />
         </div>
       )}
+      <ConfirmSuccessRegion toaster={toaster} />
     </div>
   );
 }

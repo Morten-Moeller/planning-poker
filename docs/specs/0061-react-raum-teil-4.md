@@ -1,7 +1,7 @@
 ---
 id: "0061"
 title: "React-Frontend: Raum Teil 4 mit Auflösung und Abschluss"
-status: approved
+status: Review
 risk: high
 adrs: ["0004", "0016"]
 owner: Morten Möller
@@ -99,6 +99,9 @@ Entscheidungen:
   `result-facts` und `result-distribution` (zwei neue `data-testid`, auch im Angular-Frontend);
   `app-session-page .room` in `design-sidebar.spec.ts` wird zu `room`.
 - `RoundResult` enthält den aufgedeckten Tisch; `session-page.tsx` zeigt ihn nicht mehr selbst.
+- Bei der Umsetzung festgestellt: `full-flow.spec.ts` misst die Toolbar der Beitrittsseite im
+  React-Frontend vor dem Laden der Webschrift (Titel 4,7 px breiter). Der Test wartet jetzt vor
+  der ersten Messung auf `document.fonts.ready`; die Erwartung bleibt gleich.
 
 Dateien:
 
@@ -117,6 +120,9 @@ Dateien:
 - `frontend-react/src/session/confirm-result-dialog.spec.tsx`: neu
 - `frontend-react/src/session/confirm-success.tsx`: neu, Meldung und Toaster
 - `frontend-react/src/session/confirm-success.module.css`: neu
+- `frontend-react/src/session/card-value.tsx`: neu, Karte als Text mit Namen (aus `last-result.tsx`)
+- `frontend-react/src/session/last-result.tsx`: ändern, nutzt `card-value.tsx`
+- `frontend-react/src/session/testing/popup-animations.ts`: ändern, Doppel für `ResizeObserver`
 - `frontend-react/src/session/session-history.tsx`: neu
 - `frontend-react/src/session/session-history.module.css`: neu
 - `frontend-react/src/session/session-history.spec.tsx`: neu
@@ -175,7 +181,7 @@ Tests:
 | A4 | `frontend-react/src/session/round-result.spec.tsx`: Verteilung, Kennzahlen; `frontend-react/src/session/round-stats.spec.ts` |
 | A5 | `frontend-react/src/session/round-result.spec.tsx` |
 | A6 | `frontend-react/src/session/round-footer.spec.tsx`: `REVEALED` je Rolle |
-| A7 | `frontend-react/src/session/confirm-result-dialog.spec.tsx`: Aufbau, Vorwahl, Tastatur |
+| A7 | `frontend-react/src/session/confirm-result-dialog.spec.tsx`: Aufbau, Vorwahl; Pfeiltasten: `frontend/e2e/result-round.spec.ts` (jsdom bewegt die Wahl der Radiogruppe des UI SDK nicht) |
 | A8 | `frontend-react/src/session/confirm-result-dialog.spec.tsx`: Senden |
 | A9 | `frontend-react/src/session/confirm-result-dialog.spec.tsx`: Fehler |
 | A10 | `frontend-react/src/session/confirm-result-dialog.spec.tsx`: Erfolg; `frontend-react/src/session/session-page.spec.tsx` |

@@ -81,11 +81,10 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   the tests its screens pass (`test('…', { tag: '@react' }, …)`); a test never gets another
   expectation for one frontend. A selector that exists only in the Angular frontend (an element
   name such as `app-start-page`, a class of Angular Material) is replaced by a `data-testid` or
-  an ARIA attribute in the spec that tags the test. Without the tag after spec 0060 are the tests
-  that need the result of a round, the footer in `REVEALED`, the confirm dialog or the history
-  (spec 0061): `confetti`, `consensus`, `design-sidebar`, `outliers`, `result-round`,
-  `round-timer`, `symbols`, the first tests of `viewer` and `full-flow`, three tests of `layout`,
-  and the favicon test of `theme` (spec 0062).
+  an ARIA attribute in the spec that tags the test. After spec 0061 every test has the tag but
+  the favicon test of `theme` (spec 0062). A test that compares positions waits for
+  `document.fonts.ready` first: the Vite server answers before the web font is loaded, and the
+  fallback font has other widths.
 - Session setup (T6.2): there is no login. A flow creates its session through the start page or
   the REST API in a `beforeEach`; the token lands in `sessionStorage` through the application.
 - Environment check (T4.3): Playwright waits for `/api/health` of the backend and for the

@@ -1,4 +1,5 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useLastError } from '../api/backend';
@@ -18,6 +19,7 @@ import { createTestBackend, problem, renderWithBackend } from '../api/testing/te
 import type { Answer } from '../api/testing/test-backend';
 import { motifFor } from '../api/card-motif';
 import { SessionPage } from './session-page';
+import { installPopupAnimations, installResizeObserver } from './testing/popup-animations';
 import {
   asViewer,
   confirmedEntry,
@@ -346,7 +348,7 @@ describe('SessionPage', () => {
     {
       name: 'the scrum master in REVEALED',
       snapshot: revealedScrumMaster,
-      parts: ['issue-panel', 'active-issue', 'seat-table'],
+      parts: ['issue-panel', 'round-result'],
     },
     { name: 'a developer in DISCUSSION', snapshot: discussionDeveloper, parts: ['round-status'] },
     { name: 'a developer in VOTING', snapshot: votingDeveloper, parts: ['round-status'] },
@@ -354,7 +356,7 @@ describe('SessionPage', () => {
     {
       name: 'a developer in REVEALED',
       snapshot: revealedDeveloper,
-      parts: ['active-issue', 'seat-table'],
+      parts: ['round-result'],
     },
     {
       name: 'a developer in DISCUSSION without an active issue',
@@ -381,12 +383,15 @@ describe('SessionPage', () => {
     expect(screen.getAllByTestId('active-issue')).toHaveLength(1);
   });
 
-  it('shows the revealed table under the active issue in REVEALED', async () => {
+  it('puts the active issue and the revealed table into the round result in REVEALED', async () => {
     await showRoom(revealedDeveloper);
 
+    const result = screen.getByTestId('round-result');
     expect(screen.queryByTestId('round-status')).toBeNull();
-    expect(screen.getByTestId('seat-table-title').textContent).toBe('AUFGEDECKT');
-    expect(screen.getAllByTestId('result-vote').length).toBeGreaterThan(0);
+    expect(within(result).getByTestId('active-issue-title').textContent).toBe('Login page');
+    expect(within(result).getByTestId('seat-table-title').textContent).toBe('AUFGEDECKT');
+    expect(screen.getAllByTestId('seat-table')).toHaveLength(1);
+    expect(screen.getAllByTestId('active-issue')).toHaveLength(1);
   });
 
   it.each([
@@ -404,6 +409,13 @@ describe('SessionPage', () => {
       part: 'viewer-hint',
     },
     { name: 'a viewer in VOTING', snapshot: asViewer(votingDeveloper), part: 'viewer-hint' },
+    { name: 'the scrum master in REVEALED', snapshot: revealedScrumMaster, part: 'result-accept' },
+    { name: 'a developer in REVEALED', snapshot: revealedDeveloper, part: 'result-waiting' },
+    {
+      name: 'a viewer in REVEALED',
+      snapshot: asViewer(revealedDeveloper),
+      part: 'result-waiting',
+    },
   ])(
     'shows the footer with $part as the last row of the room for $name',
     async ({ snapshot, part }) => {
@@ -420,8 +432,6 @@ describe('SessionPage', () => {
   it.each([
     { name: 'the scrum master in LOBBY', snapshot: lobbyScrumMaster },
     { name: 'a developer in LOBBY', snapshot: lobbyDeveloper },
-    { name: 'the scrum master in REVEALED', snapshot: revealedScrumMaster },
-    { name: 'a developer in REVEALED', snapshot: revealedDeveloper },
   ])('shows no footer for $name', async ({ snapshot }) => {
     const { room } = await showRoom(snapshot);
 
@@ -429,14 +439,56 @@ describe('SessionPage', () => {
     expect(room.children).toHaveLength(2);
   });
 
-  it('removes the footer when the round is revealed', async () => {
+  it('replaces the deck by the waiting text when the round is revealed', async () => {
     const test = await showRoom(votingDeveloper);
-    expect(screen.queryByTestId('round-footer')).not.toBeNull();
+    expect(screen.queryByTestId('card-deck')).not.toBeNull();
 
     receive(test, revealedDeveloper);
 
-    expect(screen.queryByTestId('round-footer')).toBeNull();
     expect(screen.queryByTestId('card-deck')).toBeNull();
+    expect(screen.getByTestId('result-waiting').textContent).toBe(
+      'Der Scrum Master lässt erneut schätzen oder übernimmt das Ergebnis.',
+    );
+  });
+
+  it.each([
+    { name: 'a developer', snapshot: lobbyDeveloper, last: 'session-facts' },
+    {
+      name: 'a developer with one revealed round',
+      snapshot: withHistory(lobbyDeveloper, unconfirmedEntry()),
+      last: 'history-panel',
+    },
+    {
+      name: 'the scrum master with a confirmed round',
+      snapshot: withHistory(lobbyScrumMaster, confirmedEntry()),
+      last: 'history-panel',
+    },
+  ])('ends the side column with $last for $name', async ({ snapshot, last }) => {
+    const { room } = await showRoom(snapshot);
+
+    const side = within(room).getByTestId('room-side');
+    expect(side.lastElementChild?.getAttribute('data-testid')).toBe(last);
+    expect(screen.queryAllByTestId('history-panel')).toHaveLength(last === 'history-panel' ? 1 : 0);
+  });
+
+  it('shows the message of a confirmed result to the scrum master and closes the dialog', async () => {
+    installPopupAnimations();
+    installResizeObserver();
+    const user = userEvent.setup();
+    await showRoom(revealedScrumMaster);
+
+    await user.click(screen.getByTestId('result-accept'));
+    await user.click(await screen.findByRole('radio', { name: '8', hidden: true }));
+    await user.click(screen.getByTestId('confirm-submit'));
+
+    const message = await screen.findByTestId('confirm-success');
+    expect(message.textContent).toBe('✓ Endwert 8 in GitLab-Issue #42 gespeichert.');
+    const open = screen.getByTestId('confirm-success-open');
+    expect(open.textContent).toBe('Öffnen');
+    expect(open.getAttribute('href')).toBe(revealedScrumMaster.activeIssue?.webUrl);
+    expect(open.getAttribute('target')).toBe('_blank');
+    expect(open.getAttribute('rel')).toBe('noopener');
+    await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).toBeNull());
   });
 
   it.each([

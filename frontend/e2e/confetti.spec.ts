@@ -49,54 +49,60 @@ async function revealConsensus(page: Page, browser: Browser): Promise<void> {
   await expect(page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
 }
 
-test('the confetti falls as one rain with distinct delays and spread durations', async ({
-  page,
-  browser,
-}) => {
-  await revealConsensus(page, browser);
-  const confetti = page.getByTestId('consensus-confetti');
-  await expect(confetti).toBeVisible();
-  await expect(confetti.locator('.piece')).toHaveCount(PIECES);
+test(
+  'the confetti falls as one rain with distinct delays and spread durations',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    await revealConsensus(page, browser);
+    const confetti = page.getByTestId('consensus-confetti');
+    await expect(confetti).toBeVisible();
+    await expect(confetti.locator('span')).toHaveCount(PIECES);
 
-  const timing = await confetti.locator('.piece').evaluateAll((pieces) =>
-    pieces.map((piece) => {
-      const style = getComputedStyle(piece);
-      return {
-        delay: parseFloat(style.animationDelay),
-        duration: parseFloat(style.animationDuration),
-      };
-    }),
-  );
-  const delays = timing.map((entry) => entry.delay);
-  const durations = timing.map((entry) => entry.duration);
+    const timing = await confetti.locator('span').evaluateAll((pieces) =>
+      pieces.map((piece) => {
+        const style = getComputedStyle(piece);
+        return {
+          delay: parseFloat(style.animationDelay),
+          duration: parseFloat(style.animationDuration),
+        };
+      }),
+    );
+    const delays = timing.map((entry) => entry.delay);
+    const durations = timing.map((entry) => entry.duration);
 
-  expect(new Set(delays).size).toBe(PIECES);
-  for (const delay of delays) {
-    expect(delay).toBeGreaterThanOrEqual(0);
-    expect(delay).toBeLessThanOrEqual(1.3);
-  }
-  expect(Math.max(...durations) - Math.min(...durations)).toBeGreaterThanOrEqual(0.8);
-});
+    expect(new Set(delays).size).toBe(PIECES);
+    for (const delay of delays) {
+      expect(delay).toBeGreaterThanOrEqual(0);
+      expect(delay).toBeLessThanOrEqual(1.3);
+    }
+    expect(Math.max(...durations) - Math.min(...durations)).toBeGreaterThanOrEqual(0.8);
+  },
+);
 
-test('the confetti falls over the height of its container', async ({ page, browser }) => {
-  await revealConsensus(page, browser);
-  const confetti = page.getByTestId('consensus-confetti');
-  await expect(confetti).toBeVisible();
-  await expect(confetti).toHaveCSS('container-type', 'size');
+test(
+  'the confetti falls over the height of its container',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    await revealConsensus(page, browser);
+    const confetti = page.getByTestId('consensus-confetti');
+    await expect(confetti).toBeVisible();
+    await expect(confetti).toHaveCSS('container-type', 'size');
 
-  const fall = await confetti
-    .locator('.piece')
-    .first()
-    .evaluate((piece) => {
-      const name = getComputedStyle(piece).animationName;
-      const rules = Array.from(document.styleSheets)
-        .filter((sheet) => !sheet.href || new URL(sheet.href).origin === location.origin)
-        .flatMap((sheet) => Array.from(sheet.cssRules));
-      const keyframes = rules.find(
-        (rule): rule is CSSKeyframesRule => rule instanceof CSSKeyframesRule && rule.name === name,
-      );
-      return keyframes?.findRule('100%')?.cssText ?? '';
-    });
+    const fall = await confetti
+      .locator('span')
+      .first()
+      .evaluate((piece) => {
+        const name = getComputedStyle(piece).animationName;
+        const rules = Array.from(document.styleSheets)
+          .filter((sheet) => !sheet.href || new URL(sheet.href).origin === location.origin)
+          .flatMap((sheet) => Array.from(sheet.cssRules));
+        const keyframes = rules.find(
+          (rule): rule is CSSKeyframesRule =>
+            rule instanceof CSSKeyframesRule && rule.name === name,
+        );
+        return keyframes?.findRule('100%')?.cssText ?? '';
+      });
 
-  expect(fall).toContain('cqh');
-});
+    expect(fall).toContain('cqh');
+  },
+);

@@ -1,0 +1,48 @@
+.region {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-s);
+  margin: 0;
+  padding: var(--app-space-s);
+  border: 0;
+  background: transparent;
+  list-style: none;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-m);
+  box-sizing: border-box;
+  min-width: min(344px, 100%);
+  max-width: min(672px, 100%);
+  min-height: 48px;
+  padding: 0 var(--app-space-s) 0 0;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background-color: var(--mat-sys-inverse-surface);
+  color: var(--mat-sys-inverse-on-surface);
+  box-shadow: var(--mat-sys-level3);
+  font: var(--mat-sys-body-medium);
+  pointer-events: auto;
+}
+
+.label {
+  flex: 1;
+  padding: 14px var(--app-space-m);
+}
+
+.title {
+  font: inherit;
+}
+
+.open {
+  padding: var(--app-space-s);
+  color: var(--mat-sys-inverse-primary);
+  font: var(--mat-sys-label-large);
+  text-decoration: none;
+}

@@ -1,6 +1,5 @@
 import type { SessionView } from '../api/api';
-import { cardName, cardSymbol } from './cards';
-import type { Card } from './cards';
+import { CardValue } from './card-value';
 import { externalUrl } from './external-link';
 import styles from './last-result.module.css';
 import { t } from './messages';
@@ -19,30 +18,6 @@ export function lastConfirmed(session: SessionView | null): HistoryEntry | null 
   }
   const latest = session.history[0];
   return latest?.finalCard ? latest : null;
-}
-
-function CardValue({
-  card,
-  className,
-  testId,
-}: {
-  card: Card;
-  className?: string;
-  testId?: string;
-}) {
-  const name = cardName(card);
-  if (name === null) {
-    return (
-      <span className={className} data-testid={testId}>
-        {cardSymbol(card)}
-      </span>
-    );
-  }
-  return (
-    <span className={className} data-testid={testId} role="img" aria-label={name}>
-      {cardSymbol(card)}
-    </span>
-  );
 }
 
 export function LastResult() {

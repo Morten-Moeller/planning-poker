@@ -3,6 +3,9 @@ import type { SessionView } from '../api/api';
 import { useBackend } from '../api/backend';
 import { AppButton } from '../ui/app-button';
 import { CardDeck } from './card-deck';
+import { ConfirmResultDialog } from './confirm-result-dialog';
+import type { ConfirmSuccessData } from './confirm-success';
+import { consensusCard } from './consensus';
 import { t } from './messages';
 import styles from './round-footer.module.css';
 import { TIMER_OPTIONS } from './timer-setting';
@@ -10,6 +13,7 @@ import { voteProgress } from './vote-progress';
 
 const NAME_SEPARATOR = ', ';
 const SENTENCE_END = '.';
+const SYMBOL_RESTART = '↻';
 
 function absentText(session: SessionView): string | null {
   const absent = session.participants
@@ -129,11 +133,89 @@ function VotingBox({ session }: { session: SessionView }) {
   );
 }
 
-export function RoundFooter({ session }: { session: SessionView }) {
-  if (session.phase !== 'DISCUSSION' && session.phase !== 'VOTING') {
+function ResultActions({
+  session,
+  onConfirmed,
+}: {
+  session: SessionView;
+  onConfirmed: (data: ConfirmSuccessData) => void;
+}) {
+  const { api } = useBackend();
+  const [restarting, setRestarting] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const disabled = session.round?.confirming === true || restarting || dialogOpen;
+
+  const restart = () => {
+    if (disabled) {
+      return;
+    }
+    setRestarting(true);
+    api
+      .restartRound(session.sessionId)
+      .catch(() => undefined)
+      .finally(() => setRestarting(false));
+  };
+
+  return (
+    <div className={styles.actions}>
+      <AppButton
+        variant="outlined"
+        className={styles.resultAction}
+        data-testid="round-restart"
+        disabled={disabled}
+        onClick={restart}
+      >
+        <span className="app-symbol" aria-hidden="true">
+          {SYMBOL_RESTART}
+        </span>{' '}
+        {t('roundResult.restart')}
+      </AppButton>
+      <AppButton
+        variant="filled"
+        className={styles.resultAction}
+        data-testid="result-accept"
+        disabled={disabled}
+        onClick={() => setDialogOpen(true)}
+      >
+        {t('roundResult.accept')}
+      </AppButton>
+      {dialogOpen && (
+        <ConfirmResultDialog
+          session={session}
+          suggestedCard={consensusCard(session.round?.votes ?? [])}
+          onClose={() => setDialogOpen(false)}
+          onConfirmed={onConfirmed}
+        />
+      )}
+    </div>
+  );
+}
+
+export function RoundFooter({
+  session,
+  onConfirmed,
+}: {
+  session: SessionView;
+  onConfirmed: (data: ConfirmSuccessData) => void;
+}) {
+  if (session.phase === 'LOBBY') {
     return null;
   }
   const role = session.me.role;
+
+  if (session.phase === 'REVEALED') {
+    return (
+      <div className={styles.footer} data-testid="round-footer">
+        {role === 'SCRUM_MASTER' ? (
+          <ResultActions session={session} onConfirmed={onConfirmed} />
+        ) : (
+          <p className={styles.waiting} data-testid="result-waiting">
+            {t('roundResult.waiting')}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={styles.footer} data-testid="round-footer">

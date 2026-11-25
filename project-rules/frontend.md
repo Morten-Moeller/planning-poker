@@ -223,7 +223,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   column and the main area have `data-testid` `room`, `room-side` and `room-main` for the
   end-to-end tests of both frontends (spec 0059). A card button has `data-state` (`open`,
   `chosen`, `locked`) and, while it unlocks, `data-unlock="true"`; the end-to-end tests read
-  these attributes, not the classes (spec 0060).
+  these attributes, not the classes (spec 0060). The two panels of the round result have
+  `result-distribution` and `result-facts` (spec 0061).
 - Footer and scroll areas (spec 0035): `RoundFooter` (`round-footer`) stands in the DOM after
   the main area and holds the cards and round actions per phase and role: `DISCUSSION` the
   locked deck with `discussion-hint` (developer) or the box with `discussion-hint` and
