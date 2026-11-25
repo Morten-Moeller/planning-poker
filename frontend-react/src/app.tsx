@@ -11,6 +11,10 @@ const SessionPage = lazy(() =>
   import('./session/session-page').then((module) => ({ default: module.SessionPage })),
 );
 
+const JoinPage = lazy(() =>
+  import('./join/join-page').then((module) => ({ default: module.JoinPage })),
+);
+
 export function App({ backend, theme }: { backend: Backend; theme: ThemeStore }) {
   return (
     <BackendProvider backend={backend}>
@@ -26,6 +30,14 @@ export function App({ backend, theme }: { backend: Backend; theme: ThemeStore })
                     <SessionPage />
                   </Suspense>
                 </RequireSession>
+              }
+            />
+            <Route
+              path="session/:id/join"
+              element={
+                <Suspense fallback={null}>
+                  <JoinPage />
+                </Suspense>
               }
             />
             <Route path="*" element={null} />

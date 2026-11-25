@@ -1,24 +1,38 @@
-import { act, screen } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api/api-error';
+import { lobbyDeveloper, lobbyScrumMaster } from '../api/examples';
+import type { SessionView } from '../api/examples';
 import { createTestBackend, renderWithBackend } from '../api/testing/test-backend';
 import { AppShell } from './app-shell';
 import { createThemeStore } from './theme-store';
 
-function renderShell(systemDark: boolean) {
+const lobbyViewer: SessionView = {
+  ...lobbyDeveloper,
+  me: { ...lobbyDeveloper.me, role: 'VIEWER' },
+  participants: lobbyDeveloper.participants.map((participant) =>
+    participant.id === lobbyDeveloper.me.participantId
+      ? { ...participant, role: 'VIEWER' }
+      : participant,
+  ),
+};
+
+function renderShell(systemDark: boolean, path = '/', snapshot: SessionView | null = null) {
   vi.stubGlobal('matchMedia', () => ({ matches: systemDark, addEventListener: () => undefined }));
-  const { backend } = createTestBackend();
+  const { backend } = createTestBackend(() => Response.json(snapshot));
   const theme = createThemeStore(window, backend.preferences);
   theme.start();
   renderWithBackend(
     <Routes>
       <Route element={<AppShell theme={theme} />}>
         <Route index element={<p>Seite</p>} />
+        <Route path="*" element={<p>Andere Seite</p>} />
       </Route>
     </Routes>,
     backend,
+    path,
   );
   return { toggle: screen.getByTestId('theme-toggle'), backend };
 }
@@ -88,5 +102,94 @@ describe('AppShell', () => {
     const banner = screen.getByTestId('error-banner');
     expect(screen.getByTestId('toolbar').nextElementSibling).toBe(banner);
     expect(banner.nextElementSibling).toBe(screen.getByRole('main'));
+  });
+
+  it('shows no motif field, no session id and no name on the start page', () => {
+    renderShell(false);
+
+    expect(screen.queryByTestId('toolbar-motif')).toBeNull();
+    expect(screen.queryByTestId('toolbar-session-id')).toBeNull();
+    expect(screen.queryByTestId('toolbar-me')).toBeNull();
+  });
+
+  it.each([
+    { path: '/session/K7P2QX9M/join?invite=code', id: 'K7P2QX9M' },
+    { path: '/session/k7p2qx9m/join', id: 'K7P2QX9M' },
+  ])('shows the motif field and the session id $id on the join page $path', ({ path, id }) => {
+    renderShell(false, path);
+
+    const toolbar = screen.getByTestId('toolbar');
+    const motif = screen.getByTestId('toolbar-motif');
+    const home = screen.getByTestId('toolbar-home');
+    const sessionId = screen.getByTestId('toolbar-session-id');
+    expect(motif.getAttribute('aria-hidden')).toBe('true');
+    expect(motif.textContent).toBe('');
+    expect(toolbar.firstElementChild).toBe(motif);
+    expect(motif.nextElementSibling).toBe(home);
+    expect(home.nextElementSibling).toBe(sessionId);
+    expect(sessionId.textContent).toBe(id);
+    expect(screen.queryByTestId('toolbar-me')).toBeNull();
+    expect(toolbar.lastElementChild).toBe(screen.getByTestId('theme-toggle'));
+  });
+
+  it.each([
+    { name: 'seven characters', path: '/session/K7P2QX9/join' },
+    { name: 'nine characters', path: '/session/K7P2QX9MA/join' },
+    { name: 'a character outside the alphabet', path: '/session/K7P2QX1M/join' },
+    { name: 'the room path', path: '/session/K7P2QX9M' },
+    { name: 'a longer path', path: '/session/K7P2QX9M/join/more' },
+  ])('shows no session id for $name', ({ path }) => {
+    renderShell(false, path);
+
+    expect(screen.queryByTestId('toolbar-motif')).toBeNull();
+    expect(screen.queryByTestId('toolbar-session-id')).toBeNull();
+    expect(screen.queryByTestId('toolbar-me')).toBeNull();
+  });
+
+  it.each([
+    { snapshot: lobbyScrumMaster, me: 'Anna · Scrum Master' },
+    { snapshot: lobbyDeveloper, me: 'Ben · Entwickler' },
+    { snapshot: lobbyViewer, me: 'Ben · Zuschauer' },
+  ])('shows the session of the snapshot and „$me“ in the room', async ({ snapshot, me }) => {
+    const { backend } = renderShell(false, '/', snapshot);
+    backend.tokens.store(snapshot.sessionId, {
+      participantId: snapshot.me.participantId,
+      token: 'token-of-me',
+    });
+
+    act(() => backend.sessions.enter(snapshot.sessionId));
+    await waitFor(() => expect(backend.sessions.session()).not.toBeNull());
+
+    const toolbar = screen.getByTestId('toolbar');
+    expect(toolbar.firstElementChild).toBe(screen.getByTestId('toolbar-motif'));
+    expect(screen.getByTestId('toolbar-session-id').textContent).toBe(snapshot.sessionId);
+    expect(screen.getByTestId('toolbar-me').textContent).toBe(me);
+    expect(toolbar.lastElementChild).toBe(screen.getByTestId('theme-toggle'));
+
+    act(() => backend.sessions.leave());
+
+    expect(screen.queryByTestId('toolbar-motif')).toBeNull();
+    expect(screen.queryByTestId('toolbar-session-id')).toBeNull();
+    expect(screen.queryByTestId('toolbar-me')).toBeNull();
+  });
+
+  it('shows no name when the own participant is not in the list', async () => {
+    const snapshot: SessionView = {
+      ...lobbyDeveloper,
+      participants: lobbyDeveloper.participants.filter(
+        (participant) => participant.id !== lobbyDeveloper.me.participantId,
+      ),
+    };
+    const { backend } = renderShell(false, '/', snapshot);
+    backend.tokens.store(snapshot.sessionId, {
+      participantId: snapshot.me.participantId,
+      token: 'token-of-me',
+    });
+
+    act(() => backend.sessions.enter(snapshot.sessionId));
+    await waitFor(() => expect(backend.sessions.session()).not.toBeNull());
+
+    expect(screen.getByTestId('toolbar-session-id').textContent).toBe(snapshot.sessionId);
+    expect(screen.queryByTestId('toolbar-me')).toBeNull();
   });
 });

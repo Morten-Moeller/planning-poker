@@ -39,11 +39,12 @@ design holds here as well, unless this file names another way.
 
 ## Structure
 
-- One folder per feature under `frontend-react/src/`: `start` (start page), `session` (page of
-  the room; until spec 0058 only the states `session-loading` and `session-gone`), `shell`
-  (toolbar, theme, error banner, main area), `api` (generated types, calls, stores, realtime,
-  error texts, route guard), `i18n` (texts), `styles` (tokens, global rules). `join` and the
-  later parts of the room come with their specs. The shared controls are in `ui`
+- One folder per feature under `frontend-react/src/`: `start` (start page), `join` (join page,
+  `project-rules/frontend-react-join.md`), `session` (page of the room; until spec 0058 only the
+  states `session-loading` and `session-gone`), `shell` (toolbar, theme, error banner, main
+  area), `api` (generated types, calls, stores, realtime,
+  error texts, route guard), `i18n` (texts), `styles` (tokens, global rules). The later
+  parts of the room come with their specs. The shared controls are in `ui`
   (`project-rules/frontend-react-ui.md`), the card motifs in `styles/motifs.css`; `i18n` holds
   `defineMessages` and the error texts per `errorCode`.
 - Rules per feature: a feature writes its rules into `project-rules/frontend-react-<feature>.md`
@@ -62,8 +63,16 @@ design holds here as well, unless this file names another way.
 - Routes: `/` (start) and `/session/:id` (room, `React.lazy`, its own chunk) inside
   `RequireSession` (`api/require-session.tsx`): without a stored token for the session it leads to
   `/session/:id/join`. The check runs once per session id when the route is entered. The route
-  `/session/:id/join` comes with spec 0057; until then an unknown path shows the shell with an
-  empty main area.
+  `/session/:id/join` (join page, `React.lazy`, its own chunk, spec 0057) stands outside
+  `RequireSession`. An unknown path shows the shell with an empty main area.
+- Toolbar (`shell/app-shell.tsx`, spec 0057): with a snapshot in the `SessionStore` it shows the
+  motif field `toolbar-motif` left of the title, the session id `toolbar-session-id` of the
+  snapshot and `toolbar-me` „Name · Rolle“ with the own name from the participant list (hidden
+  below 600 px). Without a snapshot, on `/session/:id/join`, it shows the motif field and the id
+  from the path in capital letters, only when the id has eight characters of the alphabet of the
+  session id, and no `toolbar-me`. The shell reads the snapshot with `useSyncExternalStore` from
+  `useBackend().sessions` and the path with `useLocation`. Until spec 0059 the motif field is
+  always the dashed placeholder. `theme-toggle` stays at the right end.
 
 ## State and data
 
@@ -122,7 +131,9 @@ design holds here as well, unless this file names another way.
 ## UI
 
 - Controls come from the UI SDK where it has the component (`Toggle` for `theme-toggle`, `Button`
-  for buttons, also `error-close` and `connection-reconnect` of the banner). Import each component from its own entry (`@ui-sdk/react/toggle`). Table, card and
+  for buttons). A button is an `AppButton` of `ui/` (`project-rules/frontend-react-ui.md`), also
+  `error-close` (`text`, `on-error`) and `connection-reconnect` (`outlined`, `on-error`) of the
+  banner; the banner has no own button CSS. Import each component from its own entry (`@ui-sdk/react/toggle`). Table, card and
   chip are own HTML and CSS.
 - Styling: one CSS Module per component (`*.module.css`), passed through `className`; states
   through the attributes of the UI SDK (`[data-pressed]`, `[data-disabled]`, `[data-pending]`).
