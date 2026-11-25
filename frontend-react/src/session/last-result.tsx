@@ -1,6 +1,7 @@
 import type { SessionView } from '../api/api';
 import { cardName, cardSymbol } from './cards';
 import type { Card } from './cards';
+import { externalUrl } from './external-link';
 import styles from './last-result.module.css';
 import { t } from './messages';
 import { useSession } from './use-session';
@@ -51,7 +52,9 @@ export function LastResult() {
     return null;
   }
   const project = session.project ?? null;
-  const issueUrl = project === null ? null : `${project.webUrl}/-/issues/${entry.issueIid}`;
+  const issueUrl = externalUrl(
+    project === null ? null : `${project.webUrl}/-/issues/${entry.issueIid}`,
+  );
 
   return (
     <section className={styles.lastResult} data-testid="last-result">

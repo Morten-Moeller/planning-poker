@@ -40,10 +40,10 @@ design holds here as well, unless this file names another way.
 ## Structure
 
 - One folder per feature under `frontend-react/src/`: `start` (start page), `join` (join page,
-  `project-rules/frontend-react-join.md`), `session` (page of the room; until spec 0058 only the
-  states `session-loading` and `session-gone`), `shell` (toolbar, theme, error banner, main
+  `project-rules/frontend-react-join.md`), `session` (page of the room,
+  `project-rules/frontend-react-session.md`), `shell` (toolbar, theme, error banner, main
   area), `api` (generated types, calls, stores, realtime,
-  error texts, route guard), `i18n` (texts), `styles` (tokens, global rules). The later
+  error texts, route guard, card motif of a snapshot), `i18n` (texts), `styles` (tokens, global rules). The later
   parts of the room come with their specs. The shared controls are in `ui`
   (`project-rules/frontend-react-ui.md`), the card motifs in `styles/motifs.css`; `i18n` holds
   `defineMessages` and the error texts per `errorCode`.
@@ -71,8 +71,10 @@ design holds here as well, unless this file names another way.
   below 600 px). Without a snapshot, on `/session/:id/join`, it shows the motif field and the id
   from the path in capital letters, only when the id has eight characters of the alphabet of the
   session id, and no `toolbar-me`. The shell reads the snapshot with `useSyncExternalStore` from
-  `useBackend().sessions` and the path with `useLocation`. Until spec 0059 the motif field is
-  always the dashed placeholder. `theme-toggle` stays at the right end.
+  `useBackend().sessions` and the path with `useLocation`. With a snapshot the motif field has
+  `data-filled="true"` and the class `motif-<n>` of `motifOf(session)` (`api/card-motif.ts`), so
+  it shows the accent colour and the pattern of the room; on the join page it is the dashed
+  placeholder (spec 0059). `theme-toggle` stays at the right end.
 
 ## State and data
 

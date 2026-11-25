@@ -116,6 +116,23 @@ describe('LastResult', () => {
     expect(symbol?.getAttribute('aria-hidden')).toBe('true');
   });
 
+  it.each(['javascript:alert(1)', 'data:text/html,x', '/webshop/frontend', ''])(
+    'shows no link when the project address is „%s“',
+    async (webUrl) => {
+      const project = lobbyDeveloper.project;
+      await renderInSession(
+        <LastResult />,
+        withHistory(
+          { ...lobbyDeveloper, project: project === null ? null : { ...project, webUrl } },
+          confirmed,
+        ),
+      );
+
+      expect(screen.getByTestId('last-result')).toBeTruthy();
+      expect(screen.queryByTestId('last-result-open')).toBeNull();
+    },
+  );
+
   it('shows no link when the project is unknown', async () => {
     await renderInSession(
       <LastResult />,

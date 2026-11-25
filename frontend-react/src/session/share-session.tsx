@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import type { SessionView } from '../api/api';
 import { AppButton } from '../ui/app-button';
 import { t } from './messages';
-import type { MessageKey } from './messages';
+import type { TextKey } from './messages';
 import styles from './share-session.module.css';
 
 export type ShareTarget = 'developer' | 'viewer';
@@ -11,11 +11,11 @@ export type SessionInvites = NonNullable<SessionView['invites']>;
 
 const COPIED_VISIBLE_MS = 3000;
 const TARGETS: readonly ShareTarget[] = ['developer', 'viewer'];
-const LABEL: Record<ShareTarget, MessageKey> = {
+const LABEL: Record<ShareTarget, TextKey> = {
   developer: 'share.developerLabel',
   viewer: 'share.viewerLabel',
 };
-const COPY_LABEL: Record<ShareTarget, MessageKey> = {
+const COPY_LABEL: Record<ShareTarget, TextKey> = {
   developer: 'share.copyDeveloperLink',
   viewer: 'share.copyViewerLink',
 };

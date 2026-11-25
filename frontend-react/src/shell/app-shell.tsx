@@ -2,7 +2,9 @@ import { Toggle } from '@ui-sdk/react/toggle';
 import { useSyncExternalStore } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
 import { useBackend } from '../api/backend';
+import { motifOf } from '../api/card-motif';
 import type { ParticipantRole } from '../api/recent-sessions';
+import '../styles/motifs.css';
 import { t } from './messages';
 import type { MessageKey } from './messages';
 import styles from './app-shell.module.css';
@@ -40,7 +42,15 @@ export function AppShell({ theme }: { theme: ThemeStore }) {
   return (
     <div className={styles.shell}>
       <header className={styles.toolbar} data-testid="toolbar">
-        {sessionId !== null && (
+        {session !== null && (
+          <span
+            className={`${styles.motif} ${styles.filled} motif-${motifOf(session)}`}
+            data-testid="toolbar-motif"
+            data-filled="true"
+            aria-hidden="true"
+          />
+        )}
+        {session === null && sessionId !== null && (
           <span className={styles.motif} data-testid="toolbar-motif" aria-hidden="true" />
         )}
         <Link className={styles.title} to="/" data-testid="toolbar-home">
