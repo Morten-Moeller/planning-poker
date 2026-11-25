@@ -1,7 +1,7 @@
 <div class="intro">
   <app-card-hand class="hand" [size]="'large'" />
   <h1 i18n="@@start.title">Issues gemeinsam schätzen</h1>
-  <p class="lead" i18n="@@start.lead">
+  <p class="lead" data-testid="start-lead" i18n="@@start.lead">
     Der Scrum Master erstellt die Sitzung und teilt den Link. Das Team tritt mit Namen bei und
     schätzt verdeckt.
   </p>
@@ -254,6 +254,7 @@
   <div
     class="health"
     role="status"
+    data-testid="health"
     [class.up]="backendReachable() === true"
     [class.down]="backendDown()"
   >

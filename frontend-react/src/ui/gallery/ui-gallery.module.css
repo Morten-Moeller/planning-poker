@@ -83,3 +83,25 @@
 .hand .caption {
   width: auto;
 }
+
+.suggestions {
+  box-sizing: border-box;
+  width: var(--anchor-width);
+  margin: 0;
+  padding: var(--app-space-s) 0;
+  border: 0;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background-color: var(--mat-sys-surface-container);
+  box-shadow: var(--mat-sys-level2);
+  color: var(--mat-sys-on-surface);
+}
+
+.suggestion {
+  padding: var(--app-space-s) var(--app-space-m);
+  font: var(--mat-sys-body-large);
+  cursor: pointer;
+}
+
+.suggestion[data-highlighted] {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+}

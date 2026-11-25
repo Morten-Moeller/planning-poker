@@ -1,9 +1,12 @@
-import { Button } from '@ui-sdk/react/button';
 import { useEffect, useState } from 'react';
+import { AppButton } from '../ui/app-button';
+import { CardHand } from '../ui/card-hand';
 import { ErrorNote } from '../ui/error-note';
-import { t } from './messages';
-import type { MessageKey } from './messages';
+import { CreateForm } from './create-form';
 import { backendReachable } from './health-api';
+import { t } from './messages';
+import type { TextKey } from './messages';
+import { RecentSessionsList } from './recent-sessions-list';
 import styles from './start-page.module.css';
 
 interface HealthResult {
@@ -13,7 +16,7 @@ interface HealthResult {
 
 type HealthState = 'checking' | 'up' | 'down';
 
-const STATUS_TEXT: Record<HealthState, MessageKey> = {
+const STATUS_TEXT: Record<HealthState, TextKey> = {
   checking: 'start.backendChecking',
   up: 'start.backendReachable',
   down: 'start.backendUnreachable',
@@ -49,13 +52,20 @@ export function StartPage() {
   const backendDown = result !== null && !result.reachable;
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} data-testid="start-page">
       <div className={styles.intro}>
+        <CardHand size="large" />
         <h1 className={styles.title}>{t('start.title')}</h1>
-        <p className={styles.lead}>{t('start.lead')}</p>
+        <p className={styles.lead} data-testid="start-lead">
+          {t('start.lead')}
+        </p>
+      </div>
+      <RecentSessionsList />
+      <div className={styles.panels}>
+        <CreateForm backendDown={backendDown} />
       </div>
       <footer className={styles.footer} data-testid="start-footer">
-        <div className={STATUS_CLASS[state]} role="status">
+        <div className={STATUS_CLASS[state]} role="status" data-testid="health">
           <span className={styles.healthIcon} aria-hidden="true">
             {STATUS_SYMBOL[state]}
           </span>
@@ -64,16 +74,18 @@ export function StartPage() {
         {backendDown && (
           <ErrorNote icon={false} className={styles.healthNote} data-testid="health-down">
             <span className={styles.healthNoteText}>{t('start.backendDownHint')}</span>
-            <Button
-              className={styles.retry}
+            <AppButton
+              variant="outlined"
+              tone="on-error"
+              type="button"
               data-testid="health-retry"
               onClick={() => setAttempt((last) => last + 1)}
             >
               <span className="app-symbol" aria-hidden="true">
                 {RETRY_SYMBOL}
-              </span>{' '}
+              </span>
               {t('start.backendRetry')}
-            </Button>
+            </AppButton>
           </ErrorNote>
         )}
       </footer>

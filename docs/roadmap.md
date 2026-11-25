@@ -106,7 +106,7 @@ Hinweise zu den Wellen:
 
 # Roadmap Teil 2: React-Frontend mit UI SDK
 
-Stand: 2026-11-24 (Welle 2 gemergt, Welle 3 geschrieben)
+Stand: 2026-11-24 (Welle 3 gemergt, Welle 4 geschrieben)
 
 Teil 1 oben ist abgeschlossen (Specs 0001 bis 0019) und bleibt unverändert.
 
@@ -166,10 +166,10 @@ bestehen (ADR 0001, R-26).
 | 0054 | API-Schicht, Zustand und Fehlerbanner: `Api`, `TokenStore`, `RecentSessions`, `PreferencesStore`, `Realtime`, `SessionStore`, `ErrorBanner`, Route `/session/:id` mit `session-loading` und `session-gone` | 2 | 0053 | `frontend-react/src/api/`, `frontend-react/src/session/` (Seite mit zwei Zuständen), `frontend-react/src/shell/`, `frontend-react/src/app.tsx`, `frontend-react/src/main.tsx`, `frontend-react/src/i18n/`, `frontend/e2e/session-access.spec.ts`, `project-rules/frontend-react.md`, `project-rules/testing.md` | high |
 | 0055 | Gemeinsame Bausteine: Button, Textfeld, Kartenhand, Motive, Musterseite `ui.html` | 2 | 0053 | `frontend-react/src/ui/`, `frontend-react/src/styles/motifs.css`, `frontend-react/ui.html`, `project-rules/frontend-react-ui.md` | medium |
 | 0063 | Vorbereitung der Welle 4: Textkatalog je Feature, Zahlform, `ErrorNote`, Regeln je Bereich | 3 | 0054, 0055 | `frontend-react/src/i18n/`, Kataloge in `shell/`, `start/`, `session/`, `frontend-react/src/ui/` (`ErrorNote`), `project-rules/` | medium |
-| 0056 | Startseite: Sitzung anlegen, Projekt- und Issue-Auswahl (Autocomplete), Einstellungen merken, letzte Sitzungen | 4 | 0054, 0055, 0063 | `frontend-react/src/start/`, `project-rules/frontend-react-start.md`, `frontend/e2e/` (Tags der Tests, die nur die Startseite brauchen) | medium |
-| 0057 | Beitrittsseite mit Route `/session/:id/join`: Einladung, Rollenhinweise, Fehlerzustände; Sitzung in der Toolbar; Banner mit `AppButton` | 4 | 0054, 0055, 0063 | `frontend-react/src/join/`, `frontend-react/src/shell/`, `frontend-react/src/app.tsx`, `project-rules/frontend-react-join.md` | medium |
-| 0058 | Raum, Teil 1: Raster, Seitenleiste (Timer mit Select, Teilnehmer, Teilen, Fakten), Lobby, Kartenmotiv | 4 | 0054, 0055, 0063 | `frontend-react/src/session/`, `project-rules/frontend-react-session.md` | medium |
-| 0059 | Raum, Teil 2: Issue-Auswahl mit Filtern (Segmented Control, Select), aktives Issue mit Markdown, Wechsel-Dialog | 5 | 0058 | `frontend-react/src/session/`, `frontend-react/package.json` (`marked`, Sanitizer), `frontend/e2e/` (Tags) | medium |
+| 0056 | Startseite: Sitzung anlegen, Projekt- und Issue-Auswahl (Autocomplete), Einstellungen merken, letzte Sitzungen | 4 | 0054, 0055, 0063 | `frontend-react/src/start/`, `project-rules/frontend-react-start.md`, `frontend/e2e/` (Tags der Tests, die nur die Startseite brauchen) | high |
+| 0057 | Beitrittsseite mit Route `/session/:id/join`: Einladung, Rollenhinweise, Fehlerzustände; Sitzung in der Toolbar; Banner mit `AppButton` | 4 | 0054, 0055, 0063 | `frontend-react/src/join/`, `frontend-react/src/shell/`, `frontend-react/src/app.tsx`, `project-rules/frontend-react-join.md` | high |
+| 0058 | Raum, Teil 1: Raster, Seitenleiste (Timer mit Select, Teilnehmer, Teilen, Fakten), Lobby, Kartenmotiv | 4 | 0054, 0055, 0063 | `frontend-react/src/session/`, `project-rules/frontend-react-session.md` | high |
+| 0059 | Raum, Teil 2: Issue-Auswahl mit Filtern (Segmented Control, Select), aktives Issue mit Markdown, Wechsel-Dialog; Motiv in der Toolbar; Tags für die Abläufe über Start, Beitritt und Raum | 5 | 0058 | `frontend-react/src/session/`, `frontend-react/package.json` (`marked`, Sanitizer), `frontend/e2e/` (Tags) | medium |
 | 0060 | Raum, Teil 3: Diskussion und Schätzrunde: Karte, Kartensatz, Tisch, Rundenstatus mit Fortschrittsbalken, Timer, Footer | 6 | 0059 | `frontend-react/src/session/`, `frontend/e2e/` (Tags) | medium |
 | 0061 | Raum, Teil 4: Auflösung und Abschluss: Ergebnis, Ausreißer, Konsens, Konfetti, Bestätigen (Dialog, Toast), letztes Ergebnis, Protokoll (Collapsible), erneut schätzen, Zuschauer | 7 | 0060 | `frontend-react/src/session/`, `frontend-react/src/shell/` (Toast-Region), `frontend/e2e/` (Tags) | medium |
 | 0062 | Parität: ganze Suite ohne Tag gegen React, Bundle-Grenze, README und Architektur final | 8 | 0056, 0057, 0061 | `frontend/e2e/`, `frontend/playwright.config.ts`, `frontend-react/vite.config.ts`, `README.md`, `docs/` | medium |
@@ -196,6 +196,11 @@ Hinweise zu den Wellen:
   0059, wenn alle drei Seiten auf `main` sind; 0057 und 0058 belegen ihre Kriterien mit
   Unit-Tests und dem Gang durch den Browser mit Sitzungen aus der REST-API. Die Shell (Toolbar
   mit Sitzung, Klasse `room` am Hauptbereich) ändert nur 0057.
+- Aus Welle 4 nach 0059 verschoben: Farbe und Muster der Runde im Feld `toolbar-motif` (0057
+  zeigt den Platzhalter; die Berechnung des Motivs entsteht in 0058 in `session/` und zieht mit
+  0059 nach `api/`) und die Tags `@react` für alle Abläufe über Start, Beitritt und Raum. Der
+  Test der Favicon-Verweise (`theme.spec.ts`) braucht relative Verweise in
+  `frontend-react/index.html`; das gehört zu 0062.
 - Welle 5 bis 7 ändern denselben Ordner `session/` und laufen nacheinander. 0059 fügt `marked`
   und einen Sanitizer hinzu; die Wahl des Sanitizers steht in der Spec.
 - Selektoren der Suite, die nur im Angular-Frontend existieren (`app-start-page`,

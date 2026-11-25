@@ -49,7 +49,14 @@ The shared controls of the React frontend in `frontend-react/src/ui/` (spec 0055
   and `aria-describedby`; no own `id` or `htmlFor`.
 - Props: `label`, `value`, `onChange(value: string)`, `hint`, `error`, `onBlur`, `name`,
   `autoComplete`, `inputMode`, `maxLength`, `disabled`, `data-testid` (on the input),
-  `errorTestId` (on the error text).
+  `errorTestId` (on a span with the error text alone, without the symbol, as in the Angular
+  frontend), `renderInput`.
+- `renderInput(input)` (spec 0056): a feature replaces `Input` by a control of its own that joins
+  the field, for example `AutocompleteInput` or `FieldControl` of the UI SDK. `input` has the
+  class of the field (`className`) and the props `TextField` gives to `Input`: `value`,
+  `onChange`, `onBlur`, `name`, `autoComplete`, `inputMode`, `maxLength`, `data-testid`. The
+  control puts `className` on its input element; label, hint, error and the invalid state come
+  from the field as before. Without `renderInput` nothing changes.
 - The field is controlled: the caller keeps the value and the validation and passes the error
   text. No native constraint (`required`, `pattern`) is used.
 - A non-empty `error` sets `aria-invalid="true"` and stands in place of the hint. The error text

@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { FieldControl } from '@ui-sdk/react/field';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { TextField } from './text-field';
@@ -79,7 +80,9 @@ describe('TextField', () => {
       />,
     );
 
-    const error = screen.getByTestId('name-error');
+    const errorText = screen.getByTestId('name-error');
+    expect(errorText.textContent).toBe('Bitte einen Namen eingeben.');
+    const error = errorText.parentElement as HTMLElement;
     await waitFor(() => expect(describedBy(input)).toBe('⚠ Bitte einen Namen eingeben.'));
     expect(input.getAttribute('aria-invalid')).toBe('true');
     expect(error.getAttribute('data-slot')).toBe('field-error');
@@ -129,6 +132,75 @@ describe('TextField', () => {
 
     expect(input.value).toBe('123');
     expect(onBlur).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders the input of the caller with the class, the value and the props of the field', async () => {
+    const user = userEvent.setup();
+    const onBlur = vi.fn();
+    render(
+      <Controlled
+        initial="A"
+        hint="So sehen dich die anderen."
+        name="participant"
+        autoComplete="off"
+        inputMode="text"
+        maxLength={5}
+        onBlur={onBlur}
+        renderInput={(input) => (
+          <FieldControl
+            className={input.className}
+            value={input.value}
+            onChange={(event) => input.onChange(event.currentTarget.value)}
+            onBlur={input.onBlur}
+            name={input.name}
+            autoComplete={input.autoComplete}
+            inputMode={input.inputMode}
+            maxLength={input.maxLength}
+            data-testid={input['data-testid']}
+          />
+        )}
+      />,
+    );
+    const input = screen.getByRole<HTMLInputElement>('textbox', { name: 'Dein Name' });
+
+    expect(input.getAttribute('data-slot')).toBe('field-control');
+    expect(input.getAttribute('data-testid')).toBe('name-input');
+    expect(input.className).not.toBe('');
+    expect(input.value).toBe('A');
+    expect(input.getAttribute('name')).toBe('participant');
+    expect(input.getAttribute('autocomplete')).toBe('off');
+    expect(input.getAttribute('inputmode')).toBe('text');
+    expect(input.maxLength).toBe(5);
+    expect(document.querySelector('[data-slot="input"]')).toBeNull();
+    await waitFor(() => expect(describedBy(input)).toBe('So sehen dich die anderen.'));
+
+    await user.type(input, 'da');
+    await user.tab();
+
+    expect(input.value).toBe('Ada');
+    expect(onBlur).toHaveBeenCalledTimes(1);
+  });
+
+  it('marks the input of the caller invalid and describes it with the error', async () => {
+    render(
+      <Controlled
+        error="Bitte einen Namen eingeben."
+        errorTestId="name-error"
+        renderInput={(input) => (
+          <FieldControl
+            className={input.className}
+            value={input.value}
+            onChange={(event) => input.onChange(event.currentTarget.value)}
+            data-testid={input['data-testid']}
+          />
+        )}
+      />,
+    );
+    const input = screen.getByTestId('name-input');
+
+    await waitFor(() => expect(describedBy(input)).toBe('⚠ Bitte einen Namen eingeben.'));
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByTestId('name-error').textContent).toBe('Bitte einen Namen eingeben.');
   });
 
   it('takes no input when it is disabled', async () => {

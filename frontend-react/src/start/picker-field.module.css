@@ -1,0 +1,40 @@
+.panel {
+  box-sizing: border-box;
+  width: var(--anchor-width);
+  max-height: min(var(--available-height), 256px);
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--app-space-s) 0;
+  border: 0;
+  border-radius: var(--mat-sys-corner-extra-small);
+  background-color: var(--mat-sys-surface-container);
+  box-shadow: var(--mat-sys-level2);
+  color: var(--mat-sys-on-surface);
+}
+
+.panel:not(:has([data-slot='autocomplete-item'])) {
+  display: none;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.option {
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: var(--app-space-s) var(--app-space-m);
+  font: var(--mat-sys-body-large);
+  letter-spacing: var(--mat-sys-body-large-tracking);
+  cursor: pointer;
+}
+
+.option[data-highlighted] {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+}
+
+.option[data-disabled] {
+  color: color-mix(in srgb, var(--mat-sys-on-surface) 38%, transparent);
+  cursor: default;
+}
