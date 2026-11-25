@@ -1,14 +1,14 @@
 ---
 id: "0059"
 title: "React-Frontend: Raum Teil 2 mit Issue-Auswahl und aktivem Issue"
-status: Review
+status: done
 risk: high
 adrs: ["0004", "0016", "0017"]
 owner: Morten Möller
 created: 2026-11-25
 updated: 2026-11-25
-pr: ""
-note: freigegeben in der Session
+pr: "#70"
+note: alle Kriterien erfüllt
 ---
 
 # React-Frontend: Raum Teil 2 mit Issue-Auswahl und aktivem Issue
