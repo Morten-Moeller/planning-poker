@@ -106,7 +106,7 @@ Hinweise zu den Wellen:
 
 # Roadmap Teil 2: React-Frontend mit UI SDK
 
-Stand: 2026-11-25 (Welle 5 gemergt, Welle 6 geschrieben)
+Stand: 2026-11-25 (Welle 6 gemergt, Welle 7 geschrieben)
 
 Teil 1 oben ist abgeschlossen (Specs 0001 bis 0019) und bleibt unverändert.
 
@@ -211,6 +211,10 @@ Hinweise zu den Wellen:
   in `REVEALED` zeigt der Hauptbereich bis 0061 das aktive Issue und den Tisch, ohne Footer. Die
   Zeichnungen für `?` und `☕` sind React-Komponenten, kein Abruf der SVG-Dateien. Der Footer in
   `REVEALED`, das Ergebnis, der Dialog und das Protokoll bleiben bei 0061.
+- Welle 7 (geschrieben am 2026-11-25): 0061 schaltet alle übrigen Tests frei, auch
+  `round-timer.spec.ts`, das 0060 ohne Tag ließ. Die Region der Meldung steht im Raum, nicht in
+  der Shell. Für 0062 bleiben der Test der Favicon-Verweise, der Lauf ohne Tag, die Bundle-Grenze
+  und die Texte.
 - Selektoren der Suite, die nur im Angular-Frontend existieren (`app-start-page`,
   `app-session-page .room`, `mat-button-toggle-checked`), ersetzt die Spec, die den Test
   freischaltet, in beiden Frontends durch `data-testid` oder ein ARIA-Attribut.
