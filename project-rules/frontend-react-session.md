@@ -214,7 +214,9 @@ and Design Werkbank part B).
   while `round.confirming`, until the answer to the restart and while the dialog is open;
   everybody else has `result-waiting`.
 - `ConfirmResultDialog` (`confirm-result-dialog.tsx`, `confirm-dialog`) is `Dialog` of the UI
-  SDK, mounted only while it is open, so its choice starts new every time. The cards are
+  SDK, mounted only while it is open, so its choice starts new every time. It reads issue,
+  `writeWeight` and the distribution from the snapshot on every render and keeps no copy; the
+  issue for the success message is read when the request is sent. The cards are
   `RadioGroup` and `Radio` of `@ui-sdk/react/radio` inside the labels `confirm-card`; the name
   of a radio is the name of the card, its description the count of votes. The consensus is
   preselected; without one the most frequent values are marked. While the request runs the

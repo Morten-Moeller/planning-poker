@@ -65,9 +65,9 @@ export function ConfirmResultDialog({
   onConfirmed: (data: ConfirmSuccessData) => void;
 }) {
   const { api, errors } = useBackend();
-  const [issue] = useState(session.activeIssue);
-  const [writeWeight] = useState(session.writeWeight === true);
-  const [options] = useState(() => cardOptions(session.round?.stats ?? null, suggestedCard));
+  const issue = session.activeIssue;
+  const writeWeight = session.writeWeight === true;
+  const options = cardOptions(session.round?.stats ?? null, suggestedCard);
   const [selected, setSelected] = useState<Card | null>(suggestedCard);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,12 +77,16 @@ export function ConfirmResultDialog({
     if (selected === null || sending) {
       return;
     }
-    const card = selected;
+    const confirmed: ConfirmSuccessData = {
+      card: selected,
+      issueIid: issue?.iid ?? null,
+      webUrl: issue?.webUrl ?? null,
+    };
     setSending(true);
     setError(null);
-    api.confirmRound(session.sessionId, { card }).then(
+    api.confirmRound(session.sessionId, { card: confirmed.card }).then(
       () => {
-        onConfirmed({ card, issueIid: issue?.iid ?? null, webUrl: issue?.webUrl ?? null });
+        onConfirmed(confirmed);
         onClose();
       },
       (failure: unknown) => {
