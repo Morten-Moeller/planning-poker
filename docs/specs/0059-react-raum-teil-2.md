@@ -3,7 +3,7 @@ id: "0059"
 title: "React-Frontend: Raum Teil 2 mit Issue-Auswahl und aktivem Issue"
 status: Review
 risk: high
-adrs: ["0004", "0016"]
+adrs: ["0004", "0016", "0017"]
 owner: Morten Möller
 created: 2026-11-25
 updated: 2026-11-25
@@ -91,9 +91,10 @@ ist die Stufe high. Dazu kommt HTML aus fremdem Text (Beschreibung des Issues). 
 deshalb mit high freigegeben.
 Gates: G2, das Label `human-approved` nach dem letzten Push; G3, der Status `verified`; Code-,
 Sicherheits- und Architektur-Review.
-ADR nötig: nein, kein neues. `marked` ist die Bibliothek des Angular-Frontends für denselben
-Zweck; DOMPurify ist eine Hilfsbibliothek ohne Wirkung auf die Struktur
-(`harness/policies/adr.md`). Die Änderung folgt ADR 0004 und ADR 0016.
+ADR nötig: ja, zwei neue Abhängigkeiten (`harness/policies/adr.md`, Bedingung 2):
+`docs/adr/0017-markdown-im-react-frontend-mit-marked-und-dompurify.md`. Bei der Freigabe stand hier
+„nein“; das Architektur-Review hat das ADR verlangt. Die Änderung folgt außerdem ADR 0004 und
+ADR 0016.
 
 ## Umsetzung
 
@@ -173,6 +174,8 @@ Dateien:
 - `project-rules/frontend.md`: ändern, `data-testid` des Rasters
 - `project-rules/testing.md`: ändern, Tests mit `@react`
 - `docs/roadmap.md`: ändern, Stand und Hinweis zu Welle 5
+- `docs/adr/0017-markdown-im-react-frontend-mit-marked-und-dompurify.md`: neu
+- `docs/adr/README.md`: ändern
 - `docs/specs/0059-react-raum-teil-2.md`: neu
 
 Schritte:
