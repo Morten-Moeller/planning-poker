@@ -6,7 +6,7 @@ sources: [frontend-react/src/session/**]
 
 The room of the React frontend in `frontend-react/src/session/` (spec 0058: grid, card motif, side
 column, lobby; spec 0059: issue panel, active issue, switch dialog; spec 0060: round status, timer,
-seat table, card deck, footer). The rules of `project-rules/frontend-react.md` hold here as well; texts,
+seat table, card deck, footer; spec 0061: round result, confirm dialog, success message, history). The rules of `project-rules/frontend-react.md` hold here as well; texts,
 `data-testid` and the look follow the Angular room (`project-rules/frontend.md`, Session page grid
 and Design Werkbank part B).
 
@@ -37,13 +37,11 @@ and Design Werkbank part B).
   these two selectors.
 - Main area, in this order: `IssuePanel` (scrum master, every phase), the waiting state with the
   last result (developer and viewer in `LOBBY`), then the active issue: inside `RoundStatus` in
-  `DISCUSSION` and `VOTING`, alone in `LOBBY`, and followed by the revealed `SeatTable` in
-  `REVEALED`. The result of the round, the footer in `REVEALED`, the confirm dialog and the
-  history come with spec 0061.
-- Footer: in `DISCUSSION` and `VOTING` the room has a third child after the main area, the
-  second row of the grid (`RoundFooter`, `round-footer`). From 720 px it stays in the window;
-  below that it is sticky at the bottom of the window. No footer in `LOBBY` and, until spec
-  0061, in `REVEALED`.
+  `DISCUSSION` and `VOTING`, inside `RoundResult` in `REVEALED`, alone in `LOBBY`.
+- Footer: outside `LOBBY` the room has a third child after the main area, the second row of the
+  grid (`RoundFooter`, `round-footer`). From 720 px it stays in the window; below that it is
+  sticky at the bottom of the window.
+- The side column ends with `SessionHistory` when the snapshot has history entries.
 
 ## Card motif
 
@@ -197,6 +195,44 @@ and Design Werkbank part B).
   `round-reveal` in `VOTING`; a developer has the deck; a viewer has `viewer-hint`. A command
   button is disabled until the answer.
 
+## Result and confirmation
+
+- `RoundResult` (`round-result.tsx`, `round-result`) takes the snapshot, the motif and the
+  active issue as children: the bar (`round-number`, `result-counter`, `motif-name`; the classes
+  of `round-status.module.css`), the children, `confirming-hint` while `round.confirming`, the
+  consensus, the note for outliers, `result-empty`, the revealed `SeatTable`, `not-voted` and
+  the statistics (`result-distribution`, `result-facts`). No part of the result has a button.
+- `consensusCard` (`consensus.ts`): at least two votes and all the same number card; the rule is
+  the one of `frontend/src/app/session/consensus.ts`. With a consensus `Confetti`
+  (`confetti.tsx`, `consensus-confetti`) shows 46 pieces; `pieceStyle(index)` gives the values
+  of the Angular function. No confetti under `prefersReducedMotion()`, and the CSS hides it for
+  the same media query.
+- `averageText` (`round-stats.ts`) formats the average with one decimal and a comma
+  (`Intl.NumberFormat('de')`). `CardValue` (`card-value.tsx`) shows a card as text, with
+  `role="img"` and its name for `?` and `COFFEE`.
+- Footer in `REVEALED`: the scrum master has `round-restart` and `result-accept`, both disabled
+  while `round.confirming`, until the answer to the restart and while the dialog is open;
+  everybody else has `result-waiting`.
+- `ConfirmResultDialog` (`confirm-result-dialog.tsx`, `confirm-dialog`) is `Dialog` of the UI
+  SDK, mounted only while it is open, so its choice starts new every time. It reads issue,
+  `writeWeight` and the distribution from the snapshot on every render and keeps no copy; the
+  issue for the success message is read when the request is sent. The cards are
+  `RadioGroup` and `Radio` of `@ui-sdk/react/radio` inside the labels `confirm-card`; the name
+  of a radio is the name of the card, its description the count of votes. The consensus is
+  preselected; without one the most frequent values are marked. While the request runs the
+  dialog is not dismissible, the radios and both buttons are disabled and `confirm-writing`
+  shows a `Progress` without a value. `GITLAB_ACCESS_DENIED` and `GITLAB_ERROR` stay in the
+  dialog as `confirm-error` and clear the `ErrorState`; every other error stays with the banner.
+- Success: the dialog calls `onConfirmed`, and `session-page.tsx` shows the message with
+  `showConfirmSuccess` (`confirm-success.tsx`): a `Toast` of `@ui-sdk/react/toast` for 5 s in the
+  `ToastRegion` of the room, with `confirm-success` and, for an address that passes
+  `externalUrl`, the link `confirm-success-open`. The toaster is created once per room and
+  dismissed when the room is left. Only the browser that confirmed shows the message.
+- `SessionHistory` (`session-history.tsx`, `history-panel`) is `Collapsible` of
+  `@ui-sdk/react/collapsible`, closed at first, with `keepMounted`: the entries stay in the DOM
+  while it is closed, as in the Angular frontend. An entry shows issue, round, votes, average,
+  most frequent values and the final value or „ohne Endwert“.
+
 ## Tests
 
 - Every part has its test next to it. `testing/session-snapshots.tsx` renders a part inside a
@@ -217,6 +253,8 @@ and Design Werkbank part B).
   a timer uses the fake clock of vitest with `shouldAdvanceTime`.
 - jsdom sends the end of an animation to React only as `webkitAnimationEnd`; `card.spec.tsx`
   sends both event names.
-- End-to-end: the flows up to the reveal of a round have the tag `@react` (specs 0059 and
-  0060). The tests that need the result of a round get the tag with spec 0061
-  (`project-rules/testing.md`).
+- A test with a toast calls `installResizeObserver()` (`testing/popup-animations.ts`); jsdom has
+  no `ResizeObserver`. jsdom does not move the choice of the `RadioGroup` with the arrow keys;
+  `result-round.spec.ts` covers that in the browser. A test finds the radios by
+  `data-slot="radio"`, because every `Radio` also has a hidden native input.
+- End-to-end: every flow of the room has the tag `@react` (specs 0059 to 0061).

@@ -64,6 +64,18 @@
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--mat-sys-primary) 25%, transparent);
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.actions .resultAction {
+  height: 44px;
+  padding: 0 20px;
+}
+
 .waiting {
   margin: 0;
   color: var(--app-on-surface-muted);

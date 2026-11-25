@@ -28,60 +28,61 @@ test.afterEach(async ({ browser, context: own }) => {
   }
 });
 
-test('the session page has no horizontal scroll bar at 375 px in every phase', async ({
-  page: anna,
-  browser,
-}) => {
-  await anna.goto('/');
-  await anna.getByTestId('create-name').fill('Anna');
-  await anna.getByTestId('create-project').fill('1234');
-  await anna.getByTestId('create-issue').fill('42');
-  await anna.getByTestId('create-submit').click();
-  await expect(anna).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  const link = (await anna.getByTestId('share-link-developer').textContent()) ?? '';
-  const ben = await (await browser.newContext({ viewport: VIEWPORT })).newPage();
-  await ben.goto(link);
-  await ben.getByTestId('join-name').fill('Ben');
-  await ben.getByTestId('join-submit').click();
-  await expect(ben.getByTestId('session-role')).toHaveText('Entwickler');
-  const everybody = [anna, ben];
+test(
+  'the session page has no horizontal scroll bar at 375 px in every phase',
+  { tag: '@react' },
+  async ({ page: anna, browser }) => {
+    await anna.goto('/');
+    await anna.getByTestId('create-name').fill('Anna');
+    await anna.getByTestId('create-project').fill('1234');
+    await anna.getByTestId('create-issue').fill('42');
+    await anna.getByTestId('create-submit').click();
+    await expect(anna).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
+    const link = (await anna.getByTestId('share-link-developer').textContent()) ?? '';
+    const ben = await (await browser.newContext({ viewport: VIEWPORT })).newPage();
+    await ben.goto(link);
+    await ben.getByTestId('join-name').fill('Ben');
+    await ben.getByTestId('join-submit').click();
+    await expect(ben.getByTestId('session-role')).toHaveText('Entwickler');
+    const everybody = [anna, ben];
 
-  await expect(anna.getByTestId('issue-result')).toHaveCount(2);
-  for (const page of everybody) {
-    await expect(page.getByTestId('session-phase')).toHaveText('Wartet auf ein Issue');
-    await expectSideUnderMain(page);
-    await expectNoHorizontalScroll(page);
-  }
+    await expect(anna.getByTestId('issue-result')).toHaveCount(2);
+    for (const page of everybody) {
+      await expect(page.getByTestId('session-phase')).toHaveText('Wartet auf ein Issue');
+      await expectSideUnderMain(page);
+      await expectNoHorizontalScroll(page);
+    }
 
-  await anna.getByTestId('issue-release').click();
-  for (const page of everybody) {
-    await expect(page.getByTestId('session-phase')).toHaveText('Diskussion');
-    await expect(page.getByTestId('active-issue-title')).toHaveText('Login page');
-  }
-  await expect(ben.getByTestId('discussion-hint')).toBeVisible();
-  await expect(anna.getByTestId('round-start')).toBeVisible();
-  for (const page of everybody) {
-    await expectNoHorizontalScroll(page);
-  }
+    await anna.getByTestId('issue-release').click();
+    for (const page of everybody) {
+      await expect(page.getByTestId('session-phase')).toHaveText('Diskussion');
+      await expect(page.getByTestId('active-issue-title')).toHaveText('Login page');
+    }
+    await expect(ben.getByTestId('discussion-hint')).toBeVisible();
+    await expect(anna.getByTestId('round-start')).toBeVisible();
+    for (const page of everybody) {
+      await expectNoHorizontalScroll(page);
+    }
 
-  await startVoting(anna);
-  for (const page of everybody) {
-    await expect(page.getByTestId('session-phase')).toHaveText('Runde läuft');
-  }
-  await expect(ben.getByTestId('card-deck')).toBeVisible();
-  for (const page of everybody) {
-    await expectNoHorizontalScroll(page);
-  }
+    await startVoting(anna);
+    for (const page of everybody) {
+      await expect(page.getByTestId('session-phase')).toHaveText('Runde läuft');
+    }
+    await expect(ben.getByTestId('card-deck')).toBeVisible();
+    for (const page of everybody) {
+      await expectNoHorizontalScroll(page);
+    }
 
-  await ben.getByTestId('card-deck').getByTestId('card-5').click();
-  await expect(anna.getByTestId('all-voted-hint')).toBeVisible();
-  await anna.getByTestId('round-reveal').click();
-  for (const page of everybody) {
-    await expect(page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
-    await expect(page.getByTestId('round-result')).toBeVisible();
-    await expectNoHorizontalScroll(page);
-  }
-});
+    await ben.getByTestId('card-deck').getByTestId('card-5').click();
+    await expect(anna.getByTestId('all-voted-hint')).toBeVisible();
+    await anna.getByTestId('round-reveal').click();
+    for (const page of everybody) {
+      await expect(page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
+      await expect(page.getByTestId('round-result')).toBeVisible();
+      await expectNoHorizontalScroll(page);
+    }
+  },
+);
 
 test.describe('desktop', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
@@ -171,67 +172,69 @@ async function expectFooterInWindowAndLastLineReachable(page: Page): Promise<voi
 }
 
 test.describe('scroll bar', () => {
-  test('the main content keeps its width at 1440 x 900 when a scroll bar appears', async ({
-    page: anna,
-    browser,
-  }) => {
-    const ben = await openLongIssue(anna, browser, { width: 1440, height: 900 });
-    await startVoting(anna);
-    await ben.getByTestId('card-deck').getByTestId('card-5').click();
-    await expect(anna.getByTestId('all-voted-hint')).toBeVisible();
-    await anna.getByTestId('round-reveal').click();
-    await expect(ben.getByTestId('result-waiting')).toBeVisible();
+  test(
+    'the main content keeps its width at 1440 x 900 when a scroll bar appears',
+    { tag: '@react' },
+    async ({ page: anna, browser }) => {
+      const ben = await openLongIssue(anna, browser, { width: 1440, height: 900 });
+      await startVoting(anna);
+      await ben.getByTestId('card-deck').getByTestId('card-5').click();
+      await expect(anna.getByTestId('all-voted-hint')).toBeVisible();
+      await anna.getByTestId('round-reveal').click();
+      await expect(ben.getByTestId('result-waiting')).toBeVisible();
 
-    const main = ben.getByTestId('room-main');
-    const measure = (): Promise<{ client: number; scroll: number; issue: number }> =>
-      main.evaluate((node) => ({
-        client: node.clientWidth,
-        scroll: node.scrollHeight - node.clientHeight,
-        issue: node.querySelector('[data-testid="active-issue"]')!.getBoundingClientRect().width,
-      }));
-    const before = await measure();
-    expect(before.scroll, JSON.stringify(before)).toBeLessThanOrEqual(0);
+      const main = ben.getByTestId('room-main');
+      const measure = (): Promise<{ client: number; scroll: number; issue: number }> =>
+        main.evaluate((node) => ({
+          client: node.clientWidth,
+          scroll: node.scrollHeight - node.clientHeight,
+          issue: node.querySelector('[data-testid="active-issue"]')!.getBoundingClientRect().width,
+        }));
+      const before = await measure();
+      expect(before.scroll, JSON.stringify(before)).toBeLessThanOrEqual(0);
 
-    await ben.getByTestId('active-issue-expand').click();
-    await expect(ben.getByTestId('active-issue-collapse')).toBeVisible();
-    const after = await measure();
+      await ben.getByTestId('active-issue-expand').click();
+      await expect(ben.getByTestId('active-issue-collapse')).toBeVisible();
+      const after = await measure();
 
-    expect(after.scroll, JSON.stringify(after)).toBeGreaterThan(0);
-    expect(after.client).toBe(before.client);
-    expect(after.issue).toBe(before.issue);
-  });
+      expect(after.scroll, JSON.stringify(after)).toBeGreaterThan(0);
+      expect(after.client).toBe(before.client);
+      expect(after.issue).toBe(before.issue);
+    },
+  );
 });
 
 test.describe('footer', () => {
-  test('the footer stays in the window at 1440 x 900 with a long issue description', async ({
-    page: anna,
-    browser,
-  }) => {
-    const ben = await openLongIssue(anna, browser, { width: 1440, height: 900 });
-    const everybody = [anna, ben];
+  test(
+    'the footer stays in the window at 1440 x 900 with a long issue description',
+    { tag: '@react' },
+    async ({ page: anna, browser }) => {
+      const ben = await openLongIssue(anna, browser, { width: 1440, height: 900 });
+      const everybody = [anna, ben];
 
-    await expect(ben.getByTestId('card-deck-locked')).toBeVisible();
-    await expect(anna.getByTestId('round-start')).toBeVisible();
-    for (const page of everybody) {
-      await expectFooterInWindowAndLastLineReachable(page);
-    }
+      await expect(ben.getByTestId('card-deck-locked')).toBeVisible();
+      await expect(anna.getByTestId('round-start')).toBeVisible();
+      for (const page of everybody) {
+        await expectFooterInWindowAndLastLineReachable(page);
+      }
 
-    await startVoting(anna);
-    await expect(ben.getByTestId('card-deck')).toBeVisible();
-    await expect(anna.getByTestId('round-reveal')).toBeVisible();
-    for (const page of everybody) {
-      await expectFooterInWindowAndLastLineReachable(page);
-    }
+      await startVoting(anna);
+      await expect(ben.getByTestId('card-deck')).toBeVisible();
+      await expect(anna.getByTestId('round-reveal')).toBeVisible();
+      for (const page of everybody) {
+        await expectFooterInWindowAndLastLineReachable(page);
+      }
 
-    await ben.getByTestId('card-deck').getByTestId('card-5').click();
-    await expect(anna.getByTestId('all-voted-hint')).toBeVisible();
-    await anna.getByTestId('round-reveal').click();
-    await expect(ben.getByTestId('result-waiting')).toBeVisible();
-    await expect(anna.getByTestId('result-accept')).toBeVisible();
-    for (const page of everybody) {
-      await expectFooterInWindowAndLastLineReachable(page);
-    }
-  });
+      await ben.getByTestId('card-deck').getByTestId('card-5').click();
+      await expect(anna.getByTestId('all-voted-hint')).toBeVisible();
+      await anna.getByTestId('round-reveal').click();
+      await expect(ben.getByTestId('result-waiting')).toBeVisible();
+      await expect(anna.getByTestId('result-accept')).toBeVisible();
+      for (const page of everybody) {
+        await expectFooterInWindowAndLastLineReachable(page);
+      }
+    },
+  );
 
   test(
     'the footer sticks to the bottom at 375 x 667 and the deck scrolls sideways',

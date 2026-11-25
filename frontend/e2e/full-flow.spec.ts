@@ -65,79 +65,81 @@ test.afterEach(async ({ browser, context: own }) => {
   }
 });
 
-test('three people estimate two issues and the scrum master writes the result to GitLab', async ({
-  page: anna,
-  browser,
-}) => {
-  const notesBefore = await countNotes(CONFIRMED_ISSUE);
-  await anna.goto('/');
-  await anna.getByTestId('create-name').fill('Anna');
-  await anna.getByTestId('create-project').fill(PROJECT);
-  await anna.getByTestId('create-issue').fill('42');
-  await anna.getByTestId('create-submit').click();
-  await expect(anna).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  const sessionId = (await anna.getByTestId('session-id').textContent()) ?? '';
-  const link = (await anna.getByTestId('share-link-developer').textContent()) ?? '';
+test(
+  'three people estimate two issues and the scrum master writes the result to GitLab',
+  { tag: '@react' },
+  async ({ page: anna, browser }) => {
+    const notesBefore = await countNotes(CONFIRMED_ISSUE);
+    await anna.goto('/');
+    await anna.getByTestId('create-name').fill('Anna');
+    await anna.getByTestId('create-project').fill(PROJECT);
+    await anna.getByTestId('create-issue').fill('42');
+    await anna.getByTestId('create-submit').click();
+    await expect(anna).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
+    const sessionId = (await anna.getByTestId('session-id').textContent()) ?? '';
+    const link = (await anna.getByTestId('share-link-developer').textContent()) ?? '';
 
-  const ben = await newPage(browser);
-  await ben.goto(link.replace(sessionId, sessionId.toLowerCase()));
-  await expect(ben.getByTestId('toolbar-session-id')).toHaveText(sessionId);
-  await expect(ben.getByTestId('toolbar-me')).toHaveCount(0);
-  const joinBox = await ben.getByTestId('toolbar-session-id').boundingBox();
-  await joinWithName(ben, 'Ben');
-  await expect(ben.getByTestId('toolbar-session-id')).toHaveText(sessionId);
-  await expect(ben.getByTestId('toolbar-me')).toHaveText(/Ben · Entwickler/);
-  const roomBox = await ben.getByTestId('toolbar-session-id').boundingBox();
-  expect(Math.abs(roomBox!.x - joinBox!.x)).toBeLessThanOrEqual(0.5);
-  expect(Math.abs(roomBox!.y - joinBox!.y)).toBeLessThanOrEqual(0.5);
+    const ben = await newPage(browser);
+    await ben.goto(link.replace(sessionId, sessionId.toLowerCase()));
+    await expect(ben.getByTestId('toolbar-session-id')).toHaveText(sessionId);
+    await expect(ben.getByTestId('toolbar-me')).toHaveCount(0);
+    await ben.evaluate(() => document.fonts.ready);
+    const joinBox = await ben.getByTestId('toolbar-session-id').boundingBox();
+    await joinWithName(ben, 'Ben');
+    await expect(ben.getByTestId('toolbar-session-id')).toHaveText(sessionId);
+    await expect(ben.getByTestId('toolbar-me')).toHaveText(/Ben · Entwickler/);
+    const roomBox = await ben.getByTestId('toolbar-session-id').boundingBox();
+    expect(Math.abs(roomBox!.x - joinBox!.x)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(roomBox!.y - joinBox!.y)).toBeLessThanOrEqual(0.5);
 
-  const cem = await newPage(browser);
-  await cem.goto(link);
-  await joinWithName(cem, 'Cem');
-  expect(new URL(cem.url()).pathname).toBe(`/session/${sessionId}`);
+    const cem = await newPage(browser);
+    await cem.goto(link);
+    await joinWithName(cem, 'Cem');
+    expect(new URL(cem.url()).pathname).toBe(`/session/${sessionId}`);
 
-  const everybody = [anna, ben, cem];
-  await expectAll(everybody, 'session-participant-count', '3');
-  await expectAll(everybody, 'session-phase', 'Wartet auf ein Issue');
+    const everybody = [anna, ben, cem];
+    await expectAll(everybody, 'session-participant-count', '3');
+    await expectAll(everybody, 'session-phase', 'Wartet auf ein Issue');
 
-  await search(anna, 'kein Treffer');
-  await expect(anna.getByTestId('issue-results-empty')).toHaveText('Keine Issues gefunden');
-  await expect(anna.getByTestId('issue-result')).toHaveCount(0);
-  await search(anna, '');
-  await expect(anna.getByTestId('issue-result')).toHaveCount(2);
-  await expect(anna.getByTestId('issue-preview-iid')).toHaveText('#42');
+    await search(anna, 'kein Treffer');
+    await expect(anna.getByTestId('issue-results-empty')).toHaveText('Keine Issues gefunden');
+    await expect(anna.getByTestId('issue-result')).toHaveCount(0);
+    await search(anna, '');
+    await expect(anna.getByTestId('issue-result')).toHaveCount(2);
+    await expect(anna.getByTestId('issue-preview-iid')).toHaveText('#42');
 
-  await anna.getByTestId('issue-release').click();
-  await expectAll(everybody, 'active-issue-title', 'Login page');
-  await expectAll(everybody, 'round-number', 'Runde 1');
-  await playRound(anna, ben, cem, everybody);
-  await expectAll(everybody, 'round-number', 'Runde 1');
+    await anna.getByTestId('issue-release').click();
+    await expectAll(everybody, 'active-issue-title', 'Login page');
+    await expectAll(everybody, 'round-number', 'Runde 1');
+    await playRound(anna, ben, cem, everybody);
+    await expectAll(everybody, 'round-number', 'Runde 1');
 
-  await anna.getByTestId('round-restart').click();
-  await voteAndReveal(anna, ben, cem, everybody);
-  await expectAll(everybody, 'round-number', 'Runde 2');
+    await anna.getByTestId('round-restart').click();
+    await voteAndReveal(anna, ben, cem, everybody);
+    await expectAll(everybody, 'round-number', 'Runde 2');
 
-  await issueResult(anna, CONFIRMED_ISSUE).click();
-  await anna.getByTestId('issue-release').click();
-  await anna.getByTestId('switch-confirm').click();
-  await expectAll(everybody, 'active-issue-title', 'Password reset');
-  await expectAll(everybody, 'round-number', 'Runde 1');
-  await playRound(anna, ben, cem, everybody);
+    await issueResult(anna, CONFIRMED_ISSUE).click();
+    await anna.getByTestId('issue-release').click();
+    await anna.getByTestId('switch-confirm').click();
+    await expectAll(everybody, 'active-issue-title', 'Password reset');
+    await expectAll(everybody, 'round-number', 'Runde 1');
+    await playRound(anna, ben, cem, everybody);
 
-  await anna.getByTestId('result-accept').click();
-  const dialog = anna.getByTestId('confirm-dialog');
-  await dialog.getByRole('radio', { name: '8', exact: true }).check();
-  await dialog.getByTestId('confirm-submit').click();
+    await anna.getByTestId('result-accept').click();
+    const dialog = anna.getByTestId('confirm-dialog');
+    await dialog.getByRole('radio', { name: '8', exact: true }).check();
+    await dialog.getByTestId('confirm-submit').click();
 
-  await expect(anna.getByTestId('confirm-success')).toBeVisible();
-  await expectAll(everybody, 'session-phase', 'Wartet auf ein Issue');
-  for (const page of everybody) {
-    const latest = page.getByTestId('history-entry').first();
-    await expect(latest.getByTestId('history-issue')).toHaveText('#43 Password reset');
-    await expect(latest.getByTestId('history-final-card')).toHaveText('8');
-  }
-  await expect.poll(() => countNotes(CONFIRMED_ISSUE)).toBe(notesBefore + 1);
-});
+    await expect(anna.getByTestId('confirm-success')).toBeVisible();
+    await expectAll(everybody, 'session-phase', 'Wartet auf ein Issue');
+    for (const page of everybody) {
+      const latest = page.getByTestId('history-entry').first();
+      await expect(latest.getByTestId('history-issue')).toHaveText('#43 Password reset');
+      await expect(latest.getByTestId('history-final-card')).toHaveText('8');
+    }
+    await expect.poll(() => countNotes(CONFIRMED_ISSUE)).toBe(notesBefore + 1);
+  },
+);
 
 test(
   'an unknown session with a stored token shows the gone state and drops the token',

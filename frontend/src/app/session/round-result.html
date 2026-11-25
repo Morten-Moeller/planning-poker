@@ -68,7 +68,7 @@
 
   @if (stats(); as stats) {
     <div class="stats">
-      <div class="panel">
+      <div class="panel" data-testid="result-distribution">
         <h3 class="label" i18n="@@roundResult.distribution">VERTEILUNG</h3>
         <ul class="distribution">
           @for (entry of stats.distribution; track entry.card) {
@@ -93,7 +93,7 @@
           }
         </ul>
       </div>
-      <div class="panel facts">
+      <div class="panel facts" data-testid="result-facts">
         <h3 class="label" i18n="@@roundResult.orientation">ZUR ORIENTIERUNG</h3>
         <dl>
           <div>
