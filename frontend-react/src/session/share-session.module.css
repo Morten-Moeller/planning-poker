@@ -1,0 +1,61 @@
+.share {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-s);
+}
+
+.title {
+  margin: 0;
+  font: var(--app-label-section);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-on-surface-muted);
+}
+
+.invite {
+  display: contents;
+}
+
+.label {
+  font: var(--mat-sys-body-small);
+  color: var(--app-on-surface-muted);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-s);
+  min-width: 0;
+  padding: var(--app-space-xs) var(--app-space-xs) var(--app-space-xs) var(--app-space-s);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-corner-control);
+  background-color: var(--mat-sys-surface);
+}
+
+.link {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--mat-sys-body-small);
+  font-family: var(--app-font-mono);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.note {
+  font: var(--mat-sys-body-small);
+}
+
+.done {
+  color: var(--app-success);
+}
+
+.failed {
+  color: var(--mat-sys-error);
+}
+
+.newSession {
+  align-self: flex-start;
+  margin-top: var(--app-space-xs);
+}

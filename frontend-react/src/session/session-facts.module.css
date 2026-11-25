@@ -1,0 +1,35 @@
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-s);
+}
+
+.title {
+  margin: 0;
+  font: var(--app-label-section);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-on-surface-muted);
+}
+
+.list {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--app-space-xs) var(--app-space-m);
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+}
+
+.term {
+  color: var(--app-on-surface-muted);
+}
+
+.value {
+  margin: 0;
+  color: var(--mat-sys-on-surface);
+  overflow-wrap: anywhere;
+}
+
+.id {
+  font-family: var(--app-font-mono);
+}
