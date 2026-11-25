@@ -106,7 +106,7 @@ Hinweise zu den Wellen:
 
 # Roadmap Teil 2: React-Frontend mit UI SDK
 
-Stand: 2026-11-25 (Welle 6 gemergt, Welle 7 geschrieben)
+Stand: 2026-11-25 (Welle 7 gemergt, Welle 8 geschrieben)
 
 Teil 1 oben ist abgeschlossen (Specs 0001 bis 0019) und bleibt unverändert.
 
