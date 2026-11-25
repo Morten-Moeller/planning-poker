@@ -106,7 +106,7 @@ Hinweise zu den Wellen:
 
 # Roadmap Teil 2: React-Frontend mit UI SDK
 
-Stand: 2026-11-24 (Welle 3 gemergt, Welle 4 geschrieben)
+Stand: 2026-11-25 (Welle 4 gemergt, Welle 5 geschrieben)
 
 Teil 1 oben ist abgeschlossen (Specs 0001 bis 0019) und bleibt unverändert.
 
@@ -169,7 +169,7 @@ bestehen (ADR 0001, R-26).
 | 0056 | Startseite: Sitzung anlegen, Projekt- und Issue-Auswahl (Autocomplete), Einstellungen merken, letzte Sitzungen | 4 | 0054, 0055, 0063 | `frontend-react/src/start/`, `project-rules/frontend-react-start.md`, `frontend/e2e/` (Tags der Tests, die nur die Startseite brauchen) | high |
 | 0057 | Beitrittsseite mit Route `/session/:id/join`: Einladung, Rollenhinweise, Fehlerzustände; Sitzung in der Toolbar; Banner mit `AppButton` | 4 | 0054, 0055, 0063 | `frontend-react/src/join/`, `frontend-react/src/shell/`, `frontend-react/src/app.tsx`, `project-rules/frontend-react-join.md` | high |
 | 0058 | Raum, Teil 1: Raster, Seitenleiste (Timer mit Select, Teilnehmer, Teilen, Fakten), Lobby, Kartenmotiv | 4 | 0054, 0055, 0063 | `frontend-react/src/session/`, `project-rules/frontend-react-session.md` | high |
-| 0059 | Raum, Teil 2: Issue-Auswahl mit Filtern (Segmented Control, Select), aktives Issue mit Markdown, Wechsel-Dialog; Motiv in der Toolbar; Tags für die Abläufe über Start, Beitritt und Raum | 5 | 0058 | `frontend-react/src/session/`, `frontend-react/package.json` (`marked`, Sanitizer), `frontend/e2e/` (Tags) | medium |
+| 0059 | Raum, Teil 2: Issue-Auswahl mit Filtern (Segmented Control, Select), aktives Issue mit Markdown, Wechsel-Dialog; Motiv in der Toolbar; Tags für die Abläufe über Start, Beitritt und Raum | 5 | 0056, 0057, 0058 | `frontend-react/src/session/`, `frontend-react/src/shell/`, `frontend-react/src/api/card-motif.ts`, `frontend-react/package.json` (`marked`, `dompurify`), `frontend/src/app/session/session-page.html` (`data-testid`), `frontend/e2e/` (Tags) | high |
 | 0060 | Raum, Teil 3: Diskussion und Schätzrunde: Karte, Kartensatz, Tisch, Rundenstatus mit Fortschrittsbalken, Timer, Footer | 6 | 0059 | `frontend-react/src/session/`, `frontend/e2e/` (Tags) | medium |
 | 0061 | Raum, Teil 4: Auflösung und Abschluss: Ergebnis, Ausreißer, Konsens, Konfetti, Bestätigen (Dialog, Toast), letztes Ergebnis, Protokoll (Collapsible), erneut schätzen, Zuschauer | 7 | 0060 | `frontend-react/src/session/`, `frontend-react/src/shell/` (Toast-Region), `frontend/e2e/` (Tags) | medium |
 | 0062 | Parität: ganze Suite ohne Tag gegen React, Bundle-Grenze, README und Architektur final | 8 | 0056, 0057, 0061 | `frontend/e2e/`, `frontend/playwright.config.ts`, `frontend-react/vite.config.ts`, `README.md`, `docs/` | medium |
@@ -202,7 +202,11 @@ Hinweise zu den Wellen:
   Test der Favicon-Verweise (`theme.spec.ts`) braucht relative Verweise in
   `frontend-react/index.html`; das gehört zu 0062.
 - Welle 5 bis 7 ändern denselben Ordner `session/` und laufen nacheinander. 0059 fügt `marked`
-  und einen Sanitizer hinzu; die Wahl des Sanitizers steht in der Spec.
+  und DOMPurify hinzu.
+- Welle 5 (geschrieben am 2026-11-25): Das aktive Issue steht ohne den Rahmen des Rundenstatus
+  im Hauptbereich; 0060 setzt es in den Rundenstatus. Ohne Tag bleiben die Tests, die
+  `discussion-hint`, `round-number` oder eine laufende Runde brauchen (0060), eine ganze Runde
+  (`design-sidebar.spec.ts`, 0061) und der Test der Favicon-Verweise (0062).
 - Selektoren der Suite, die nur im Angular-Frontend existieren (`app-start-page`,
   `app-session-page .room`, `mat-button-toggle-checked`), ersetzt die Spec, die den Test
   freischaltet, in beiden Frontends durch `data-testid` oder ein ARIA-Attribut.
