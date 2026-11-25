@@ -1,0 +1,81 @@
+.roundStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 10px 14px;
+  border-radius: var(--app-corner-control);
+  background-color: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.phase {
+  font-family: var(--app-font-mono);
+  font-weight: 600;
+  color: var(--mat-sys-on-surface);
+}
+
+.counter strong {
+  font-weight: 600;
+  color: var(--mat-sys-on-surface);
+}
+
+.progress {
+  flex: 1 1 80px;
+  min-width: 60px;
+}
+
+.progressTrack {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background-color: var(--mat-sys-outline-variant);
+}
+
+.progressValue {
+  height: 100%;
+  background-color: var(--app-success);
+  transition: width 200ms ease-out;
+}
+
+.motif {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font: var(--mat-sys-body-small);
+  color: var(--app-on-surface-muted);
+}
+
+.swatch {
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  background-color: var(--app-card-accent, var(--mat-sys-primary));
+  background-image: var(--app-card-pattern, none);
+  background-size: var(--app-card-pattern-size, auto);
+}
+
+@media (max-width: 599px) {
+  .motif {
+    display: none;
+  }
+}
+
+.discussionTimer {
+  padding: 3px 10px;
+  font: 600 14px / 20px var(--app-font-mono);
+  color: var(--app-on-surface-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressValue {
+    transition: none;
+  }
+}

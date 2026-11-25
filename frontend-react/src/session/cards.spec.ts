@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardName, cardSymbol } from './cards';
+import { CARDS, cardLabel, cardName, cardSymbol } from './cards';
 import type { Card } from './cards';
 
 const CASES: readonly { card: Card; symbol: string; name: string | null }[] = [
@@ -24,4 +24,12 @@ describe('cards', () => {
       expect(cardName(card)).toBe(name);
     },
   );
+
+  it('has the eleven cards in the order of the deck', () => {
+    expect(CARDS).toEqual(CASES.map((entry) => entry.card));
+  });
+
+  it.each(CASES)('labels the card $card with its name or its value', ({ card, name }) => {
+    expect(cardLabel(card)).toBe(name ?? card);
+  });
 });

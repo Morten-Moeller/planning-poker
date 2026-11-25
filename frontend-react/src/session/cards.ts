@@ -3,6 +3,20 @@ import { t } from './messages';
 
 export type Card = components['schemas']['Card'];
 
+export const CARDS: readonly Card[] = [
+  '0',
+  '1',
+  '2',
+  '3',
+  '5',
+  '8',
+  '13',
+  '21',
+  '34',
+  '?',
+  'COFFEE',
+];
+
 const COFFEE_SYMBOL = '☕';
 
 export function cardSymbol(card: Card): string {
@@ -18,4 +32,8 @@ export function cardName(card: Card): string | null {
     default:
       return null;
   }
+}
+
+export function cardLabel(card: Card): string {
+  return cardName(card) ?? card;
 }

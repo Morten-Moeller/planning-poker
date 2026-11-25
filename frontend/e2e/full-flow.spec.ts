@@ -139,27 +139,29 @@ test('three people estimate two issues and the scrum master writes the result to
   await expect.poll(() => countNotes(CONFIRMED_ISSUE)).toBe(notesBefore + 1);
 });
 
-test('an unknown session with a stored token shows the gone state and drops the token', async ({
-  page,
-}) => {
-  const key = `planningpoker.session.${UNKNOWN_SESSION_ID}`;
-  await page.goto('/');
-  await page.evaluate(
-    ([storageKey]) =>
-      sessionStorage.setItem(storageKey, JSON.stringify({ participantId: 'p', token: 't' })),
-    [key],
-  );
+test(
+  'an unknown session with a stored token shows the gone state and drops the token',
+  { tag: '@react' },
+  async ({ page }) => {
+    const key = `planningpoker.session.${UNKNOWN_SESSION_ID}`;
+    await page.goto('/');
+    await page.evaluate(
+      ([storageKey]) =>
+        sessionStorage.setItem(storageKey, JSON.stringify({ participantId: 'p', token: 't' })),
+      [key],
+    );
 
-  await page.goto(`/session/${UNKNOWN_SESSION_ID}`);
+    await page.goto(`/session/${UNKNOWN_SESSION_ID}`);
 
-  await expect(page.getByTestId('session-gone')).toContainText(
-    'Diese Sitzung ist abgelaufen oder existiert nicht.',
-  );
-  await expect(page.getByTestId('session-loading')).toHaveCount(0);
-  await expect(page.getByTestId('error-banner')).toHaveCount(0);
-  expect(await page.evaluate((storageKey) => sessionStorage.getItem(storageKey), key)).toBeNull();
+    await expect(page.getByTestId('session-gone')).toContainText(
+      'Diese Sitzung ist abgelaufen oder existiert nicht.',
+    );
+    await expect(page.getByTestId('session-loading')).toHaveCount(0);
+    await expect(page.getByTestId('error-banner')).toHaveCount(0);
+    expect(await page.evaluate((storageKey) => sessionStorage.getItem(storageKey), key)).toBeNull();
 
-  await page.getByTestId('session-gone-home').click();
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByTestId('create-submit')).toBeVisible();
-});
+    await page.getByTestId('session-gone-home').click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByTestId('create-submit')).toBeVisible();
+  },
+);

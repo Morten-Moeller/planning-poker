@@ -78,26 +78,28 @@ test(
   },
 );
 
-test('creates a session with the project alone and releases an issue in the room', async ({
-  page,
-}) => {
-  await page.goto('/');
-  await page.getByTestId('create-name').fill('Anna');
-  await page.getByTestId('create-project').fill('1234');
-  await expect(page.getByTestId('create-issue')).toHaveValue('');
+test(
+  'creates a session with the project alone and releases an issue in the room',
+  { tag: '@react' },
+  async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('create-name').fill('Anna');
+    await page.getByTestId('create-project').fill('1234');
+    await expect(page.getByTestId('create-issue')).toHaveValue('');
 
-  await page.getByTestId('create-submit').click();
+    await page.getByTestId('create-submit').click();
 
-  await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-  await expect(page.getByTestId('session-phase')).toHaveText('Wartet auf ein Issue');
-  await expect(page.getByTestId('issue-preview-iid')).toHaveCount(0);
-  const issue = page.getByTestId('issue-result').filter({ hasText: '#43 ' });
-  await expect(issue).toBeVisible();
-  await issue.click();
-  await expect(page.getByTestId('issue-preview-iid')).toHaveText('#43');
+    await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
+    await expect(page.getByTestId('session-phase')).toHaveText('Wartet auf ein Issue');
+    await expect(page.getByTestId('issue-preview-iid')).toHaveCount(0);
+    const issue = page.getByTestId('issue-result').filter({ hasText: '#43 ' });
+    await expect(issue).toBeVisible();
+    await issue.click();
+    await expect(page.getByTestId('issue-preview-iid')).toHaveText('#43');
 
-  await page.getByTestId('issue-release').click();
+    await page.getByTestId('issue-release').click();
 
-  await expect(page.getByTestId('active-issue-title')).toHaveText('Password reset');
-  await expect(page.getByTestId('round-number')).toHaveText('Runde 1');
-});
+    await expect(page.getByTestId('active-issue-title')).toHaveText('Password reset');
+    await expect(page.getByTestId('round-number')).toHaveText('Runde 1');
+  },
+);

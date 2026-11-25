@@ -233,39 +233,40 @@ test.describe('footer', () => {
     }
   });
 
-  test('the footer sticks to the bottom at 375 x 667 and the deck scrolls sideways', async ({
-    page: anna,
-    browser,
-  }) => {
-    const viewport = { width: 375, height: 667 };
-    const ben = await openLongIssue(anna, browser, viewport);
-    await startVoting(anna);
-    const deck = ben.getByTestId('card-deck');
-    await expect(deck).toBeVisible();
+  test(
+    'the footer sticks to the bottom at 375 x 667 and the deck scrolls sideways',
+    { tag: '@react' },
+    async ({ page: anna, browser }) => {
+      const viewport = { width: 375, height: 667 };
+      const ben = await openLongIssue(anna, browser, viewport);
+      await startVoting(anna);
+      const deck = ben.getByTestId('card-deck');
+      await expect(deck).toBeVisible();
 
-    const footer = await box(ben.getByTestId('round-footer'));
-    expect(Math.abs(footer.bottom - viewport.height)).toBeLessThanOrEqual(1);
-    const group = deck.getByRole('group', { name: 'Deine Karte' });
-    const row = await group.evaluate((node) => ({
-      scrollWidth: node.scrollWidth,
-      clientWidth: node.clientWidth,
-      tops: Array.from(node.querySelectorAll('button')).map(
-        (button) => button.getBoundingClientRect().top,
-      ),
-    }));
-    expect(row.tops).toHaveLength(11);
-    expect(new Set(row.tops).size).toBe(1);
-    expect(row.scrollWidth).toBeGreaterThan(row.clientWidth);
-    await expectNoHorizontalScroll(ben);
+      const footer = await box(ben.getByTestId('round-footer'));
+      expect(Math.abs(footer.bottom - viewport.height)).toBeLessThanOrEqual(1);
+      const group = deck.getByRole('group', { name: 'Deine Karte' });
+      const row = await group.evaluate((node) => ({
+        scrollWidth: node.scrollWidth,
+        clientWidth: node.clientWidth,
+        tops: Array.from(node.querySelectorAll('button')).map(
+          (button) => button.getBoundingClientRect().top,
+        ),
+      }));
+      expect(row.tops).toHaveLength(11);
+      expect(new Set(row.tops).size).toBe(1);
+      expect(row.scrollWidth).toBeGreaterThan(row.clientWidth);
+      await expectNoHorizontalScroll(ben);
 
-    const coffee = deck.getByTestId('card-COFFEE');
-    await coffee.click();
-    await expect(coffee).toHaveAttribute('aria-pressed', 'true');
-    const card = await coffee.boundingBox();
-    const list = await group.boundingBox();
-    expect(card!.x).toBeGreaterThanOrEqual(list!.x);
-    expect(card!.x + card!.width).toBeLessThanOrEqual(list!.x + list!.width + 0.5);
-    expect(card!.y + card!.height).toBeLessThanOrEqual(viewport.height);
-    await expectNoHorizontalScroll(ben);
-  });
+      const coffee = deck.getByTestId('card-COFFEE');
+      await coffee.click();
+      await expect(coffee).toHaveAttribute('aria-pressed', 'true');
+      const card = await coffee.boundingBox();
+      const list = await group.boundingBox();
+      expect(card!.x).toBeGreaterThanOrEqual(list!.x);
+      expect(card!.x + card!.width).toBeLessThanOrEqual(list!.x + list!.width + 0.5);
+      expect(card!.y + card!.height).toBeLessThanOrEqual(viewport.height);
+      await expectNoHorizontalScroll(ben);
+    },
+  );
 });
