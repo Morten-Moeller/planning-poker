@@ -1,14 +1,14 @@
 ---
 id: "0062"
 title: "React-Frontend: Parität mit ganzer Suite, Favicon, Bundle-Grenze und Texten"
-status: Review
+status: done
 risk: medium
 adrs: ["0016"]
 owner: Morten Möller
 created: 2026-11-25
 updated: 2026-11-25
-pr: ""
-note: freigegeben in der Session
+pr: "#73"
+note: alle Kriterien erfüllt
 ---
 
 # React-Frontend: Parität mit ganzer Suite, Favicon, Bundle-Grenze und Texten
