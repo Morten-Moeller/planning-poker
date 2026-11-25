@@ -51,49 +51,45 @@ const cases: { system: Scheme; other: Scheme }[] = [
 ];
 
 for (const { system, other } of cases) {
-  test(
-    `with a ${system} system a click switches to ${other} and the choice stays after a reload`,
-    { tag: '@react' },
-    async ({ page }) => {
-      await page.emulateMedia({ colorScheme: system });
-      await page.goto('/');
-      await expect(page.getByTestId('theme-toggle')).toBeVisible();
-      await expectScheme(page, system);
+  test(`with a ${system} system a click switches to ${other} and the choice stays after a reload`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: system });
+    await page.goto('/');
+    await expect(page.getByTestId('theme-toggle')).toBeVisible();
+    await expectScheme(page, system);
 
-      await page.getByTestId('theme-toggle').click();
-      await expectScheme(page, other);
-      await expect(page.locator('html')).toHaveAttribute('data-theme', other);
+    await page.getByTestId('theme-toggle').click();
+    await expectScheme(page, other);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', other);
 
-      await page.reload();
-      await expect(page.getByTestId('theme-toggle')).toBeVisible();
-      await expectScheme(page, other);
-    },
-  );
+    await page.reload();
+    await expect(page.getByTestId('theme-toggle')).toBeVisible();
+    await expectScheme(page, other);
+  });
 
-  test(
-    `with a ${system} system a click switches the card motif and the toolbar motif in the room`,
-    { tag: '@react' },
-    async ({ page }) => {
-      await page.emulateMedia({ colorScheme: system });
-      await page.goto('/');
-      await page.getByTestId('create-name').fill('Anna');
-      await page.getByTestId('create-project').fill(PROJECT);
-      await page.getByTestId('create-issue').fill('42');
-      await page.getByTestId('create-submit').click();
-      await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-      const room = page.getByTestId('room');
-      await expect(room).toHaveAttribute('data-motif', /^[0-4]$/);
-      const id = Number(await room.getAttribute('data-motif'));
-      const motif = page.getByTestId('toolbar-motif');
+  test(`with a ${system} system a click switches the card motif and the toolbar motif in the room`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: system });
+    await page.goto('/');
+    await page.getByTestId('create-name').fill('Anna');
+    await page.getByTestId('create-project').fill(PROJECT);
+    await page.getByTestId('create-issue').fill('42');
+    await page.getByTestId('create-submit').click();
+    await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
+    const room = page.getByTestId('room');
+    await expect(room).toHaveAttribute('data-motif', /^[0-4]$/);
+    const id = Number(await room.getAttribute('data-motif'));
+    const motif = page.getByTestId('toolbar-motif');
 
-      expect(await accent(room)).toBe(ACCENTS[system][id]);
-      expect(await background(motif)).toBe(rgb(ACCENTS[system][id]));
+    expect(await accent(room)).toBe(ACCENTS[system][id]);
+    expect(await background(motif)).toBe(rgb(ACCENTS[system][id]));
 
-      await page.getByTestId('theme-toggle').click();
+    await page.getByTestId('theme-toggle').click();
 
-      await expectScheme(page, other);
-      expect(await accent(room)).toBe(ACCENTS[other][id]);
-      expect(await background(motif)).toBe(rgb(ACCENTS[other][id]));
-    },
-  );
+    await expectScheme(page, other);
+    expect(await accent(room)).toBe(ACCENTS[other][id]);
+    expect(await background(motif)).toBe(rgb(ACCENTS[other][id]));
+  });
 }

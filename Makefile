@@ -4,8 +4,8 @@
 # harness/scripts/app-lock.sh, so only one worktree runs the application at a time.
 # backend, frontend and frontend-react read .env in their own subshell; no other target loads it.
 # frontend and frontend-react pass only the ports to their process, never the GitLab token.
-# e2e runs the suite against the Angular frontend, then the tests tagged @react against the React
-# frontend (frontend/playwright.config.ts, E2E_FRONTEND).
+# e2e runs the suite against the Angular frontend, then the same suite against the build of the
+# React frontend (frontend/playwright.config.ts, E2E_FRONTEND).
 
 include harness/gates.mk
 
@@ -84,7 +84,7 @@ frontend: ## Start the frontend on FRONTEND_PORT from .env (default 4200), proxy
 frontend-react: ## Start the React frontend on FRONTEND_REACT_PORT from .env (default 4300), proxy to BACKEND_PORT
 	@[ -f .env ] && . ./.env; BACKEND_PORT=$${BACKEND_PORT:-8080} exec pnpm -C frontend-react start --port $${FRONTEND_REACT_PORT:-4300} --strictPort
 
-e2e: gitlab-double ## End-to-end tests under the application lock: the suite against the Angular frontend, then the tests tagged @react against the React frontend
+e2e: gitlab-double ## End-to-end tests under the application lock: the suite against the Angular frontend, then the same suite against the build of the React frontend
 	@harness/scripts/app-lock.sh acquire --owner "$(E2E_OWNER)" --wait 900
 	@status=0; $(PNPM) e2e || status=$$?; \
 	  if [ $$status -eq 0 ]; then E2E_FRONTEND=react $(PNPM) e2e || status=$$?; fi; \

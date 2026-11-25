@@ -43,101 +43,101 @@ test.afterEach(async ({ browser, context: own }) => {
   }
 });
 
-test(
-  'a viewer joins through the viewer link, sees the round without cards and is never counted',
-  { tag: '@react' },
-  async ({ page: anna, context, browser, baseURL }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseURL });
-    const sessionId = await createSession(anna);
-    const developerLink = await copy(anna, 'developer');
-    const viewerLink = await copy(anna, 'viewer');
-    expect(developerLink).toBe(await anna.getByTestId('share-link-developer').textContent());
-    expect(viewerLink).toBe(await anna.getByTestId('share-link-viewer').textContent());
-    expect(viewerLink).toMatch(/&as=viewer$/);
+test('a viewer joins through the viewer link, sees the round without cards and is never counted', async ({
+  page: anna,
+  context,
+  browser,
+  baseURL,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseURL });
+  const sessionId = await createSession(anna);
+  const developerLink = await copy(anna, 'developer');
+  const viewerLink = await copy(anna, 'viewer');
+  expect(developerLink).toBe(await anna.getByTestId('share-link-developer').textContent());
+  expect(viewerLink).toBe(await anna.getByTestId('share-link-viewer').textContent());
+  expect(viewerLink).toMatch(/&as=viewer$/);
 
-    const ben = await open(browser, developerLink);
-    await expect(ben.getByTestId('join-role-hint')).toBeVisible();
-    await join(ben, 'Ben');
-    await expect(ben.getByTestId('session-role')).toHaveText('Entwickler');
+  const ben = await open(browser, developerLink);
+  await expect(ben.getByTestId('join-role-hint')).toBeVisible();
+  await join(ben, 'Ben');
+  await expect(ben.getByTestId('session-role')).toHaveText('Entwickler');
 
-    const paula = await open(browser, viewerLink);
-    await expect(paula.getByTestId('join-viewer-hint')).toHaveText(
-      'Du trittst als Zuschauer bei. Du siehst die Runde, schätzt aber nicht mit.',
+  const paula = await open(browser, viewerLink);
+  await expect(paula.getByTestId('join-viewer-hint')).toHaveText(
+    'Du trittst als Zuschauer bei. Du siehst die Runde, schätzt aber nicht mit.',
+  );
+  await join(paula, 'Paula');
+  await expect(paula.getByTestId('session-role')).toHaveText('Zuschauer');
+  await expect(paula.getByTestId('toolbar-me')).toHaveText('Paula · Zuschauer');
+  await expect(paula.getByTestId('session-share')).toHaveCount(0);
+
+  for (const view of [anna, ben, paula]) {
+    await expect(view.getByTestId('session-participants')).toHaveText(
+      '3 (1 Entwickler, 1 Zuschauer)',
     );
-    await join(paula, 'Paula');
-    await expect(paula.getByTestId('session-role')).toHaveText('Zuschauer');
-    await expect(paula.getByTestId('toolbar-me')).toHaveText('Paula · Zuschauer');
-    await expect(paula.getByTestId('session-share')).toHaveCount(0);
+    await expect(row(view, 'Paula').getByTestId('participant-role')).toHaveText('Zuschauer');
+  }
+  await expect(anna.getByTestId('participant-name')).toHaveText(['Anna', 'Ben', 'Paula']);
 
-    for (const view of [anna, ben, paula]) {
-      await expect(view.getByTestId('session-participants')).toHaveText(
-        '3 (1 Entwickler, 1 Zuschauer)',
-      );
-      await expect(row(view, 'Paula').getByTestId('participant-role')).toHaveText('Zuschauer');
-    }
-    await expect(anna.getByTestId('participant-name')).toHaveText(['Anna', 'Ben', 'Paula']);
+  await anna.getByTestId('issue-release').click();
+  await expect(paula.getByTestId('session-phase')).toHaveText('Diskussion');
+  await expect(paula.getByTestId('viewer-hint')).toHaveText('Du schaust zu.');
+  await expect(paula.getByTestId('card-deck-locked')).toHaveCount(0);
+  await startVoting(anna);
 
-    await anna.getByTestId('issue-release').click();
-    await expect(paula.getByTestId('session-phase')).toHaveText('Diskussion');
-    await expect(paula.getByTestId('viewer-hint')).toHaveText('Du schaust zu.');
-    await expect(paula.getByTestId('card-deck-locked')).toHaveCount(0);
-    await startVoting(anna);
+  await expect(paula.getByTestId('session-phase')).toHaveText('Runde läuft');
+  await expect(paula.getByTestId('active-issue')).toBeVisible();
+  await expect(paula.getByTestId('viewer-hint')).toHaveText('Du schaust zu.');
+  await expect(paula.getByTestId('card-deck')).toHaveCount(0);
+  await expect(paula.getByTestId('seat-name')).toHaveText(['Ben']);
+  await expect(anna.getByTestId('vote-counter')).toContainText('0 von 1');
 
-    await expect(paula.getByTestId('session-phase')).toHaveText('Runde läuft');
-    await expect(paula.getByTestId('active-issue')).toBeVisible();
-    await expect(paula.getByTestId('viewer-hint')).toHaveText('Du schaust zu.');
-    await expect(paula.getByTestId('card-deck')).toHaveCount(0);
-    await expect(paula.getByTestId('seat-name')).toHaveText(['Ben']);
-    await expect(anna.getByTestId('vote-counter')).toContainText('0 von 1');
+  await ben.getByTestId('card-deck').getByTestId('card-5').click();
 
-    await ben.getByTestId('card-deck').getByTestId('card-5').click();
+  await expect(anna.getByTestId('all-voted-hint')).toContainText(
+    'Alle verbundenen Entwickler haben geschätzt.',
+  );
+  await expect(row(anna, 'Paula').getByTestId('participant-vote-status')).toHaveCount(0);
+  await anna.getByTestId('round-reveal').click();
 
-    await expect(anna.getByTestId('all-voted-hint')).toContainText(
-      'Alle verbundenen Entwickler haben geschätzt.',
-    );
-    await expect(row(anna, 'Paula').getByTestId('participant-vote-status')).toHaveCount(0);
-    await anna.getByTestId('round-reveal').click();
+  for (const view of [anna, ben, paula]) {
+    await expect(view.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
+    await expect(view.getByTestId('result-vote-name')).toHaveText(['Ben']);
+    await expect(view.getByTestId('not-voted')).toHaveCount(0);
+    await expect(row(view, 'Paula').getByTestId('participant-vote-status')).toHaveCount(0);
+  }
+  await expect(paula.getByTestId('result-waiting')).toBeVisible();
+  await expect(paula.getByTestId('round-restart')).toHaveCount(0);
+  expect(new URL(paula.url()).pathname).toBe(`/session/${sessionId}`);
+});
 
-    for (const view of [anna, ben, paula]) {
-      await expect(view.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
-      await expect(view.getByTestId('result-vote-name')).toHaveText(['Ben']);
-      await expect(view.getByTestId('not-voted')).toHaveCount(0);
-      await expect(row(view, 'Paula').getByTestId('participant-vote-status')).toHaveCount(0);
-    }
-    await expect(paula.getByTestId('result-waiting')).toBeVisible();
-    await expect(paula.getByTestId('round-restart')).toHaveCount(0);
-    expect(new URL(paula.url()).pathname).toBe(`/session/${sessionId}`);
-  },
-);
+test('a link without a code and a link with a changed code show the hints', async ({
+  page: anna,
+  browser,
+}) => {
+  const sessionId = await createSession(anna);
+  const developerLink = (await anna.getByTestId('share-link-developer').textContent()) ?? '';
 
-test(
-  'a link without a code and a link with a changed code show the hints',
-  { tag: '@react' },
-  async ({ page: anna, browser }) => {
-    const sessionId = await createSession(anna);
-    const developerLink = (await anna.getByTestId('share-link-developer').textContent()) ?? '';
+  const withoutCode = await open(browser, `/session/${sessionId}/join`);
+  await expect(withoutCode.getByTestId('join-invite-missing')).toHaveText(
+    'Zum Beitreten brauchst du einen Einladungslink vom Scrum Master.',
+  );
+  await expect(withoutCode.getByTestId('join-form')).toHaveCount(0);
 
-    const withoutCode = await open(browser, `/session/${sessionId}/join`);
-    await expect(withoutCode.getByTestId('join-invite-missing')).toHaveText(
-      'Zum Beitreten brauchst du einen Einladungslink vom Scrum Master.',
-    );
-    await expect(withoutCode.getByTestId('join-form')).toHaveCount(0);
+  const room = await open(browser, `/session/${sessionId}`);
+  await expect(room).toHaveURL(`/session/${sessionId}/join`);
+  await expect(room.getByTestId('join-invite-missing')).toBeVisible();
 
-    const room = await open(browser, `/session/${sessionId}`);
-    await expect(room).toHaveURL(`/session/${sessionId}/join`);
-    await expect(room.getByTestId('join-invite-missing')).toBeVisible();
-
-    const changed = new URL(developerLink);
-    const code = changed.searchParams.get('invite') ?? '';
-    changed.searchParams.set('invite', `${code.slice(1)}x`);
-    const withChangedCode = await open(browser, changed.toString());
-    await withChangedCode.getByTestId('join-name').fill('Cem');
-    await withChangedCode.getByTestId('join-submit').click();
-    await expect(withChangedCode.getByTestId('join-invite-invalid')).toHaveText(
-      'Der Einladungslink ist ungültig. Bitte den Scrum Master um einen neuen.',
-    );
-    await expect(withChangedCode.getByTestId('join-form')).toHaveCount(0);
-    await expect(withChangedCode.getByTestId('error-banner')).toHaveCount(0);
-    await expect(anna.getByTestId('session-participant-count')).toHaveText('1');
-  },
-);
+  const changed = new URL(developerLink);
+  const code = changed.searchParams.get('invite') ?? '';
+  changed.searchParams.set('invite', `${code.slice(1)}x`);
+  const withChangedCode = await open(browser, changed.toString());
+  await withChangedCode.getByTestId('join-name').fill('Cem');
+  await withChangedCode.getByTestId('join-submit').click();
+  await expect(withChangedCode.getByTestId('join-invite-invalid')).toHaveText(
+    'Der Einladungslink ist ungültig. Bitte den Scrum Master um einen neuen.',
+  );
+  await expect(withChangedCode.getByTestId('join-form')).toHaveCount(0);
+  await expect(withChangedCode.getByTestId('error-banner')).toHaveCount(0);
+  await expect(anna.getByTestId('session-participant-count')).toHaveText('1');
+});

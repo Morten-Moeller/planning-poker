@@ -23,52 +23,50 @@ async function join(browser: Browser, link: string, name: string): Promise<Page>
   return page;
 }
 
-test(
-  'the server reveals the round at the deadline without the scrum master',
-  { tag: '@react' },
-  async ({ browser }) => {
-    test.setTimeout(60_000);
-    const scrumMaster = await (await browser.newContext()).newPage();
-    const link = await createSession(scrumMaster);
-    const developer = await join(browser, link, 'Ben');
+test('the server reveals the round at the deadline without the scrum master', async ({
+  browser,
+}) => {
+  test.setTimeout(60_000);
+  const scrumMaster = await (await browser.newContext()).newPage();
+  const link = await createSession(scrumMaster);
+  const developer = await join(browser, link, 'Ben');
 
-    await expect(developer.getByTestId('timer-setting')).toHaveCount(0);
-    await expect(scrumMaster.getByTestId('timer-setting')).toBeVisible();
+  await expect(developer.getByTestId('timer-setting')).toHaveCount(0);
+  await expect(scrumMaster.getByTestId('timer-setting')).toBeVisible();
 
-    await scrumMaster.getByTestId('timer-setting').click();
-    await scrumMaster.getByTestId(`timer-option-${TIMER_SECONDS}`).click();
-    await expect(scrumMaster.getByTestId('timer-setting')).toContainText('15 s');
+  await scrumMaster.getByTestId('timer-setting').click();
+  await scrumMaster.getByTestId(`timer-option-${TIMER_SECONDS}`).click();
+  await expect(scrumMaster.getByTestId('timer-setting')).toContainText('15 s');
 
-    await expect(scrumMaster.getByTestId('participant')).toHaveCount(2);
-    await scrumMaster.getByTestId('issue-release').click();
+  await expect(scrumMaster.getByTestId('participant')).toHaveCount(2);
+  await scrumMaster.getByTestId('issue-release').click();
 
-    await expect(developer.getByTestId('session-phase')).toHaveText('Diskussion');
-    await expect(developer.getByTestId('active-issue-title')).toHaveText('Login page');
-    await expect(developer.getByTestId('card-deck')).toHaveCount(0);
-    await expect(developer.getByRole('timer')).toHaveCount(0);
-    await expect(scrumMaster.getByTestId('round-start-timer')).toHaveText('Timer: 15 s');
-    await scrumMaster.waitForTimeout(2_000);
-    await expect(developer.getByTestId('session-phase')).toHaveText('Diskussion');
+  await expect(developer.getByTestId('session-phase')).toHaveText('Diskussion');
+  await expect(developer.getByTestId('active-issue-title')).toHaveText('Login page');
+  await expect(developer.getByTestId('card-deck')).toHaveCount(0);
+  await expect(developer.getByRole('timer')).toHaveCount(0);
+  await expect(scrumMaster.getByTestId('round-start-timer')).toHaveText('Timer: 15 s');
+  await scrumMaster.waitForTimeout(2_000);
+  await expect(developer.getByTestId('session-phase')).toHaveText('Diskussion');
 
-    await startVoting(scrumMaster);
+  await startVoting(scrumMaster);
 
-    await expect(developer.getByTestId('card-deck')).toBeVisible();
-    await developer.getByTestId('card-deck').getByTestId('card-5').click();
-    await expect(developer.getByTestId('card-deck').getByTestId('card-5')).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    for (const page of [scrumMaster, developer]) {
-      await expect(page.getByTestId('session-phase')).toHaveText('Runde läuft');
-      await expect(page.getByRole('timer')).toHaveText(/Noch 0:1\d/);
-    }
+  await expect(developer.getByTestId('card-deck')).toBeVisible();
+  await developer.getByTestId('card-deck').getByTestId('card-5').click();
+  await expect(developer.getByTestId('card-deck').getByTestId('card-5')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  for (const page of [scrumMaster, developer]) {
+    await expect(page.getByTestId('session-phase')).toHaveText('Runde läuft');
+    await expect(page.getByRole('timer')).toHaveText(/Noch 0:1\d/);
+  }
 
-    await scrumMaster.context().close();
+  await scrumMaster.context().close();
 
-    await expect(developer.getByTestId('session-phase')).toHaveText('Runde aufgelöst', {
-      timeout: (TIMER_SECONDS + 5) * 1000,
-    });
-    await expect(developer.getByTestId('round-result')).toBeVisible();
-    await expect(developer.getByRole('timer')).toHaveCount(0);
-  },
-);
+  await expect(developer.getByTestId('session-phase')).toHaveText('Runde aufgelöst', {
+    timeout: (TIMER_SECONDS + 5) * 1000,
+  });
+  await expect(developer.getByTestId('round-result')).toBeVisible();
+  await expect(developer.getByRole('timer')).toHaveCount(0);
+});

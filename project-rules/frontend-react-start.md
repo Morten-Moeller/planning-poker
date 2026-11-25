@@ -93,9 +93,6 @@ and `project-rules/frontend-react-ui.md` hold here as well.
 
 ## End-to-end
 
-- Flows of this feature with the tag `@react`: `frontend/e2e/health.spec.ts` (all tests),
-  `frontend/e2e/create-and-join.spec.ts` (the incomplete form, the unknown issue, the issue that
-  GitLab refuses), `frontend/e2e/project-picker.spec.ts` (the empty state of the issue search,
-  the lists on a click into the empty fields) and the focus ring test of
-  `frontend/e2e/theme.spec.ts`.
-- The flows that need the room or the join page get their tag with spec 0059.
+- Flows of this feature: `frontend/e2e/health.spec.ts`, `frontend/e2e/create-and-join.spec.ts`,
+  `frontend/e2e/project-picker.spec.ts`, `frontend/e2e/recent-sessions.spec.ts` and
+  `frontend/e2e/theme.spec.ts`; they run against both frontends (`project-rules/testing.md`).

@@ -57,88 +57,77 @@ const schemes = [
 ];
 
 for (const scheme of schemes) {
-  test(
-    `the start page uses the ${scheme.colorScheme} theme of the system`,
-    { tag: '@react' },
-    async ({ page }) => {
-      await page.emulateMedia({ colorScheme: scheme.colorScheme });
-      await page.goto('/');
-      await expect(page.getByTestId('theme-toggle')).toBeVisible();
+  test(`the start page uses the ${scheme.colorScheme} theme of the system`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme.colorScheme });
+    await page.goto('/');
+    await expect(page.getByTestId('theme-toggle')).toBeVisible();
 
-      expect(await token(page, '--mat-sys-surface')).toBe(scheme.surface);
-      expect(await token(page, '--mat-sys-primary')).toBe(scheme.primary);
-      expect(await token(page, '--app-success')).toBe(scheme.success);
-      const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-      expect(background).toBe(await rgb(page, scheme.surface));
-    },
-  );
+    expect(await token(page, '--mat-sys-surface')).toBe(scheme.surface);
+    expect(await token(page, '--mat-sys-primary')).toBe(scheme.primary);
+    expect(await token(page, '--app-success')).toBe(scheme.success);
+    const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    expect(background).toBe(await rgb(page, scheme.surface));
+  });
 }
 
-test(
-  'text uses IBM Plex Sans and the session id in the toolbar IBM Plex Mono',
-  { tag: '@react' },
-  async ({ page }) => {
-    await createSession(page);
+test('text uses IBM Plex Sans and the session id in the toolbar IBM Plex Mono', async ({
+  page,
+}) => {
+  await createSession(page);
 
-    const body = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
-    expect(body).toMatch(/^"?IBM Plex Sans"?/);
-    const sessionId = page.getByTestId('toolbar-session-id');
-    const mono = await sessionId.evaluate((element) => getComputedStyle(element).fontFamily);
-    expect(mono).toMatch(/^"?IBM Plex Mono"?/);
-  },
-);
+  const body = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
+  expect(body).toMatch(/^"?IBM Plex Sans"?/);
+  const sessionId = page.getByTestId('toolbar-session-id');
+  const mono = await sessionId.evaluate((element) => getComputedStyle(element).fontFamily);
+  expect(mono).toMatch(/^"?IBM Plex Mono"?/);
+});
 
-test(
-  'the toolbar shows the session id and name and role in the room only',
-  { tag: '@react' },
-  async ({ page, browser }) => {
-    await page.goto('/');
-    await expect(page.getByTestId('create-form')).toBeVisible();
-    await expect(page.getByTestId('toolbar-session-id')).toHaveCount(0);
-    await expect(page.getByTestId('toolbar-me')).toHaveCount(0);
+test('the toolbar shows the session id and name and role in the room only', async ({
+  page,
+  browser,
+}) => {
+  await page.goto('/');
+  await expect(page.getByTestId('create-form')).toBeVisible();
+  await expect(page.getByTestId('toolbar-session-id')).toHaveCount(0);
+  await expect(page.getByTestId('toolbar-me')).toHaveCount(0);
 
-    const link = await createSession(page);
-    const sessionId = (await page.getByTestId('session-id').textContent()) ?? '';
-    expect(sessionId).toMatch(SESSION_ID);
-    await expect(page.getByTestId('toolbar-session-id')).toHaveText(sessionId);
-    await expect(page.getByTestId('toolbar-me')).toHaveText('Anna · Scrum Master');
+  const link = await createSession(page);
+  const sessionId = (await page.getByTestId('session-id').textContent()) ?? '';
+  expect(sessionId).toMatch(SESSION_ID);
+  await expect(page.getByTestId('toolbar-session-id')).toHaveText(sessionId);
+  await expect(page.getByTestId('toolbar-me')).toHaveText('Anna · Scrum Master');
 
-    const ben = await join(browser, link, 'Ben');
-    await expect(ben.getByTestId('toolbar-session-id')).toHaveText(sessionId);
-    await expect(ben.getByTestId('toolbar-me')).toHaveText('Ben · Entwickler');
+  const ben = await join(browser, link, 'Ben');
+  await expect(ben.getByTestId('toolbar-session-id')).toHaveText(sessionId);
+  await expect(ben.getByTestId('toolbar-me')).toHaveText('Ben · Entwickler');
 
-    const small = await join(browser, link, 'Cem', { width: 375, height: 800 });
-    await expect(small.getByTestId('toolbar-session-id')).toHaveText(sessionId);
-    await expect(small.getByTestId('toolbar-me')).toBeHidden();
-  },
-);
+  const small = await join(browser, link, 'Cem', { width: 375, height: 800 });
+  await expect(small.getByTestId('toolbar-session-id')).toHaveText(sessionId);
+  await expect(small.getByTestId('toolbar-me')).toBeHidden();
+});
 
-test(
-  'a button shows the focus ring for keyboard focus only',
-  { tag: '@react' },
-  async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByTestId('health-status')).toHaveText('Backend erreichbar');
-    const input = page.getByTestId('create-issue');
-    const button = page.getByTestId('create-submit');
-    const outline = () =>
-      button.evaluate((element) => {
-        const style = getComputedStyle(element);
-        return { style: style.outlineStyle, width: style.outlineWidth, color: style.outlineColor };
-      });
-    const primary = await rgb(page, await token(page, '--mat-sys-primary'));
+test('a button shows the focus ring for keyboard focus only', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByTestId('health-status')).toHaveText('Backend erreichbar');
+  const input = page.getByTestId('create-issue');
+  const button = page.getByTestId('create-submit');
+  const outline = () =>
+    button.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { style: style.outlineStyle, width: style.outlineWidth, color: style.outlineColor };
+    });
+  const primary = await rgb(page, await token(page, '--mat-sys-primary'));
 
-    await input.click();
-    await page.keyboard.press('Tab');
-    await expect(button).toBeFocused();
-    expect(await outline()).toEqual({ style: 'solid', width: '3px', color: primary });
+  await input.click();
+  await page.keyboard.press('Tab');
+  await expect(button).toBeFocused();
+  expect(await outline()).toEqual({ style: 'solid', width: '3px', color: primary });
 
-    await page.getByTestId('create-name').click();
-    await button.click();
-    await expect(button).toBeFocused();
-    expect((await outline()).style).toBe('none');
-  },
-);
+  await page.getByTestId('create-name').click();
+  await button.click();
+  await expect(button).toBeFocused();
+  expect((await outline()).style).toBe('none');
+});
 
 test('the page links the favicon in three formats and serves them', async ({ page, request }) => {
   await page.goto('/');

@@ -109,172 +109,167 @@ test.afterEach(async ({ browser, context: own }) => {
   stubs = [];
 });
 
-test(
-  'everybody sees the same result, the scrum master starts a new round and confirms the result',
-  { tag: '@react' },
-  async ({ page, browser }) => {
-    const { anna, link } = await createSession(page, '42');
-    const ben = await join(browser, link, 'Ben');
-    const cem = await join(browser, link, 'Cem');
-    const everybody = [anna, ben, cem];
-    await expect(anna.page.getByTestId('participant')).toHaveCount(3);
-    await anna.page.getByTestId('issue-release').click();
-    await startVoting(anna.page);
+test('everybody sees the same result, the scrum master starts a new round and confirms the result', async ({
+  page,
+  browser,
+}) => {
+  const { anna, link } = await createSession(page, '42');
+  const ben = await join(browser, link, 'Ben');
+  const cem = await join(browser, link, 'Cem');
+  const everybody = [anna, ben, cem];
+  await expect(anna.page.getByTestId('participant')).toHaveCount(3);
+  await anna.page.getByTestId('issue-release').click();
+  await startVoting(anna.page);
 
-    await playRound(anna, [
-      [ben, '5'],
-      [cem, '8'],
+  await playRound(anna, [
+    [ben, '5'],
+    [cem, '8'],
+  ]);
+
+  for (const view of everybody) {
+    expect(await texts(result(view).getByTestId('result-vote'))).toEqual(['Ben5', 'Cem8']);
+    expect(await texts(result(view).getByTestId('result-count-card'))).toEqual(['5', '8']);
+    expect(await texts(result(view).getByTestId('result-count-votes'))).toEqual([
+      '1 Stimme',
+      '1 Stimme',
     ]);
+    await expect(result(view).getByTestId('result-average')).toHaveText('6,5');
+    await expect(result(view).getByTestId('result-most-frequent')).toHaveText('5, 8');
+    await expect(result(view)).toContainText('Durchschnitt (Orientierung)');
+    await expect(result(view)).toContainText('Häufigste Werte (Orientierung)');
+    await expect(result(view).getByTestId('result-facts').locator('button')).toHaveCount(0);
+    await expect(result(view).getByTestId('result-distribution').locator('button')).toHaveCount(0);
+  }
+  await expect(anna.page.getByTestId('round-restart')).toBeVisible();
+  await expect(anna.page.getByTestId('result-accept')).toBeVisible();
+  for (const developer of [ben, cem]) {
+    await expect(developer.page.getByTestId('round-restart')).toHaveCount(0);
+    await expect(developer.page.getByTestId('result-accept')).toHaveCount(0);
+  }
 
-    for (const view of everybody) {
-      expect(await texts(result(view).getByTestId('result-vote'))).toEqual(['Ben5', 'Cem8']);
-      expect(await texts(result(view).getByTestId('result-count-card'))).toEqual(['5', '8']);
-      expect(await texts(result(view).getByTestId('result-count-votes'))).toEqual([
-        '1 Stimme',
-        '1 Stimme',
-      ]);
-      await expect(result(view).getByTestId('result-average')).toHaveText('6,5');
-      await expect(result(view).getByTestId('result-most-frequent')).toHaveText('5, 8');
-      await expect(result(view)).toContainText('Durchschnitt (Orientierung)');
-      await expect(result(view)).toContainText('Häufigste Werte (Orientierung)');
-      await expect(result(view).getByTestId('result-facts').locator('button')).toHaveCount(0);
-      await expect(result(view).getByTestId('result-distribution').locator('button')).toHaveCount(
-        0,
-      );
-    }
-    await expect(anna.page.getByTestId('round-restart')).toBeVisible();
-    await expect(anna.page.getByTestId('result-accept')).toBeVisible();
-    for (const developer of [ben, cem]) {
-      await expect(developer.page.getByTestId('round-restart')).toHaveCount(0);
-      await expect(developer.page.getByTestId('result-accept')).toHaveCount(0);
-    }
-
-    await expect(anna.page.getByTestId('round-restart')).toHaveText('↻ Erneut schätzen');
-    for (const developer of [ben, cem]) {
-      await expect(developer.page.getByTestId('result-waiting')).toHaveText(
-        'Der Scrum Master lässt erneut schätzen oder übernimmt das Ergebnis.',
-      );
-    }
-    await anna.page.getByTestId('round-restart').click();
-
-    await expectPhase(everybody, 'Runde läuft');
-    for (const view of everybody) {
-      await expect(voteStatus(view, 'Ben')).toHaveText('Ausstehend');
-      await expect(voteStatus(view, 'Cem')).toHaveText('Ausstehend');
-      await expect.poll(() => lastRoundNumber(view)).toBe(2);
-      const entries = await openHistory(view);
-      await expect(entries).toHaveCount(1);
-      await expect(entries.getByTestId('history-issue')).toHaveText('#42 Login page');
-      await expect(entries.getByTestId('history-round')).toHaveText('Runde 1');
-      expect(await texts(entries.getByTestId('history-vote'))).toEqual(['Ben5', 'Cem8']);
-      await expect(entries.getByTestId('history-no-final-card')).toHaveText('ohne Endwert');
-      await expect(entries.getByTestId('history-final-card')).toHaveCount(0);
-    }
-    for (const developer of [ben, cem]) {
-      await expect(
-        developer.page.getByTestId('card-deck').locator('[aria-pressed="true"]'),
-      ).toHaveCount(0);
-    }
-
-    await playRound(anna, [
-      [ben, '5'],
-      [cem, '8'],
-    ]);
-
-    await anna.page.getByTestId('result-accept').click();
-    const dialog = anna.page.getByTestId('confirm-dialog');
-    await expect(dialog.getByTestId('confirm-card')).toHaveCount(11);
-    await expect(dialog.getByTestId('confirm-submit')).toBeDisabled();
-    await dialog.getByRole('radio', { name: '8', exact: true }).check();
-    await expect(dialog.getByTestId('confirm-submit')).toBeEnabled();
-    await dialog.getByTestId('confirm-submit').click();
-
-    await expect(anna.page.getByTestId('confirm-success')).toBeVisible();
-    await expect(dialog).toHaveCount(0);
-    await expectPhase(everybody, 'Wartet auf ein Issue');
-    await expect(anna.page.getByTestId('issue-panel')).toBeVisible();
-    for (const view of everybody) {
-      const entries = view.page.getByTestId('history-entry');
-      await expect(entries).toHaveCount(2);
-      await expect(entries.first().getByTestId('history-round')).toHaveText('Runde 2');
-      await expect(entries.first().getByTestId('history-final-card')).toHaveText('8');
-      await expect(entries.nth(1).getByTestId('history-no-final-card')).toHaveText('ohne Endwert');
-    }
-    await expect(ben.page.getByTestId('confirm-success')).toHaveCount(0);
-  },
-);
-
-test(
-  'restart with a timer opens the cards at once and runs the timer',
-  { tag: '@react' },
-  async ({ page, browser }) => {
-    const { anna, link } = await createSession(page, '42');
-    const ben = await join(browser, link, 'Ben');
-    await expect(anna.page.getByTestId('participant')).toHaveCount(2);
-    await anna.page.getByTestId('timer-setting').click();
-    await anna.page.getByTestId('timer-option-15').click();
-    await expect(anna.page.getByTestId('timer-setting')).toContainText('15 s');
-    await anna.page.getByTestId('issue-release').click();
-    await startVoting(anna.page);
-    await playRound(anna, [[ben, '5']]);
-
-    await anna.page.getByTestId('round-restart').click();
-
-    await expectPhase([anna, ben], 'Runde läuft');
-    await expect(ben.page.getByTestId('discussion-hint')).toHaveCount(0);
-    await expect(anna.page.getByTestId('round-start')).toHaveCount(0);
-    await choose(ben, '8');
-    await expect(ben.page.getByRole('timer')).toHaveText(/Noch 0:1\d/);
-    await expect.poll(() => lastRoundNumber(ben)).toBe(2);
-  },
-);
-
-test(
-  'a GitLab error stays in the dialog and the second attempt confirms the result',
-  { tag: '@react' },
-  async ({ page, browser }) => {
-    const iid = uniqueIssueIid();
-    await stubIssueWithFailingFirstNote(iid, 'Export report', stubs);
-    const { anna, link } = await createSession(page, String(iid));
-    const ben = await join(browser, link, 'Ben');
-    await expect(anna.page.getByTestId('participant')).toHaveCount(2);
-    await anna.page.getByTestId('issue-release').click();
-    await startVoting(anna.page);
-    await playRound(anna, [[ben, '3']]);
-
-    await anna.page.getByTestId('result-accept').click();
-    const dialog = anna.page.getByTestId('confirm-dialog');
-    await expect(dialog.locator(':focus')).toHaveCount(1);
-    await dialog.getByRole('radio', { name: '5', exact: true }).focus();
-    await anna.page.keyboard.press('ArrowRight');
-    await expect(dialog.getByRole('radio', { name: '8', exact: true })).toBeChecked();
-    await expect(dialog.getByTestId('confirm-submit')).toBeEnabled();
-    await dialog.getByTestId('confirm-submit').focus();
-    await expect(dialog.getByTestId('confirm-submit')).toBeFocused();
-    await anna.page.keyboard.press('Enter');
-
-    await expect(dialog.getByTestId('confirm-error-message')).toHaveText(
-      'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.',
+  await expect(anna.page.getByTestId('round-restart')).toHaveText('↻ Erneut schätzen');
+  for (const developer of [ben, cem]) {
+    await expect(developer.page.getByTestId('result-waiting')).toHaveText(
+      'Der Scrum Master lässt erneut schätzen oder übernimmt das Ergebnis.',
     );
-    await expect(dialog.getByTestId('confirm-error')).toContainText(
-      'Der Kommentar wurde nicht geschrieben. Prüfe das Token und versuche es erneut.',
-    );
-    await expect(dialog.getByTestId('confirm-submit')).toHaveText('Erneut versuchen');
-    await expect(dialog.getByRole('radio', { name: '8', exact: true })).toBeChecked();
-    await expect(anna.page.getByTestId('error-banner')).toHaveCount(0);
-    await expectPhase([anna, ben], 'Runde aufgelöst');
+  }
+  await anna.page.getByTestId('round-restart').click();
 
-    await dialog.getByTestId('confirm-submit').click();
+  await expectPhase(everybody, 'Runde läuft');
+  for (const view of everybody) {
+    await expect(voteStatus(view, 'Ben')).toHaveText('Ausstehend');
+    await expect(voteStatus(view, 'Cem')).toHaveText('Ausstehend');
+    await expect.poll(() => lastRoundNumber(view)).toBe(2);
+    const entries = await openHistory(view);
+    await expect(entries).toHaveCount(1);
+    await expect(entries.getByTestId('history-issue')).toHaveText('#42 Login page');
+    await expect(entries.getByTestId('history-round')).toHaveText('Runde 1');
+    expect(await texts(entries.getByTestId('history-vote'))).toEqual(['Ben5', 'Cem8']);
+    await expect(entries.getByTestId('history-no-final-card')).toHaveText('ohne Endwert');
+    await expect(entries.getByTestId('history-final-card')).toHaveCount(0);
+  }
+  for (const developer of [ben, cem]) {
+    await expect(
+      developer.page.getByTestId('card-deck').locator('[aria-pressed="true"]'),
+    ).toHaveCount(0);
+  }
 
-    await expect(anna.page.getByTestId('confirm-success')).toBeVisible();
-    await expect(dialog).toHaveCount(0);
-    await expect(anna.page.getByTestId('error-banner')).toHaveCount(0);
-    await expectPhase([anna, ben], 'Wartet auf ein Issue');
-    for (const view of [anna, ben]) {
-      const entries = await openHistory(view);
-      await expect(entries).toHaveCount(1);
-      await expect(entries.getByTestId('history-issue')).toHaveText(`#${iid} Export report`);
-      await expect(entries.getByTestId('history-final-card')).toHaveText('8');
-    }
-  },
-);
+  await playRound(anna, [
+    [ben, '5'],
+    [cem, '8'],
+  ]);
+
+  await anna.page.getByTestId('result-accept').click();
+  const dialog = anna.page.getByTestId('confirm-dialog');
+  await expect(dialog.getByTestId('confirm-card')).toHaveCount(11);
+  await expect(dialog.getByTestId('confirm-submit')).toBeDisabled();
+  await dialog.getByRole('radio', { name: '8', exact: true }).check();
+  await expect(dialog.getByTestId('confirm-submit')).toBeEnabled();
+  await dialog.getByTestId('confirm-submit').click();
+
+  await expect(anna.page.getByTestId('confirm-success')).toBeVisible();
+  await expect(dialog).toHaveCount(0);
+  await expectPhase(everybody, 'Wartet auf ein Issue');
+  await expect(anna.page.getByTestId('issue-panel')).toBeVisible();
+  for (const view of everybody) {
+    const entries = view.page.getByTestId('history-entry');
+    await expect(entries).toHaveCount(2);
+    await expect(entries.first().getByTestId('history-round')).toHaveText('Runde 2');
+    await expect(entries.first().getByTestId('history-final-card')).toHaveText('8');
+    await expect(entries.nth(1).getByTestId('history-no-final-card')).toHaveText('ohne Endwert');
+  }
+  await expect(ben.page.getByTestId('confirm-success')).toHaveCount(0);
+});
+
+test('restart with a timer opens the cards at once and runs the timer', async ({
+  page,
+  browser,
+}) => {
+  const { anna, link } = await createSession(page, '42');
+  const ben = await join(browser, link, 'Ben');
+  await expect(anna.page.getByTestId('participant')).toHaveCount(2);
+  await anna.page.getByTestId('timer-setting').click();
+  await anna.page.getByTestId('timer-option-15').click();
+  await expect(anna.page.getByTestId('timer-setting')).toContainText('15 s');
+  await anna.page.getByTestId('issue-release').click();
+  await startVoting(anna.page);
+  await playRound(anna, [[ben, '5']]);
+
+  await anna.page.getByTestId('round-restart').click();
+
+  await expectPhase([anna, ben], 'Runde läuft');
+  await expect(ben.page.getByTestId('discussion-hint')).toHaveCount(0);
+  await expect(anna.page.getByTestId('round-start')).toHaveCount(0);
+  await choose(ben, '8');
+  await expect(ben.page.getByRole('timer')).toHaveText(/Noch 0:1\d/);
+  await expect.poll(() => lastRoundNumber(ben)).toBe(2);
+});
+
+test('a GitLab error stays in the dialog and the second attempt confirms the result', async ({
+  page,
+  browser,
+}) => {
+  const iid = uniqueIssueIid();
+  await stubIssueWithFailingFirstNote(iid, 'Export report', stubs);
+  const { anna, link } = await createSession(page, String(iid));
+  const ben = await join(browser, link, 'Ben');
+  await expect(anna.page.getByTestId('participant')).toHaveCount(2);
+  await anna.page.getByTestId('issue-release').click();
+  await startVoting(anna.page);
+  await playRound(anna, [[ben, '3']]);
+
+  await anna.page.getByTestId('result-accept').click();
+  const dialog = anna.page.getByTestId('confirm-dialog');
+  await expect(dialog.locator(':focus')).toHaveCount(1);
+  await dialog.getByRole('radio', { name: '5', exact: true }).focus();
+  await anna.page.keyboard.press('ArrowRight');
+  await expect(dialog.getByRole('radio', { name: '8', exact: true })).toBeChecked();
+  await expect(dialog.getByTestId('confirm-submit')).toBeEnabled();
+  await dialog.getByTestId('confirm-submit').focus();
+  await expect(dialog.getByTestId('confirm-submit')).toBeFocused();
+  await anna.page.keyboard.press('Enter');
+
+  await expect(dialog.getByTestId('confirm-error-message')).toHaveText(
+    'GitLab ist gerade nicht erreichbar. Bitte später erneut versuchen.',
+  );
+  await expect(dialog.getByTestId('confirm-error')).toContainText(
+    'Der Kommentar wurde nicht geschrieben. Prüfe das Token und versuche es erneut.',
+  );
+  await expect(dialog.getByTestId('confirm-submit')).toHaveText('Erneut versuchen');
+  await expect(dialog.getByRole('radio', { name: '8', exact: true })).toBeChecked();
+  await expect(anna.page.getByTestId('error-banner')).toHaveCount(0);
+  await expectPhase([anna, ben], 'Runde aufgelöst');
+
+  await dialog.getByTestId('confirm-submit').click();
+
+  await expect(anna.page.getByTestId('confirm-success')).toBeVisible();
+  await expect(dialog).toHaveCount(0);
+  await expect(anna.page.getByTestId('error-banner')).toHaveCount(0);
+  await expectPhase([anna, ben], 'Wartet auf ein Issue');
+  for (const view of [anna, ben]) {
+    const entries = await openHistory(view);
+    await expect(entries).toHaveCount(1);
+    await expect(entries.getByTestId('history-issue')).toHaveText(`#${iid} Export report`);
+    await expect(entries.getByTestId('history-final-card')).toHaveText('8');
+  }
+});

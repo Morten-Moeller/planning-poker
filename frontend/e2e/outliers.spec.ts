@@ -47,34 +47,30 @@ test.afterEach(async ({ browser, context: own }) => {
   }
 });
 
-test(
-  'every participant sees the same outliers after the reveal',
-  { tag: '@react' },
-  async ({ page, browser }) => {
-    const link = await createSession(page, '42');
-    const ben = await join(browser, link, 'Ben');
-    const cem = await join(browser, link, 'Cem');
-    const everybody = [page, ben, cem];
-    await expect(page.getByTestId('participant')).toHaveCount(3);
-    await page.getByTestId('issue-release').click();
-    await startVoting(page);
-    await expectPhase(everybody, 'Runde läuft');
+test('every participant sees the same outliers after the reveal', async ({ page, browser }) => {
+  const link = await createSession(page, '42');
+  const ben = await join(browser, link, 'Ben');
+  const cem = await join(browser, link, 'Cem');
+  const everybody = [page, ben, cem];
+  await expect(page.getByTestId('participant')).toHaveCount(3);
+  await page.getByTestId('issue-release').click();
+  await startVoting(page);
+  await expectPhase(everybody, 'Runde läuft');
 
-    await choose(ben, '1');
-    await choose(cem, '13');
-    await expect(page.getByTestId('all-voted-hint')).toBeVisible();
-    await page.getByTestId('round-reveal').click();
+  await choose(ben, '1');
+  await choose(cem, '13');
+  await expect(page.getByTestId('all-voted-hint')).toBeVisible();
+  await page.getByTestId('round-reveal').click();
 
-    await expectPhase(everybody, 'Runde aufgelöst');
-    for (const view of everybody) {
-      await expect(view.getByTestId('outlier-hint')).toBeVisible();
-      await expect(view.getByTestId('outlier-hint')).toHaveText(
-        'Niedrigste und höchste Schätzung liegen weit auseinander.',
-      );
-      await expect(view.getByTestId('result-vote-outlier')).toHaveCount(2);
-      for (const name of ['Ben', 'Cem']) {
-        await expect(vote(view, name).getByTestId('result-vote-outlier')).toHaveText('Ausreißer');
-      }
+  await expectPhase(everybody, 'Runde aufgelöst');
+  for (const view of everybody) {
+    await expect(view.getByTestId('outlier-hint')).toBeVisible();
+    await expect(view.getByTestId('outlier-hint')).toHaveText(
+      'Niedrigste und höchste Schätzung liegen weit auseinander.',
+    );
+    await expect(view.getByTestId('result-vote-outlier')).toHaveCount(2);
+    for (const name of ['Ben', 'Cem']) {
+      await expect(vote(view, name).getByTestId('result-vote-outlier')).toHaveText('Ausreißer');
     }
-  },
-);
+  }
+});

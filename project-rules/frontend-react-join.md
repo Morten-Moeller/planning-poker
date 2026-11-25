@@ -56,5 +56,4 @@ of the Angular join page (`project-rules/frontend.md`, Start and join page, Invi
   route of the page and a route that shows the path after the change of the page.
 - End-to-end: the flows with a join (`frontend/e2e/create-and-join.spec.ts`,
   `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/preferences.spec.ts`,
-  `frontend/e2e/viewer.spec.ts`) need the start page and the room and get the tag `@react` with
-  spec 0059.
+  `frontend/e2e/viewer.spec.ts`) run against both frontends (`project-rules/testing.md`).

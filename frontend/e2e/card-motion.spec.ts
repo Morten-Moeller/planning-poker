@@ -63,66 +63,63 @@ test.afterEach(async ({ browser, context: own }) => {
   }
 });
 
-test(
-  'locked cards show the not-allowed cursor and open cards the pointer',
-  { tag: '@react' },
-  async ({ page, browser }) => {
-    const developer = await discussion(page, browser, 'no-preference');
-    const locked = developer.getByTestId('card-deck-locked').getByTestId('card-5');
+test('locked cards show the not-allowed cursor and open cards the pointer', async ({
+  page,
+  browser,
+}) => {
+  const developer = await discussion(page, browser, 'no-preference');
+  const locked = developer.getByTestId('card-deck-locked').getByTestId('card-5');
 
-    expect(await cursor(locked)).toBe('not-allowed');
+  expect(await cursor(locked)).toBe('not-allowed');
 
-    await startVoting(page);
+  await startVoting(page);
 
-    const open = developer.getByTestId('card-deck').getByTestId('card-5');
-    await expect(open).toHaveAttribute('data-state', 'open');
-    expect(await cursor(open)).toBe('pointer');
-  },
-);
+  const open = developer.getByTestId('card-deck').getByTestId('card-5');
+  await expect(open).toHaveAttribute('data-state', 'open');
+  expect(await cursor(open)).toBe('pointer');
+});
 
-test(
-  'the cards unlock one after another from left to right when the voting starts',
-  { tag: '@react' },
-  async ({ page, browser }) => {
-    const developer = await discussion(page, browser, 'no-preference');
+test('the cards unlock one after another from left to right when the voting starts', async ({
+  page,
+  browser,
+}) => {
+  const developer = await discussion(page, browser, 'no-preference');
 
-    await startVoting(page);
+  await startVoting(page);
 
-    const cards = developer.getByTestId('card-deck').locator('button');
-    await expect(cards).toHaveCount(11);
-    await expect(cards.first()).toHaveAttribute('data-unlock', 'true');
-    expect(await unlockIndexes(cards)).toEqual([
-      '0',
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      '7',
-      '8',
-      '9',
-      '10',
-    ]);
-    await expect.poll(() => running(cards), { timeout: 1_500 }).toBe(0);
-    for (const card of await cards.all()) {
-      await expect(card).toHaveAttribute('data-state', 'open');
-      await expect(card).not.toHaveAttribute('aria-disabled');
-    }
-  },
-);
+  const cards = developer.getByTestId('card-deck').locator('button');
+  await expect(cards).toHaveCount(11);
+  await expect(cards.first()).toHaveAttribute('data-unlock', 'true');
+  expect(await unlockIndexes(cards)).toEqual([
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+  ]);
+  await expect.poll(() => running(cards), { timeout: 1_500 }).toBe(0);
+  for (const card of await cards.all()) {
+    await expect(card).toHaveAttribute('data-state', 'open');
+    await expect(card).not.toHaveAttribute('aria-disabled');
+  }
+});
 
-test(
-  'the cards open without the unlock animation under reduced motion',
-  { tag: '@react' },
-  async ({ page, browser }) => {
-    const developer = await discussion(page, browser, 'reduce');
+test('the cards open without the unlock animation under reduced motion', async ({
+  page,
+  browser,
+}) => {
+  const developer = await discussion(page, browser, 'reduce');
 
-    await startVoting(page);
+  await startVoting(page);
 
-    const cards = developer.getByTestId('card-deck').locator('button');
-    await expect(cards).toHaveCount(11);
-    await expect(cards.first()).toHaveAttribute('data-state', 'open');
-    expect(await unlockIndexes(cards)).toEqual(Array(11).fill(null));
-  },
-);
+  const cards = developer.getByTestId('card-deck').locator('button');
+  await expect(cards).toHaveCount(11);
+  await expect(cards.first()).toHaveAttribute('data-state', 'open');
+  expect(await unlockIndexes(cards)).toEqual(Array(11).fill(null));
+});
