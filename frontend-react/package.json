@@ -7,8 +7,9 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
+    "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit && vite build && node scripts/bundle-budget.ts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write ."
   },

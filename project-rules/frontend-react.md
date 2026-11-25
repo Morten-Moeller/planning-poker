@@ -173,10 +173,17 @@ design holds here as well, unless this file names another way.
 
 ## Quality
 
-- `make typecheck-frontend-react`: `tsc --noEmit` and `vite build`.
+- `make typecheck-frontend-react`: `tsc --noEmit`, `vite build` and the bundle budget.
 - `make lint-frontend-react`: ESLint 10 (`typescript-eslint`, `react-hooks`, `jsx-a11y`,
   `no-warning-comments`) and `prettier --check .`.
 - `make test-frontend-react`: vitest with jsdom and React Testing Library, once. Tests stand next
   to the file as `*.spec.ts` or `*.spec.tsx` and drive a component as a user does (role, text,
   `data-testid`, `user-event`).
-- End-to-end: the suite in `frontend/e2e/` with `E2E_FRONTEND=react` (`project-rules/testing.md`).
+- `make typecheck-frontend-react` also checks the bundle budget after the build
+  (`scripts/bundle-budget.ts`, from the manifest of Vite): the entry with its static imports and
+  their styles, unpacked, warns above 500 kB and fails above 1 MB, the values of the Angular
+  frontend. The room and the join page are own chunks and do not count.
+- End-to-end: the whole suite in `frontend/e2e/` with `E2E_FRONTEND=react`, against the build
+  served by `vite preview` (`project-rules/testing.md`).
+- `index.html` has `<base href="/" />` and relative links to the three favicon files, like the
+  Angular frontend.

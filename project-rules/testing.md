@@ -51,7 +51,7 @@ change touches.
 | `frontend/src/app/shell/`, `frontend/src/styles.scss`, `frontend/src/styles/`, `frontend/src/index.html` | `frontend/src/app/shell/*.spec.ts`                                                                             | `frontend/e2e/theme.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/design-sidebar.spec.ts`, `frontend/e2e/theme-toggle.spec.ts`                                                                                                                                                                                                                                                                                                 |
 | `frontend/src/app/join/`                                                                                 | `frontend/src/app/join/*.spec.ts`                                                                              | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/preferences.spec.ts`, `frontend/e2e/viewer.spec.ts`                                                                                                                                                                                                                                                                                             |
 | `frontend/src/app/session/`                                                                              | `frontend/src/app/session/*.spec.ts`                                                                           | `frontend/e2e/create-and-join.spec.ts`, `frontend/e2e/session-room.spec.ts`, `frontend/e2e/voting-round.spec.ts`, `frontend/e2e/result-round.spec.ts`, `frontend/e2e/round-timer.spec.ts`, `frontend/e2e/outliers.spec.ts`, `frontend/e2e/consensus.spec.ts`, `frontend/e2e/confetti.spec.ts`, `frontend/e2e/full-flow.spec.ts`, `frontend/e2e/layout.spec.ts`, `frontend/e2e/issue-filter.spec.ts`, `frontend/e2e/theme.spec.ts`, `frontend/e2e/design-sidebar.spec.ts`, `frontend/e2e/viewer.spec.ts` |
-| `frontend-react/src/<feature>/` (every folder: `api`, `i18n`, `session`, `shell`, `start`, `ui`, …), `frontend-react/src/styles/`, `frontend-react/index.html` | `*.spec.ts` and `*.spec.tsx` next to the file in the same folder | the tests with the tag `@react`: `grep -l "@react" frontend/e2e/*.spec.ts`; the rule file of the feature (`project-rules/frontend-react-<feature>.md`) names the flows of the feature |
+| `frontend-react/src/<feature>/` (every folder: `api`, `i18n`, `session`, `shell`, `start`, `ui`, …), `frontend-react/src/styles/`, `frontend-react/index.html` | `*.spec.ts` and `*.spec.tsx` next to the file in the same folder | the specs in `frontend/e2e/` that the rule file of the feature (`project-rules/frontend-react-<feature>.md`) names, run with `E2E_FRONTEND=react` |
 
 ## End-to-end
 
@@ -72,19 +72,17 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   fails the start.
 - One spec: `pnpm -C frontend exec playwright test e2e/health.spec.ts`; Playwright starts the
   servers for this run as well.
-- React frontend (spec 0053, ADR 0016): with `E2E_FRONTEND=react` the third `webServer` is the
-  Vite server of `frontend-react/` on `FRONTEND_PORT`, and only tests with the tag `@react` run
-  (`grep` in `frontend/playwright.config.ts`). `make e2e` runs the suite against the Angular
-  frontend and then, when that run passed, the tagged tests against the React frontend, both
-  under one application lock. React alone:
-  `E2E_FRONTEND=react pnpm -C frontend exec playwright test`. A spec of the React frontend tags
-  the tests its screens pass (`test('…', { tag: '@react' }, …)`); a test never gets another
-  expectation for one frontend. A selector that exists only in the Angular frontend (an element
-  name such as `app-start-page`, a class of Angular Material) is replaced by a `data-testid` or
-  an ARIA attribute in the spec that tags the test. After spec 0061 every test has the tag but
-  the favicon test of `theme` (spec 0062). A test that compares positions waits for
-  `document.fonts.ready` first: the Vite server answers before the web font is loaded, and the
-  fallback font has other widths.
+- React frontend (ADR 0016, spec 0062): `make e2e` runs the whole suite against the Angular
+  frontend and then, when that run passed, the whole suite against the React frontend, both under
+  one application lock. With `E2E_FRONTEND=react` the third `webServer` builds `frontend-react/`
+  (`vite build`) and serves the build with `vite preview` on `FRONTEND_PORT`, with the proxy for
+  `/api` and `/ws`; the Angular run uses `ng serve`. React alone:
+  `E2E_FRONTEND=react pnpm -C frontend exec playwright test`. A test never has another
+  expectation for one frontend and no tag per frontend. A selector must exist in both frontends:
+  a `data-testid`, a role or an ARIA attribute, never an element name such as `app-start-page`
+  or a class of Angular Material or of a CSS Module. A test that compares positions waits for
+  `document.fonts.ready` first: the fallback font has other widths than the web font. A change
+  of the user interface names in its spec whether it holds for both frontends.
 - Session setup (T6.2): there is no login. A flow creates its session through the start page or
   the REST API in a `beforeEach`; the token lands in `sessionStorage` through the application.
 - Environment check (T4.3): Playwright waits for `/api/health` of the backend and for the

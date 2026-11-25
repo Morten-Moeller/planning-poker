@@ -106,7 +106,8 @@ Hinweise zu den Wellen:
 
 # Roadmap Teil 2: React-Frontend mit UI SDK
 
-Stand: 2026-11-25 (Welle 7 gemergt, Welle 8 geschrieben)
+Stand: 2026-11-25 (abgeschlossen mit Spec 0062: alle Seiten, dieselbe Playwright-Suite gegen beide
+Frontends)
 
 Teil 1 oben ist abgeschlossen (Specs 0001 bis 0019) und bleibt unverändert.
 
@@ -215,6 +216,8 @@ Hinweise zu den Wellen:
   `round-timer.spec.ts`, das 0060 ohne Tag ließ. Die Region der Meldung steht im Raum, nicht in
   der Shell. Für 0062 bleiben der Test der Favicon-Verweise, der Lauf ohne Tag, die Bundle-Grenze
   und die Texte.
+- Welle 8 (geschrieben am 2026-11-25): 0062 entfernt die Tags `@react` und das `grep`, lässt den
+  React-Lauf gegen den Build laufen (`vite preview`) und prüft die Größe des ersten Ladens.
 - Selektoren der Suite, die nur im Angular-Frontend existieren (`app-start-page`,
   `app-session-page .room`, `mat-button-toggle-checked`), ersetzt die Spec, die den Test
   freischaltet, in beiden Frontends durch `data-testid` oder ein ARIA-Attribut.

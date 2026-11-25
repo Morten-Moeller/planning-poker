@@ -1,7 +1,7 @@
 ---
 id: "0062"
 title: "React-Frontend: Parität mit ganzer Suite, Favicon, Bundle-Grenze und Texten"
-status: approved
+status: Review
 risk: medium
 adrs: ["0016"]
 owner: Morten Möller
@@ -78,8 +78,10 @@ Die Änderung folgt ADR 0016 („Die Playwright-Suite läuft zweimal“).
 Entscheidungen:
 
 - Keine neue Abhängigkeit. Die Bundle-Grenze prüft ein eigenes Skript
-  `frontend-react/scripts/bundle-budget.mjs` aus dem Manifest von Vite (`build.manifest`); die
-  Werte sind die des Angular-Frontends (Warnung 500 kB, Fehler 1 MB, Spec 0044).
+  `frontend-react/scripts/bundle-budget.ts` aus dem Manifest von Vite (`build.manifest`); die
+  Werte sind die des Angular-Frontends (Warnung 500 kB, Fehler 1 MB, Spec 0044). Das Skript ist
+  TypeScript und läuft mit Node 26 ohne Übersetzung (`node scripts/bundle-budget.ts`), damit
+  `tsc` und der Test es prüfen; freigegeben war die Endung `.mjs`.
 - Der React-Lauf der Suite nutzt `vite preview` des Builds. Grund: Im Dev-Server waren drei Tests
   der Startseite je einmal rot, ohne belegte Ursache; der gebaute Stand lädt ohne Umwandlung zur
   Laufzeit und ist der Stand, den Nutzer bekommen. Der Angular-Lauf bleibt bei `ng serve`.
@@ -92,9 +94,11 @@ Dateien:
 - `frontend-react/index.html`: ändern, `base` und relative Verweise
 - `frontend-react/vite.config.ts`: ändern, `preview` mit Proxy, `build.manifest`
 - `frontend-react/package.json`: ändern, Skript `typecheck` mit der Grenze, Skript `preview`
-- `frontend-react/scripts/bundle-budget.mjs`: neu
+- `frontend-react/scripts/bundle-budget.ts`: neu
 - `frontend-react/scripts/bundle-budget.spec.ts`: neu
-- `frontend-react/tsconfig.json`: ändern, falls der Test des Skripts es braucht
+- `frontend-react/tsconfig.json`: ändern, Ordner `scripts`
+- `project-rules/frontend-react-start.md`: ändern, Absatz End-to-end
+- `project-rules/frontend-react-join.md`: ändern, Absatz End-to-end
 - `frontend/playwright.config.ts`: ändern, ohne `grep`, React-Server aus dem Build
 - `frontend/e2e/card-motion.spec.ts`: ändern, Tags entfernen
 - `frontend/e2e/confetti.spec.ts`: ändern, Tags entfernen
@@ -135,7 +139,7 @@ Schritte:
    `grep`.
 3. Tags aus `frontend/e2e/` entfernen, `prettier --write`; `git diff -w` gegen den Stand vor Spec
    0056 zeigt je Datei nur die Selektoren der Specs 0056 bis 0061 und die Wartezeile aus 0061.
-4. `bundle-budget.mjs` mit Test; Skript `typecheck`.
+4. `bundle-budget.ts` mit Test; Skript `typecheck`.
 5. Texte: README, Architektur, Roadmap, Regeldateien.
 6. `make check`; `make e2e` dreimal. Ist ein Lauf rot, hält `/implement` an und meldet den Test
    mit der Ausgabe; kein Test wird wiederholt, bis er grün ist.

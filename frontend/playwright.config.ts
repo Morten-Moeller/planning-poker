@@ -8,7 +8,7 @@ const java = javaHome ? `${javaHome}/bin/java` : 'java';
 const gitlabDoubleJar = '../backend/target/gitlab-double/wiremock-standalone.jar';
 const react = process.env['E2E_FRONTEND'] === 'react';
 const frontendServer = react
-  ? `pnpm -C ../frontend-react exec vite --port ${frontendPort} --strictPort`
+  ? `pnpm -C ../frontend-react exec vite build && pnpm -C ../frontend-react exec vite preview --port ${frontendPort} --strictPort`
   : `pnpm exec ng serve --port ${frontendPort}`;
 
 export default defineConfig({
@@ -17,7 +17,6 @@ export default defineConfig({
   forbidOnly: !!process.env['CI'],
   retries: 0,
   reporter: process.env['CI'] ? 'github' : 'list',
-  grep: react ? /@react/ : undefined,
   use: {
     baseURL: `http://localhost:${frontendPort}`,
     trace: 'retain-on-failure',

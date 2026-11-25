@@ -257,4 +257,4 @@ and Design Werkbank part B).
   no `ResizeObserver`. jsdom does not move the choice of the `RadioGroup` with the arrow keys;
   `result-round.spec.ts` covers that in the browser. A test finds the radios by
   `data-slot="radio"`, because every `Radio` also has a hidden native input.
-- End-to-end: every flow of the room has the tag `@react` (specs 0059 to 0061).
+- End-to-end: every flow of the room runs against both frontends (`project-rules/testing.md`).
