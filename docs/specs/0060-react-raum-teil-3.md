@@ -1,14 +1,14 @@
 ---
 id: "0060"
 title: "React-Frontend: Raum Teil 3 mit Diskussion und Schätzrunde"
-status: Review
+status: done
 risk: medium
 adrs: ["0004", "0016"]
 owner: Morten Möller
 created: 2026-11-25
 updated: 2026-11-25
-pr: ""
-note: freigegeben in der Session
+pr: "#71"
+note: alle Kriterien erfüllt
 ---
 
 # React-Frontend: Raum Teil 3 mit Diskussion und Schätzrunde
