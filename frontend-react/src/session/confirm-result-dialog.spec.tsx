@@ -10,7 +10,12 @@ import { ConfirmResultDialog } from './confirm-result-dialog';
 import type { ConfirmSuccessData } from './confirm-success';
 import { confirmSuccessText } from './confirm-success';
 import { installPopupAnimations } from './testing/popup-animations';
-import { SessionPart, renderInSession, withRound } from './testing/session-snapshots';
+import {
+  SessionPart,
+  receiveSnapshot,
+  renderInSession,
+  withRound,
+} from './testing/session-snapshots';
 
 const ID = revealedScrumMaster.sessionId;
 const NAMES = ['0', '1', '2', '3', '5', '8', '13', '21', '34', 'Unklar', 'Kaffeepause'];
@@ -178,6 +183,28 @@ describe('ConfirmResultDialog', () => {
 
       expect(text('confirm-note')).toBe(note);
     });
+  });
+
+  it('follows a later snapshot while it is open and keeps the choice', async () => {
+    const user = userEvent.setup();
+    const test = await show({ ...revealedScrumMaster, writeWeight: false });
+    await user.click(radio('8'));
+    expect(text('confirm-note')).toContain('Das Gewicht des Issues bleibt unverändert.');
+
+    receiveSnapshot(
+      test,
+      withRound(
+        { ...revealedScrumMaster, writeWeight: true },
+        {
+          stats: { distribution: [{ card: '13', count: 3 }], average: 13, mostFrequent: ['13'] },
+        },
+      ),
+    );
+
+    expect(text('confirm-note')).toContain('Zahlenwerte werden zusätzlich als Gewicht gesetzt.');
+    expect(within(option('13')).getByTestId('confirm-card-votes').textContent).toContain('3×');
+    expect(within(option('5')).getByTestId('confirm-card-votes').textContent).toBe('');
+    expect(checked()).toEqual(['8']);
   });
 
   describe('choice', () => {
