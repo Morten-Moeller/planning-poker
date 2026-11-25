@@ -5,15 +5,18 @@
 }
 
 .dialog {
+  position: fixed;
+  inset: 0;
   box-sizing: border-box;
   width: max-content;
   min-width: 280px;
   max-width: min(560px, calc(100vw - 2 * var(--app-space-m)));
+  height: fit-content;
   margin: auto;
   padding: 0;
   border: 0;
   border-radius: var(--mat-sys-corner-extra-large);
-  background-color: var(--mat-sys-surface-container-high);
+  background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   box-shadow: var(--mat-sys-level3);
 }
@@ -27,7 +30,7 @@
 
 .text {
   margin: 0;
-  padding: 0 var(--app-space-l) var(--app-space-l);
+  padding: 0 var(--app-space-l) var(--app-space-m);
   font: var(--mat-sys-body-medium);
   color: var(--mat-sys-on-surface-variant);
 }
@@ -37,5 +40,5 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--app-space-s);
-  padding: 0 var(--app-space-l) var(--app-space-l);
+  padding: 0 var(--app-space-l) var(--app-space-m);
 }

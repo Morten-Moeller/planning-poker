@@ -61,19 +61,16 @@
   gap: var(--app-space-s);
   box-sizing: border-box;
   min-height: 40px;
-  margin: 0;
-  padding: 0 var(--app-space-m);
+  margin: 0 0 0 -1px;
+  padding: 0 12px;
   border: 0;
+  border-left: 1px solid var(--mat-sys-outline);
   background-color: transparent;
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-label-large);
   letter-spacing: var(--mat-sys-label-large-tracking);
   white-space: nowrap;
   cursor: pointer;
-}
-
-.weightOption + .weightOption {
-  border-left: 1px solid var(--mat-sys-outline);
 }
 
 .weightOption:hover {
