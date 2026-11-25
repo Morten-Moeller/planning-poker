@@ -10,6 +10,9 @@ import { motifOf } from '../api/card-motif';
 import { LastResult, lastConfirmed } from './last-result';
 import { t } from './messages';
 import { ParticipantList } from './participant-list';
+import { RoundFooter } from './round-footer';
+import { RoundStatus } from './round-status';
+import { SeatTable } from './seat-table';
 import { SessionFacts } from './session-facts';
 import styles from './session-page.module.css';
 import { ShareSession } from './share-session';
@@ -43,6 +46,10 @@ function Room({ session }: { session: SessionView }) {
   const scrumMaster = session.me.role === 'SCRUM_MASTER';
   const motif = motifOf(session);
   const invites = session.invites ?? null;
+  const inRound = session.phase === 'DISCUSSION' || session.phase === 'VOTING';
+  const activeIssue = session.activeIssue !== null && (
+    <ActiveIssue issue={session.activeIssue} phase={session.phase} />
+  );
 
   return (
     <div className={`${styles.room} motif-${motif}`} data-testid="room" data-motif={motif}>
@@ -60,10 +67,20 @@ function Room({ session }: { session: SessionView }) {
       <div className={styles.main} data-testid="room-main">
         {scrumMaster && <IssuePanel session={session} />}
         {!scrumMaster && session.phase === 'LOBBY' && <LobbyWaiting session={session} />}
-        {session.activeIssue !== null && (
-          <ActiveIssue issue={session.activeIssue} phase={session.phase} />
+        {inRound ? (
+          <RoundStatus session={session} motif={motif}>
+            {activeIssue}
+          </RoundStatus>
+        ) : (
+          activeIssue
         )}
+        {session.phase === 'REVEALED' && <SeatTable session={session} />}
       </div>
+      {inRound && (
+        <div className={styles.footer}>
+          <RoundFooter session={session} />
+        </div>
+      )}
     </div>
   );
 }

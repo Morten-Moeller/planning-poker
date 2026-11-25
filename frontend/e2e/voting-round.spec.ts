@@ -112,128 +112,131 @@ test.afterEach(async ({ browser, context: own }) => {
   }
 });
 
-test('a developer chooses and changes a hidden card and the scrum master reveals early', async ({
-  page,
-  browser,
-}) => {
-  const { scrumMaster, link } = await createSession(page);
-  const ben = await join(browser, link, 'Ben');
-  const cem = await join(browser, link, 'Cem');
-  await release(scrumMaster, [ben, cem]);
+test(
+  'a developer chooses and changes a hidden card and the scrum master reveals early',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, link } = await createSession(page);
+    const ben = await join(browser, link, 'Ben');
+    const cem = await join(browser, link, 'Cem');
+    await release(scrumMaster, [ben, cem]);
 
-  const cards = ben.page.getByTestId('card-deck').locator('button');
-  await expect(cards).toHaveCount(11);
-  expect(await cards.evaluateAll((nodes) => nodes.map((node) => node.dataset['testid']))).toEqual(
-    CARD_IDS,
-  );
-  await expect(card(ben, 'COFFEE')).toHaveAccessibleName('Karte Kaffeepause');
-  await expect(scrumMaster.page.getByTestId('card-deck')).toHaveCount(0);
-  await expect(scrumMaster.page.getByTestId('round-reveal')).toBeVisible();
-  for (const developer of [ben, cem]) {
-    await expect(developer.page.getByTestId('card-deck')).toBeVisible();
-    await expect(developer.page.getByTestId('round-reveal')).toHaveCount(0);
-  }
+    const cards = ben.page.getByTestId('card-deck').locator('button');
+    await expect(cards).toHaveCount(11);
+    expect(await cards.evaluateAll((nodes) => nodes.map((node) => node.dataset['testid']))).toEqual(
+      CARD_IDS,
+    );
+    await expect(card(ben, 'COFFEE')).toHaveAccessibleName('Karte Kaffeepause');
+    await expect(scrumMaster.page.getByTestId('card-deck')).toHaveCount(0);
+    await expect(scrumMaster.page.getByTestId('round-reveal')).toBeVisible();
+    for (const developer of [ben, cem]) {
+      await expect(developer.page.getByTestId('card-deck')).toBeVisible();
+      await expect(developer.page.getByTestId('round-reveal')).toHaveCount(0);
+    }
 
-  await choose(ben, '5');
-  await choose(ben, '8');
-  await expect(cards.and(ben.page.locator('[aria-pressed="true"]'))).toHaveCount(1);
-  await expect(card(ben, '5')).toHaveAttribute('aria-pressed', 'false');
+    await choose(ben, '5');
+    await choose(ben, '8');
+    await expect(cards.and(ben.page.locator('[aria-pressed="true"]'))).toHaveCount(1);
+    await expect(card(ben, '5')).toHaveAttribute('aria-pressed', 'false');
 
-  await card(ben, '8').focus();
-  await ben.page.keyboard.press('Tab');
-  await expect(card(ben, '13')).toBeFocused();
-  ben.chosen.add('13');
-  await ben.page.keyboard.press('Enter');
-  await expect(card(ben, '13')).toHaveAttribute('aria-pressed', 'true');
-  await expect(card(ben, '8')).toHaveAttribute('aria-pressed', 'false');
-  await ben.page.keyboard.press('Tab');
-  await expect(card(ben, '21')).toBeFocused();
-  ben.chosen.add('21');
-  await ben.page.keyboard.press(' ');
-  await expect(card(ben, '21')).toHaveAttribute('aria-pressed', 'true');
-  await expect(cards.and(ben.page.locator('[aria-pressed="true"]'))).toHaveCount(1);
+    await card(ben, '8').focus();
+    await ben.page.keyboard.press('Tab');
+    await expect(card(ben, '13')).toBeFocused();
+    ben.chosen.add('13');
+    await ben.page.keyboard.press('Enter');
+    await expect(card(ben, '13')).toHaveAttribute('aria-pressed', 'true');
+    await expect(card(ben, '8')).toHaveAttribute('aria-pressed', 'false');
+    await ben.page.keyboard.press('Tab');
+    await expect(card(ben, '21')).toBeFocused();
+    ben.chosen.add('21');
+    await ben.page.keyboard.press(' ');
+    await expect(card(ben, '21')).toHaveAttribute('aria-pressed', 'true');
+    await expect(cards.and(ben.page.locator('[aria-pressed="true"]'))).toHaveCount(1);
 
-  await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('1 von 2');
-  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
-  const reveal = scrumMaster.page.getByTestId('round-reveal');
-  await expect(reveal).toBeEnabled();
-  expectNoForeignCards([scrumMaster, ben, cem]);
+    await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('1 von 2');
+    await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
+    const reveal = scrumMaster.page.getByTestId('round-reveal');
+    await expect(reveal).toBeEnabled();
+    expectNoForeignCards([scrumMaster, ben, cem]);
 
-  await reveal.click();
+    await reveal.click();
 
-  for (const view of [scrumMaster, ben, cem]) {
-    await expect(view.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
-    await expect(view.page.getByTestId('card-deck')).toHaveCount(0);
-  }
-});
+    for (const view of [scrumMaster, ben, cem]) {
+      await expect(view.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
+      await expect(view.page.getByTestId('card-deck')).toHaveCount(0);
+    }
+  },
+);
 
-test('the others see the vote status and the counter but never the card', async ({
-  page,
-  browser,
-}) => {
-  const { scrumMaster, link } = await createSession(page);
-  const ben = await join(browser, link, 'Ben');
-  const cem = await join(browser, link, 'Cem');
-  await release(scrumMaster, [ben, cem]);
+test(
+  'the others see the vote status and the counter but never the card',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, link } = await createSession(page);
+    const ben = await join(browser, link, 'Ben');
+    const cem = await join(browser, link, 'Cem');
+    await release(scrumMaster, [ben, cem]);
 
-  for (const view of [scrumMaster, ben, cem]) {
-    await expect(view.page.getByTestId('vote-counter')).toContainText('0 von 2');
-    await expect(voteStatus(view, 'Ben')).toHaveText('Ausstehend');
-    await expect(voteStatus(view, 'Cem')).toHaveText('Ausstehend');
-    await expect(voteStatus(view, 'Anna')).toHaveCount(0);
-  }
-  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
+    for (const view of [scrumMaster, ben, cem]) {
+      await expect(view.page.getByTestId('vote-counter')).toContainText('0 von 2');
+      await expect(voteStatus(view, 'Ben')).toHaveText('Ausstehend');
+      await expect(voteStatus(view, 'Cem')).toHaveText('Ausstehend');
+      await expect(voteStatus(view, 'Anna')).toHaveCount(0);
+    }
+    await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
 
-  await choose(ben, '5');
+    await choose(ben, '5');
 
-  for (const view of [scrumMaster, cem]) {
-    await expect(voteStatus(view, 'Ben')).toHaveText('Hat geschätzt');
-    await expect(voteStatus(view, 'Cem')).toHaveText('Ausstehend');
-    await expect(view.page.getByTestId('vote-counter')).toContainText('1 von 2');
-  }
-  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
+    for (const view of [scrumMaster, cem]) {
+      await expect(voteStatus(view, 'Ben')).toHaveText('Hat geschätzt');
+      await expect(voteStatus(view, 'Cem')).toHaveText('Ausstehend');
+      await expect(view.page.getByTestId('vote-counter')).toContainText('1 von 2');
+    }
+    await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
 
-  await choose(cem, 'COFFEE');
+    await choose(cem, 'COFFEE');
 
-  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toBeVisible();
-  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveAttribute('role', 'status');
-  await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('2 von 2');
-  for (const developer of [ben, cem]) {
-    await expect(developer.page.getByTestId('vote-counter')).toContainText('2 von 2');
-    await expect(developer.page.getByTestId('all-voted-hint')).toHaveCount(0);
-  }
-  expectNoForeignCards([scrumMaster, ben, cem]);
+    await expect(scrumMaster.page.getByTestId('all-voted-hint')).toBeVisible();
+    await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveAttribute('role', 'status');
+    await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('2 von 2');
+    for (const developer of [ben, cem]) {
+      await expect(developer.page.getByTestId('vote-counter')).toContainText('2 von 2');
+      await expect(developer.page.getByTestId('all-voted-hint')).toHaveCount(0);
+    }
+    expectNoForeignCards([scrumMaster, ben, cem]);
 
-  await scrumMaster.page.getByTestId('round-reveal').click();
+    await scrumMaster.page.getByTestId('round-reveal').click();
 
-  for (const view of [scrumMaster, ben, cem]) {
-    await expect(view.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
-    await expect(view.page.getByTestId('card-deck')).toHaveCount(0);
-  }
-});
+    for (const view of [scrumMaster, ben, cem]) {
+      await expect(view.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
+      await expect(view.page.getByTestId('card-deck')).toHaveCount(0);
+    }
+  },
+);
 
-test('a disconnected developer without a vote does not block the hint', async ({
-  page,
-  browser,
-}) => {
-  const { scrumMaster, link } = await createSession(page);
-  const ben = await join(browser, link, 'Ben');
-  const cem = await join(browser, link, 'Cem');
-  const dan = await join(browser, link, 'Dan');
-  await release(scrumMaster, [ben, cem, dan]);
+test(
+  'a disconnected developer without a vote does not block the hint',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, link } = await createSession(page);
+    const ben = await join(browser, link, 'Ben');
+    const cem = await join(browser, link, 'Cem');
+    const dan = await join(browser, link, 'Dan');
+    await release(scrumMaster, [ben, cem, dan]);
 
-  await choose(ben, '3');
-  await choose(cem, '?');
+    await choose(ben, '3');
+    await choose(cem, '?');
 
-  await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('2 von 3');
-  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
+    await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('2 von 3');
+    await expect(scrumMaster.page.getByTestId('all-voted-hint')).toHaveCount(0);
 
-  await dan.page.context().close();
+    await dan.page.context().close();
 
-  await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('2 von 2');
-  await expect(scrumMaster.page.getByTestId('all-voted-hint')).toBeVisible();
-  expectNoForeignCards([scrumMaster, ben, cem]);
-});
+    await expect(scrumMaster.page.getByTestId('vote-counter')).toContainText('2 von 2');
+    await expect(scrumMaster.page.getByTestId('all-voted-hint')).toBeVisible();
+    expectNoForeignCards([scrumMaster, ben, cem]);
+  },
+);
 
 function seat(view: View, name: string): Locator {
   return view.page
@@ -242,107 +245,114 @@ function seat(view: View, name: string): Locator {
     .filter({ has: view.page.getByText(name, { exact: true }) });
 }
 
-test('a developer chooses a card with the keyboard and the table shows it hidden until the reveal', async ({
-  page,
-  browser,
-}) => {
-  const { scrumMaster, link } = await createSession(page);
-  const ben = await join(browser, link, 'Ben');
-  const cem = await join(browser, link, 'Cem');
-  await release(scrumMaster, [ben, cem]);
+test(
+  'a developer chooses a card with the keyboard and the table shows it hidden until the reveal',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, link } = await createSession(page);
+    const ben = await join(browser, link, 'Ben');
+    const cem = await join(browser, link, 'Cem');
+    await release(scrumMaster, [ben, cem]);
 
-  await expect(seat(scrumMaster, 'Ben').getByTestId('seat-status')).toHaveText('ausstehend');
-  await card(ben, '5').focus();
-  await ben.page.keyboard.press('ArrowRight');
-  await expect(card(ben, '8')).toBeFocused();
-  ben.chosen.add('8');
-  await ben.page.keyboard.press('Enter');
-  await expect(card(ben, '8')).toHaveAttribute('aria-pressed', 'true');
+    await expect(seat(scrumMaster, 'Ben').getByTestId('seat-status')).toHaveText('ausstehend');
+    await card(ben, '5').focus();
+    await ben.page.keyboard.press('ArrowRight');
+    await expect(card(ben, '8')).toBeFocused();
+    ben.chosen.add('8');
+    await ben.page.keyboard.press('Enter');
+    await expect(card(ben, '8')).toHaveAttribute('aria-pressed', 'true');
 
-  for (const view of [scrumMaster, cem]) {
-    await expect(view.page.getByTestId('seat-table')).toContainText('AM TISCH · VERDECKT');
-    await expect(seat(view, 'Ben').getByTestId('seat-status')).toHaveText('✓ geschätzt');
-    await expect(seat(view, 'Ben').getByTestId('seat-card')).toHaveAccessibleName('Karte verdeckt');
-    await expect(view.page.getByTestId('seat-table')).not.toContainText('8');
-  }
-  await choose(cem, '13');
-  expectNoForeignCards([scrumMaster, ben, cem]);
-
-  await scrumMaster.page.getByTestId('round-reveal').click();
-
-  for (const view of [scrumMaster, ben, cem]) {
-    await expect(view.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
-    await expect(view.page.getByTestId('seat-table')).toContainText('AUFGEDECKT');
-    await expect(view.page.getByTestId('result-vote-name')).toHaveText(['Ben', 'Cem']);
-    await expect(view.page.getByTestId('result-vote-card')).toHaveText(['8', '13']);
-  }
-});
-
-test('the card deck is one row of cards of at least 44 px and no horizontal page scrolling at 375 px', async ({
-  page,
-  browser,
-}) => {
-  const { scrumMaster, link } = await createSession(page);
-  const ben = await join(browser, link, 'Ben', { width: 375, height: 800 });
-  await release(scrumMaster, [ben]);
-
-  const group = ben.page.getByTestId('card-deck').getByRole('group', { name: 'Deine Karte' });
-  await expect(group).toBeVisible();
-  const columns = await group.evaluate(
-    (node) => getComputedStyle(node).gridTemplateColumns.split(' ').length,
-  );
-  expect(columns).toBe(11);
-  const boxes = await ben.page
-    .getByTestId('card-deck')
-    .locator('button')
-    .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().toJSON() as DOMRect));
-  expect(boxes).toHaveLength(11);
-  for (const box of boxes) {
-    expect(box.width).toBeGreaterThanOrEqual(44);
-    expect(box.height).toBeGreaterThanOrEqual(44);
-    expect(Math.abs(box.top - boxes[0].top)).toBeLessThanOrEqual(0.5);
-  }
-  expect(
-    await ben.page.evaluate(
-      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-    ),
-  ).toBe(true);
-});
-
-test('the card deck is at most 1000 px wide, centred and has portrait cards at 1920 px', async ({
-  page,
-  browser,
-}) => {
-  const { scrumMaster, link } = await createSession(page);
-  const ben = await join(browser, link, 'Ben', { width: 1920, height: 1080 });
-  await scrumMaster.page.getByTestId('issue-release').click();
-
-  for (const id of ['card-deck-locked', 'card-deck']) {
-    if (id === 'card-deck') {
-      await startVoting(scrumMaster.page);
+    for (const view of [scrumMaster, cem]) {
+      await expect(view.page.getByTestId('seat-table')).toContainText('AM TISCH · VERDECKT');
+      await expect(seat(view, 'Ben').getByTestId('seat-status')).toHaveText('✓ geschätzt');
+      await expect(seat(view, 'Ben').getByTestId('seat-card')).toHaveAccessibleName(
+        'Karte verdeckt',
+      );
+      await expect(view.page.getByTestId('seat-table')).not.toContainText('8');
     }
-    const deck = ben.page.getByTestId(id);
-    await expect(deck).toBeVisible();
-    const { deckBox, parentBox } = await deck.evaluate((node) => ({
-      deckBox: node.getBoundingClientRect().toJSON() as DOMRect,
-      parentBox: (node.parentElement as HTMLElement).getBoundingClientRect().toJSON() as DOMRect,
-    }));
-    expect(deckBox.width).toBeLessThanOrEqual(1000);
-    expect(parentBox.right - parentBox.left).toBeGreaterThan(1000);
-    expect(
-      Math.abs(deckBox.left - parentBox.left - (parentBox.right - deckBox.right)),
-    ).toBeLessThanOrEqual(1);
-    const cards = await deck
-      .locator('.card')
+    await choose(cem, '13');
+    expectNoForeignCards([scrumMaster, ben, cem]);
+
+    await scrumMaster.page.getByTestId('round-reveal').click();
+
+    for (const view of [scrumMaster, ben, cem]) {
+      await expect(view.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
+      await expect(view.page.getByTestId('seat-table')).toContainText('AUFGEDECKT');
+      await expect(view.page.getByTestId('result-vote-name')).toHaveText(['Ben', 'Cem']);
+      await expect(view.page.getByTestId('result-vote-card')).toHaveText(['8', '13']);
+    }
+  },
+);
+
+test(
+  'the card deck is one row of cards of at least 44 px and no horizontal page scrolling at 375 px',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, link } = await createSession(page);
+    const ben = await join(browser, link, 'Ben', { width: 375, height: 800 });
+    await release(scrumMaster, [ben]);
+
+    const group = ben.page.getByTestId('card-deck').getByRole('group', { name: 'Deine Karte' });
+    await expect(group).toBeVisible();
+    const columns = await group.evaluate(
+      (node) => getComputedStyle(node).gridTemplateColumns.split(' ').length,
+    );
+    expect(columns).toBe(11);
+    const boxes = await ben.page
+      .getByTestId('card-deck')
+      .locator('button')
       .evaluateAll((nodes) =>
         nodes.map((node) => node.getBoundingClientRect().toJSON() as DOMRect),
       );
-    expect(cards).toHaveLength(11);
-    for (const box of cards) {
-      expect(box.height).toBeGreaterThan(box.width);
+    expect(boxes).toHaveLength(11);
+    for (const box of boxes) {
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(Math.abs(box.top - boxes[0].top)).toBeLessThanOrEqual(0.5);
     }
-  }
-});
+    expect(
+      await ben.page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
+  },
+);
+
+test(
+  'the card deck is at most 1000 px wide, centred and has portrait cards at 1920 px',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, link } = await createSession(page);
+    const ben = await join(browser, link, 'Ben', { width: 1920, height: 1080 });
+    await scrumMaster.page.getByTestId('issue-release').click();
+
+    for (const id of ['card-deck-locked', 'card-deck']) {
+      if (id === 'card-deck') {
+        await startVoting(scrumMaster.page);
+      }
+      const deck = ben.page.getByTestId(id);
+      await expect(deck).toBeVisible();
+      const { deckBox, parentBox } = await deck.evaluate((node) => ({
+        deckBox: node.getBoundingClientRect().toJSON() as DOMRect,
+        parentBox: (node.parentElement as HTMLElement).getBoundingClientRect().toJSON() as DOMRect,
+      }));
+      expect(deckBox.width).toBeLessThanOrEqual(1000);
+      expect(parentBox.right - parentBox.left).toBeGreaterThan(1000);
+      expect(
+        Math.abs(deckBox.left - parentBox.left - (parentBox.right - deckBox.right)),
+      ).toBeLessThanOrEqual(1);
+      const cards = await deck
+        .locator('button')
+        .evaluateAll((nodes) =>
+          nodes.map((node) => node.getBoundingClientRect().toJSON() as DOMRect),
+        );
+      expect(cards).toHaveLength(11);
+      for (const box of cards) {
+        expect(box.height).toBeGreaterThan(box.width);
+      }
+    }
+  },
+);
 
 interface SeatBox {
   cardTop: number;
@@ -356,8 +366,12 @@ async function seatBoxes(view: View): Promise<SeatBox[]> {
     .locator('li')
     .evaluateAll((seats) =>
       seats.map((seat) => {
-        const card = seat.querySelector('.card')!.getBoundingClientRect();
-        const name = seat.querySelector('.name')!.getBoundingClientRect();
+        const card = seat
+          .querySelector('[data-testid="seat-card"], [data-testid="result-vote-card"]')!
+          .getBoundingClientRect();
+        const name = seat
+          .querySelector('[data-testid="seat-name"], [data-testid="result-vote-name"]')!
+          .getBoundingClientRect();
         return { cardTop: card.top, cardHeight: card.height, nameTop: name.top };
       }),
     );
@@ -375,30 +389,31 @@ for (const viewport of [
   { width: 1440, height: 900 },
   { width: 375, height: 800 },
 ]) {
-  test(`the seats at the table stay aligned with a developer without a vote at ${viewport.width} px`, async ({
-    page,
-    browser,
-  }) => {
-    await page.setViewportSize(viewport);
-    const { scrumMaster, link } = await createSession(page);
-    const ben = await join(browser, link, 'Ben');
-    const cem = await join(browser, link, 'Cem');
-    await release(scrumMaster, [ben, cem]);
-    await choose(ben, '21');
+  test(
+    `the seats at the table stay aligned with a developer without a vote at ${viewport.width} px`,
+    { tag: '@react' },
+    async ({ page, browser }) => {
+      await page.setViewportSize(viewport);
+      const { scrumMaster, link } = await createSession(page);
+      const ben = await join(browser, link, 'Ben');
+      const cem = await join(browser, link, 'Cem');
+      await release(scrumMaster, [ben, cem]);
+      await choose(ben, '21');
 
-    const table = scrumMaster.page.getByTestId('seat-table');
-    await expect(table.getByTestId('seat-status')).toHaveText(['✓ geschätzt', 'ausstehend']);
-    await expect(table.getByTestId('seat-card').nth(1)).toHaveText('…');
-    expectAligned(await seatBoxes(scrumMaster));
+      const table = scrumMaster.page.getByTestId('seat-table');
+      await expect(table.getByTestId('seat-status')).toHaveText(['✓ geschätzt', 'ausstehend']);
+      await expect(table.getByTestId('seat-card').nth(1)).toHaveText('…');
+      expectAligned(await seatBoxes(scrumMaster));
 
-    await scrumMaster.page.getByTestId('round-reveal').click();
-    await expect(scrumMaster.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
-    await expect(table.getByTestId('result-vote-card')).toHaveText('21');
-    await expect(table.getByTestId('seat-card')).toHaveText('–');
-    await expect(table.getByTestId('seat-status')).toHaveText('nicht geschätzt');
-    await table.evaluate((node) =>
-      Promise.all(node.getAnimations({ subtree: true }).map((animation) => animation.finished)),
-    );
-    expectAligned(await seatBoxes(scrumMaster));
-  });
+      await scrumMaster.page.getByTestId('round-reveal').click();
+      await expect(scrumMaster.page.getByTestId('session-phase')).toHaveText('Runde aufgelöst');
+      await expect(table.getByTestId('result-vote-card')).toHaveText('21');
+      await expect(table.getByTestId('seat-card')).toHaveText('–');
+      await expect(table.getByTestId('seat-status')).toHaveText('nicht geschätzt');
+      await table.evaluate((node) =>
+        Promise.all(node.getAnimations({ subtree: true }).map((animation) => animation.finished)),
+      );
+      expectAligned(await seatBoxes(scrumMaster));
+    },
+  );
 }

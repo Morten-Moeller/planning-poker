@@ -1,6 +1,8 @@
 import { act, waitFor } from '@testing-library/react';
+import { useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import type { IssueListResponse, SessionView } from '../../api/api';
+import { useBackend } from '../../api/backend';
 import { revealedDeveloper } from '../../api/examples';
 import { createTestBackend, renderWithBackend } from '../../api/testing/test-backend';
 import type { Answer, FetchCall, TestBackend } from '../../api/testing/test-backend';
@@ -117,4 +119,42 @@ export async function renderInSession(
 
 export function receiveSnapshot(test: TestBackend, snapshot: SessionView): void {
   act(() => test.sockets.last().receive({ type: 'session.state', payload: snapshot }));
+}
+
+type Round = NonNullable<SessionView['round']>;
+
+export function withRound(snapshot: SessionView, changes: Partial<Round>): SessionView {
+  return {
+    ...snapshot,
+    round: snapshot.round === null ? null : { ...snapshot.round, ...changes },
+  };
+}
+
+export function withParticipant(
+  snapshot: SessionView,
+  name: string,
+  changes: Partial<Participant>,
+): SessionView {
+  return {
+    ...snapshot,
+    participants: snapshot.participants.map((participant) =>
+      participant.name === name ? { ...participant, ...changes } : participant,
+    ),
+  };
+}
+
+export function withDeveloper(snapshot: SessionView, name: string, connected = true): SessionView {
+  return {
+    ...snapshot,
+    participants: [
+      ...snapshot.participants,
+      { id: `id-${name.toLowerCase()}`, name, role: 'DEVELOPER', connected, hasVoted: false },
+    ],
+  };
+}
+
+export function SessionPart({ render }: { render: (session: SessionView) => ReactNode }) {
+  const { sessions } = useBackend();
+  const session = useSyncExternalStore(sessions.subscribe, sessions.session);
+  return session === null ? null : render(session);
 }

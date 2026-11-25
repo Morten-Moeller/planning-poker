@@ -336,26 +336,30 @@ describe('SessionPage', () => {
     {
       name: 'the scrum master in DISCUSSION',
       snapshot: discussionScrumMaster,
-      parts: ['issue-panel', 'active-issue'],
+      parts: ['issue-panel', 'round-status'],
     },
     {
       name: 'the scrum master in VOTING',
       snapshot: votingScrumMaster,
-      parts: ['issue-panel', 'active-issue'],
+      parts: ['issue-panel', 'round-status'],
     },
     {
       name: 'the scrum master in REVEALED',
       snapshot: revealedScrumMaster,
-      parts: ['issue-panel', 'active-issue'],
+      parts: ['issue-panel', 'active-issue', 'seat-table'],
     },
-    { name: 'a developer in DISCUSSION', snapshot: discussionDeveloper, parts: ['active-issue'] },
-    { name: 'a developer in VOTING', snapshot: votingDeveloper, parts: ['active-issue'] },
-    { name: 'a viewer in VOTING', snapshot: asViewer(votingDeveloper), parts: ['active-issue'] },
-    { name: 'a developer in REVEALED', snapshot: revealedDeveloper, parts: ['active-issue'] },
+    { name: 'a developer in DISCUSSION', snapshot: discussionDeveloper, parts: ['round-status'] },
+    { name: 'a developer in VOTING', snapshot: votingDeveloper, parts: ['round-status'] },
+    { name: 'a viewer in VOTING', snapshot: asViewer(votingDeveloper), parts: ['round-status'] },
+    {
+      name: 'a developer in REVEALED',
+      snapshot: revealedDeveloper,
+      parts: ['active-issue', 'seat-table'],
+    },
     {
       name: 'a developer in DISCUSSION without an active issue',
       snapshot: { ...discussionDeveloper, activeIssue: null },
-      parts: [],
+      parts: ['round-status'],
     },
   ])('shows $parts in the main area for $name', async ({ snapshot, parts }) => {
     const { room } = await showRoom(snapshot);
@@ -363,6 +367,76 @@ describe('SessionPage', () => {
     expect(mainParts(room)).toEqual(parts);
     expect(screen.queryByTestId('lobby-waiting')).toBeNull();
     expect(screen.queryByTestId('last-result')).toBeNull();
+  });
+
+  it.each([
+    { name: 'DISCUSSION', snapshot: discussionDeveloper, table: false },
+    { name: 'VOTING', snapshot: votingDeveloper, table: true },
+  ])('puts the active issue into the round status in $name', async ({ snapshot, table }) => {
+    await showRoom(snapshot);
+
+    const status = screen.getByTestId('round-status');
+    expect(within(status).getByTestId('active-issue-title').textContent).toBe('Login page');
+    expect(within(status).queryByTestId('seat-table') !== null).toBe(table);
+    expect(screen.getAllByTestId('active-issue')).toHaveLength(1);
+  });
+
+  it('shows the revealed table under the active issue in REVEALED', async () => {
+    await showRoom(revealedDeveloper);
+
+    expect(screen.queryByTestId('round-status')).toBeNull();
+    expect(screen.getByTestId('seat-table-title').textContent).toBe('AUFGEDECKT');
+    expect(screen.getAllByTestId('result-vote').length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    {
+      name: 'the scrum master in DISCUSSION',
+      snapshot: discussionScrumMaster,
+      part: 'round-start',
+    },
+    { name: 'the scrum master in VOTING', snapshot: votingScrumMaster, part: 'round-reveal' },
+    { name: 'a developer in DISCUSSION', snapshot: discussionDeveloper, part: 'card-deck-locked' },
+    { name: 'a developer in VOTING', snapshot: votingDeveloper, part: 'card-deck' },
+    {
+      name: 'a viewer in DISCUSSION',
+      snapshot: asViewer(discussionDeveloper),
+      part: 'viewer-hint',
+    },
+    { name: 'a viewer in VOTING', snapshot: asViewer(votingDeveloper), part: 'viewer-hint' },
+  ])(
+    'shows the footer with $part as the last row of the room for $name',
+    async ({ snapshot, part }) => {
+      const { room } = await showRoom(snapshot);
+
+      const footer = screen.getByTestId('round-footer');
+      expect(room.lastElementChild?.contains(footer)).toBe(true);
+      expect(room.lastElementChild).not.toBe(within(room).getByTestId('room-main'));
+      expect(within(room).getByTestId('room-main').contains(footer)).toBe(false);
+      expect(within(footer).getByTestId(part)).toBeTruthy();
+    },
+  );
+
+  it.each([
+    { name: 'the scrum master in LOBBY', snapshot: lobbyScrumMaster },
+    { name: 'a developer in LOBBY', snapshot: lobbyDeveloper },
+    { name: 'the scrum master in REVEALED', snapshot: revealedScrumMaster },
+    { name: 'a developer in REVEALED', snapshot: revealedDeveloper },
+  ])('shows no footer for $name', async ({ snapshot }) => {
+    const { room } = await showRoom(snapshot);
+
+    expect(screen.queryByTestId('round-footer')).toBeNull();
+    expect(room.children).toHaveLength(2);
+  });
+
+  it('removes the footer when the round is revealed', async () => {
+    const test = await showRoom(votingDeveloper);
+    expect(screen.queryByTestId('round-footer')).not.toBeNull();
+
+    receive(test, revealedDeveloper);
+
+    expect(screen.queryByTestId('round-footer')).toBeNull();
+    expect(screen.queryByTestId('card-deck')).toBeNull();
   });
 
   it.each([

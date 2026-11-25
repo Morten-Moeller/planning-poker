@@ -5,7 +5,8 @@ sources: [frontend-react/src/session/**]
 # React frontend: session room
 
 The room of the React frontend in `frontend-react/src/session/` (spec 0058: grid, card motif, side
-column, lobby; spec 0059: issue panel, active issue, switch dialog). The rules of `project-rules/frontend-react.md` hold here as well; texts,
+column, lobby; spec 0059: issue panel, active issue, switch dialog; spec 0060: round status, timer,
+seat table, card deck, footer). The rules of `project-rules/frontend-react.md` hold here as well; texts,
 `data-testid` and the look follow the Angular room (`project-rules/frontend.md`, Session page grid
 and Design Werkbank part B).
 
@@ -35,9 +36,14 @@ and Design Werkbank part B).
   for the room. A change of the elements around `main` in `shell/app-shell.tsx` needs a look at
   these two selectors.
 - Main area, in this order: `IssuePanel` (scrum master, every phase), the waiting state with the
-  last result (developer and viewer in `LOBBY`), `ActiveIssue` (every role, with an active issue
-  in the snapshot). The round status, the deck, the footer and the result come with specs 0060
-  and 0061; until then the active issue stands in the main area without a frame.
+  last result (developer and viewer in `LOBBY`), then the active issue: inside `RoundStatus` in
+  `DISCUSSION` and `VOTING`, alone in `LOBBY`, and followed by the revealed `SeatTable` in
+  `REVEALED`. The result of the round, the footer in `REVEALED`, the confirm dialog and the
+  history come with spec 0061.
+- Footer: in `DISCUSSION` and `VOTING` the room has a third child after the main area, the
+  second row of the grid (`RoundFooter`, `round-footer`). From 720 px it stays in the window;
+  below that it is sticky at the bottom of the window. No footer in `LOBBY` and, until spec
+  0061, in `REVEALED`.
 
 ## Card motif
 
@@ -144,6 +150,53 @@ and Design Werkbank part B).
   otherwise the link is not shown (`active-issue-link`, `issue-preview-link`,
   `last-result-open`).
 
+## Round
+
+- `RoundStatus` (`round-status.tsx`, `round-status`) takes the snapshot, the motif and the
+  active issue as children. The bar shows in `DISCUSSION` `round-phase`, `round-number` and, with
+  a timer of the session, `discussion-timer`; in `VOTING` `round-number`, `vote-counter`,
+  `vote-progress` and, with `round.deadline`, `RoundTimer`; always `motif-name` (`motifName`,
+  hidden below 600 px). The seat table follows the children in `VOTING`.
+- `voteProgress` (`vote-progress.ts`) counts the connected developers and their votes; the
+  scrum master, viewers and disconnected developers are not counted. `vote-progress` is
+  `Progress` of `@ui-sdk/react/progress` with `value` and `max` as counts and `ProgressTrack`;
+  the fill is an own element with the rounded percent as width, because `ProgressIndicator`
+  sets an unrounded width and shows a full bar for `max` 0.
+- `RoundTimer` (`round-timer.tsx`) counts every second with `sessions.serverNow()`, never with
+  the client clock alone. The last 10 s have the class `final`, 0 shows „Zeit abgelaufen“.
+  `round-timer-live` changes only at the first state, every 15 s and in the last 10 s, so a
+  screen reader does not read every second.
+- `SeatTable` (`seat-table.tsx`) shows one seat per developer. Before the reveal a seat has no
+  card value in the DOM: a hidden card after a vote, „…“ or „getrennt“ without one. In
+  `REVEALED` a vote is `result-vote` with `result-vote-card`, also for a developer who left; a
+  developer without a vote keeps `seat`. `outlierCards` (`outliers.ts`) gives the lowest and the
+  highest number card when they are more than two places apart; the rule is the one of
+  `frontend/src/app/session/outliers.ts` and changes in both files together. The cards turn one
+  after another (40 ms steps).
+- `PokerCard` (`card.tsx`) is a `button` in the states `open`, `chosen` and `locked` and an
+  element with `role="img"` in `hidden` and `revealed`; `pending` has no role. The button has
+  `data-state`, `aria-pressed` and, locked or while a vote is sent, `aria-disabled="true"`
+  (never `disabled`, so it keeps the focus). The value stands in an `aria-hidden` span; the name
+  is the `aria-label` „Karte …“. `?` and `COFFEE` are drawn by `CardGlyph` (`card-glyph.tsx`),
+  React components with the paths of `frontend/public/question-mark.svg` and
+  `coffee-break.svg`; a change of a drawing is made in both frontends. The wrapper of a card in the
+  deck has 8 px padding on top from 600 px, the wrapper of a card at a seat a gap of 6 px: in the
+  Angular frontend the host of the card takes these values from the rules `.deck` and `.seat` of
+  the parent component, and the measures of both frontends are equal only with them.
+- `CardDeck` (`card-deck.tsx`) is `card-deck` in `VOTING` and `card-deck-locked` in
+  `DISCUSSION`. A click, Enter or Space sends `PUT …/vote`; until the answer no card takes a
+  click. The chosen card is `round.myVote` of the snapshot, never a local value. Arrow keys,
+  Home and End move the focus; the card with the focus and the chosen card are scrolled into
+  the row. Below 600 px the deck is one row that scrolls sideways.
+- Motion: a locked card wiggles on a click and on the first mouse move; the cards unlock one
+  after another (`data-unlock`, `--unlock-index`) when the same deck changes from locked to
+  open; revealed cards turn over. `prefersReducedMotion()` (`reduced-motion.ts`) switches all
+  three off, and the CSS has the same media query.
+- `RoundFooter` (`round-footer.tsx`): the scrum master has `discussion-hint` with `round-start`
+  in `DISCUSSION` and `pending-hint` or `all-voted-hint` (with `absent-hint`) with
+  `round-reveal` in `VOTING`; a developer has the deck; a viewer has `viewer-hint`. A command
+  button is disabled until the answer.
+
 ## Tests
 
 - Every part has its test next to it. `testing/session-snapshots.tsx` renders a part inside a
@@ -158,8 +211,12 @@ and Design Werkbank part B).
   of `renderInSession` (`issuePage(items, nextPage, total)`); without it the list is empty.
   `sessionAnswer` gives the same answers for a test with its own render. Tests with a popup of
   the UI SDK call `installPopupAnimations()` (`testing/popup-animations.ts`).
-- End-to-end (spec 0059): the flows that reach the room up to the release of an issue have the
-  tag `@react`: `create-and-join`, `issue-filter`, `preferences`, `recent-sessions`, and the
-  tests of `session-room`, `theme`, `theme-toggle`, `layout`, `project-picker` and `viewer` that
-  need no round. The tests that need the round status, the deck, the footer or a result get the
-  tag with specs 0060 and 0061 (`project-rules/testing.md`).
+- A test of a part that takes the snapshot as a prop renders it inside `SessionPart`
+  (`testing/session-snapshots.tsx`), which reads the snapshot of the store; `withRound`,
+  `withParticipant` and `withDeveloper` build the snapshots the examples do not have. A test of
+  a timer uses the fake clock of vitest with `shouldAdvanceTime`.
+- jsdom sends the end of an animation to React only as `webkitAnimationEnd`; `card.spec.tsx`
+  sends both event names.
+- End-to-end: the flows up to the reveal of a round have the tag `@react` (specs 0059 and
+  0060). The tests that need the result of a round get the tag with spec 0061
+  (`project-rules/testing.md`).

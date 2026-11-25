@@ -69,82 +69,84 @@ test(
   },
 );
 
-test('the scrum master releases an issue and the developer sees it without reload', async ({
-  page,
-  browser,
-}) => {
-  const { scrumMaster, developer } = await openRoom(page, browser);
+test(
+  'the scrum master releases an issue and the developer sees it without reload',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, developer } = await openRoom(page, browser);
 
-  await expect(scrumMaster.getByTestId('issue-panel')).toBeVisible();
-  await expect(scrumMaster.getByTestId('issue-result')).toHaveCount(2);
-  await expect(scrumMaster.getByTestId('issue-load-more')).toHaveCount(0);
-  await expect(scrumMaster.getByTestId('issue-search-input')).toBeVisible();
-  await expect(scrumMaster.getByTestId('issue-search-submit')).toBeVisible();
-  await expect(result(scrumMaster, 42)).toHaveAttribute('aria-pressed', 'true');
-  const preview = scrumMaster.getByTestId('issue-preview');
-  await expect(preview.getByTestId('issue-preview-iid')).toHaveText('#42');
-  await expect(preview.getByTestId('issue-preview-title')).toHaveText('Login page');
-  await expect(preview.getByTestId('issue-preview-link')).toHaveAttribute(
-    'href',
-    'https://gitlab.example/group/project/-/issues/42',
-  );
+    await expect(scrumMaster.getByTestId('issue-panel')).toBeVisible();
+    await expect(scrumMaster.getByTestId('issue-result')).toHaveCount(2);
+    await expect(scrumMaster.getByTestId('issue-load-more')).toHaveCount(0);
+    await expect(scrumMaster.getByTestId('issue-search-input')).toBeVisible();
+    await expect(scrumMaster.getByTestId('issue-search-submit')).toBeVisible();
+    await expect(result(scrumMaster, 42)).toHaveAttribute('aria-pressed', 'true');
+    const preview = scrumMaster.getByTestId('issue-preview');
+    await expect(preview.getByTestId('issue-preview-iid')).toHaveText('#42');
+    await expect(preview.getByTestId('issue-preview-title')).toHaveText('Login page');
+    await expect(preview.getByTestId('issue-preview-link')).toHaveAttribute(
+      'href',
+      'https://gitlab.example/group/project/-/issues/42',
+    );
 
-  await expect(developer.getByTestId('lobby-waiting')).toBeVisible();
-  await expect(developer.getByTestId('active-issue')).toHaveCount(0);
-  await expect(developer.getByTestId('issue-panel')).toHaveCount(0);
-  await expect(developer.getByTestId('issue-release')).toHaveCount(0);
+    await expect(developer.getByTestId('lobby-waiting')).toBeVisible();
+    await expect(developer.getByTestId('active-issue')).toHaveCount(0);
+    await expect(developer.getByTestId('issue-panel')).toHaveCount(0);
+    await expect(developer.getByTestId('issue-release')).toHaveCount(0);
 
-  await result(scrumMaster, 43).click();
-  await expect(preview.getByTestId('issue-preview-iid')).toHaveText('#43');
-  await expect(preview.getByTestId('issue-preview-title')).toHaveText('Password reset');
+    await result(scrumMaster, 43).click();
+    await expect(preview.getByTestId('issue-preview-iid')).toHaveText('#43');
+    await expect(preview.getByTestId('issue-preview-title')).toHaveText('Password reset');
 
-  await scrumMaster.getByTestId('issue-release').click();
+    await scrumMaster.getByTestId('issue-release').click();
 
-  await expect(scrumMaster.getByTestId('session-phase')).toHaveText('Diskussion');
-  await expect(developer.getByTestId('lobby-waiting')).toHaveCount(0);
-  await expect(developer.getByTestId('discussion-hint')).toBeVisible();
-  await expect(developer.getByTestId('card-deck')).toHaveCount(0);
-  await expect(developer.getByTestId('active-issue-title')).toHaveText('Password reset');
-  await expect(developer.getByTestId('active-issue-description')).toContainText(
-    'reset my password',
-  );
-  const link = developer.getByTestId('active-issue-link');
-  await expect(link).toHaveAttribute('href', 'https://gitlab.example/group/project/-/issues/43');
-  await expect(link).toHaveAttribute('target', '_blank');
-  await expect(link).toHaveAttribute('rel', 'noopener');
-  await expect(developer.getByTestId('issue-panel')).toHaveCount(0);
-  await expect(developer.getByTestId('issue-release')).toHaveCount(0);
-});
+    await expect(scrumMaster.getByTestId('session-phase')).toHaveText('Diskussion');
+    await expect(developer.getByTestId('lobby-waiting')).toHaveCount(0);
+    await expect(developer.getByTestId('discussion-hint')).toBeVisible();
+    await expect(developer.getByTestId('card-deck')).toHaveCount(0);
+    await expect(developer.getByTestId('active-issue-title')).toHaveText('Password reset');
+    await expect(developer.getByTestId('active-issue-description')).toContainText(
+      'reset my password',
+    );
+    const link = developer.getByTestId('active-issue-link');
+    await expect(link).toHaveAttribute('href', 'https://gitlab.example/group/project/-/issues/43');
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', 'noopener');
+    await expect(developer.getByTestId('issue-panel')).toHaveCount(0);
+    await expect(developer.getByTestId('issue-release')).toHaveCount(0);
+  },
+);
 
-test('switching the issue while voting asks first and can be cancelled', async ({
-  page,
-  browser,
-}) => {
-  const { scrumMaster, developer } = await openRoom(page, browser);
-  const release = scrumMaster.getByTestId('issue-release');
-  await release.click();
-  await expect(developer.getByTestId('active-issue-title')).toHaveText('Login page');
-  await startVoting(scrumMaster);
+test(
+  'switching the issue while voting asks first and can be cancelled',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, developer } = await openRoom(page, browser);
+    const release = scrumMaster.getByTestId('issue-release');
+    await release.click();
+    await expect(developer.getByTestId('active-issue-title')).toHaveText('Login page');
+    await startVoting(scrumMaster);
 
-  await expect(release).toHaveText('Issue wechseln');
-  await expect(release).toBeDisabled();
+    await expect(release).toHaveText('Issue wechseln');
+    await expect(release).toBeDisabled();
 
-  await result(scrumMaster, 43).click();
-  await expect(release).toBeEnabled();
-  await release.click();
-  await expect(scrumMaster.getByTestId('switch-dialog')).toBeVisible();
-  await scrumMaster.getByTestId('switch-cancel').click();
-  await expect(scrumMaster.getByTestId('switch-dialog')).toHaveCount(0);
-  await expect(scrumMaster.getByTestId('active-issue-title')).toHaveText('Login page');
-  await expect(developer.getByTestId('active-issue-title')).toHaveText('Login page');
+    await result(scrumMaster, 43).click();
+    await expect(release).toBeEnabled();
+    await release.click();
+    await expect(scrumMaster.getByTestId('switch-dialog')).toBeVisible();
+    await scrumMaster.getByTestId('switch-cancel').click();
+    await expect(scrumMaster.getByTestId('switch-dialog')).toHaveCount(0);
+    await expect(scrumMaster.getByTestId('active-issue-title')).toHaveText('Login page');
+    await expect(developer.getByTestId('active-issue-title')).toHaveText('Login page');
 
-  await release.click();
-  await scrumMaster.getByTestId('switch-confirm').click();
+    await release.click();
+    await scrumMaster.getByTestId('switch-confirm').click();
 
-  await expect(scrumMaster.getByTestId('active-issue-title')).toHaveText('Password reset');
-  await expect(developer.getByTestId('active-issue-title')).toHaveText('Password reset');
-  await expect(release).toBeDisabled();
-});
+    await expect(scrumMaster.getByTestId('active-issue-title')).toHaveText('Password reset');
+    await expect(developer.getByTestId('active-issue-title')).toHaveText('Password reset');
+    await expect(release).toBeDisabled();
+  },
+);
 
 test(
   'script content of an issue description does not run',

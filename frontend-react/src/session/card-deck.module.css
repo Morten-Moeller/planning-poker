@@ -1,0 +1,62 @@
+.deck {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1000px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-m);
+  padding-top: var(--app-space-s);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--app-space-s) var(--app-space-m);
+}
+
+.title {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+}
+
+.hint {
+  margin: 0;
+  font: var(--mat-sys-label-large);
+  font-weight: 400;
+  color: var(--app-on-surface-muted);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+  align-items: end;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+@media (max-width: 599px) {
+  .deck {
+    gap: var(--app-space-xs);
+    padding-top: 0;
+  }
+
+  .cards {
+    grid-template-columns: repeat(11, 48px);
+    gap: var(--app-space-s);
+    margin-inline: calc(-1 * var(--app-space-m));
+    padding: 14px var(--app-space-m) var(--app-space-s);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--app-space-m);
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
+
+  .cards > * {
+    scroll-snap-align: start;
+  }
+}

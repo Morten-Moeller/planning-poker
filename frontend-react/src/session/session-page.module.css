@@ -50,6 +50,16 @@ main:has(> .room) {
   padding: var(--app-space-xl) var(--app-space-2xl) var(--app-space-2xl);
 }
 
+.footer {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-surface);
+}
+
 @media (min-width: 720px) {
   div:has(> main > .room) {
     flex: none;
@@ -73,6 +83,16 @@ main:has(> .room) {
     grid-column: 1;
     overflow-y: visible;
     padding: var(--app-space-m) var(--app-space-m) var(--app-space-l);
+  }
+
+  .footer {
+    grid-column: 1;
+    grid-row: 2;
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    overflow: visible;
+    border-top: none;
   }
 
   .side {
