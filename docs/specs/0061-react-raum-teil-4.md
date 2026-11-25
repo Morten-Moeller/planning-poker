@@ -1,14 +1,14 @@
 ---
 id: "0061"
 title: "React-Frontend: Raum Teil 4 mit Auflösung und Abschluss"
-status: Review
+status: done
 risk: high
 adrs: ["0004", "0016"]
 owner: Morten Möller
 created: 2026-11-25
 updated: 2026-11-25
-pr: ""
-note: freigegeben in der Session
+pr: "#72"
+note: alle Kriterien erfüllt
 ---
 
 # React-Frontend: Raum Teil 4 mit Auflösung und Abschluss
