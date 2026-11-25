@@ -1,9 +1,9 @@
 import { act, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import type { SessionView } from '../../api/api';
+import type { IssueListResponse, SessionView } from '../../api/api';
 import { revealedDeveloper } from '../../api/examples';
 import { createTestBackend, renderWithBackend } from '../../api/testing/test-backend';
-import type { Answer, TestBackend } from '../../api/testing/test-backend';
+import type { Answer, FetchCall, TestBackend } from '../../api/testing/test-backend';
 
 type Participant = SessionView['participants'][number];
 type HistoryEntry = SessionView['history'][number];
@@ -58,10 +58,39 @@ export function inRound(snapshot: SessionView, number: number): SessionView {
 
 const NO_CONTENT: Answer = () => new Response(null, { status: 204 });
 
-export function sessionBackend(snapshot: SessionView, command: Answer = NO_CONTENT): TestBackend {
-  const test = createTestBackend((call) =>
-    call.method === 'GET' ? Response.json(snapshot) : command(call),
-  );
+const ISSUE_LIST = /\/issues(\?|$)/;
+
+export function isIssueList(call: FetchCall): boolean {
+  return call.method === 'GET' && ISSUE_LIST.test(call.url);
+}
+
+export function issuePage(
+  items: IssueListResponse['items'] = [],
+  nextPage: number | null = null,
+  total: number | null = items.length,
+): Response {
+  return Response.json({ items, nextPage, total } satisfies IssueListResponse);
+}
+
+export function sessionAnswer(
+  snapshot: SessionView,
+  command: Answer = NO_CONTENT,
+  issues: Answer = () => issuePage(),
+): Answer {
+  return (call) => {
+    if (isIssueList(call)) {
+      return issues(call);
+    }
+    return call.method === 'GET' ? Response.json(snapshot) : command(call);
+  };
+}
+
+export function sessionBackend(
+  snapshot: SessionView,
+  command: Answer = NO_CONTENT,
+  issues?: Answer,
+): TestBackend {
+  const test = createTestBackend(sessionAnswer(snapshot, command, issues));
   test.backend.tokens.store(snapshot.sessionId, {
     participantId: snapshot.me.participantId,
     token: TOKEN,
@@ -73,8 +102,9 @@ export async function renderInSession(
   ui: ReactNode,
   snapshot: SessionView,
   command: Answer = NO_CONTENT,
+  issues?: Answer,
 ) {
-  const test = sessionBackend(snapshot, command);
+  const test = sessionBackend(snapshot, command, issues);
   const view = renderWithBackend(ui, test.backend);
   act(() => test.backend.sessions.enter(snapshot.sessionId));
   await waitFor(() => {

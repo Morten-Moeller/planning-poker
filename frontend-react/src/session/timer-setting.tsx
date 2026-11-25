@@ -10,14 +10,15 @@ import {
 import { useState } from 'react';
 import { useBackend } from '../api/backend';
 import { TIMER_OFF } from '../api/preferences-store';
+import select from './filled-select.module.css';
 import { t } from './messages';
-import type { MessageKey } from './messages';
+import type { TextKey } from './messages';
 import styles from './timer-setting.module.css';
 import { useSession } from './use-session';
 
 export interface TimerOption {
   seconds: number;
-  label: MessageKey;
+  label: TextKey;
 }
 
 export const TIMER_OPTIONS: readonly TimerOption[] = [
@@ -51,9 +52,9 @@ export function TimerSetting({ sessionId }: { sessionId: string }) {
   };
 
   return (
-    <Field className={styles.field}>
-      <div className={styles.box}>
-        <FieldLabel className={styles.label}>{t('timerSetting.label')}</FieldLabel>
+    <Field className={select.field}>
+      <div className={select.box}>
+        <FieldLabel className={select.label}>{t('timerSetting.label')}</FieldLabel>
         <Select
           items={items}
           value={String(value)}
@@ -64,20 +65,20 @@ export function TimerSetting({ sessionId }: { sessionId: string }) {
             }
           }}
         >
-          <SelectTrigger className={styles.trigger} data-testid="timer-setting">
-            <SelectValue className={styles.value} />
-            <span className={styles.arrow} aria-hidden="true" />
+          <SelectTrigger className={select.trigger} data-testid="timer-setting">
+            <SelectValue className={select.value} />
+            <span className={select.arrow} aria-hidden="true" />
           </SelectTrigger>
-          <SelectContent className={styles.content} align="start" sideOffset={0}>
+          <SelectContent className={select.content} align="start" sideOffset={0}>
             {items.map((item) => (
               <SelectItem
                 key={item.value}
-                className={styles.item}
+                className={select.item}
                 value={item.value}
                 data-testid={`timer-option-${item.value}`}
               >
                 {item.label}
-                <SelectItemIndicator className={styles.check} aria-hidden="true" />
+                <SelectItemIndicator className={select.check} aria-hidden="true" />
               </SelectItem>
             ))}
           </SelectContent>

@@ -111,33 +111,34 @@ test('a viewer joins through the viewer link, sees the round without cards and i
   expect(new URL(paula.url()).pathname).toBe(`/session/${sessionId}`);
 });
 
-test('a link without a code and a link with a changed code show the hints', async ({
-  page: anna,
-  browser,
-}) => {
-  const sessionId = await createSession(anna);
-  const developerLink = (await anna.getByTestId('share-link-developer').textContent()) ?? '';
+test(
+  'a link without a code and a link with a changed code show the hints',
+  { tag: '@react' },
+  async ({ page: anna, browser }) => {
+    const sessionId = await createSession(anna);
+    const developerLink = (await anna.getByTestId('share-link-developer').textContent()) ?? '';
 
-  const withoutCode = await open(browser, `/session/${sessionId}/join`);
-  await expect(withoutCode.getByTestId('join-invite-missing')).toHaveText(
-    'Zum Beitreten brauchst du einen Einladungslink vom Scrum Master.',
-  );
-  await expect(withoutCode.getByTestId('join-form')).toHaveCount(0);
+    const withoutCode = await open(browser, `/session/${sessionId}/join`);
+    await expect(withoutCode.getByTestId('join-invite-missing')).toHaveText(
+      'Zum Beitreten brauchst du einen Einladungslink vom Scrum Master.',
+    );
+    await expect(withoutCode.getByTestId('join-form')).toHaveCount(0);
 
-  const room = await open(browser, `/session/${sessionId}`);
-  await expect(room).toHaveURL(`/session/${sessionId}/join`);
-  await expect(room.getByTestId('join-invite-missing')).toBeVisible();
+    const room = await open(browser, `/session/${sessionId}`);
+    await expect(room).toHaveURL(`/session/${sessionId}/join`);
+    await expect(room.getByTestId('join-invite-missing')).toBeVisible();
 
-  const changed = new URL(developerLink);
-  const code = changed.searchParams.get('invite') ?? '';
-  changed.searchParams.set('invite', `${code.slice(1)}x`);
-  const withChangedCode = await open(browser, changed.toString());
-  await withChangedCode.getByTestId('join-name').fill('Cem');
-  await withChangedCode.getByTestId('join-submit').click();
-  await expect(withChangedCode.getByTestId('join-invite-invalid')).toHaveText(
-    'Der Einladungslink ist ungültig. Bitte den Scrum Master um einen neuen.',
-  );
-  await expect(withChangedCode.getByTestId('join-form')).toHaveCount(0);
-  await expect(withChangedCode.getByTestId('error-banner')).toHaveCount(0);
-  await expect(anna.getByTestId('session-participant-count')).toHaveText('1');
-});
+    const changed = new URL(developerLink);
+    const code = changed.searchParams.get('invite') ?? '';
+    changed.searchParams.set('invite', `${code.slice(1)}x`);
+    const withChangedCode = await open(browser, changed.toString());
+    await withChangedCode.getByTestId('join-name').fill('Cem');
+    await withChangedCode.getByTestId('join-submit').click();
+    await expect(withChangedCode.getByTestId('join-invite-invalid')).toHaveText(
+      'Der Einladungslink ist ungültig. Bitte den Scrum Master um einen neuen.',
+    );
+    await expect(withChangedCode.getByTestId('join-form')).toHaveCount(0);
+    await expect(withChangedCode.getByTestId('error-banner')).toHaveCount(0);
+    await expect(anna.getByTestId('session-participant-count')).toHaveText('1');
+  },
+);

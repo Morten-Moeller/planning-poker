@@ -1,3 +1,5 @@
+import type { SessionView } from './api';
+
 export const MOTIF_COUNT = 5;
 
 export const LOBBY_MOTIF = 0;
@@ -25,4 +27,11 @@ export function motifFor(sessionId: string, issueIid: number, round: number): nu
     previous = motif;
   }
   return motif;
+}
+
+export function motifOf(session: SessionView): number {
+  if (session.phase === 'LOBBY' || session.activeIssue === null || session.round === null) {
+    return LOBBY_MOTIF;
+  }
+  return motifFor(session.sessionId, session.activeIssue.iid, session.round.number);
 }

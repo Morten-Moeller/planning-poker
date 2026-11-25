@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api/api-error';
-import { lobbyDeveloper, lobbyScrumMaster } from '../api/examples';
+import { motifFor } from '../api/card-motif';
+import { lobbyDeveloper, lobbyScrumMaster, votingDeveloper } from '../api/examples';
 import type { SessionView } from '../api/examples';
 import { createTestBackend, renderWithBackend } from '../api/testing/test-backend';
 import { AppShell } from './app-shell';
@@ -21,7 +22,7 @@ const lobbyViewer: SessionView = {
 
 function renderShell(systemDark: boolean, path = '/', snapshot: SessionView | null = null) {
   vi.stubGlobal('matchMedia', () => ({ matches: systemDark, addEventListener: () => undefined }));
-  const { backend } = createTestBackend(() => Response.json(snapshot));
+  const { backend, sockets } = createTestBackend(() => Response.json(snapshot));
   const theme = createThemeStore(window, backend.preferences);
   theme.start();
   renderWithBackend(
@@ -34,7 +35,7 @@ function renderShell(systemDark: boolean, path = '/', snapshot: SessionView | nu
     backend,
     path,
   );
-  return { toggle: screen.getByTestId('theme-toggle'), backend };
+  return { toggle: screen.getByTestId('theme-toggle'), backend, sockets };
 }
 
 describe('AppShell', () => {
@@ -124,6 +125,8 @@ describe('AppShell', () => {
     const sessionId = screen.getByTestId('toolbar-session-id');
     expect(motif.getAttribute('aria-hidden')).toBe('true');
     expect(motif.textContent).toBe('');
+    expect(motif.hasAttribute('data-filled')).toBe(false);
+    expect(motif.className).not.toMatch(/motif-\d/);
     expect(toolbar.firstElementChild).toBe(motif);
     expect(motif.nextElementSibling).toBe(home);
     expect(home.nextElementSibling).toBe(sessionId);
@@ -171,6 +174,33 @@ describe('AppShell', () => {
     expect(screen.queryByTestId('toolbar-motif')).toBeNull();
     expect(screen.queryByTestId('toolbar-session-id')).toBeNull();
     expect(screen.queryByTestId('toolbar-me')).toBeNull();
+  });
+
+  it('fills the motif field with the motif of the lobby and then of the round', async () => {
+    const { backend, sockets } = renderShell(false, '/', lobbyDeveloper);
+    backend.tokens.store(lobbyDeveloper.sessionId, {
+      participantId: lobbyDeveloper.me.participantId,
+      token: 'token-of-me',
+    });
+
+    act(() => backend.sessions.enter(lobbyDeveloper.sessionId));
+    await waitFor(() => expect(sockets.sockets.length).toBe(1));
+
+    const motif = screen.getByTestId('toolbar-motif');
+    expect(motif.getAttribute('data-filled')).toBe('true');
+    expect(motif.classList.contains('motif-0')).toBe(true);
+    expect(motif.getAttribute('aria-hidden')).toBe('true');
+
+    const round: SessionView = {
+      ...votingDeveloper,
+      round: votingDeveloper.round === null ? null : { ...votingDeveloper.round, number: 3 },
+    };
+    const expected = motifFor(round.sessionId, round.activeIssue?.iid ?? 0, 3);
+    expect(round.round?.number).toBe(3);
+    act(() => sockets.last().receive({ type: 'session.state', payload: round }));
+
+    const classes = [...screen.getByTestId('toolbar-motif').classList];
+    expect(classes.filter((name) => /^motif-\d$/.test(name))).toEqual([`motif-${expected}`]);
   });
 
   it('shows no name when the own participant is not in the list', async () => {

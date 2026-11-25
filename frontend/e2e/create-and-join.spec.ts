@@ -47,53 +47,54 @@ test(
   },
 );
 
-test('creates a session and opens the room as scrum master with the share block', async ({
-  page,
-  context,
-  baseURL,
-}) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseURL });
+test(
+  'creates a session and opens the room as scrum master with the share block',
+  { tag: '@react' },
+  async ({ page, context, baseURL }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseURL });
 
-  await createSession(page);
-  const sessionId = await createdSessionId(page);
+    await createSession(page);
+    const sessionId = await createdSessionId(page);
 
-  await expect(page.getByTestId('session-role')).toHaveText('Scrum Master');
-  await expect(page.getByTestId('session-share')).toBeVisible();
-  const prefix = `${baseURL}/session/${sessionId}/join?invite=`;
-  const developerLink = (await page.getByTestId('share-link-developer').textContent()) ?? '';
-  const viewerLink = (await page.getByTestId('share-link-viewer').textContent()) ?? '';
-  expect(developerLink.startsWith(prefix)).toBe(true);
-  expect(developerLink.slice(prefix.length)).toMatch(INVITE);
-  expect(viewerLink.startsWith(prefix)).toBe(true);
-  expect(viewerLink.endsWith(VIEWER_SUFFIX)).toBe(true);
-  expect(viewerLink.slice(prefix.length, -VIEWER_SUFFIX.length)).toMatch(INVITE);
-  expect(viewerLink).not.toContain(developerLink.slice(prefix.length));
-  await expect(page.getByTestId('share-session-id')).toHaveCount(0);
+    await expect(page.getByTestId('session-role')).toHaveText('Scrum Master');
+    await expect(page.getByTestId('session-share')).toBeVisible();
+    const prefix = `${baseURL}/session/${sessionId}/join?invite=`;
+    const developerLink = (await page.getByTestId('share-link-developer').textContent()) ?? '';
+    const viewerLink = (await page.getByTestId('share-link-viewer').textContent()) ?? '';
+    expect(developerLink.startsWith(prefix)).toBe(true);
+    expect(developerLink.slice(prefix.length)).toMatch(INVITE);
+    expect(viewerLink.startsWith(prefix)).toBe(true);
+    expect(viewerLink.endsWith(VIEWER_SUFFIX)).toBe(true);
+    expect(viewerLink.slice(prefix.length, -VIEWER_SUFFIX.length)).toMatch(INVITE);
+    expect(viewerLink).not.toContain(developerLink.slice(prefix.length));
+    await expect(page.getByTestId('share-session-id')).toHaveCount(0);
 
-  await page.getByTestId('copy-link-developer').click();
-  await expect(page.getByTestId('copy-link-developer-done')).toHaveText('Kopiert');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(developerLink);
+    await page.getByTestId('copy-link-developer').click();
+    await expect(page.getByTestId('copy-link-developer-done')).toHaveText('Kopiert');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(developerLink);
 
-  await page.getByTestId('copy-link-viewer').click();
-  await expect(page.getByTestId('copy-link-viewer-done')).toHaveText('Kopiert');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(viewerLink);
-});
+    await page.getByTestId('copy-link-viewer').click();
+    await expect(page.getByTestId('copy-link-viewer-done')).toHaveText('Kopiert');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(viewerLink);
+  },
+);
 
-test('a developer joins through the link in a second browser context', async ({
-  page,
-  browser,
-}) => {
-  await createSession(page);
-  await createdSessionId(page);
-  const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
+test(
+  'a developer joins through the link in a second browser context',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    await createSession(page);
+    await createdSessionId(page);
+    const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
 
-  const developer = await joinInNewContext(browser, link, 'Ben');
+    const developer = await joinInNewContext(browser, link, 'Ben');
 
-  await expect(developer.getByTestId('session-role')).toHaveText('Entwickler');
-  await expect(developer.getByTestId('session-participant-count')).toHaveText('2');
-  await expect(page.getByTestId('session-participant-count')).toHaveText('2');
-  await developer.context().close();
-});
+    await expect(developer.getByTestId('session-role')).toHaveText('Entwickler');
+    await expect(developer.getByTestId('session-participant-count')).toHaveText('2');
+    await expect(page.getByTestId('session-participant-count')).toHaveText('2');
+    await developer.context().close();
+  },
+);
 
 test(
   'an unknown issue shows the message at the form and creates no session',
@@ -132,38 +133,44 @@ test(
   },
 );
 
-test('a taken name shows the message on the join page', async ({ page, browser }) => {
-  await createSession(page);
-  await createdSessionId(page);
-  const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
+test(
+  'a taken name shows the message on the join page',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    await createSession(page);
+    await createdSessionId(page);
+    const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
 
-  const developer = await joinInNewContext(browser, link, 'anna');
+    const developer = await joinInNewContext(browser, link, 'anna');
 
-  await expect(developer.getByTestId('join-error')).toHaveText(
-    'Der Name ist in dieser Sitzung schon vergeben.',
-  );
-  await expect(developer).toHaveURL(/\/join\?invite=/);
-  await developer.context().close();
-});
+    await expect(developer.getByTestId('join-error')).toHaveText(
+      'Der Name ist in dieser Sitzung schon vergeben.',
+    );
+    await expect(developer).toHaveURL(/\/join\?invite=/);
+    await developer.context().close();
+  },
+);
 
-test('an unknown session id replaces the join form with the state session not found', async ({
-  page,
-}) => {
-  await page.goto('/session/ZZZZ2222/join?invite=unknown-session-invite');
-  await page.getByTestId('join-name').fill('Ben');
-  await page.getByTestId('join-submit').click();
+test(
+  'an unknown session id replaces the join form with the state session not found',
+  { tag: '@react' },
+  async ({ page }) => {
+    await page.goto('/session/ZZZZ2222/join?invite=unknown-session-invite');
+    await page.getByTestId('join-name').fill('Ben');
+    await page.getByTestId('join-submit').click();
 
-  await expect(page.getByTestId('join-not-found')).toContainText('Sitzung nicht gefunden');
-  await expect(page.getByTestId('join-not-found')).toContainText(
-    'Der Link ist abgelaufen oder falsch.',
-  );
-  await expect(page.getByTestId('join-form')).toHaveCount(0);
-  await expect(page).toHaveURL(/\/session\/ZZZZ2222\/join\?invite=unknown-session-invite$/);
+    await expect(page.getByTestId('join-not-found')).toContainText('Sitzung nicht gefunden');
+    await expect(page.getByTestId('join-not-found')).toContainText(
+      'Der Link ist abgelaufen oder falsch.',
+    );
+    await expect(page.getByTestId('join-form')).toHaveCount(0);
+    await expect(page).toHaveURL(/\/session\/ZZZZ2222\/join\?invite=unknown-session-invite$/);
 
-  await page.getByTestId('join-not-found-home').click();
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByTestId('create-form')).toBeVisible();
-});
+    await page.getByTestId('join-not-found-home').click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByTestId('create-form')).toBeVisible();
+  },
+);
 
 async function expectNoHorizontalScroll(page: Page): Promise<void> {
   const size = await page.evaluate(() => ({
@@ -177,24 +184,26 @@ for (const colorScheme of ['light', 'dark'] as const) {
   test.describe(`at 375 px in ${colorScheme}`, () => {
     test.use({ viewport: { width: 375, height: 812 }, colorScheme });
 
-    test('the start page shows only the create form and the join page fits the width', async ({
-      page,
-    }) => {
-      await page.goto('/');
-      await expect(page.getByTestId('health-status')).toHaveText('Backend erreichbar');
+    test(
+      'the start page shows only the create form and the join page fits the width',
+      { tag: '@react' },
+      async ({ page }) => {
+        await page.goto('/');
+        await expect(page.getByTestId('health-status')).toHaveText('Backend erreichbar');
 
-      await expect(page.getByTestId('create-form')).toBeVisible();
-      await expect(page.getByTestId('join-form')).toHaveCount(0);
-      await expect(page.getByTestId('join-session-id-input')).toHaveCount(0);
-      await expectNoHorizontalScroll(page);
+        await expect(page.getByTestId('create-form')).toBeVisible();
+        await expect(page.getByTestId('join-form')).toHaveCount(0);
+        await expect(page.getByTestId('join-session-id-input')).toHaveCount(0);
+        await expectNoHorizontalScroll(page);
 
-      await page.goto('/session/K7P2QX9M/join?invite=some-invite');
-      await expect(page.getByTestId('toolbar-session-id')).toHaveText('K7P2QX9M');
-      await expect(page.getByTestId('toolbar-motif')).toBeVisible();
-      await expect(page.getByTestId('toolbar-me')).toHaveCount(0);
-      await expect(page.getByTestId('join-session-id')).toHaveCount(0);
-      await expect(page.getByTestId('join-form')).toBeVisible();
-      await expectNoHorizontalScroll(page);
-    });
+        await page.goto('/session/K7P2QX9M/join?invite=some-invite');
+        await expect(page.getByTestId('toolbar-session-id')).toHaveText('K7P2QX9M');
+        await expect(page.getByTestId('toolbar-motif')).toBeVisible();
+        await expect(page.getByTestId('toolbar-me')).toHaveCount(0);
+        await expect(page.getByTestId('join-session-id')).toHaveCount(0);
+        await expect(page.getByTestId('join-form')).toBeVisible();
+        await expectNoHorizontalScroll(page);
+      },
+    );
   });
 }

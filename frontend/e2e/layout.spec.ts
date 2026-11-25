@@ -14,8 +14,8 @@ async function expectNoHorizontalScroll(page: Page): Promise<void> {
 }
 
 async function expectSideUnderMain(page: Page): Promise<void> {
-  const main = await page.locator('app-session-page .main').boundingBox();
-  const side = await page.locator('app-session-page .side').boundingBox();
+  const main = await page.getByTestId('room-main').boundingBox();
+  const side = await page.getByTestId('room-side').boundingBox();
   expect(main).not.toBeNull();
   expect(side).not.toBeNull();
   expect(side!.y).toBeGreaterThanOrEqual(main!.y + main!.height - 1);
@@ -86,19 +86,23 @@ test('the session page has no horizontal scroll bar at 375 px in every phase', a
 test.describe('desktop', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test('the side column of the session page is 340 px wide', async ({ page }) => {
-    await page.goto('/');
-    await page.getByTestId('create-name').fill('Anna');
-    await page.getByTestId('create-project').fill('1234');
-    await page.getByTestId('create-issue').fill('42');
-    await page.getByTestId('create-submit').click();
-    await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
-    await expect(page.getByTestId('share-link-developer')).toBeVisible();
+  test(
+    'the side column of the session page is 340 px wide',
+    { tag: '@react' },
+    async ({ page }) => {
+      await page.goto('/');
+      await page.getByTestId('create-name').fill('Anna');
+      await page.getByTestId('create-project').fill('1234');
+      await page.getByTestId('create-issue').fill('42');
+      await page.getByTestId('create-submit').click();
+      await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
+      await expect(page.getByTestId('share-link-developer')).toBeVisible();
 
-    const side = await page.locator('app-session-page .side').boundingBox();
-    expect(side?.width).toBe(340);
-    await expectNoHorizontalScroll(page);
-  });
+      const side = await page.getByTestId('room-side').boundingBox();
+      expect(side?.width).toBe(340);
+      await expectNoHorizontalScroll(page);
+    },
+  );
 });
 
 async function openLongIssue(
@@ -145,7 +149,7 @@ async function expectFooterInWindowAndLastLineReachable(page: Page): Promise<voi
     await expect(page.getByTestId('active-issue-collapse')).toBeVisible();
   }
   const scroll = await page.evaluate(() => {
-    const main = document.querySelector<HTMLElement>('app-session-page .main')!;
+    const main = document.querySelector<HTMLElement>('[data-testid="room-main"]')!;
     return {
       page: document.documentElement.scrollHeight - document.documentElement.clientHeight,
       main: main.scrollHeight - main.clientHeight,
@@ -160,7 +164,7 @@ async function expectFooterInWindowAndLastLineReachable(page: Page): Promise<voi
     .getByText('Letzte Zeile der Beschreibung.');
   await lastLine.scrollIntoViewIfNeeded();
   const line = await box(lastLine);
-  const main = await box(page.locator('app-session-page .main'));
+  const main = await box(page.getByTestId('room-main'));
   expect(line.top).toBeGreaterThanOrEqual(main.top);
   expect(line.bottom).toBeLessThanOrEqual(footer.top + 0.5);
   expect((await box(page.getByTestId('round-footer'))).top).toBe(footer.top);
@@ -178,7 +182,7 @@ test.describe('scroll bar', () => {
     await anna.getByTestId('round-reveal').click();
     await expect(ben.getByTestId('result-waiting')).toBeVisible();
 
-    const main = ben.locator('app-session-page .main');
+    const main = ben.getByTestId('room-main');
     const measure = (): Promise<{ client: number; scroll: number; issue: number }> =>
       main.evaluate((node) => ({
         client: node.clientWidth,

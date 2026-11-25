@@ -1,17 +1,17 @@
 import type { SessionView } from '../api/api';
 import { t } from './messages';
-import type { MessageKey } from './messages';
+import type { TextKey } from './messages';
 import styles from './session-facts.module.css';
 import { useSession } from './use-session';
 
-const PHASE_TEXT: Record<SessionView['phase'], MessageKey> = {
+const PHASE_TEXT: Record<SessionView['phase'], TextKey> = {
   LOBBY: 'session.phase.LOBBY',
   DISCUSSION: 'session.phase.DISCUSSION',
   VOTING: 'session.phase.VOTING',
   REVEALED: 'session.phase.REVEALED',
 };
 
-const ROLE_TEXT: Record<SessionView['me']['role'], MessageKey> = {
+const ROLE_TEXT: Record<SessionView['me']['role'], TextKey> = {
   SCRUM_MASTER: 'session.role.SCRUM_MASTER',
   DEVELOPER: 'session.role.DEVELOPER',
   VIEWER: 'session.role.VIEWER',

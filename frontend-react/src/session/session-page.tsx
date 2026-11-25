@@ -4,7 +4,9 @@ import type { SessionView } from '../api/api';
 import { useBackend } from '../api/backend';
 import '../styles/motifs.css';
 import { CardHand } from '../ui/card-hand';
-import { LOBBY_MOTIF, motifFor } from './card-motif';
+import { ActiveIssue } from './active-issue';
+import { IssuePanel } from './issue-panel';
+import { motifOf } from '../api/card-motif';
 import { LastResult, lastConfirmed } from './last-result';
 import { t } from './messages';
 import { ParticipantList } from './participant-list';
@@ -15,13 +17,6 @@ import { TimerSetting } from './timer-setting';
 import { useSession } from './use-session';
 
 const SESSION_NOT_FOUND = 'SESSION_NOT_FOUND';
-
-function motifOf(session: SessionView): number {
-  if (session.phase === 'LOBBY' || session.activeIssue === null || session.round === null) {
-    return LOBBY_MOTIF;
-  }
-  return motifFor(session.sessionId, session.activeIssue.iid, session.round.number);
-}
 
 function LobbyWaiting({ session }: { session: SessionView }) {
   const afterResult = lastConfirmed(session) !== null;
@@ -63,7 +58,11 @@ function Room({ session }: { session: SessionView }) {
         <SessionFacts />
       </div>
       <div className={styles.main} data-testid="room-main">
+        {scrumMaster && <IssuePanel session={session} />}
         {!scrumMaster && session.phase === 'LOBBY' && <LobbyWaiting session={session} />}
+        {session.activeIssue !== null && (
+          <ActiveIssue issue={session.activeIssue} phase={session.phase} />
+        )}
       </div>
     </div>
   );

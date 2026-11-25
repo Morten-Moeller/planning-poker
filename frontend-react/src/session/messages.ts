@@ -59,10 +59,54 @@ export const MESSAGES = {
   'lastResult.cards': 'Karten',
   'lastResult.saved': 'Als Kommentar in GitLab gespeichert',
   'lastResult.open': 'In GitLab öffnen',
+  'issuePanel.title': 'Issue auswählen',
+  'issuePanel.project': 'Projekt: {name} · {id}',
+  'issuePanel.projectId': 'Projekt: {id}',
+  'issuePanel.searchLabel': 'Issues suchen',
+  'issuePanel.searchSubmit': 'Suchen',
+  'issuePanel.weightFilterLabel': 'Filter nach Gewicht',
+  'issuePanel.weightNone': 'Ohne Gewicht',
+  'issuePanel.weightAny': 'Mit Gewicht',
+  'issuePanel.weightAll': 'Alle',
+  'issuePanel.periodLabel': 'Geändert in',
+  'issuePanel.periodWeek': '1 Woche',
+  'issuePanel.periodMonth': '1 Monat',
+  'issuePanel.periodYear': '1 Jahr',
+  'issuePanel.periodAll': 'Alle',
+  'issuePanel.errorTitle': 'Die Issues konnten nicht geladen werden.',
+  'issuePanel.retry': 'Erneut versuchen',
+  'issuePanel.withoutWeight': 'ohne Gewicht',
+  'issuePanel.weightValue': 'Gewicht {weight}',
+  'issuePanel.empty': 'Keine Issues gefunden',
+  'issuePanel.resetFilters': 'Filter zurücksetzen',
+  'issuePanel.loadMore': 'Mehr laden',
+  'issuePanel.countOfTotal': '{shown} von {total} Issues',
+  'issuePanel.count': { one: '1 Issue', other: '{count} Issues' },
+  'issuePanel.selected': 'Ausgewählt:',
+  'issuePanel.release': 'Freigeben',
+  'issuePanel.switch': 'Issue wechseln',
+  'switchIssue.title': 'Issue wechseln?',
+  'switchIssue.textRevealed':
+    'Runde {round} zu #{iid} ist aufgedeckt und hat keinen Endwert. Beim Wechsel bleibt sie ohne Endwert im Protokoll.',
+  'switchIssue.textRunningNone':
+    'Runde {round} zu #{iid} läuft noch. Beim Wechsel endet sie ohne Ergebnis, es gibt noch keine abgegebene Schätzung.',
+  'switchIssue.textRunning': {
+    one: 'Runde {round} zu #{iid} läuft noch. Beim Wechsel endet sie ohne Ergebnis, die 1 abgegebene Schätzung wird verworfen.',
+    other:
+      'Runde {round} zu #{iid} läuft noch. Beim Wechsel endet sie ohne Ergebnis, die {count} abgegebenen Schätzungen werden verworfen.',
+  },
+  'switchIssue.cancel': 'Abbrechen',
+  'switchIssue.confirm': 'Issue wechseln',
+  'activeIssue.openInGitLab': 'In GitLab öffnen',
+  'activeIssue.expand': 'Ganze Beschreibung anzeigen',
+  'activeIssue.collapse': 'Beschreibung einklappen',
   'card.coffee': 'Kaffeepause',
   'card.unclear': 'Unklar',
 } as const;
 
 export type MessageKey = keyof typeof MESSAGES;
+export type TextKey = {
+  [K in MessageKey]: (typeof MESSAGES)[K] extends string ? K : never;
+}[MessageKey];
 
 export const t = defineMessages(MESSAGES);

@@ -74,41 +74,44 @@ for (const scheme of schemes) {
   );
 }
 
-test('text uses IBM Plex Sans and the session id in the toolbar IBM Plex Mono', async ({
-  page,
-}) => {
-  await createSession(page);
+test(
+  'text uses IBM Plex Sans and the session id in the toolbar IBM Plex Mono',
+  { tag: '@react' },
+  async ({ page }) => {
+    await createSession(page);
 
-  const body = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
-  expect(body).toMatch(/^"?IBM Plex Sans"?/);
-  const sessionId = page.getByTestId('toolbar-session-id');
-  const mono = await sessionId.evaluate((element) => getComputedStyle(element).fontFamily);
-  expect(mono).toMatch(/^"?IBM Plex Mono"?/);
-});
+    const body = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
+    expect(body).toMatch(/^"?IBM Plex Sans"?/);
+    const sessionId = page.getByTestId('toolbar-session-id');
+    const mono = await sessionId.evaluate((element) => getComputedStyle(element).fontFamily);
+    expect(mono).toMatch(/^"?IBM Plex Mono"?/);
+  },
+);
 
-test('the toolbar shows the session id and name and role in the room only', async ({
-  page,
-  browser,
-}) => {
-  await page.goto('/');
-  await expect(page.getByTestId('create-form')).toBeVisible();
-  await expect(page.getByTestId('toolbar-session-id')).toHaveCount(0);
-  await expect(page.getByTestId('toolbar-me')).toHaveCount(0);
+test(
+  'the toolbar shows the session id and name and role in the room only',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    await page.goto('/');
+    await expect(page.getByTestId('create-form')).toBeVisible();
+    await expect(page.getByTestId('toolbar-session-id')).toHaveCount(0);
+    await expect(page.getByTestId('toolbar-me')).toHaveCount(0);
 
-  const link = await createSession(page);
-  const sessionId = (await page.getByTestId('session-id').textContent()) ?? '';
-  expect(sessionId).toMatch(SESSION_ID);
-  await expect(page.getByTestId('toolbar-session-id')).toHaveText(sessionId);
-  await expect(page.getByTestId('toolbar-me')).toHaveText('Anna · Scrum Master');
+    const link = await createSession(page);
+    const sessionId = (await page.getByTestId('session-id').textContent()) ?? '';
+    expect(sessionId).toMatch(SESSION_ID);
+    await expect(page.getByTestId('toolbar-session-id')).toHaveText(sessionId);
+    await expect(page.getByTestId('toolbar-me')).toHaveText('Anna · Scrum Master');
 
-  const ben = await join(browser, link, 'Ben');
-  await expect(ben.getByTestId('toolbar-session-id')).toHaveText(sessionId);
-  await expect(ben.getByTestId('toolbar-me')).toHaveText('Ben · Entwickler');
+    const ben = await join(browser, link, 'Ben');
+    await expect(ben.getByTestId('toolbar-session-id')).toHaveText(sessionId);
+    await expect(ben.getByTestId('toolbar-me')).toHaveText('Ben · Entwickler');
 
-  const small = await join(browser, link, 'Cem', { width: 375, height: 800 });
-  await expect(small.getByTestId('toolbar-session-id')).toHaveText(sessionId);
-  await expect(small.getByTestId('toolbar-me')).toBeHidden();
-});
+    const small = await join(browser, link, 'Cem', { width: 375, height: 800 });
+    await expect(small.getByTestId('toolbar-session-id')).toHaveText(sessionId);
+    await expect(small.getByTestId('toolbar-me')).toBeHidden();
+  },
+);
 
 test(
   'a button shows the focus ring for keyboard focus only',

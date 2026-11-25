@@ -41,32 +41,33 @@ test.afterEach(async ({ browser, context: own }) => {
   }
 });
 
-test('both roles see the participants with role and connection state', async ({
-  page,
-  browser,
-}) => {
-  const { scrumMaster, developer } = await openRoom(page, browser);
+test(
+  'both roles see the participants with role and connection state',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, developer } = await openRoom(page, browser);
 
-  for (const view of [scrumMaster, developer]) {
-    await expect(view.getByTestId('participant')).toHaveCount(2);
-    await expect(participant(view, 'Anna').getByTestId('participant-role')).toHaveText(
-      'Scrum Master',
-    );
-    await expect(participant(view, 'Anna').getByTestId('participant-status')).toHaveText(
-      'verbunden',
-    );
-    await expect(participant(view, 'Ben').getByTestId('participant-role')).toHaveCount(0);
-    await expect(participant(view, 'Ben').getByTestId('participant-status')).toHaveText(
-      'verbunden',
-    );
-  }
+    for (const view of [scrumMaster, developer]) {
+      await expect(view.getByTestId('participant')).toHaveCount(2);
+      await expect(participant(view, 'Anna').getByTestId('participant-role')).toHaveText(
+        'Scrum Master',
+      );
+      await expect(participant(view, 'Anna').getByTestId('participant-status')).toHaveText(
+        'verbunden',
+      );
+      await expect(participant(view, 'Ben').getByTestId('participant-role')).toHaveCount(0);
+      await expect(participant(view, 'Ben').getByTestId('participant-status')).toHaveText(
+        'verbunden',
+      );
+    }
 
-  await developer.context().close();
+    await developer.context().close();
 
-  await expect(participant(scrumMaster, 'Ben').getByTestId('participant-status')).toHaveText(
-    'getrennt',
-  );
-});
+    await expect(participant(scrumMaster, 'Ben').getByTestId('participant-status')).toHaveText(
+      'getrennt',
+    );
+  },
+);
 
 test('the scrum master releases an issue and the developer sees it without reload', async ({
   page,
@@ -145,89 +146,95 @@ test('switching the issue while voting asks first and can be cancelled', async (
   await expect(release).toBeDisabled();
 });
 
-test('script content of an issue description does not run', async ({ page, browser }) => {
-  const { scrumMaster, developer } = await openRoom(page, browser, '44');
-  await expect(scrumMaster.getByTestId('issue-preview-iid')).toHaveText('#44');
+test(
+  'script content of an issue description does not run',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, developer } = await openRoom(page, browser, '44');
+    await expect(scrumMaster.getByTestId('issue-preview-iid')).toHaveText('#44');
 
-  await scrumMaster.getByTestId('issue-release').click();
+    await scrumMaster.getByTestId('issue-release').click();
 
-  for (const view of [scrumMaster, developer]) {
-    const description = view.getByTestId('active-issue-description');
-    await expect(view.getByTestId('active-issue-title')).toHaveText('Script check');
-    await expect(description.locator('strong')).toHaveText('fett');
-    await expect(description.locator('script')).toHaveCount(0);
-    await expect(description.locator('[onerror]')).toHaveCount(0);
-    expect(
-      await view.evaluate(() => (window as unknown as { __pwned?: unknown }).__pwned),
-    ).toBeUndefined();
-  }
-});
+    for (const view of [scrumMaster, developer]) {
+      const description = view.getByTestId('active-issue-description');
+      await expect(view.getByTestId('active-issue-title')).toHaveText('Script check');
+      await expect(description.locator('strong')).toHaveText('fett');
+      await expect(description.locator('script')).toHaveCount(0);
+      await expect(description.locator('[onerror]')).toHaveCount(0);
+      expect(
+        await view.evaluate(() => (window as unknown as { __pwned?: unknown }).__pwned),
+      ).toBeUndefined();
+    }
+  },
+);
 
-test('an external image of an issue description sends no request to its host', async ({
-  page,
-  browser,
-}) => {
-  const { scrumMaster, developer } = await openRoom(page, browser, '44');
-  const outcomes: string[] = [];
-  const isTracker = (url: string) => new URL(url).hostname === 'tracker.example';
-  for (const view of [scrumMaster, developer]) {
-    view.on('requestfinished', (request) => {
-      if (isTracker(request.url())) {
-        outcomes.push('sent');
-      }
+test(
+  'an external image of an issue description sends no request to its host',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, developer } = await openRoom(page, browser, '44');
+    const outcomes: string[] = [];
+    const isTracker = (url: string) => new URL(url).hostname === 'tracker.example';
+    for (const view of [scrumMaster, developer]) {
+      view.on('requestfinished', (request) => {
+        if (isTracker(request.url())) {
+          outcomes.push('sent');
+        }
+      });
+      view.on('requestfailed', (request) => {
+        if (isTracker(request.url())) {
+          outcomes.push(request.failure()?.errorText ?? 'unknown');
+        }
+      });
+    }
+
+    await scrumMaster.getByTestId('issue-release').click();
+
+    for (const view of [scrumMaster, developer]) {
+      await expect(view.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveAttribute(
+        'content',
+        "img-src 'self' data:",
+      );
+      const image = view.getByTestId('active-issue-description').locator('img[alt="Pixel"]');
+      await expect(image).toHaveAttribute('src', 'https://tracker.example/pixel.gif');
+      await expect.poll(() => image.evaluate((node: HTMLImageElement) => node.complete)).toBe(true);
+    }
+    await expect.poll(() => outcomes.length).toBe(2);
+    expect(outcomes).toEqual(['csp', 'csp']);
+  },
+);
+
+test(
+  'the issue number in the head of the active issue is as large as the title, grey and not bold',
+  { tag: '@react' },
+  async ({ page, browser }) => {
+    const { scrumMaster, developer } = await openRoom(page, browser);
+    await scrumMaster.getByTestId('issue-release').click();
+    await expect(developer.getByTestId('active-issue-iid')).toHaveText('#42');
+
+    const styles = await developer.getByTestId('active-issue').evaluate((node) => {
+      const iid = getComputedStyle(node.querySelector('[data-testid="active-issue-iid"]')!);
+      const title = getComputedStyle(node.querySelector('h2')!);
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--app-on-surface-muted)';
+      node.appendChild(probe);
+      const muted = getComputedStyle(probe).color;
+      probe.remove();
+      return {
+        iidSize: iid.fontSize,
+        titleSize: title.fontSize,
+        iidLineHeight: iid.lineHeight,
+        titleLineHeight: title.lineHeight,
+        iidWeight: iid.fontWeight,
+        iidColor: iid.color,
+        iidFont: iid.fontFamily,
+        muted,
+      };
     });
-    view.on('requestfailed', (request) => {
-      if (isTracker(request.url())) {
-        outcomes.push(request.failure()?.errorText ?? 'unknown');
-      }
-    });
-  }
-
-  await scrumMaster.getByTestId('issue-release').click();
-
-  for (const view of [scrumMaster, developer]) {
-    await expect(view.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveAttribute(
-      'content',
-      "img-src 'self' data:",
-    );
-    const image = view.getByTestId('active-issue-description').locator('img[alt="Pixel"]');
-    await expect(image).toHaveAttribute('src', 'https://tracker.example/pixel.gif');
-    await expect.poll(() => image.evaluate((node: HTMLImageElement) => node.complete)).toBe(true);
-  }
-  await expect.poll(() => outcomes.length).toBe(2);
-  expect(outcomes).toEqual(['csp', 'csp']);
-});
-
-test('the issue number in the head of the active issue is as large as the title, grey and not bold', async ({
-  page,
-  browser,
-}) => {
-  const { scrumMaster, developer } = await openRoom(page, browser);
-  await scrumMaster.getByTestId('issue-release').click();
-  await expect(developer.getByTestId('active-issue-iid')).toHaveText('#42');
-
-  const styles = await developer.getByTestId('active-issue').evaluate((node) => {
-    const iid = getComputedStyle(node.querySelector('[data-testid="active-issue-iid"]')!);
-    const title = getComputedStyle(node.querySelector('h2')!);
-    const probe = document.createElement('span');
-    probe.style.color = 'var(--app-on-surface-muted)';
-    node.appendChild(probe);
-    const muted = getComputedStyle(probe).color;
-    probe.remove();
-    return {
-      iidSize: iid.fontSize,
-      titleSize: title.fontSize,
-      iidLineHeight: iid.lineHeight,
-      titleLineHeight: title.lineHeight,
-      iidWeight: iid.fontWeight,
-      iidColor: iid.color,
-      iidFont: iid.fontFamily,
-      muted,
-    };
-  });
-  expect(styles.iidSize).toBe(styles.titleSize);
-  expect(styles.iidLineHeight).toBe(styles.titleLineHeight);
-  expect(styles.iidWeight).toBe('400');
-  expect(styles.iidColor).toBe(styles.muted);
-  expect(styles.iidFont).toContain('IBM Plex Mono');
-});
+    expect(styles.iidSize).toBe(styles.titleSize);
+    expect(styles.iidLineHeight).toBe(styles.titleLineHeight);
+    expect(styles.iidWeight).toBe('400');
+    expect(styles.iidColor).toBe(styles.muted);
+    expect(styles.iidFont).toContain('IBM Plex Mono');
+  },
+);

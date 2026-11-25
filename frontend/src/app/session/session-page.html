@@ -1,7 +1,7 @@
 <h1 class="visually-hidden" i18n="@@session.title">Sitzung</h1>
 @if (store.session(); as session) {
-  <div class="room" [attr.data-motif]="motif()">
-    <div class="side">
+  <div class="room" data-testid="room" [attr.data-motif]="motif()">
+    <div class="side" data-testid="room-side">
       @if (store.isScrumMaster()) {
         <section class="timer">
           <h2 i18n="@@session.timerTitle">Timer</h2>
@@ -17,7 +17,7 @@
         <app-session-history />
       }
     </div>
-    <div class="main">
+    <div class="main" data-testid="room-main">
       @if (store.isScrumMaster()) {
         <app-issue-panel [sessionId]="session.sessionId" />
       } @else if (session.phase === 'LOBBY') {

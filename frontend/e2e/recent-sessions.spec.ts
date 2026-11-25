@@ -29,112 +29,121 @@ function row(page: Page, sessionId: string) {
     .filter({ has: page.getByTestId('recent-session-id').getByText(sessionId, { exact: true }) });
 }
 
-test('the scrum master returns to the session from the start page after the tab is closed', async ({
-  context,
-  page,
-}) => {
-  await page.goto('/');
-  const sessionId = await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
-  await expect(page.getByTestId('issue-panel')).toBeVisible();
+test(
+  'the scrum master returns to the session from the start page after the tab is closed',
+  { tag: '@react' },
+  async ({ context, page }) => {
+    await page.goto('/');
+    const sessionId = await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
+    await expect(page.getByTestId('issue-panel')).toBeVisible();
 
-  const start = await reopen(context, page);
-  const entry = row(start, sessionId);
-  await expect(start.getByTestId('recent-sessions')).toBeVisible();
-  await expect(entry.getByTestId('recent-session-project')).toHaveText('Planning Poker Test');
-  await expect(entry.getByTestId('recent-session-issue')).toHaveText('Kein Issue aktiv');
-  await expect(entry.getByTestId('recent-session-role')).toHaveText('Scrum Master');
-  await expect(entry.getByTestId('recent-session-name')).toHaveText('Anna');
+    const start = await reopen(context, page);
+    const entry = row(start, sessionId);
+    await expect(start.getByTestId('recent-sessions')).toBeVisible();
+    await expect(entry.getByTestId('recent-session-project')).toHaveText('Planning Poker Test');
+    await expect(entry.getByTestId('recent-session-issue')).toHaveText('Kein Issue aktiv');
+    await expect(entry.getByTestId('recent-session-role')).toHaveText('Scrum Master');
+    await expect(entry.getByTestId('recent-session-name')).toHaveText('Anna');
 
-  await entry.getByRole('link').click();
-  await expect(start).toHaveURL((url) => url.pathname === `/session/${sessionId}`);
-  await expect(start.getByTestId('issue-panel')).toBeVisible();
-  await expect(start.getByTestId('toolbar-me')).toHaveText('Anna · Scrum Master');
-});
+    await entry.getByRole('link').click();
+    await expect(start).toHaveURL((url) => url.pathname === `/session/${sessionId}`);
+    await expect(start.getByTestId('issue-panel')).toBeVisible();
+    await expect(start.getByTestId('toolbar-me')).toHaveText('Anna · Scrum Master');
+  },
+);
 
-test('a developer returns to the session from the start page after the tab is closed', async ({
-  browser,
-  page,
-}) => {
-  await page.goto('/');
-  const sessionId = await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
+test(
+  'a developer returns to the session from the start page after the tab is closed',
+  { tag: '@react' },
+  async ({ browser, page }) => {
+    await page.goto('/');
+    const sessionId = await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
 
-  const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
-  const developerContext = await browser.newContext();
-  const developer = await developerContext.newPage();
-  await developer.goto(link);
-  await developer.getByTestId('join-name').fill('Ben');
-  await developer.getByTestId('join-submit').click();
-  await expect(developer.getByTestId('lobby-waiting')).toBeVisible();
+    const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
+    const developerContext = await browser.newContext();
+    const developer = await developerContext.newPage();
+    await developer.goto(link);
+    await developer.getByTestId('join-name').fill('Ben');
+    await developer.getByTestId('join-submit').click();
+    await expect(developer.getByTestId('lobby-waiting')).toBeVisible();
 
-  const start = await reopen(developerContext, developer);
-  const entry = row(start, sessionId);
-  await expect(entry.getByTestId('recent-session-role')).toHaveText('Entwickler');
-  await expect(entry.getByTestId('recent-session-name')).toHaveText('Ben');
+    const start = await reopen(developerContext, developer);
+    const entry = row(start, sessionId);
+    await expect(entry.getByTestId('recent-session-role')).toHaveText('Entwickler');
+    await expect(entry.getByTestId('recent-session-name')).toHaveText('Ben');
 
-  await entry.getByRole('link').click();
-  await expect(start.getByTestId('lobby-waiting')).toBeVisible();
-  await expect(start.getByTestId('toolbar-me')).toHaveText('Ben · Entwickler');
-  await developerContext.close();
-});
+    await entry.getByRole('link').click();
+    await expect(start.getByTestId('lobby-waiting')).toBeVisible();
+    await expect(start.getByTestId('toolbar-me')).toHaveText('Ben · Entwickler');
+    await developerContext.close();
+  },
+);
 
-test('Neue Sitzung leads to the prefilled start page and both sessions stand in the list', async ({
-  page,
-}) => {
-  await page.goto('/');
-  const first = await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
+test(
+  'Neue Sitzung leads to the prefilled start page and both sessions stand in the list',
+  { tag: '@react' },
+  async ({ page }) => {
+    await page.goto('/');
+    const first = await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
 
-  await page.getByTestId('new-session').click();
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByTestId('create-name')).toHaveValue('Anna');
-  await expect(page.getByTestId('create-project')).toHaveValue('1234');
-  await expect(row(page, first)).toBeVisible();
+    await page.getByTestId('new-session').click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByTestId('create-name')).toHaveValue('Anna');
+    await expect(page.getByTestId('create-project')).toHaveValue('1234');
+    await expect(row(page, first)).toBeVisible();
 
-  const second = await createSession(page, { project: '5678' });
-  expect(second).not.toBe(first);
-  await expect(page.getByTestId('new-session')).toBeVisible();
+    const second = await createSession(page, { project: '5678' });
+    expect(second).not.toBe(first);
+    await expect(page.getByTestId('new-session')).toBeVisible();
 
-  await page.getByTestId('toolbar-home').click();
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByTestId('recent-session-id')).toHaveText([second, first]);
-  await expect(row(page, second).getByTestId('recent-session-project')).toHaveText(
-    'Release Notes Test',
-  );
-  await expect(row(page, first).getByTestId('recent-session-project')).toHaveText(
-    'Planning Poker Test',
-  );
-});
+    await page.getByTestId('toolbar-home').click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByTestId('recent-session-id')).toHaveText([second, first]);
+    await expect(row(page, second).getByTestId('recent-session-project')).toHaveText(
+      'Release Notes Test',
+    );
+    await expect(row(page, first).getByTestId('recent-session-project')).toHaveText(
+      'Planning Poker Test',
+    );
+  },
+);
 
-test('a developer sees neither the invite links nor Neue Sitzung in the room', async ({
-  browser,
-  page,
-}) => {
-  await page.goto('/');
-  const sessionId = await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
+test(
+  'a developer sees neither the invite links nor Neue Sitzung in the room',
+  { tag: '@react' },
+  async ({ browser, page }) => {
+    await page.goto('/');
+    const sessionId = await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
 
-  const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
-  const developerContext = await browser.newContext();
-  const developer = await developerContext.newPage();
-  await developer.goto(link);
-  await developer.getByTestId('join-name').fill('Ben');
-  await developer.getByTestId('join-submit').click();
-  await expect(developer.getByTestId('lobby-waiting')).toBeVisible();
-  await expect(developer.getByTestId('session-share')).toHaveCount(0);
-  await expect(developer.getByTestId('new-session')).toHaveCount(0);
-  await expect(developer.getByTestId('toolbar-home')).toHaveAttribute('href', '/');
-  await developerContext.close();
-});
+    const link = (await page.getByTestId('share-link-developer').textContent()) ?? '';
+    const developerContext = await browser.newContext();
+    const developer = await developerContext.newPage();
+    await developer.goto(link);
+    await developer.getByTestId('join-name').fill('Ben');
+    await developer.getByTestId('join-submit').click();
+    await expect(developer.getByTestId('lobby-waiting')).toBeVisible();
+    await expect(developer.getByTestId('session-share')).toHaveCount(0);
+    await expect(developer.getByTestId('new-session')).toHaveCount(0);
+    await expect(developer.getByTestId('toolbar-home')).toHaveAttribute('href', '/');
+    await developerContext.close();
+  },
+);
 
-test('with the feature switched off the browser keeps no list', async ({ context, page }) => {
-  await context.route('**/api/config', (route) =>
-    route.fulfill({ json: { rememberSessions: false } }),
-  );
-  await page.goto('/');
-  await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
-  await expect(page.getByTestId('issue-panel')).toBeVisible();
-  expect(await page.evaluate((key) => localStorage.getItem(key), RECENT_KEY)).toBeNull();
+test(
+  'with the feature switched off the browser keeps no list',
+  { tag: '@react' },
+  async ({ context, page }) => {
+    await context.route('**/api/config', (route) =>
+      route.fulfill({ json: { rememberSessions: false } }),
+    );
+    await page.goto('/');
+    await createSession(page, { name: 'Anna', project: '1234', issue: '42' });
+    await expect(page.getByTestId('issue-panel')).toBeVisible();
+    expect(await page.evaluate((key) => localStorage.getItem(key), RECENT_KEY)).toBeNull();
 
-  const start = await reopen(context, page);
-  await expect(start.getByTestId('health-status')).toHaveText('Backend erreichbar');
-  await expect(start.getByTestId('recent-sessions')).toHaveCount(0);
-  expect(await start.evaluate((key) => localStorage.getItem(key), RECENT_KEY)).toBeNull();
-});
+    const start = await reopen(context, page);
+    await expect(start.getByTestId('health-status')).toHaveText('Backend erreichbar');
+    await expect(start.getByTestId('recent-sessions')).toHaveCount(0);
+    expect(await start.evaluate((key) => localStorage.getItem(key), RECENT_KEY)).toBeNull();
+  },
+);

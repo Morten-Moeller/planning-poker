@@ -37,6 +37,13 @@
   border-radius: var(--mat-sys-corner-extra-small);
 }
 
+.filled {
+  border: none;
+  background-color: var(--app-card-accent);
+  background-image: var(--app-card-pattern);
+  background-size: var(--app-card-pattern-size);
+}
+
 .sessionId {
   padding: 0 var(--app-space-s);
   border: 1px solid var(--mat-sys-outline-variant);

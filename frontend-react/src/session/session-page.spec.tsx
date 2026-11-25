@@ -16,12 +16,14 @@ import {
 import { RequireSession } from '../api/require-session';
 import { createTestBackend, problem, renderWithBackend } from '../api/testing/test-backend';
 import type { Answer } from '../api/testing/test-backend';
-import { motifFor } from './card-motif';
+import { motifFor } from '../api/card-motif';
 import { SessionPage } from './session-page';
 import {
   asViewer,
   confirmedEntry,
   inRound,
+  isIssueList,
+  sessionAnswer,
   unconfirmedEntry,
   withHistory,
 } from './testing/session-snapshots';
@@ -60,7 +62,7 @@ function setup(answer: Answer) {
 }
 
 async function showRoom(snapshot: SessionView) {
-  const test = setup(() => Response.json(snapshot));
+  const test = setup(sessionAnswer(snapshot));
   const room = await screen.findByTestId('room');
   return { ...test, room };
 }
@@ -97,19 +99,23 @@ describe('SessionPage', () => {
   });
 
   it('shows that the session loads and enters the session with the stored token', async () => {
-    const { backend, calls, sockets } = setup(() => Response.json(lobbyScrumMaster));
+    const { backend, calls, sockets } = setup(sessionAnswer(lobbyScrumMaster));
 
     expect(screen.getByTestId('session-loading').textContent).toBe('Sitzung wird geladen');
     await waitFor(() => expect(backend.sessions.session()).toEqual(lobbyScrumMaster));
 
-    expect(calls.map((call) => `${call.method} ${call.url}`)).toEqual([`GET /api/sessions/${ID}`]);
+    await waitFor(() => expect(calls).toHaveLength(2));
+    expect(calls.map((call) => `${call.method} ${call.url}`)).toEqual([
+      `GET /api/sessions/${ID}`,
+      `GET /api/sessions/${ID}/issues?weight=NONE&period=ALL`,
+    ]);
     expect(calls[0]?.headers['Authorization']).toBe('Bearer token-of-anna');
     expect(sockets.sockets).toHaveLength(1);
     expect(screen.queryByTestId('session-gone')).toBeNull();
   });
 
   it('leaves the session when the page is left', async () => {
-    const { backend, sockets, unmount } = setup(() => Response.json(lobbyScrumMaster));
+    const { backend, sockets, unmount } = setup(sessionAnswer(lobbyScrumMaster));
     await waitFor(() => expect(sockets.sockets).toHaveLength(1));
 
     unmount();
@@ -128,7 +134,7 @@ describe('SessionPage', () => {
   });
 
   it('shows the state session gone when the WebSocket reports SESSION_NOT_FOUND', async () => {
-    const test = setup(() => Response.json(lobbyScrumMaster));
+    const test = setup(sessionAnswer(lobbyScrumMaster));
     await waitFor(() => expect(test.sockets.sockets).toHaveLength(1));
 
     act(() =>
@@ -188,7 +194,7 @@ describe('SessionPage', () => {
   });
 
   it('keeps the heading Sitzung for screen readers only, in every state', async () => {
-    const test = setup(() => Response.json(lobbyScrumMaster));
+    const test = setup(sessionAnswer(lobbyScrumMaster));
     const loading = screen.getByRole('heading', { level: 1 });
     expect(loading.textContent).toBe('Sitzung');
     expect(loading.className).toContain('visuallyHidden');
@@ -314,23 +320,72 @@ describe('SessionPage', () => {
     expect(screen.queryByTestId('last-result')).toBeNull();
   });
 
+  function mainParts(room: HTMLElement): (string | null)[] {
+    return [...within(room).getByTestId('room-main').children].map((part) =>
+      part.getAttribute('data-testid'),
+    );
+  }
+
   it.each([
-    { name: 'the scrum master in LOBBY', snapshot: lobbyScrumMaster },
+    { name: 'the scrum master in LOBBY', snapshot: lobbyScrumMaster, parts: ['issue-panel'] },
     {
       name: 'the scrum master in LOBBY after a confirmation',
       snapshot: withHistory(lobbyScrumMaster, confirmedEntry()),
+      parts: ['issue-panel'],
     },
-    { name: 'a developer in DISCUSSION', snapshot: discussionDeveloper },
-    { name: 'a developer in VOTING', snapshot: votingDeveloper },
-    { name: 'a viewer in VOTING', snapshot: asViewer(votingDeveloper) },
-    { name: 'a developer in REVEALED', snapshot: revealedDeveloper },
-    { name: 'the scrum master in REVEALED', snapshot: revealedScrumMaster },
-  ])('leaves the main area empty for $name', async ({ snapshot }) => {
+    {
+      name: 'the scrum master in DISCUSSION',
+      snapshot: discussionScrumMaster,
+      parts: ['issue-panel', 'active-issue'],
+    },
+    {
+      name: 'the scrum master in VOTING',
+      snapshot: votingScrumMaster,
+      parts: ['issue-panel', 'active-issue'],
+    },
+    {
+      name: 'the scrum master in REVEALED',
+      snapshot: revealedScrumMaster,
+      parts: ['issue-panel', 'active-issue'],
+    },
+    { name: 'a developer in DISCUSSION', snapshot: discussionDeveloper, parts: ['active-issue'] },
+    { name: 'a developer in VOTING', snapshot: votingDeveloper, parts: ['active-issue'] },
+    { name: 'a viewer in VOTING', snapshot: asViewer(votingDeveloper), parts: ['active-issue'] },
+    { name: 'a developer in REVEALED', snapshot: revealedDeveloper, parts: ['active-issue'] },
+    {
+      name: 'a developer in DISCUSSION without an active issue',
+      snapshot: { ...discussionDeveloper, activeIssue: null },
+      parts: [],
+    },
+  ])('shows $parts in the main area for $name', async ({ snapshot, parts }) => {
     const { room } = await showRoom(snapshot);
 
-    expect(within(room).getByTestId('room-main').children).toHaveLength(0);
+    expect(mainParts(room)).toEqual(parts);
     expect(screen.queryByTestId('lobby-waiting')).toBeNull();
     expect(screen.queryByTestId('last-result')).toBeNull();
+  });
+
+  it.each([
+    { name: 'a developer', snapshot: lobbyDeveloper },
+    { name: 'a viewer', snapshot: asViewer(lobbyDeveloper) },
+    { name: 'a developer in VOTING', snapshot: votingDeveloper },
+    { name: 'a viewer in REVEALED', snapshot: asViewer(revealedDeveloper) },
+  ])('shows no issue panel and loads no issues for $name', async ({ snapshot }) => {
+    const { calls } = await showRoom(snapshot);
+
+    expect(screen.queryByTestId('issue-panel')).toBeNull();
+    expect(screen.queryByTestId('issue-release')).toBeNull();
+    expect(calls.filter(isIssueList)).toHaveLength(0);
+  });
+
+  it('shows the active issue of the snapshot with its title', async () => {
+    const test = await showRoom(lobbyDeveloper);
+    expect(screen.queryByTestId('active-issue')).toBeNull();
+
+    receive(test, discussionDeveloper);
+
+    expect(screen.getByTestId('active-issue-title').textContent).toBe('Login page');
+    expect(screen.getByTestId('active-issue-iid').textContent).toBe('#42');
   });
 
   it('removes the waiting state with the release of an issue', async () => {

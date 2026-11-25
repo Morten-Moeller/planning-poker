@@ -1,7 +1,7 @@
 ---
 id: "0059"
 title: "React-Frontend: Raum Teil 2 mit Issue-Auswahl und aktivem Issue"
-status: approved
+status: Review
 risk: high
 adrs: ["0004", "0016"]
 owner: Morten Möller
@@ -65,7 +65,7 @@ es, wenn diese Tests mit dem Tag `@react` gegen beide Frontends grün sind.
 | A3 | Suche: Feld `issue-search-input` (`type="search"`, Beschriftung „Issues suchen“) und Button `issue-search-submit` „Suchen“; Absenden lädt mit dem Text ohne Leerzeichen am Rand, ein leeres Feld ohne `search`. Filter: `issue-filter-weight` (Komponente `SegmentedControl` des UI SDK, `aria-label` „Filter nach Gewicht“) mit `issue-filter-weight-none` „Ohne Gewicht“, `-any` „Mit Gewicht“, `-all` „Alle“; `issue-filter-period` (Komponente `Select`, Beschriftung „Geändert in“) mit `issue-filter-period-week` „1 Woche“, `-month` „1 Monat“, `-year` „1 Jahr“, `-all` „Alle“. Eine Wahl speichert `weightFilter` oder `periodFilter` im `PreferencesStore` und lädt die erste Seite. „Filter zurücksetzen“ setzt beide Filter auf die Vorgabe, leert die Suche und lädt. | vitest: `frontend-react/src/session/issue-panel.spec.tsx`; e2e: `frontend/e2e/preferences.spec.ts`, `frontend/e2e/issue-filter.spec.ts` |
 | A4 | Antwortet die Liste mit `GITLAB_ACCESS_DENIED` oder `GITLAB_ERROR`, steht `issue-results-error` (`role="alert"`) mit „Die Issues konnten nicht geladen werden.“, dem Text des Fehlers in `issue-results-error-message` und `issue-results-retry` „↻ Erneut versuchen“ da; das Banner bleibt leer, „Mehr laden“ fehlt. „Erneut versuchen“ wiederholt die letzte Anfrage (auch eine Folgeseite). Eine Antwort auf eine überholte Anfrage ändert die Liste nicht. | vitest: `frontend-react/src/session/issue-panel.spec.tsx` |
 | A5 | Gewählt ist zu Beginn das aktive Issue, sonst `preselectedIssueIid`, sonst keines; ein neues aktives Issue im Snapshot setzt die Wahl darauf. `issue-preview` zeigt „Ausgewählt:“, `issue-preview-iid` „#iid“ und, wenn das Issue in der Liste steht, den Link `issue-preview-link` mit `issue-preview-title` (neuer Tab, `rel="noopener"`). | vitest: `frontend-react/src/session/issue-panel.spec.tsx`; e2e: `frontend/e2e/session-room.spec.ts`, `frontend/e2e/project-picker.spec.ts` |
-| A6 | `issue-release` heißt „Freigeben“ in `LOBBY`, sonst „Issue wechseln“. Der Button ist gesperrt ohne Wahl, wenn das gewählte Issue das aktive ist, während die Runde bestätigt wird (`round.confirming`) und bis zur Antwort auf die Freigabe. In `LOBBY` und `DISCUSSION` sendet ein Klick `PUT …/issue` mit `issueIid`. | vitest: `frontend-react/src/session/issue-panel.spec.tsx` |
+| A6 | `issue-release` heißt „Freigeben“ in `LOBBY`, sonst „Issue wechseln“. Der Button ist gesperrt ohne Wahl, wenn das gewählte Issue das aktive ist, während die Runde bestätigt wird (`round.confirming`) und bis zur Antwort auf die Freigabe. In `LOBBY` und `DISCUSSION` sendet ein Klick `POST …/active-issue` mit `issueIid`. | vitest: `frontend-react/src/session/issue-panel.spec.tsx` |
 | A7 | In `VOTING` und `REVEALED` öffnet der Klick `switch-dialog` (Komponente `Dialog` des UI SDK) mit dem Titel „Issue wechseln?“ und `switch-text`: aufgedeckt „Runde n zu #iid ist aufgedeckt und hat keinen Endwert. Beim Wechsel bleibt sie ohne Endwert im Protokoll.“; laufend „Runde n zu #iid läuft noch. Beim Wechsel endet sie ohne Ergebnis, …“ mit „es gibt noch keine abgegebene Schätzung.“, „die 1 abgegebene Schätzung wird verworfen.“ oder „die k abgegebenen Schätzungen werden verworfen.“. `switch-cancel` „Abbrechen“ und Escape schließen ohne Anfrage; `switch-confirm` „Issue wechseln“ sendet die Freigabe, außer der Button ist in der Zwischenzeit gesperrt. Der Fokus liegt nach dem Schließen wieder auf `issue-release`. | vitest: `frontend-react/src/session/switch-issue-dialog.spec.tsx`, `frontend-react/src/session/issue-panel.spec.tsx` |
 | A8 | Wechselt die Phase von `REVEALED` nach `LOBBY`, lädt die Auswahl die erste Seite neu. | vitest: `frontend-react/src/session/issue-panel.spec.tsx` |
 | A9 | Mit aktivem Issue zeigt der Hauptbereich für jede Rolle `active-issue`: `active-issue-iid` „#iid“ (Größe und Zeilenhöhe des Titels, `--app-font-mono`, Gewicht 400, `--app-on-surface-muted`), `active-issue-title` als `h2`, den Link `active-issue-link` „In GitLab öffnen ↗“ (neuer Tab, `rel="noopener"`) und die Beschreibung `active-issue-description`. | vitest: `frontend-react/src/session/active-issue.spec.tsx`; e2e: `frontend/e2e/session-room.spec.ts` (Test zur Größe der Issue-Nummer) |
@@ -78,7 +78,7 @@ es, wenn diese Tests mit dem Tag `@react` gegen beide Frontends grün sind.
 
 ## Contracts
 
-keine Änderung. Genutzt: `GET /api/sessions/{id}/issues`, `PUT /api/sessions/{id}/issue`, der
+keine Änderung. Genutzt: `GET /api/sessions/{id}/issues`, `POST /api/sessions/{id}/active-issue`, der
 Snapshot `SessionView`.
 
 ## Risiko
@@ -103,7 +103,8 @@ Entscheidungen:
   Angular-Frontend) und `dompurify` `^3.4.18` (npm-Registry am 2026-11-25: 3.5.0 vom 2026-11-22
   ist jünger als 7 Tage, 3.4.18 vom 2026-11-14 nicht; Lizenz MPL-2.0 oder Apache-2.0). Das
   Angular-Frontend bereinigt mit dem Sanitizer von Angular; React hat keinen, deshalb DOMPurify
-  mit den Standardregeln.
+  mit dem HTML-Profil, ohne Formulare, Eingabefelder, `style` und das Attribut `style`, wie der
+  Sanitizer von Angular (bei der Umsetzung enger gefasst als „Standardregeln“ der Freigabe).
 - Bedienelemente aus dem UI SDK, lokal in `session/`: `SegmentedControl` (Gewicht), `Select`
   (Zeitraum), `Dialog` (Wechsel). `Dialog` statt `AlertDialog`, weil der Dialog des
   Angular-Frontends bei einem Klick daneben schließt. Das Suchfeld ist `TextField` aus `ui/`.
@@ -145,6 +146,11 @@ Dateien:
 - `frontend-react/src/session/external-link.ts`: neu, Prüfung des Schemas
 - `frontend-react/src/session/external-link.spec.ts`: neu
 - `frontend-react/src/session/filled-select.module.css`: neu
+- `frontend-react/src/session/issue-list.ts`: neu, Liste der Issues als Store (Hilfsdatei)
+- `frontend-react/src/session/use-narrow.ts`: neu, Breite unter 720 px (Hilfsdatei)
+- `frontend-react/src/session/testing/popup-animations.ts`: neu, Hilfe für Tests mit Popups
+- `frontend-react/src/session/session-facts.tsx`: ändern, Typ `TextKey`
+- `frontend-react/src/session/share-session.tsx`: ändern, Typ `TextKey`
 - `frontend-react/src/session/timer-setting.tsx`: ändern, Klassen aus `filled-select.module.css`
 - `frontend-react/src/session/timer-setting.module.css`: ändern
 - `frontend-react/src/session/last-result.tsx`: ändern, A12
