@@ -1,14 +1,14 @@
 ---
 id: "0065"
 title: "End-to-End-Tests: unstete Läufe der Startseite und `ECONNRESET` im Protokoll untersuchen"
-status: Review
+status: done
 risk: medium
 adrs: []
 owner: Morten Möller
 created: 2026-11-26
 updated: 2026-11-26
-pr: ""
-note: freigegeben in der Session
+pr: "#76"
+note: alle Kriterien erfüllt
 ---
 
 # End-to-End-Tests: unstete Läufe der Startseite und `ECONNRESET` im Protokoll untersuchen
