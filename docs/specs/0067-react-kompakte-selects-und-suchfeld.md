@@ -1,14 +1,14 @@
 ---
 id: "0067"
 title: "React-Frontend: kompakte Selects und kompaktes Suchfeld im Raum"
-status: Review
+status: done
 risk: medium
 adrs: ["0016"]
 owner: Morten Möller
 created: 2026-11-26
 updated: 2026-11-26
-pr: ""
-note: freigegeben in der Session
+pr: "#77"
+note: alle Kriterien erfüllt; gesperrter Zustand und Beitrittsseite nicht im Browser gemessen
 ---
 
 # React-Frontend: kompakte Selects und kompaktes Suchfeld im Raum
