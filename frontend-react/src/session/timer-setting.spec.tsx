@@ -76,6 +76,14 @@ describe('TimerSetting', () => {
     expect(select.getAttribute('data-slot')).toBe('select-trigger');
   });
 
+  it('keeps the label Timer out of view and shows the value alone in the field', async () => {
+    await setup();
+
+    const label = screen.getByText('Timer');
+    expect(label.className).toContain('labelHidden');
+    expect(trigger().textContent).toBe('Aus');
+  });
+
   it('offers the fixed durations', async () => {
     await setup();
 

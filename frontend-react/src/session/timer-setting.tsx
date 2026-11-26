@@ -10,7 +10,7 @@ import {
 import { useState } from 'react';
 import { useBackend } from '../api/backend';
 import { TIMER_OFF } from '../api/preferences-store';
-import select from './filled-select.module.css';
+import select from './outlined-select.module.css';
 import { t } from './messages';
 import type { TextKey } from './messages';
 import styles from './timer-setting.module.css';
@@ -54,7 +54,7 @@ export function TimerSetting({ sessionId }: { sessionId: string }) {
   return (
     <Field className={select.field}>
       <div className={select.box}>
-        <FieldLabel className={select.label}>{t('timerSetting.label')}</FieldLabel>
+        <FieldLabel className={select.labelHidden}>{t('timerSetting.label')}</FieldLabel>
         <Select
           items={items}
           value={String(value)}
@@ -69,7 +69,7 @@ export function TimerSetting({ sessionId }: { sessionId: string }) {
             <SelectValue className={select.value} />
             <span className={select.arrow} aria-hidden="true" />
           </SelectTrigger>
-          <SelectContent className={select.content} align="start" sideOffset={0}>
+          <SelectContent className={select.content} align="start" sideOffset={4}>
             {items.map((item) => (
               <SelectItem
                 key={item.value}

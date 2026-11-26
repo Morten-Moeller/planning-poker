@@ -34,6 +34,10 @@
   letter-spacing: var(--mat-sys-body-large-tracking);
 }
 
+.input[data-size='compact'] {
+  height: 40px;
+}
+
 .input:hover {
   border-color: var(--mat-sys-on-surface);
 }

@@ -396,6 +396,15 @@ describe('IssuePanel', () => {
       expect(listQueries(calls)).toHaveLength(1);
     });
 
+    it('names the period filter by its visible label and marks the search field compact', async () => {
+      await setup();
+
+      const period = screen.getByRole('combobox', { name: 'Geändert in' });
+      expect(period).toBe(screen.getByTestId('issue-filter-period'));
+      expect(screen.getByText('Geändert in').className).not.toContain('labelHidden');
+      expect(screen.getByTestId('issue-search-input').getAttribute('data-size')).toBe('compact');
+    });
+
     it('offers the period filter as a select of the UI SDK with four options', async () => {
       const user = userEvent.setup();
       await setup();

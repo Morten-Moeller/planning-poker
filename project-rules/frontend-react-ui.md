@@ -65,6 +65,9 @@ The shared controls of the React frontend in `frontend-react/src/ui/` (spec 0055
   field 56 px high with a border of 1 px in `--mat-sys-outline` and the radius
   `--app-corner-control`; focus 2 px `--mat-sys-primary`; error `--mat-sys-error`; hint and error
   in `--mat-sys-body-small` below the field.
+- `size="compact"` (spec 0067) sets `data-size="compact"` on the input and makes the field
+  40 px high, for a field next to an `AppButton`. Without `size` the field is 56 px high. Only
+  the search field of the issue panel uses it.
 - The input has no outline on `:focus-visible`; the border shows the focus, as in the Angular
   frontend. This is the only control without the outline of `global.css`.
 

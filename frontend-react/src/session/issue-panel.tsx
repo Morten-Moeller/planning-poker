@@ -18,7 +18,7 @@ import type { UpdatedPeriod, WeightFilter } from '../api/preferences-store';
 import { AppButton } from '../ui/app-button';
 import { TextField } from '../ui/text-field';
 import { externalUrl } from './external-link';
-import select from './filled-select.module.css';
+import select from './outlined-select.module.css';
 import { createIssueList } from './issue-list';
 import styles from './issue-panel.module.css';
 import { t } from './messages';
@@ -194,6 +194,7 @@ export function IssuePanel({ session }: { session: SessionView }) {
             value={searchText}
             onChange={setSearchText}
             autoComplete="off"
+            size="compact"
             data-testid="issue-search-input"
             renderInput={({ onChange, ...input }) => (
               <Input {...input} type="search" onValueChange={(next) => onChange(next)} />
@@ -236,9 +237,9 @@ export function IssuePanel({ session }: { session: SessionView }) {
             </SegmentedControlItem>
           ))}
         </SegmentedControl>
-        <Field className={select.field}>
-          <div className={select.box}>
-            <FieldLabel className={select.label}>{t('issuePanel.periodLabel')}</FieldLabel>
+        <Field className={`${select.field} ${select.inline}`}>
+          <FieldLabel className={select.label}>{t('issuePanel.periodLabel')}</FieldLabel>
+          <div className={`${select.box} ${select.narrow}`}>
             <Select
               items={periodItems}
               value={filters.period}
@@ -252,7 +253,7 @@ export function IssuePanel({ session }: { session: SessionView }) {
                 <SelectValue className={select.value} />
                 <span className={select.arrow} aria-hidden="true" />
               </SelectTrigger>
-              <SelectContent className={select.content} align="start" sideOffset={0}>
+              <SelectContent className={select.content} align="start" sideOffset={4}>
                 {PERIODS.map((option) => (
                   <SelectItem
                     key={option.value}
