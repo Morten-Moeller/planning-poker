@@ -101,8 +101,8 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   the `SessionStore` and clears `ErrorState`. An issue search without results shows
   `issue-results-empty`; after a failed load it is not shown until the next load succeeds
   (spec 0064). The links `active-issue-link`, `issue-preview-link`, `confirm-success-open` and
-  `last-result-open` open a new tab and have `rel="noopener noreferrer"` (spec 0064). A failed copy to the clipboard shows a `role="status"` text to copy by
-  hand.
+  `last-result-open` open a new tab and have `rel="noopener noreferrer"` (spec 0064). A failed
+  copy to the clipboard shows a `role="status"` text to copy by hand.
 - Project and issue choice on the start page (spec 0022, ADR 0008): the fields `create-project`
   and `create-issue` are `mat-autocomplete` inputs. The text goes through `valueChanges` with
   `debounceTime(300)` and `switchMap` to `ApiService.searchProjects` and
