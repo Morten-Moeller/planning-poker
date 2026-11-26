@@ -4,7 +4,7 @@ Nov 16, 2026 · @Morten
 
 ## 1. Ziel und Scope
 
-Gebaut wird Variante A: ein Angular-Frontend und ein Quarkus-Backend, mit denen ein Scrum-Team GitLab-Issues synchron schätzt und das vereinbarte Ergebnis am Issue hinterlegt. Grundlage sind das [Frontend-README](https://github.com/buchner-org/coding-challenge/blob/main/planning-poker/frontend/README.md) und das [Backend-README](https://github.com/buchner-org/coding-challenge/blob/main/planning-poker/backend/README.md) der Coding Challenge, zuletzt abgeglichen am 16.11.2026.
+Gebaut wird Variante A: ein Angular-Frontend und ein Quarkus-Backend, mit denen ein Scrum-Team GitLab-Issues synchron schätzt und das vereinbarte Ergebnis am Issue hinterlegt. Grundlage sind das Frontend-README und das Backend-README der Coding Challenge, zuletzt abgeglichen am 16.11.2026.
 
 Variante A statt B: Der Server erzwingt verdeckte Karten und Rollen, wie es das Backend-README verlangt („stellt sicher, dass Steuerungsaktionen ausschließlich dem Scrum Master vorbehalten sind“). Der GitLab-Token bleibt im Backend, und die Echtzeit-Synchronisation braucht keinen Drittdienst. In Variante B bräuchte jeder Browser einen Token mit Schreibrecht, und die Synchronisation liefe über einen externen Dienst oder über Abfragen der GitLab-API. Diese Begründung kommt ins README (R-24).
 
