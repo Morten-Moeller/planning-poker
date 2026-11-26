@@ -68,12 +68,16 @@ and Design Werkbank part B).
   and the options are also passed as `items`, so the trigger shows the label of a value that
   comes with a later snapshot. The value is `timerSeconds` of the snapshot. A choice sends
   `PUT …/timer` (`null` for „Aus“), disables the select until the answer and saves `timerSeconds`
-  in the `PreferencesStore` after success only. The look is the filled field of the Angular
-  room: a box of 212 × 60 px in `--mat-sys-surface-variant` with the label inside at the top, a
-  line of 1 px below (2 px in `--mat-sys-primary` while open or focused), the list of the same
-  width directly under it and a check mark at the chosen option. The trigger keeps the focus
-  outline of `global.css`. These rules stand in `filled-select.module.css`; the period filter
-  of the issue panel uses them as well.
+  in the `PreferencesStore` after success only. The look is the outlined select of the React
+  frontend alone (spec 0067; the Angular room keeps the filled field): a box of 212 × 42 px
+  with a border of 1 px in `--mat-sys-outline`, the radius `--app-corner-control` and no
+  background; the border is `--mat-sys-on-surface` on hover and 2 px in `--mat-sys-primary`
+  while open or focused (an inset shadow, so the content does not move); a disabled select has
+  border and text at 38 % of `--mat-sys-on-surface`. The list has the width of the trigger,
+  4 px below it, and a check mark at the chosen option. The label „Timer“ is not visible
+  (`labelHidden`) and stays the accessible name; the heading of the section stands above. These
+  rules stand in `outlined-select.module.css`; the period filter of the issue panel uses them as
+  well.
 - `ParticipantList` (`participant-list.tsx`): scrum master and developers first, viewers after
   them. The own row has „(du)“ and `data-me="true"`. Only a developer has `participant-chip`
   (`data-filled="true"` after a vote in `VOTING` and `REVEALED`); the scrum master and a viewer
@@ -113,7 +117,9 @@ and Design Werkbank part B).
 - Controls: the search field is `TextField` of `ui/` with an `Input` of `type="search"`; the
   weight filter is `SegmentedControl` of `@ui-sdk/react/segmented-control` (`radiogroup` with
   three `radio` items, `aria-label`); the period filter is `Select` with the look of
-  `filled-select.module.css`. Buttons are `AppButton`.
+  `outlined-select.module.css`, 148 px wide and as high as the weight filter, with the visible
+  label „Geändert in“ to its left. The search field has `size="compact"` (40 px, the height of
+  „Suchen“; spec 0067). Buttons are `AppButton`.
 - Errors: `GITLAB_ACCESS_DENIED` and `GITLAB_ERROR` of the list are shown in
   `issue-results-error` with `issue-results-retry`, and the `ErrorState` is cleared so the banner
   stays empty. Every other error stays with the banner.

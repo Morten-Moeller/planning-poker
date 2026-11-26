@@ -5,6 +5,8 @@ import styles from './text-field.module.css';
 
 type InputProps = ComponentProps<typeof Input>;
 
+export type TextFieldSize = 'compact';
+
 export interface TextFieldInputProps {
   className: string;
   value: string;
@@ -15,6 +17,7 @@ export interface TextFieldInputProps {
   inputMode?: InputProps['inputMode'];
   maxLength?: number;
   'data-testid'?: string;
+  'data-size'?: TextFieldSize;
 }
 
 export interface TextFieldProps {
@@ -29,6 +32,7 @@ export interface TextFieldProps {
   inputMode?: InputProps['inputMode'];
   maxLength?: number;
   disabled?: boolean;
+  size?: TextFieldSize;
   'data-testid'?: string;
   errorTestId?: string;
   renderInput?: (input: TextFieldInputProps) => ReactNode;
@@ -48,6 +52,7 @@ export function TextField({
   inputMode,
   maxLength,
   disabled,
+  size,
   'data-testid': testId,
   errorTestId,
   renderInput,
@@ -69,6 +74,7 @@ export function TextField({
           inputMode={inputMode}
           maxLength={maxLength}
           data-testid={testId}
+          data-size={size}
         />
       ) : (
         renderInput({
@@ -81,6 +87,7 @@ export function TextField({
           inputMode,
           maxLength,
           'data-testid': testId,
+          'data-size': size,
         })
       )}
       {hasError && (

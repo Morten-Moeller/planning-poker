@@ -32,6 +32,15 @@ function describedBy(input: HTMLElement): string {
 }
 
 describe('TextField', () => {
+  it('has no size mark without size and the mark compact with size compact', () => {
+    const { unmount } = render(<Controlled />);
+    expect(screen.getByRole('textbox').hasAttribute('data-size')).toBe(false);
+    unmount();
+
+    render(<Controlled size="compact" />);
+    expect(screen.getByRole('textbox').getAttribute('data-size')).toBe('compact');
+  });
+
   it('gives the input the accessible name of the label and the parts of the UI SDK', () => {
     render(<Controlled />);
 
