@@ -106,8 +106,8 @@ Hinweise zu den Wellen:
 
 # Roadmap Teil 2: React-Frontend mit UI SDK
 
-Stand: 2026-11-25 (abgeschlossen mit Spec 0062: alle Seiten, dieselbe Playwright-Suite gegen beide
-Frontends)
+Stand: 2026-11-26 (Parität erreicht mit Spec 0062: alle Seiten, dieselbe Playwright-Suite gegen
+beide Frontends; Welle 9 schließt offene Hinweise aus den Reviews)
 
 Teil 1 oben ist abgeschlossen (Specs 0001 bis 0019) und bleibt unverändert.
 
@@ -172,8 +172,9 @@ bestehen (ADR 0001, R-26).
 | 0058 | Raum, Teil 1: Raster, Seitenleiste (Timer mit Select, Teilnehmer, Teilen, Fakten), Lobby, Kartenmotiv | 4 | 0054, 0055, 0063 | `frontend-react/src/session/`, `project-rules/frontend-react-session.md` | high |
 | 0059 | Raum, Teil 2: Issue-Auswahl mit Filtern (Segmented Control, Select), aktives Issue mit Markdown, Wechsel-Dialog; Motiv in der Toolbar; Tags für die Abläufe über Start, Beitritt und Raum | 5 | 0056, 0057, 0058 | `frontend-react/src/session/`, `frontend-react/src/shell/`, `frontend-react/src/api/card-motif.ts`, `frontend-react/package.json` (`marked`, `dompurify`), `frontend/src/app/session/session-page.html` (`data-testid`), `frontend/e2e/` (Tags) | high |
 | 0060 | Raum, Teil 3: Diskussion und Schätzrunde: Karte, Kartensatz, Tisch, Rundenstatus mit Fortschrittsbalken, Timer, Footer | 6 | 0059 | `frontend-react/src/session/`, `frontend/e2e/` (Tags) | medium |
-| 0061 | Raum, Teil 4: Auflösung und Abschluss: Ergebnis, Ausreißer, Konsens, Konfetti, Bestätigen (Dialog, Toast), letztes Ergebnis, Protokoll (Collapsible), erneut schätzen, Zuschauer | 7 | 0060 | `frontend-react/src/session/`, `frontend-react/src/shell/` (Toast-Region), `frontend/e2e/` (Tags) | medium |
+| 0061 | Raum, Teil 4: Auflösung und Abschluss: Ergebnis, Ausreißer, Konsens, Konfetti, Bestätigen (Dialog, Toast), letztes Ergebnis, Protokoll (Collapsible), erneut schätzen, Zuschauer | 7 | 0060 | `frontend-react/src/session/` (mit Toast-Region), `frontend/e2e/` (Tags) | medium |
 | 0062 | Parität: ganze Suite ohne Tag gegen React, Bundle-Grenze, README und Architektur final | 8 | 0056, 0057, 0061 | `frontend/e2e/`, `frontend/playwright.config.ts`, `frontend-react/vite.config.ts`, `README.md`, `docs/` | medium |
+| 0064 | Review-Hinweise: leerer Zustand der Issue-Liste nach einem Fehler, `rel` der Links auf GitLab, in beiden Frontends | 9 | 0062 | `frontend-react/src/session/`, `frontend/src/app/session/`, `frontend/e2e/session-room.spec.ts`, `project-rules/`, `docs/roadmap.md` | medium |
 
 Hinweise zu den Wellen:
 
@@ -221,6 +222,9 @@ Hinweise zu den Wellen:
 - Selektoren der Suite, die nur im Angular-Frontend existieren (`app-start-page`,
   `app-session-page .room`, `mat-button-toggle-checked`), ersetzt die Spec, die den Test
   freischaltet, in beiden Frontends durch `data-testid` oder ein ARIA-Attribut.
+- Welle 9 (geschrieben am 2026-11-26): 0064 schließt die offenen Hinweise aus den Reviews von 0059
+  und 0061 in beiden Frontends. Die Toast-Region bleibt in `session/`; die Zeile zu 0061 nannte
+  `shell/` und ist berichtigt.
 - Die Specs ab Welle 2 werden mit `/roadmap next` aus dem dann vorhandenen Code geschrieben.
 
 ## Offene Fragen
