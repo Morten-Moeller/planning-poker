@@ -1,14 +1,14 @@
 ---
 id: "0064"
 title: "Review-Hinweise: leerer Zustand der Issue-Liste nach einem Fehler und `rel` der Links"
-status: Review
+status: done
 risk: medium
 adrs: ["0016"]
 owner: Morten Möller
 created: 2026-11-26
 updated: 2026-11-26
-pr: ""
-note: freigegeben in der Session
+pr: "#74"
+note: alle Kriterien erfüllt
 ---
 
 # Review-Hinweise: leerer Zustand der Issue-Liste nach einem Fehler und `rel` der Links
