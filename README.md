@@ -1,11 +1,24 @@
 # Planning Poker
 
-Ein Scrum-Team schätzt GitLab-Issues synchron: Der Scrum Master legt eine Sitzung an, teilt die
-Einladungslinks für Entwickler und Zuschauer, wählt ein Issue und gibt es frei. Die Entwickler wählen verdeckt eine Karte, der
-Scrum Master löst auf, lässt bei Bedarf erneut schätzen und übernimmt den vereinbarten Wert als
-Kommentar an das GitLab-Issue. Lösung der Coding Challenge Planning Poker
-([Frontend-README](https://github.com/buchner-org/coding-challenge/blob/main/planning-poker/frontend/README.md),
-[Backend-README](https://github.com/buchner-org/coding-challenge/blob/main/planning-poker/backend/README.md)).
+Planning Poker für Scrum-Teams, die ihre Issues in GitLab führen: Das Team schätzt ein Issue
+gemeinsam und in Echtzeit, und das vereinbarte Ergebnis steht danach als Kommentar am Issue.
+
+Der Scrum Master legt eine Sitzung an, teilt die Einladungslinks für Entwickler und Zuschauer,
+wählt ein Issue und gibt es frei. Die Entwickler wählen verdeckt eine Karte, der Scrum Master löst
+auf, lässt bei Bedarf erneut schätzen und übernimmt den vereinbarten Wert als Kommentar an das
+GitLab-Issue.
+
+Das Projekt ist als Lösung einer Coding Challenge entstanden und wird seitdem weitergeführt. Der
+Stand der Abgabe trägt den Tag `abgabe`.
+
+| Teil | Umsetzung |
+|---|---|
+| Backend | Quarkus 3 auf Java 25. Es hält die Sitzungen im Arbeitsspeicher, prüft Rollen und Phasen und spricht als einziger Teil mit GitLab. |
+| Frontend | Angular 22. Dieselbe Oberfläche gibt es ein zweites Mal mit React 19 (`frontend-react/`). |
+| Echtzeit | Nach jeder Änderung sendet der Server jedem Teilnehmer per WebSocket den vollständigen, je Rolle gefilterten Zustand. |
+| Vertrag | OpenAPI, aus dem Backend generiert; beide Frontends beziehen ihre Typen daraus. |
+| Tests | Unit- und Integrationstests je Projekt, dazu eine Playwright-Suite, die gegen beide Frontends und ein GitLab-Double läuft. |
+| Arbeitsweise | Entwickelt mit KI-Agenten unter dem AI Development Harness: Jede Änderung beginnt mit einer Spec, die eine Person freigibt, und endet in einem Pull Request mit KI-Review. Die Entscheidungen stehen als ADRs in `docs/adr/` (Abschnitt Entwicklung). |
 
 ## Schnellstart
 
@@ -53,8 +66,7 @@ Angular-Frontend bleibt das Frontend der Abgabe.
 ## Variante
 
 Gebaut ist Variante A: ein Angular-Frontend und ein Quarkus-Backend. Der Server erzwingt verdeckte
-Karten und Rollen, wie es das Backend-README verlangt („stellt sicher, dass Steuerungsaktionen
-ausschließlich dem Scrum Master vorbehalten sind“). Der GitLab-Token bleibt im Backend, und die
+Karten und Rollen, wie es die Aufgabenstellung verlangt. Der GitLab-Token bleibt im Backend, und die
 Echtzeit-Synchronisation braucht keinen Drittdienst. In Variante B bräuchte jeder Browser einen
 Token mit Schreibrecht, und die Synchronisation liefe über einen externen Dienst oder über
 Abfragen der GitLab-API. Entscheidung: `docs/adr/0001-angular-und-quarkus-variante-a.md`.
