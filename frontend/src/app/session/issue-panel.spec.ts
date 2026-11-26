@@ -363,16 +363,16 @@ describe('IssuePanel', () => {
     await open(lobbyScrumMaster, FIRST_PAGE, 2);
 
     await click('issue-load-more');
-    http
-      .expectOne((r) => r.url === ISSUES_URL)
-      .flush(
-        { errorCode: 'INVALID_STATE', title: 'Conflict', status: 409 },
-        {
-          status: 409,
-          statusText: 'Conflict',
-          headers: { 'Content-Type': 'application/problem+json' },
-        },
-      );
+    const request = http.expectOne((r) => r.url === ISSUES_URL);
+    expect(request.request.params.get('page')).toBe('2');
+    request.flush(
+      { errorCode: 'INVALID_STATE', title: 'Conflict', status: 409 },
+      {
+        status: 409,
+        statusText: 'Conflict',
+        headers: { 'Content-Type': 'application/problem+json' },
+      },
+    );
     await fixture.whenStable();
 
     expect(all('issue-result')).toHaveLength(2);
