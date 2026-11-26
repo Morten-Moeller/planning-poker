@@ -106,8 +106,8 @@ Hinweise zu den Wellen:
 
 # Roadmap Teil 2: React-Frontend mit UI SDK
 
-Stand: 2026-11-26 (Parität erreicht mit Spec 0062: alle Seiten, dieselbe Playwright-Suite gegen
-beide Frontends; Welle 9 schließt offene Hinweise aus den Reviews)
+Stand: 2026-11-26 (Parität erreicht mit Spec 0062; Welle 9 schloss offene Hinweise aus den Reviews,
+Welle 10 untersucht unstete End-to-End-Läufe und teilt einen Test)
 
 Teil 1 oben ist abgeschlossen (Specs 0001 bis 0019) und bleibt unverändert.
 
@@ -175,6 +175,8 @@ bestehen (ADR 0001, R-26).
 | 0061 | Raum, Teil 4: Auflösung und Abschluss: Ergebnis, Ausreißer, Konsens, Konfetti, Bestätigen (Dialog, Toast), letztes Ergebnis, Protokoll (Collapsible), erneut schätzen, Zuschauer | 7 | 0060 | `frontend-react/src/session/` (mit Toast-Region), `frontend/e2e/` (Tags) | medium |
 | 0062 | Parität: ganze Suite ohne Tag gegen React, Bundle-Grenze, README und Architektur final | 8 | 0056, 0057, 0061 | `frontend/e2e/`, `frontend/playwright.config.ts`, `frontend-react/vite.config.ts`, `README.md`, `docs/` | medium |
 | 0064 | Review-Hinweise: leerer Zustand der Issue-Liste nach einem Fehler, `rel` der Links auf GitLab, in beiden Frontends | 9 | 0062 | `frontend-react/src/session/`, `frontend/src/app/session/`, `frontend/e2e/session-room.spec.ts`, `project-rules/`, `docs/roadmap.md` | medium |
+| 0065 | End-to-End-Tests: unstete Läufe der Startseite und `ECONNRESET` im Protokoll untersuchen | 10 | 0064 | `project-rules/testing.md`, `frontend/e2e/project-picker.spec.ts`, `frontend/e2e/create-and-join.spec.ts`, `docs/roadmap.md` | medium |
+| 0066 | Angular-Frontend: Test der Issue-Liste nach einem Fehler in drei Fälle teilen | 10 | 0064 | `frontend/src/app/session/issue-panel.spec.ts` | low |
 
 Hinweise zu den Wellen:
 
@@ -225,6 +227,13 @@ Hinweise zu den Wellen:
 - Welle 9 (geschrieben am 2026-11-26): 0064 schließt die offenen Hinweise aus den Reviews von 0059
   und 0061 in beiden Frontends. Die Toast-Region bleibt in `session/`; die Zeile zu 0061 nannte
   `shell/` und ist berichtigt.
+- Welle 10 (geschrieben am 2026-11-26): 0065 untersucht die einzelnen roten Läufe der Startseite
+  und die Zeile `ECONNRESET`; 0066 teilt einen Test des Angular-Frontends (Hinweis aus dem Review
+  von 0064). Getrennte Dateien; `wave-check.sh` meldet keine Überschneidung.
+  Ergebnis von 0065: die drei Tests sind in je 30 Wiederholungen gegen alle drei Ziele grün (nicht
+  reproduzierbar, Tests unverändert); die Zeile `ECONNRESET` schreibt der Proxy von `ng serve` im
+  Angular-Lauf, wenn der Browser eine Seite mit offenem WebSocket beendet, und zeigt keinen Fehler
+  an (`project-rules/testing.md`, Abschnitt „Flaky tests“).
 - Die Specs ab Welle 2 werden mit `/roadmap next` aus dem dann vorhandenen Code geschrieben.
 
 ## Offene Fragen
