@@ -177,6 +177,7 @@ bestehen (ADR 0001, R-26).
 | 0064 | Review-Hinweise: leerer Zustand der Issue-Liste nach einem Fehler, `rel` der Links auf GitLab, in beiden Frontends | 9 | 0062 | `frontend-react/src/session/`, `frontend/src/app/session/`, `frontend/e2e/session-room.spec.ts`, `project-rules/`, `docs/roadmap.md` | medium |
 | 0065 | End-to-End-Tests: unstete Läufe der Startseite und `ECONNRESET` im Protokoll untersuchen | 10 | 0064 | `project-rules/testing.md`, `frontend/e2e/project-picker.spec.ts`, `frontend/e2e/create-and-join.spec.ts`, `docs/roadmap.md` | medium |
 | 0066 | Angular-Frontend: Test der Issue-Liste nach einem Fehler in drei Fälle teilen | 10 | 0064 | `frontend/src/app/session/issue-panel.spec.ts` | low |
+| 0067 | React-Frontend: kompakte Selects und kompaktes Suchfeld im Raum (nur React) | 11 | 0064 | `frontend-react/src/session/`, `frontend-react/src/ui/` (`TextField`), `project-rules/`, `docs/roadmap.md` | medium |
 
 Hinweise zu den Wellen:
 
@@ -234,6 +235,9 @@ Hinweise zu den Wellen:
   reproduzierbar, Tests unverändert); die Zeile `ECONNRESET` schreibt der Proxy von `ng serve` im
   Angular-Lauf, wenn der Browser eine Seite mit offenem WebSocket beendet, und zeigt keinen Fehler
   an (`project-rules/testing.md`, Abschnitt „Flaky tests“).
+- Welle 11 (geschrieben am 2026-11-26): 0067 ändert das Aussehen von drei Feldern nur im
+  React-Frontend (Entscheidung der Person nach einem Blick auf den Raum); die Spec trägt die
+  Aussage nach ADR 0016.
 - Die Specs ab Welle 2 werden mit `/roadmap next` aus dem dann vorhandenen Code geschrieben.
 
 ## Offene Fragen
