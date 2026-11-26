@@ -316,7 +316,7 @@ describe('IssuePanel', () => {
     expect(texts('issue-result')).toEqual(['✓ #42 Login page ohne Gewicht']);
   });
 
-  it('shows no empty state after a failed load with another code and shows it after an empty load', async () => {
+  it('keeps the loaded issues and shows no empty state and no error state after a failed load with another code', async () => {
     await open(lobbyScrumMaster);
 
     await click('issue-search-submit');
@@ -335,12 +335,48 @@ describe('IssuePanel', () => {
     expect(all('issue-result')).toHaveLength(2);
     expect(all('issue-results-empty')).toHaveLength(0);
     expect(all('issue-results-error')).toHaveLength(0);
+  });
+
+  it('shows the empty state when a load without issues follows a failed load with another code', async () => {
+    await open(lobbyScrumMaster);
+    await click('issue-search-submit');
+    http
+      .expectOne((r) => r.url === ISSUES_URL)
+      .flush(
+        { errorCode: 'INVALID_STATE', title: 'Conflict', status: 409 },
+        {
+          status: 409,
+          statusText: 'Conflict',
+          headers: { 'Content-Type': 'application/problem+json' },
+        },
+      );
+    await fixture.whenStable();
 
     await click('issue-search-submit');
     http.expectOne((r) => r.url === ISSUES_URL).flush({ items: [], nextPage: null, total: 0 });
     await fixture.whenStable();
 
     expect(texts('issue-results-empty')).toEqual(['Keine Issues gefunden']);
+  });
+
+  it('keeps the loaded issues and shows no empty state after a failed load more with another code', async () => {
+    await open(lobbyScrumMaster, FIRST_PAGE, 2);
+
+    await click('issue-load-more');
+    http
+      .expectOne((r) => r.url === ISSUES_URL)
+      .flush(
+        { errorCode: 'INVALID_STATE', title: 'Conflict', status: 409 },
+        {
+          status: 409,
+          statusText: 'Conflict',
+          headers: { 'Content-Type': 'application/problem+json' },
+        },
+      );
+    await fixture.whenStable();
+
+    expect(all('issue-result')).toHaveLength(2);
+    expect(all('issue-results-empty')).toHaveLength(0);
   });
 
   it('shows no empty state when the first load fails with another code', async () => {
