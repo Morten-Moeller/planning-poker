@@ -1,13 +1,13 @@
 ---
 id: "0066"
 title: "Angular-Frontend: Test der Issue-Liste nach einem Fehler in drei Fälle teilen"
-status: Review
+status: done
 risk: low
 adrs: []
 owner: Morten Möller
 created: 2026-11-26
 updated: 2026-11-26
-pr: ""
+pr: "#75"
 note: freigegeben in der Session
 ---
 
