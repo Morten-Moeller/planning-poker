@@ -100,6 +100,36 @@ package`, then the jar with `-Dquarkus.profile=e2e` and
   läuft“. „Erneut schätzen“ (`round-restart`, spec 0034, ADR 0012) leads straight to „Runde
   läuft“, without `startVoting(page)`.
 
+## Flaky tests (Unstete Tests)
+
+- Rule (T4.4): a flaky test is fixed or deleted in its own pull request. `retries` in
+  `frontend/playwright.config.ts` stays 0; no longer timeout and no skipped test in its place.
+- Repeat one test: `pnpm -C frontend exec playwright test <file> -g "<title>" --repeat-each=30`,
+  with `E2E_FRONTEND=react` for the build of the React frontend. The number of workers is the
+  default, as in `make e2e`. A red run keeps its trace under `frontend/test-results/`
+  (`trace: 'retain-on-failure'`); `pnpm -C frontend exec playwright show-trace <trace.zip>` opens it.
+- Not reproducible (spec 0065, 2026-11-26): three tests of the start page were red once each, in
+  runs against the dev server of the React frontend: in `project-picker.spec.ts` „shows the empty
+  state of the issue search and keeps a typed issue number“ and „opens the project list on a click
+  into the empty field and then the issue list“, in `create-and-join.spec.ts` „creates a session
+  and opens the room as scrum master with the share block“. 30 repeats of each test with 4
+  workers: 90 of 90 green against the Angular frontend, 90 of 90 against the build of the React
+  frontend, 90 of 90 against the dev server of the React frontend (`vite` in place of `vite build`
+  and `vite preview`, a local change of the start command). No red run, so no trace and no change
+  of the tests.
+- `[vite] ws proxy error: Error: read ECONNRESET` in the output of the web server: the line comes
+  from the Angular run. The proxy of `ng serve` for `/ws` writes it, together with
+  `[vite] ws proxy socket error: Error: read ECONNRESET`, when the browser ends a page whose room
+  has an open WebSocket and both connections of the proxy (to the backend and to the browser) are
+  reset. Measured for a closed tab (`page.close()` in `reopen` of `recent-sessions.spec.ts`):
+  `pnpm -C frontend exec playwright test recent-sessions -g "a developer returns" --repeat-each=30`
+  wrote the pair in 7 of 30 runs with 4 workers and in 0 of 15 with `--workers=1`. A whole run of
+  the suite against the Angular frontend wrote 1 to 3 pairs (7 runs), also next to tests that
+  close a second browser context. The same call and the whole suite against the React frontend
+  wrote none. The line shows no failure: every test of these runs passed, the connection belongs
+  to a page that is closed, and a page that returns to the room opens a new connection. The
+  reason why only the Angular run writes it is not found.
+
 ## Test data
 
 - Command: none yet. Sessions live in memory and are created through the public API

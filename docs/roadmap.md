@@ -230,6 +230,10 @@ Hinweise zu den Wellen:
 - Welle 10 (geschrieben am 2026-11-26): 0065 untersucht die einzelnen roten Läufe der Startseite
   und die Zeile `ECONNRESET`; 0066 teilt einen Test des Angular-Frontends (Hinweis aus dem Review
   von 0064). Getrennte Dateien; `wave-check.sh` meldet keine Überschneidung.
+  Ergebnis von 0065: die drei Tests sind in je 30 Wiederholungen gegen alle drei Ziele grün (nicht
+  reproduzierbar, Tests unverändert); die Zeile `ECONNRESET` schreibt der Proxy von `ng serve` im
+  Angular-Lauf, wenn der Browser eine Seite mit offenem WebSocket beendet, und zeigt keinen Fehler
+  an (`project-rules/testing.md`, Abschnitt „Flaky tests“).
 - Die Specs ab Welle 2 werden mit `/roadmap next` aus dem dann vorhandenen Code geschrieben.
 
 ## Offene Fragen
