@@ -68,7 +68,7 @@ export function IssuePanel({ session }: { session: SessionView }) {
   const { api, errors, preferences } = useBackend();
   const sessionId = session.sessionId;
   const [list] = useState(() => createIssueList(api, errors, sessionId));
-  const { items, nextPage, total, loading, failure } = useSyncExternalStore(
+  const { items, nextPage, total, loading, failure, loadFailed } = useSyncExternalStore(
     list.subscribe,
     list.state,
   );
@@ -326,7 +326,7 @@ export function IssuePanel({ session }: { session: SessionView }) {
           })}
         </ul>
       )}
-      {items.length === 0 && !loading && !failed && (
+      {items.length === 0 && !loading && !loadFailed && (
         <div className={styles.empty} role="status">
           <strong data-testid="issue-results-empty">{t('issuePanel.empty')}</strong>
           <AppButton variant="text" data-testid="issue-filter-reset" onClick={resetFilters}>
@@ -367,7 +367,7 @@ export function IssuePanel({ session }: { session: SessionView }) {
                 data-testid="issue-preview-link"
                 href={selectedUrl}
                 target="_blank"
-                rel="noopener"
+                rel="noopener noreferrer"
               >
                 <span data-testid="issue-preview-title">{selected.title}</span>
               </a>

@@ -42,7 +42,7 @@ export function ActiveIssue({ issue, phase }: { issue: IssueView; phase: Session
             data-testid="active-issue-link"
             href={url}
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
           >
             {t('activeIssue.openInGitLab')}{' '}
             <span className="app-symbol" aria-hidden="true">

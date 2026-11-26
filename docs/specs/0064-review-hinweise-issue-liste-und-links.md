@@ -1,7 +1,7 @@
 ---
 id: "0064"
 title: "Review-Hinweise: leerer Zustand der Issue-Liste nach einem Fehler und `rel` der Links"
-status: approved
+status: Review
 risk: medium
 adrs: ["0016"]
 owner: Morten Möller
@@ -121,7 +121,7 @@ Tests:
 
 | Kriterium | Test |
 |---|---|
-| A1 | `frontend-react/src/session/issue-panel.spec.tsx`, `frontend/src/app/session/issue-panel.spec.ts`: Laden mit `INTERNAL_ERROR` schlägt fehl, kein `issue-results-empty`, kein `issue-filter-reset` |
+| A1 | `frontend-react/src/session/issue-panel.spec.tsx`, `frontend/src/app/session/issue-panel.spec.ts`: Laden mit `INVALID_STATE` schlägt fehl (der Vertrag kennt kein `INTERNAL_ERROR`), kein `issue-results-empty`, kein `issue-filter-reset` |
 | A2 | dieselben Dateien: Fehler, dann Laden ohne Treffer zeigt `issue-results-empty`; Treffer, dann Fehler beim Nachladen lässt die Treffer stehen |
 | A3 | dieselben Dateien: bestehende Fälle zu `GITLAB_ERROR` und `GITLAB_ACCESS_DENIED` |
 | A4 | `frontend-react/src/session/active-issue.spec.tsx`, `frontend-react/src/session/issue-panel.spec.tsx`, `frontend-react/src/session/session-page.spec.tsx`, `frontend/src/app/session/active-issue.spec.ts`, `frontend/src/app/session/issue-panel.spec.ts`, `frontend/src/app/session/confirm-success.spec.ts`; `frontend/e2e/session-room.spec.ts` in beiden Läufen |

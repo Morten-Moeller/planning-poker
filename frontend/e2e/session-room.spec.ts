@@ -110,7 +110,7 @@ test('the scrum master releases an issue and the developer sees it without reloa
   const link = developer.getByTestId('active-issue-link');
   await expect(link).toHaveAttribute('href', 'https://gitlab.example/group/project/-/issues/43');
   await expect(link).toHaveAttribute('target', '_blank');
-  await expect(link).toHaveAttribute('rel', 'noopener');
+  await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   await expect(developer.getByTestId('issue-panel')).toHaveCount(0);
   await expect(developer.getByTestId('issue-release')).toHaveCount(0);
 });

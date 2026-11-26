@@ -488,6 +488,50 @@ describe('IssuePanel', () => {
       expect(screen.queryByTestId('issue-load-more')).toBeNull();
     });
 
+    it('shows no empty state after a failed load with another code', async () => {
+      const { backend } = await setup(lobbyScrumMaster, {
+        issues: () => problem(409, 'INVALID_STATE'),
+      });
+
+      await waitFor(() => expect(backend.errors.error()).not.toBeNull());
+
+      expect(screen.queryByTestId('issue-results-empty')).toBeNull();
+      expect(screen.queryByTestId('issue-filter-reset')).toBeNull();
+      expect(screen.queryByTestId('issue-results-error')).toBeNull();
+    });
+
+    it('shows the empty state again after a load without results', async () => {
+      const user = userEvent.setup();
+      const { backend } = await setup(lobbyScrumMaster, {
+        issues: inSequence(
+          () => problem(409, 'INVALID_STATE'),
+          () => issuePage([], null, 0),
+        ),
+      });
+      await waitFor(() => expect(backend.errors.error()).not.toBeNull());
+
+      await user.click(screen.getByTestId('issue-search-submit'));
+
+      expect(await screen.findByTestId('issue-results-empty')).toBeTruthy();
+    });
+
+    it('keeps the list after a failed next page with another code', async () => {
+      const user = userEvent.setup();
+      const { backend } = await setup(lobbyScrumMaster, {
+        issues: inSequence(
+          () => issuePage([LOGIN, RESET], 2, 3),
+          () => problem(409, 'INVALID_STATE'),
+        ),
+      });
+      await shown(2);
+
+      await user.click(screen.getByTestId('issue-load-more'));
+      await waitFor(() => expect(backend.errors.error()).not.toBeNull());
+
+      expect(rows()).toHaveLength(2);
+      expect(screen.queryByTestId('issue-results-empty')).toBeNull();
+    });
+
     it('repeats the request with Erneut versuchen and removes the error after success', async () => {
       const user = userEvent.setup();
       savePreferences({ weightFilter: 'ALL', periodFilter: 'YEAR' });
@@ -592,7 +636,7 @@ describe('IssuePanel', () => {
       const link = screen.getByTestId('issue-preview-link');
       expect(link.getAttribute('href')).toBe('https://gitlab.example/group/project/-/issues/42');
       expect(link.getAttribute('target')).toBe('_blank');
-      expect(link.getAttribute('rel')).toBe('noopener');
+      expect(link.getAttribute('rel')).toBe('noopener noreferrer');
     });
 
     it('starts with the active issue before the preselected one', async () => {

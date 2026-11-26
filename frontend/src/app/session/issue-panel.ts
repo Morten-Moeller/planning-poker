@@ -72,6 +72,7 @@ export class IssuePanel implements OnInit {
   protected readonly loading = signal(false);
   protected readonly failure = signal<string | null>(null);
   protected readonly failed = computed(() => this.failure() !== null);
+  protected readonly loadFailed = signal(false);
   protected readonly releasing = signal(false);
   protected readonly weight = signal<WeightFilter>(this.saved.weightFilter);
   protected readonly period = signal<UpdatedPeriod>(this.saved.periodFilter);
@@ -212,6 +213,7 @@ export class IssuePanel implements OnInit {
     this.lastLoad = { query, append };
     this.loading.set(true);
     this.failure.set(null);
+    this.loadFailed.set(false);
     this.listing = this.api.listIssues(this.sessionId(), query).subscribe({
       next: (response) => {
         this.results.update((current) =>
@@ -223,6 +225,7 @@ export class IssuePanel implements OnInit {
       },
       error: (error: unknown) => {
         this.loading.set(false);
+        this.loadFailed.set(true);
         const message = formErrorMessage(error, SEARCH_ERRORS);
         if (message !== null) {
           this.errorState.clear();
