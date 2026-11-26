@@ -117,6 +117,9 @@ and Design Werkbank part B).
 - Errors: `GITLAB_ACCESS_DENIED` and `GITLAB_ERROR` of the list are shown in
   `issue-results-error` with `issue-results-retry`, and the `ErrorState` is cleared so the banner
   stays empty. Every other error stays with the banner.
+- `issue-results-empty` is shown only after a load that succeeded without results. After a
+  failed load (`loadFailed` of `issue-list.ts`) it is not shown until the next load succeeds;
+  results of an earlier load stay (spec 0064).
 - Selection: the chosen issue is the active issue, else `preselectedIssueIid`, else none; a click
   on a row changes it, and a new active issue in the snapshot sets it again. The choice is held as
   `{ base, iid }` and compared with the default during render, not copied in an effect.
@@ -133,7 +136,7 @@ and Design Werkbank part B).
 
 - `ActiveIssue` (`active-issue.tsx`, `active-issue`) shows `active-issue-iid` (size and line
   height of the title, `--app-font-mono`, weight 400, `--app-on-surface-muted`), the title as
-  `h2`, the link `active-issue-link` (new tab, `rel="noopener"`) and the description.
+  `h2`, the link `active-issue-link` (new tab, `rel="noopener noreferrer"`) and the description.
 - Description: `renderMarkdown` (`markdown.ts`) turns the Markdown into HTML with `marked` and
   cleans it with DOMPurify (HTML profile; no `form`, `input`, `button`, `textarea`, `select`,
   `style` and no `style` attribute). It is the only place of this frontend with
@@ -146,7 +149,8 @@ and Design Werkbank part B).
 - Links to GitLab: an address from GitLab (`webUrl` of an issue or of the project) passes
   `externalUrl` (`external-link.ts`) before it becomes an `href`; only `http:` and `https:` pass,
   otherwise the link is not shown (`active-issue-link`, `issue-preview-link`,
-  `last-result-open`).
+  `last-result-open`). The four links to GitLab (these three and `confirm-success-open`) open a
+  new tab and have `rel="noopener noreferrer"` (spec 0064).
 
 ## Round
 

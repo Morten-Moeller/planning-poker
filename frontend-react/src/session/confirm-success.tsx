@@ -56,7 +56,7 @@ export function ConfirmSuccessRegion({ toaster }: { toaster: ConfirmToaster }) {
                 data-testid="confirm-success-open"
                 href={webUrl}
                 target="_blank"
-                rel="noopener"
+                rel="noopener noreferrer"
               >
                 {t('confirmResult.successOpen')}
               </a>

@@ -40,7 +40,7 @@ describe('ConfirmSuccess', () => {
     expect(open?.textContent?.trim()).toBe('Öffnen');
     expect(open?.getAttribute('href')).toBe(WEB_URL);
     expect(open?.getAttribute('target')).toBe('_blank');
-    expect(open?.getAttribute('rel')).toBe('noopener');
+    expect(open?.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
   it('names the coffee card by its name', async () => {

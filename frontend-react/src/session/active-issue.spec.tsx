@@ -60,7 +60,7 @@ describe('ActiveIssue', () => {
     const link = screen.getByTestId('active-issue-link');
     expect(link.getAttribute('href')).toBe('https://gitlab.example/group/project/-/issues/42');
     expect(link.getAttribute('target')).toBe('_blank');
-    expect(link.getAttribute('rel')).toBe('noopener');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
     expect(link.textContent).toBe('In GitLab öffnen ↗');
     const symbol = link.querySelector('.app-symbol');
     expect(symbol?.textContent).toBe('↗');

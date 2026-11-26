@@ -2,7 +2,11 @@
   <div class="head">
     <span class="iid" data-testid="active-issue-iid">#{{ issue().iid }}</span>
     <h2 data-testid="active-issue-title">{{ issue().title }}</h2>
-    <a data-testid="active-issue-link" [href]="issue().webUrl" target="_blank" [rel]="'noopener'"
+    <a
+      data-testid="active-issue-link"
+      [href]="issue().webUrl"
+      target="_blank"
+      [rel]="'noopener noreferrer'"
       ><ng-container i18n="@@activeIssue.openInGitLab">In GitLab öffnen</ng-container>&ngsp;<span
         class="app-symbol"
         aria-hidden="true"

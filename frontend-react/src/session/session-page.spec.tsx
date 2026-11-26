@@ -487,7 +487,7 @@ describe('SessionPage', () => {
     expect(open.textContent).toBe('Öffnen');
     expect(open.getAttribute('href')).toBe(revealedScrumMaster.activeIssue?.webUrl);
     expect(open.getAttribute('target')).toBe('_blank');
-    expect(open.getAttribute('rel')).toBe('noopener');
+    expect(open.getAttribute('rel')).toBe('noopener noreferrer');
     await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).toBeNull());
   });
 

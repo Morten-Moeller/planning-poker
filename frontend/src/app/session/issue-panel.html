@@ -146,7 +146,7 @@
         </li>
       }
     </ul>
-  } @else if (!loading() && !failed()) {
+  } @else if (!loading() && !loadFailed()) {
     <div class="empty" role="status">
       <strong data-testid="issue-results-empty" i18n="@@issuePanel.empty"
         >Keine Issues gefunden</strong
@@ -203,7 +203,7 @@
             data-testid="issue-preview-link"
             [href]="issue.webUrl"
             target="_blank"
-            [rel]="'noopener'"
+            [rel]="'noopener noreferrer'"
             ><span data-testid="issue-preview-title">{{ issue.title }}</span></a
           >
         }

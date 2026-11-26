@@ -84,7 +84,7 @@ describe('ActiveIssue', () => {
     const link = element('active-issue-link')!;
     expect(link.getAttribute('href')).toBe(ISSUE.webUrl);
     expect(link.getAttribute('target')).toBe('_blank');
-    expect(link.getAttribute('rel')).toBe('noopener');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
   it('shows the arrow of the GitLab link in its own hidden span with the class app-symbol', async () => {

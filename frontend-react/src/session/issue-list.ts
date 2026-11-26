@@ -11,6 +11,7 @@ export interface IssueListState {
   readonly total: number | null;
   readonly loading: boolean;
   readonly failure: string | null;
+  readonly loadFailed: boolean;
 }
 
 export interface IssueList {
@@ -38,6 +39,7 @@ const EMPTY: IssueListState = {
   total: null,
   loading: false,
   failure: null,
+  loadFailed: false,
 };
 
 export function createIssueList(api: Api, errors: ErrorState, sessionId: string): IssueList {
@@ -53,7 +55,7 @@ export function createIssueList(api: Api, errors: ErrorState, sessionId: string)
 
   const run = (load: Load) => {
     latest = load;
-    set({ ...current, loading: true, failure: null });
+    set({ ...current, loading: true, failure: null, loadFailed: false });
     api.listIssues(sessionId, load.query).then(
       (page) => {
         if (latest !== load) {
@@ -65,6 +67,7 @@ export function createIssueList(api: Api, errors: ErrorState, sessionId: string)
           total: page.total,
           loading: false,
           failure: null,
+          loadFailed: false,
         });
       },
       (error: unknown) => {
@@ -75,7 +78,7 @@ export function createIssueList(api: Api, errors: ErrorState, sessionId: string)
         if (latest !== load) {
           return;
         }
-        set({ ...current, loading: false, failure: message });
+        set({ ...current, loading: false, failure: message, loadFailed: true });
       },
     );
   };

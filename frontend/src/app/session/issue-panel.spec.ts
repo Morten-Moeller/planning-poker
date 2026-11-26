@@ -137,6 +137,8 @@ describe('IssuePanel', () => {
     expect(one('issue-preview-iid').textContent?.trim()).toBe('#42');
     expect(one('issue-preview-title').textContent?.trim()).toBe('Login page');
     expect(one('issue-preview-link').getAttribute('href')).toBe(FIRST_PAGE[1].webUrl);
+    expect(one('issue-preview-link').getAttribute('rel')).toBe('noopener noreferrer');
+    expect(one('issue-preview-link').getAttribute('target')).toBe('_blank');
     expect(all('issue-load-more')).toHaveLength(0);
     expect(one('issue-release').textContent?.trim()).toBe('Freigeben');
     expect(button('issue-release').disabled).toBe(false);
@@ -312,6 +314,54 @@ describe('IssuePanel', () => {
 
     expect(all('issue-results-error')).toHaveLength(0);
     expect(texts('issue-result')).toEqual(['✓ #42 Login page ohne Gewicht']);
+  });
+
+  it('shows no empty state after a failed load with another code and shows it after an empty load', async () => {
+    await open(lobbyScrumMaster);
+
+    await click('issue-search-submit');
+    http
+      .expectOne((r) => r.url === ISSUES_URL)
+      .flush(
+        { errorCode: 'INVALID_STATE', title: 'Conflict', status: 409 },
+        {
+          status: 409,
+          statusText: 'Conflict',
+          headers: { 'Content-Type': 'application/problem+json' },
+        },
+      );
+    await fixture.whenStable();
+
+    expect(all('issue-result')).toHaveLength(2);
+    expect(all('issue-results-empty')).toHaveLength(0);
+    expect(all('issue-results-error')).toHaveLength(0);
+
+    await click('issue-search-submit');
+    http.expectOne((r) => r.url === ISSUES_URL).flush({ items: [], nextPage: null, total: 0 });
+    await fixture.whenStable();
+
+    expect(texts('issue-results-empty')).toEqual(['Keine Issues gefunden']);
+  });
+
+  it('shows no empty state when the first load fails with another code', async () => {
+    await open(lobbyScrumMaster, []);
+    expect(all('issue-results-empty')).toHaveLength(1);
+
+    await click('issue-search-submit');
+    http
+      .expectOne((r) => r.url === ISSUES_URL)
+      .flush(
+        { errorCode: 'INVALID_STATE', title: 'Conflict', status: 409 },
+        {
+          status: 409,
+          statusText: 'Conflict',
+          headers: { 'Content-Type': 'application/problem+json' },
+        },
+      );
+    await fixture.whenStable();
+
+    expect(all('issue-results-empty')).toHaveLength(0);
+    expect(all('issue-filter-reset')).toHaveLength(0);
   });
 
   it('shows the access denied text of GitLab in the error state and clears the banner', async () => {
