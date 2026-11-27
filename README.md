@@ -8,6 +8,11 @@ wählt ein Issue und gibt es frei. Die Entwickler wählen verdeckt eine Karte, d
 auf, lässt bei Bedarf erneut schätzen und übernimmt den vereinbarten Wert als Kommentar an das
 GitLab-Issue.
 
+![Ablauf im Demo-Modus: Sitzung anlegen, zwei Runden schätzen, Ergebnis übernehmen](docs/assets/demo-modus.gif)
+
+Die Aufnahme zeigt das Angular-Frontend im Demo-Modus aus der Sicht des Scrum Masters. Der
+Demo-Modus läuft ohne GitLab-Token mit Beispieldaten (Abschnitt Demo-Modus).
+
 Das Projekt ist als Lösung einer Coding Challenge entstanden und wird seitdem weitergeführt. Der
 Stand der Abgabe trägt den Tag `abgabe`.
 
