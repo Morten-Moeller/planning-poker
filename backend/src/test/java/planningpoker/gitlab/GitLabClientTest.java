@@ -96,7 +96,7 @@ class GitLabClientTest {
         assertEquals(Optional.of(2), page.nextPage());
         assertEquals(Optional.of(23), page.total());
         gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES))
-                .withHeader("PRIVATE-TOKEN", equalTo(config.token()))
+                .withHeader("PRIVATE-TOKEN", equalTo(config.token().orElseThrow()))
                 .withQueryParam("state", equalTo("opened"))
                 .withQueryParam("search", equalTo("log"))
                 .withQueryParam("order_by", equalTo("updated_at"))
@@ -160,8 +160,8 @@ class GitLabClientTest {
         GitLabIssue issue = client.loadIssue(PROJECT, 7);
 
         assertEquals(new GitLabIssue(7, "Login", "Form", "https://gitlab.example/g/p/-/issues/7", null), issue);
-        gitlab.verify(
-                getRequestedFor(urlPathEqualTo(ISSUES + "/7")).withHeader("PRIVATE-TOKEN", equalTo(config.token())));
+        gitlab.verify(getRequestedFor(urlPathEqualTo(ISSUES + "/7"))
+                .withHeader("PRIVATE-TOKEN", equalTo(config.token().orElseThrow())));
     }
 
     @Test
@@ -171,7 +171,7 @@ class GitLabClientTest {
         client.addNote(PROJECT, 7, "**Planning Poker: Ergebnis 5**");
 
         gitlab.verify(postRequestedFor(urlPathEqualTo(ISSUES + "/7/notes"))
-                .withHeader("PRIVATE-TOKEN", equalTo(config.token()))
+                .withHeader("PRIVATE-TOKEN", equalTo(config.token().orElseThrow()))
                 .withHeader("Content-Type", equalTo("application/json"))
                 .withRequestBody(equalToJson("{\"body\":\"**Planning Poker: Ergebnis 5**\"}")));
     }
@@ -183,7 +183,7 @@ class GitLabClientTest {
         client.setWeight(PROJECT, 7, 5);
 
         gitlab.verify(putRequestedFor(urlPathEqualTo(ISSUES + "/7"))
-                .withHeader("PRIVATE-TOKEN", equalTo(config.token()))
+                .withHeader("PRIVATE-TOKEN", equalTo(config.token().orElseThrow()))
                 .withRequestBody(equalToJson("{\"weight\":5}")));
     }
 
@@ -202,7 +202,7 @@ class GitLabClientTest {
                 page.items());
         assertEquals(Optional.of(2), page.nextPage());
         gitlab.verify(getRequestedFor(urlPathEqualTo(PROJECTS))
-                .withHeader("PRIVATE-TOKEN", equalTo(config.token()))
+                .withHeader("PRIVATE-TOKEN", equalTo(config.token().orElseThrow()))
                 .withQueryParam("membership", equalTo("true"))
                 .withQueryParam("simple", equalTo("true"))
                 .withQueryParam("search", equalTo("pok"))
@@ -224,7 +224,7 @@ class GitLabClientTest {
 
         assertEquals(new GitLabProject(4711, "App", "group/app", "https://gitlab.example/group/app"), project);
         gitlab.verify(getRequestedFor(urlPathEqualTo(PROJECTS + "/group%2Fapp"))
-                .withHeader("PRIVATE-TOKEN", equalTo(config.token())));
+                .withHeader("PRIVATE-TOKEN", equalTo(config.token().orElseThrow())));
     }
 
     @Test
@@ -301,7 +301,7 @@ class GitLabClientTest {
         assertEquals(reason, e.reason());
         assertEquals(status, e.status());
         assertTrue(e.getMessage().contains(operation), e.getMessage());
-        assertFalse(e.getMessage().contains(config.token()), e.getMessage());
+        assertFalse(e.getMessage().contains(config.token().orElseThrow()), e.getMessage());
         assertFalse(e.getMessage().contains(GITLAB_ERROR_TEXT), e.getMessage());
         assertFalse(e.getMessage().contains("invalid token"), e.getMessage());
     }
@@ -342,7 +342,7 @@ class GitLabClientTest {
         assertTrue(line.contains("projectId=" + PROJECT), line);
         assertTrue(line.contains("status=" + status), line);
         assertTrue(line.contains("reason=" + reason), line);
-        assertFalse(line.contains(config.token()), line);
+        assertFalse(line.contains(config.token().orElseThrow()), line);
         assertFalse(line.contains(GITLAB_ERROR_TEXT), line);
         assertFalse(line.contains("invalid token"), line);
         assertNull(record.getThrown(), line);
@@ -365,7 +365,7 @@ class GitLabClientTest {
                 continue;
             }
             ownLines++;
-            assertFalse(line.contains(config.token()), "token value in log line: " + line);
+            assertFalse(line.contains(config.token().orElseThrow()), "token value in log line: " + line);
         }
         assertTrue(ownLines > 0, "no log lines of this process in " + logPath);
     }

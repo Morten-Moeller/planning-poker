@@ -7,6 +7,7 @@ import { motifFor } from '../api/card-motif';
 import { lobbyDeveloper, lobbyScrumMaster, votingDeveloper } from '../api/examples';
 import type { SessionView } from '../api/examples';
 import { createTestBackend, renderWithBackend } from '../api/testing/test-backend';
+import type { Answer } from '../api/testing/test-backend';
 import { AppShell } from './app-shell';
 import { createThemeStore } from './theme-store';
 
@@ -20,9 +21,17 @@ const lobbyViewer: SessionView = {
   ),
 };
 
-function renderShell(systemDark: boolean, path = '/', snapshot: SessionView | null = null) {
+const DEMO_HINT =
+  'Demo-Modus: Projekte und Issues sind Beispiele. Ergebnisse gehen nicht an GitLab.';
+
+function renderShell(
+  systemDark: boolean,
+  path = '/',
+  snapshot: SessionView | null = null,
+  answer: Answer = () => Response.json(snapshot),
+) {
   vi.stubGlobal('matchMedia', () => ({ matches: systemDark, addEventListener: () => undefined }));
-  const { backend, sockets } = createTestBackend(() => Response.json(snapshot));
+  const { backend, sockets } = createTestBackend(answer);
   const theme = createThemeStore(window, backend.preferences);
   theme.start();
   renderWithBackend(
@@ -103,6 +112,58 @@ describe('AppShell', () => {
     const banner = screen.getByTestId('error-banner');
     expect(screen.getByTestId('toolbar').nextElementSibling).toBe(banner);
     expect(banner.nextElementSibling).toBe(screen.getByRole('main'));
+  });
+
+  it.each([
+    { name: 'the start page', path: '/' },
+    { name: 'the join page', path: '/session/K7P2QX9M/join?invite=code' },
+  ])('shows the demo hint under the toolbar on $name for demo true', async ({ path }) => {
+    const { backend } = renderShell(false, path, null, () =>
+      Response.json({ rememberSessions: true, demo: true }),
+    );
+    expect(screen.queryByTestId('demo-hint')).toBeNull();
+
+    await act(() => backend.loadSetting());
+
+    const hint = screen.getByTestId('demo-hint');
+    expect(hint.textContent).toBe(DEMO_HINT);
+    expect(hint.getAttribute('role')).toBe('status');
+    expect(screen.getByTestId('toolbar').nextElementSibling).toBe(hint);
+    expect(hint.nextElementSibling).toBe(screen.getByRole('main'));
+  });
+
+  it('shows the demo hint between the toolbar and the error banner in the room', async () => {
+    const { backend } = renderShell(false, '/', lobbyScrumMaster, (call) =>
+      call.url === '/api/config'
+        ? Response.json({ rememberSessions: true, demo: true })
+        : Response.json(lobbyScrumMaster),
+    );
+    backend.tokens.store(lobbyScrumMaster.sessionId, {
+      participantId: lobbyScrumMaster.me.participantId,
+      token: 'token-of-me',
+    });
+    await act(() => backend.loadSetting());
+    act(() => backend.sessions.enter(lobbyScrumMaster.sessionId));
+    await waitFor(() => expect(backend.sessions.session()).not.toBeNull());
+    act(() => backend.errors.report(new ApiError('NAME_TAKEN', 409)));
+
+    const hint = screen.getByTestId('demo-hint');
+    expect(hint.textContent).toBe(DEMO_HINT);
+    expect(screen.getByTestId('toolbar').nextElementSibling).toBe(hint);
+    expect(hint.nextElementSibling).toBe(screen.getByTestId('error-banner'));
+  });
+
+  it.each([
+    { name: 'demo false', answer: () => Response.json({ rememberSessions: true, demo: false }) },
+    { name: 'an answer without the field', answer: () => Response.json({}) },
+    { name: 'an answer 500', answer: () => new Response(null, { status: 500 }) },
+    { name: 'a network failure', answer: () => Promise.reject(new TypeError('Failed to fetch')) },
+  ])('shows no demo hint after $name of GET /api/config', async ({ answer }) => {
+    const { backend } = renderShell(false, '/', null, answer);
+
+    await act(() => backend.loadSetting());
+
+    expect(screen.queryByTestId('demo-hint')).toBeNull();
   });
 
   it('shows no motif field, no session id and no name on the start page', () => {

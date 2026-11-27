@@ -1,11 +1,16 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  TestRequest,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { apiErrorInterceptor } from '../api/api-error.interceptor';
 import { authInterceptor } from '../api/auth.interceptor';
 import { SessionView, lobbyDeveloper, lobbyScrumMaster } from '../api/examples';
+import { loadRecentSessionsSetting } from '../api/recent-sessions';
 import { SessionStore } from '../api/session-store';
 import { FakeSocketFactory } from '../api/testing/fake-web-socket';
 import { asViewer } from '../api/testing/viewer-snapshots';
@@ -174,6 +179,54 @@ describe('AppShell', () => {
     expect(toggle().textContent?.trim()).toBe('☀️');
     expect(toggle().getAttribute('aria-label')).toBe('Helles Design');
     expect(toggle().getAttribute('aria-pressed')).toBe('true');
+  });
+
+  const DEMO_HINT =
+    'Demo-Modus: Projekte und Issues sind Beispiele. Ergebnisse gehen nicht an GitLab.';
+
+  async function loadConfig(answer: (request: TestRequest) => void): Promise<void> {
+    const loaded = TestBed.runInInjectionContext(() => loadRecentSessionsSetting());
+    answer(http.expectOne('/api/config'));
+    await loaded;
+    await fixture.whenStable();
+  }
+
+  it('shows the demo hint between the toolbar and the main area for demo true', async () => {
+    await loadConfig((request) => request.flush({ rememberSessions: true, demo: true }));
+
+    const hint = element('demo-hint');
+    expect(text('demo-hint')).toBe(DEMO_HINT);
+    expect(hint?.getAttribute('role')).toBe('status');
+    expect(element('toolbar')?.nextElementSibling).toBe(hint);
+    expect(hint?.nextElementSibling?.tagName).toBe('APP-ERROR-BANNER');
+  });
+
+  it('keeps the demo hint on the join route and in the room', async () => {
+    await loadConfig((request) => request.flush({ rememberSessions: true, demo: true }));
+
+    await navigate(`/session/${SESSION_ID}/join?invite=abc`);
+    expect(text('demo-hint')).toBe(DEMO_HINT);
+
+    await open(lobbyScrumMaster);
+    expect(text('demo-hint')).toBe(DEMO_HINT);
+  });
+
+  it('shows no demo hint before the settings are loaded', () => {
+    expect(element('demo-hint')).toBeNull();
+  });
+
+  it('shows no demo hint for demo false', async () => {
+    await loadConfig((request) => request.flush({ rememberSessions: true, demo: false }));
+
+    expect(element('demo-hint')).toBeNull();
+  });
+
+  it('shows no demo hint when GET /api/config fails', async () => {
+    await loadConfig((request) =>
+      request.flush('down', { status: 504, statusText: 'Gateway Timeout' }),
+    );
+
+    expect(element('demo-hint')).toBeNull();
   });
 
   it('shows the toggle in the room as well', async () => {

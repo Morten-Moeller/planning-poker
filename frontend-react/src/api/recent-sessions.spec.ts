@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createDemoMode } from './demo-mode';
 import { RECENT_SESSIONS_KEY, createRecentSessions } from './recent-sessions';
 import type { RecentSession } from './recent-sessions';
 import { createTestBackend, problem } from './testing/test-backend';
@@ -20,7 +21,7 @@ function denied(): Storage {
 }
 
 function createList() {
-  return createRecentSessions(() => localStorage, setTimeout);
+  return createRecentSessions(() => localStorage, setTimeout, createDemoMode());
 }
 
 function ids(entries: RecentSession[]): string[] {
@@ -129,7 +130,7 @@ describe('recent sessions', () => {
     });
 
     it('is empty and saves nothing when localStorage throws', () => {
-      const recent = createRecentSessions(denied, setTimeout);
+      const recent = createRecentSessions(denied, setTimeout, createDemoMode());
 
       expect(recent.list()).toEqual([]);
       expect(recent.find('AAAAAAAA')).toBeNull();
@@ -173,6 +174,24 @@ describe('recent sessions', () => {
       expect(calls.map((call) => `${call.method} ${call.url}`)).toEqual(['GET /api/config']);
     });
 
+    it('has the demo mode off before the settings are loaded', () => {
+      expect(createTestBackend().backend.demo.active()).toBe(false);
+    });
+
+    it.each([true, false])('sets the demo mode to %s from GET /api/config', async (demo) => {
+      const { backend, calls } = createTestBackend(() =>
+        Response.json({ rememberSessions: true, demo }),
+      );
+      const listener = vi.fn();
+      backend.demo.subscribe(listener);
+
+      await backend.loadSetting();
+
+      expect(backend.demo.active()).toBe(demo);
+      expect(listener).toHaveBeenCalledTimes(demo ? 1 : 0);
+      expect(calls.length).toBe(1);
+    });
+
     it.each([
       { name: 'a problem with an errorCode', answer: () => problem(500, 'GITLAB_ERROR') },
       { name: 'an answer 500 without a body', answer: () => new Response(null, { status: 500 }) },
@@ -184,6 +203,7 @@ describe('recent sessions', () => {
       await backend.loadSetting();
 
       expect(backend.recent.enabled()).toBeNull();
+      expect(backend.demo.active()).toBe(false);
       expect(backend.errors.error()).toBeNull();
     });
 
@@ -202,9 +222,10 @@ describe('recent sessions', () => {
 
       expect(done).toHaveBeenCalledTimes(1);
       expect(calls[0]?.signal?.aborted).toBe(true);
-      answer(Response.json({ rememberSessions: true }));
+      answer(Response.json({ rememberSessions: true, demo: true }));
       await vi.advanceTimersByTimeAsync(0);
       expect(backend.recent.enabled()).toBeNull();
+      expect(backend.demo.active()).toBe(false);
       expect(backend.errors.error()).toBeNull();
     });
   });

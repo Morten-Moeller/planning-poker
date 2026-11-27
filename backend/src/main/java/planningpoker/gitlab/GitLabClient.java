@@ -13,6 +13,7 @@ import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ContextResolver;
 import java.net.URI;
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -32,24 +33,39 @@ public class GitLabClient {
 
     private final GitLabApi api;
     private final GitLabProjectApi projectApi;
+    private final DemoGitLab demo;
 
-    public GitLabClient(GitLabConfig config) {
+    public GitLabClient(GitLabConfig config, Clock clock) {
+        if (config.demo()) {
+            this.api = null;
+            this.projectApi = null;
+            this.demo = new DemoGitLab(clock);
+            LOG.warn("Demo mode: planningpoker.gitlab.token is not set. Projects and issues are examples in memory,"
+                    + " no call goes to GitLab.");
+            return;
+        }
+        this.demo = null;
+        String token = config.token().orElseThrow();
         long timeoutMillis = config.timeout().toMillis();
         ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        this.api = builder(config, timeoutMillis, mapper).build(GitLabApi.class);
-        this.projectApi = builder(config, timeoutMillis, mapper).build(GitLabProjectApi.class);
+        this.api = builder(config, token, timeoutMillis, mapper).build(GitLabApi.class);
+        this.projectApi = builder(config, token, timeoutMillis, mapper).build(GitLabProjectApi.class);
     }
 
-    private static QuarkusRestClientBuilder builder(GitLabConfig config, long timeoutMillis, ObjectMapper mapper) {
+    private static QuarkusRestClientBuilder builder(
+            GitLabConfig config, String token, long timeoutMillis, ObjectMapper mapper) {
         return QuarkusRestClientBuilder.newBuilder()
                 .baseUri(URI.create(config.baseUrl()))
                 .connectTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
                 .readTimeout(timeoutMillis, TimeUnit.MILLISECONDS)
-                .register(new PrivateTokenFilter(config.token()))
+                .register(new PrivateTokenFilter(token))
                 .register(new JacksonContext(mapper));
     }
 
     public ProjectPage searchProjects(String search, int page) {
+        if (demo != null) {
+            return demo.searchProjects(search, page);
+        }
         return call("searchProjects", null, () -> {
             try (Response response =
                     projectApi.searchProjects(true, true, search, "last_activity_at", PAGE_SIZE, page)) {
@@ -61,10 +77,16 @@ public class GitLabClient {
     }
 
     public GitLabProject loadProject(String projectId) {
+        if (demo != null) {
+            return demo.loadProject(projectId);
+        }
         return call("loadProject", projectId, () -> projectApi.loadProject(projectId));
     }
 
     public IssuePage searchIssues(String projectId, IssueQuery query) {
+        if (demo != null) {
+            return demo.searchIssues(projectId, query);
+        }
         return call("searchIssues", projectId, () -> {
             try (Response response = api.searchIssues(
                     projectId,
@@ -87,10 +109,17 @@ public class GitLabClient {
     }
 
     public GitLabIssue loadIssue(String projectId, long iid) {
+        if (demo != null) {
+            return demo.loadIssue(projectId, iid);
+        }
         return call("loadIssue", projectId, () -> api.loadIssue(projectId, iid));
     }
 
     public void addNote(String projectId, long iid, String body) {
+        if (demo != null) {
+            demo.addNote(projectId, iid, body);
+            return;
+        }
         call("addNote", projectId, () -> {
             try (Response response = api.addNote(projectId, iid, new NoteRequest(body))) {
                 failOnError("addNote", projectId, response);
@@ -100,6 +129,10 @@ public class GitLabClient {
     }
 
     public void setWeight(String projectId, long iid, int weight) {
+        if (demo != null) {
+            demo.setWeight(projectId, iid, weight);
+            return;
+        }
         call("setWeight", projectId, () -> {
             try (Response response = api.setWeight(projectId, iid, new WeightRequest(weight))) {
                 failOnError("setWeight", projectId, response);

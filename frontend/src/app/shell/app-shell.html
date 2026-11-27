@@ -38,6 +38,11 @@
     <span class="app-symbol" aria-hidden="true">{{ theme.dark() ? '☀️' : '🌙' }}</span>
   </button>
 </mat-toolbar>
+@if (demo()) {
+  <p class="demo-hint" role="status" data-testid="demo-hint" i18n="@@shell.demoHint">
+    Demo-Modus: Projekte und Issues sind Beispiele. Ergebnisse gehen nicht an GitLab.
+  </p>
+}
 <app-error-banner />
 <main class="content" [class.room]="session() !== null">
   <router-outlet />

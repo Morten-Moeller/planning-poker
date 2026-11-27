@@ -334,6 +334,8 @@ export interface components {
         ConfigResponse: {
             /** @description Whether the browser keeps the last sessions with their token in localStorage (planningpoker.session.remember). */
             rememberSessions: boolean;
+            /** @description Whether the backend runs in demo mode: no GitLab token is set (planningpoker.gitlab.token), projects and issues are examples in memory. */
+            demo: boolean;
         };
         /** @description Confirms a card as the final value of the revealed round and writes it to GitLab. */
         ConfirmRequest: {

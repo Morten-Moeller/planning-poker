@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { DemoMode } from './demo-mode';
 import {
   RECENT_SESSIONS_KEY,
   RecentSession,
@@ -141,10 +142,26 @@ describe('RecentSessions', () => {
 
     it.each([[true], [false]])('takes rememberSessions %s from GET /api/config', async (value) => {
       const loaded = TestBed.runInInjectionContext(() => loadRecentSessionsSetting());
-      http.expectOne('/api/config').flush({ rememberSessions: value });
+      http.expectOne('/api/config').flush({ rememberSessions: value, demo: false });
       await loaded;
 
       expect(recent.enabled()).toBe(value);
+    });
+
+    it.each([[true], [false]])('takes demo %s from GET /api/config', async (value) => {
+      const loaded = TestBed.runInInjectionContext(() => loadRecentSessionsSetting());
+      http.expectOne('/api/config').flush({ rememberSessions: true, demo: value });
+      await loaded;
+
+      expect(TestBed.inject(DemoMode).active()).toBe(value);
+    });
+
+    it('leaves the demo mode off for an answer without the field', async () => {
+      const loaded = TestBed.runInInjectionContext(() => loadRecentSessionsSetting());
+      http.expectOne('/api/config').flush({ rememberSessions: true });
+      await loaded;
+
+      expect(TestBed.inject(DemoMode).active()).toBe(false);
     });
 
     it('leaves the setting unknown when the call fails', async () => {
@@ -153,6 +170,7 @@ describe('RecentSessions', () => {
       await loaded;
 
       expect(recent.enabled()).toBeNull();
+      expect(TestBed.inject(DemoMode).active()).toBe(false);
     });
   });
 });

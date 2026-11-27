@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import { createApi } from './api';
 import type { Api, Fetch } from './api';
 import type { ApiError } from './api-error';
+import { createDemoMode } from './demo-mode';
+import type { DemoMode } from './demo-mode';
 import { createErrorState } from './error-state';
 import type { ErrorState } from './error-state';
 import { createPreferencesStore } from './preferences-store';
@@ -18,6 +20,7 @@ import type { TokenStore } from './token-store';
 
 export interface Backend {
   api: Api;
+  demo: DemoMode;
   errors: ErrorState;
   preferences: PreferencesStore;
   recent: RecentSessions;
@@ -66,7 +69,8 @@ export function createBackend(
   const clock = browserClock(win);
   const errors = createErrorState();
   const preferences = createPreferencesStore(() => win.localStorage);
-  const recent = createRecentSessions(() => win.localStorage, clock.setTimeout);
+  const demo = createDemoMode();
+  const recent = createRecentSessions(() => win.localStorage, clock.setTimeout, demo);
   const tokens = createTokenStore(() => win.sessionStorage, recent, clock.now);
   const api = createApi(network.fetch, tokens, errors);
   const realtime = createRealtime(
@@ -77,6 +81,7 @@ export function createBackend(
 
   return {
     api,
+    demo,
     errors,
     preferences,
     recent,

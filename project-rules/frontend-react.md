@@ -113,7 +113,16 @@ design holds here as well, unless this file names another way.
   `RecentSessions.enabled()` `true` it also writes the entry of the recent sessions
   (`planningpoker.recent-sessions` in `localStorage`, at most five, newest first) and reads it
   back when `sessionStorage` has no value. `enabled()` comes from `GET /api/config` and stays
-  `null` after a failure or 3 s; that failure is not reported to the `ErrorState`. A token never
+  `null` after a failure or 3 s; that failure is not reported to the `ErrorState`.
+- Demo mode (spec 0068, ADR 0018): `createDemoMode` in `api/demo-mode.ts` is a store
+  (`active`, `set`, `subscribe`), part of the `Backend` as `demo`. `RecentSessions.loadSetting`
+  sets it from `demo` of the same answer of `GET /api/config`; it stays `false` without the
+  field, after a failure and after 3 s. The shell reads it with `useSyncExternalStore` and shows
+  `demo-hint` (`role="status"`, text `shell.demoHint`, same text and colours as the Angular
+  frontend) between the toolbar and the `ErrorBanner` on every page. The start page
+  has no fixed height: `start-page.module.css` makes `main` a column flex container
+  (`main:has(> .page)`) and the page takes the rest of the window, so the hint causes no page
+  scroll. A token never
   appears in a log, a URL or a text for users.
 - Preferences: `createPreferencesStore` in `api/preferences-store.ts` reads and saves
   `planningpoker.preferences` in `localStorage` with the fields, values and defaults of the
