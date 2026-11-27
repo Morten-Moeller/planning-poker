@@ -22,3 +22,4 @@ Wann ein ADR nötig ist: `harness/policies/adr.md`. Format MADR aus `0000-templa
 | 0015 | Java 25 (Temurin) als Laufzeit und Sprachstand des Backends (ändert den Punkt „Java 21“ aus 0001) | accepted | 2026-11-23 |
 | 0016 | Zweites Frontend mit React 19, Vite und UI SDK neben dem Angular-Frontend (weicht für die Oberfläche von A1.7 ab) | accepted | 2026-11-24 |
 | 0017 | Markdown im React-Frontend mit marked, bereinigt mit DOMPurify | accepted | 2026-11-25 |
+| 0018 | Demo-Modus ohne GitLab-Token mit eingebautem GitLab-Ersatz im Backend (ändert „ohne Token kein Start“ aus Spec 0003) | accepted | 2026-11-26 |
