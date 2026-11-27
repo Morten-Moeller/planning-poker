@@ -7,6 +7,8 @@ export const MESSAGES = {
   'shell.role.SCRUM_MASTER': 'Scrum Master',
   'shell.role.DEVELOPER': 'Entwickler',
   'shell.role.VIEWER': 'Zuschauer',
+  'shell.demoHint':
+    'Demo-Modus: Projekte und Issues sind Beispiele. Ergebnisse gehen nicht an GitLab.',
   'error.close': 'Schließen',
   'connection.lost': 'Verbindung zum Server unterbrochen.',
   'connection.retryIn': 'Neuer Versuch in {seconds} s. Deine Karte bleibt erhalten.',

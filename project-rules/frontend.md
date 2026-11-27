@@ -45,7 +45,11 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   exception of `localStorage` gives an empty list, never an error. The setting comes from
   `GET /api/config` (`rememberSessions`): the app initializer `loadRecentSessionsSetting`
   (`app.config.ts`, timeout 3 s) sets the signal `RecentSessions.enabled`; it stays `null` when
-  the call fails. Only with `true`, `TokenStore.store` also writes the entry (create: role
+  the call fails. The same call sets the signal `DemoMode.active` (`api/demo-mode.ts`, spec 0068,
+  ADR 0018) from `demo`; it stays `false` without the field and when the call fails. With `true`
+  the shell shows `demo-hint` (`role="status"`, text `@@shell.demoHint`, colours
+  `secondary-container`) between the toolbar and the `ErrorBanner` on every page. There is no
+  second call of `GET /api/config`. Only with `true`, `TokenStore.store` also writes the entry (create: role
   `SCRUM_MASTER`, join: `VIEWER` with `as=viewer`, else `DEVELOPER`; the list shows the role of
   the checked snapshot and falls back to the stored one) and `TokenStore.identity` falls back to the entry when
   `sessionStorage` has none and copies it into `sessionStorage`; `TokenStore.remove` removes both.

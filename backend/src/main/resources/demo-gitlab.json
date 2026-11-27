@@ -1,0 +1,214 @@
+{
+  "projects": [
+    {
+      "id": 101,
+      "name": "Webshop",
+      "pathWithNamespace": "demo/webshop",
+      "issues": [
+        {
+          "iid": 1,
+          "title": "Warenkorb bleibt nach dem Anmelden erhalten",
+          "weight": null,
+          "updatedHoursAgo": 3,
+          "description": "## Ziel\n\nAls Kundin möchte ich meinen Warenkorb behalten, wenn ich mich erst an der Kasse anmelde.\n\n## Akzeptanzkriterien\n\n- Artikel des Gasts stehen nach dem Anmelden im Warenkorb des Kontos\n- Gleiche Artikel werden zusammengezählt\n- Der Gast-Warenkorb ist danach leer\n\n## Hinweis\n\n```http\nPOST /api/cart/merge\n{ \"guestCartId\": \"…\" }\n```"
+        },
+        {
+          "iid": 2,
+          "title": "Gutscheincode an der Kasse einlösen",
+          "weight": null,
+          "updatedHoursAgo": 20,
+          "description": "## Ziel\n\nAls Kunde möchte ich an der Kasse einen Gutscheincode eingeben.\n\n## Akzeptanzkriterien\n\n- Ein gültiger Code senkt die Summe sofort\n- Ein abgelaufener Code zeigt eine Meldung\n- Je Bestellung gilt ein Code"
+        },
+        {
+          "iid": 3,
+          "title": "Suche findet Artikel mit Umlauten nicht",
+          "weight": 3,
+          "updatedHoursAgo": 45,
+          "description": "## Fehler\n\nDie Suche nach `Müsli` findet nichts, `Muesli` findet drei Artikel.\n\n## Schritte\n\n1. Startseite öffnen\n2. `Müsli` in das Suchfeld tippen\n3. Enter drücken\n\n## Erwartet\n\nBeide Schreibweisen zeigen dieselben Artikel."
+        },
+        {
+          "iid": 4,
+          "title": "Produktbilder verzögert laden",
+          "weight": null,
+          "updatedHoursAgo": 70,
+          "description": "## Ziel\n\nAls Besucher mit langsamer Verbindung möchte ich die Artikelliste schnell sehen.\n\n## Akzeptanzkriterien\n\n- Bilder unter dem sichtbaren Bereich laden erst beim Scrollen\n- Platzhalter haben die Größe des Bildes\n- Kein Sprung im Layout\n\n## Hinweis\n\n```html\n<img loading=\"lazy\" width=\"320\" height=\"320\" src=\"…\">\n```"
+        },
+        {
+          "iid": 5,
+          "title": "Rechnung als PDF herunterladen",
+          "weight": 5,
+          "updatedHoursAgo": 110,
+          "description": "## Ziel\n\nAls Kundin möchte ich die Rechnung einer Bestellung als PDF herunterladen.\n\n## Akzeptanzkriterien\n\n- Der Link steht in der Bestellübersicht\n- Das PDF enthält Rechnungsnummer, Positionen und Umsatzsteuer\n- Der Dateiname ist `rechnung-<nummer>.pdf`"
+        },
+        {
+          "iid": 6,
+          "title": "Lieferadresse nach der Bestellung ändern",
+          "weight": null,
+          "updatedHoursAgo": 170,
+          "description": "## Ziel\n\nAls Kunde möchte ich die Lieferadresse ändern, solange das Paket nicht gepackt ist.\n\n## Akzeptanzkriterien\n\n- Die Änderung geht bis zum Status „In Bearbeitung“\n- Danach ist das Formular gesperrt und nennt den Grund\n- Die Bestellbestätigung wird neu versendet"
+        },
+        {
+          "iid": 7,
+          "title": "Wunschliste teilen",
+          "weight": null,
+          "updatedHoursAgo": 230,
+          "description": "## Ziel\n\nAls Kundin möchte ich meine Wunschliste als Link teilen.\n\n## Akzeptanzkriterien\n\n- Der Link zeigt die Liste ohne Anmeldung\n- Der Link lässt sich zurückziehen\n- Preise stehen nur für angemeldete Besucher dabei"
+        },
+        {
+          "iid": 8,
+          "title": "Startseite lädt auf dem Handy länger als drei Sekunden",
+          "weight": 8,
+          "updatedHoursAgo": 300,
+          "description": "## Fehler\n\nAuf einem Mittelklasse-Handy dauert der erste Aufbau der Startseite 4,8 s.\n\n## Messung\n\n```text\nLCP  4,8 s\nTBT  620 ms\nCLS  0,02\n```\n\n## Ideen\n\n- Schriften vorladen\n- Karussell erst nach dem ersten Bild starten\n- Skript für Bewertungen nachladen"
+        },
+        {
+          "iid": 9,
+          "title": "Bestellübersicht nach Zeitraum filtern",
+          "weight": null,
+          "updatedHoursAgo": 400,
+          "description": "## Ziel\n\nAls Kunde möchte ich meine Bestellungen nach Zeitraum filtern.\n\n## Akzeptanzkriterien\n\n- Auswahl: 30 Tage, 6 Monate, Jahr\n- Die Auswahl bleibt nach dem Neuladen erhalten\n- Ohne Treffer steht ein Hinweis da"
+        },
+        {
+          "iid": 10,
+          "title": "Newsletter mit doppelter Bestätigung",
+          "weight": 2,
+          "updatedHoursAgo": 520,
+          "description": "## Ziel\n\nAls Besucherin möchte ich den Newsletter bestellen und per E-Mail bestätigen.\n\n## Akzeptanzkriterien\n\n- Ohne Bestätigung geht kein Newsletter raus\n- Der Link gilt 48 Stunden\n- Abbestellen geht mit einem Klick"
+        },
+        {
+          "iid": 11,
+          "title": "Zahlung mit SEPA-Lastschrift",
+          "weight": 13,
+          "updatedHoursAgo": 640,
+          "description": "## Ziel\n\nAls Kunde möchte ich per Lastschrift bezahlen.\n\n## Akzeptanzkriterien\n\n- Die IBAN wird beim Tippen geprüft\n- Das Mandat steht in der Bestellbestätigung\n- Eine Rücklastschrift setzt die Bestellung auf „Offen“\n\n## Hinweis\n\n```text\nDE89 3704 0044 0532 0130 00\n```"
+        },
+        {
+          "iid": 12,
+          "title": "Artikel vergleichen",
+          "weight": null,
+          "updatedHoursAgo": 800,
+          "description": "## Ziel\n\nAls Kundin möchte ich bis zu vier Artikel nebeneinander vergleichen.\n\n## Akzeptanzkriterien\n\n- Unterschiede sind hervorgehoben\n- Die Auswahl bleibt beim Wechsel der Kategorie\n- Auf dem Handy lässt sich die Tabelle seitlich schieben"
+        },
+        {
+          "iid": 13,
+          "title": "Filter „Auf Lager“ in der Artikelliste",
+          "weight": 2,
+          "updatedHoursAgo": 1000,
+          "description": "## Ziel\n\nAls Kunde möchte ich nur lieferbare Artikel sehen.\n\n## Akzeptanzkriterien\n\n- Der Filter steht über der Liste\n- Die Anzahl der Treffer passt sich an\n- Der Filter steht in der Adresse der Seite"
+        },
+        {
+          "iid": 14,
+          "title": "Bewertung mit Foto abgeben",
+          "weight": null,
+          "updatedHoursAgo": 1300,
+          "description": "## Ziel\n\nAls Kundin möchte ich zu meiner Bewertung ein Foto hochladen.\n\n## Akzeptanzkriterien\n\n- Erlaubt sind JPEG und PNG bis 5 MB\n- Das Foto erscheint nach der Prüfung\n- Ein abgelehntes Foto nennt den Grund"
+        },
+        {
+          "iid": 15,
+          "title": "Versandkosten im Warenkorb anzeigen",
+          "weight": 3,
+          "updatedHoursAgo": 1700,
+          "description": "## Ziel\n\nAls Kunde möchte ich die Versandkosten schon im Warenkorb sehen.\n\n## Akzeptanzkriterien\n\n- Die Kosten hängen vom Land der Lieferadresse ab\n- Ab 50 € steht „Versandkostenfrei“ da\n- Ohne Adresse gilt Deutschland"
+        },
+        {
+          "iid": 16,
+          "title": "Passwort zurücksetzen schickt zwei E-Mails",
+          "weight": 1,
+          "updatedHoursAgo": 2200,
+          "description": "## Fehler\n\nEin Klick auf „Passwort vergessen“ verschickt zwei E-Mails mit verschiedenen Links. Nur der zweite Link gilt.\n\n## Vermutung\n\n- Das Formular sendet beim Klick und beim Verlassen des Feldes\n\n```text\n10:02:11 POST /api/password-reset 202\n10:02:11 POST /api/password-reset 202\n```"
+        },
+        {
+          "iid": 17,
+          "title": "Kategorien im Menü alphabetisch sortieren",
+          "weight": null,
+          "updatedHoursAgo": 2900,
+          "description": "## Ziel\n\nAls Besucher möchte ich die Kategorien im Menü alphabetisch sehen.\n\n## Akzeptanzkriterien\n\n- Umlaute stehen bei ihrem Grundbuchstaben\n- „Angebote“ bleibt an erster Stelle"
+        },
+        {
+          "iid": 18,
+          "title": "Abholung in der Filiale",
+          "weight": null,
+          "updatedHoursAgo": 3800,
+          "description": "## Ziel\n\nAls Kundin möchte ich meine Bestellung in einer Filiale abholen.\n\n## Akzeptanzkriterien\n\n- Die Kasse zeigt Filialen im Umkreis von 25 km\n- Eine E-Mail meldet, wenn die Ware bereitliegt\n- Nach sieben Tagen geht die Ware zurück"
+        },
+        {
+          "iid": 19,
+          "title": "Preisalarm für einen Artikel",
+          "weight": 5,
+          "updatedHoursAgo": 5000,
+          "description": "## Ziel\n\nAls Kunde möchte ich eine E-Mail bekommen, wenn ein Artikel unter meinen Wunschpreis fällt.\n\n## Akzeptanzkriterien\n\n- Je Artikel gilt ein Alarm\n- Der Alarm endet nach der ersten E-Mail\n- Die Übersicht steht im Konto"
+        },
+        {
+          "iid": 20,
+          "title": "Bestellung als Gast ohne Konto",
+          "weight": null,
+          "updatedHoursAgo": 6500,
+          "description": "## Ziel\n\nAls Besucherin möchte ich ohne Konto bestellen.\n\n## Akzeptanzkriterien\n\n- Pflicht sind E-Mail und Lieferadresse\n- Die Bestellbestätigung enthält einen Link zum Status\n- Nach der Bestellung lässt sich ein Konto anlegen"
+        },
+        {
+          "iid": 21,
+          "title": "Barrierefreiheit der Kasse prüfen",
+          "weight": 8,
+          "updatedHoursAgo": 9500,
+          "description": "## Aufgabe\n\nDie Kasse mit Tastatur und Screenreader durchgehen und die Fehler beheben.\n\n## Bekannt\n\n- Das Feld „Hausnummer“ hat keinen Namen\n- Die Fehlermeldung der IBAN wird nicht vorgelesen\n- Der Fokus springt nach „Weiter“ an den Seitenanfang\n\n```html\n<input id=\"house-number\" aria-describedby=\"house-number-error\">\n```"
+        },
+        {
+          "iid": 22,
+          "title": "Alte Bestellungen archivieren",
+          "weight": null,
+          "updatedHoursAgo": 13000,
+          "description": "## Ziel\n\nAls Betreiber möchte ich Bestellungen nach zehn Jahren archivieren.\n\n## Akzeptanzkriterien\n\n- Ein nächtlicher Lauf verschiebt die Daten\n- Kunden sehen archivierte Bestellungen nicht mehr\n- Der Lauf schreibt die Anzahl ins Protokoll\n\n## Hinweis\n\n```text\n0 3 * * *  archive-orders --older-than 10y\n```"
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "name": "Mobile App",
+      "pathWithNamespace": "demo/mobile-app",
+      "issues": [
+        {
+          "iid": 1,
+          "title": "Anmeldung mit Fingerabdruck",
+          "weight": 5,
+          "updatedHoursAgo": 8,
+          "description": "## Ziel\n\nAls Nutzerin der App möchte ich mich mit dem Fingerabdruck anmelden.\n\n## Akzeptanzkriterien\n\n- Die Einstellung steht unter „Sicherheit“\n- Nach drei Fehlversuchen gilt das Passwort\n- Ohne Sensor fehlt die Einstellung"
+        },
+        {
+          "iid": 2,
+          "title": "Push-Nachricht bei Versand",
+          "weight": null,
+          "updatedHoursAgo": 60,
+          "description": "## Ziel\n\nAls Kunde möchte ich eine Nachricht bekommen, wenn mein Paket unterwegs ist.\n\n## Akzeptanzkriterien\n\n- Die Nachricht öffnet die Sendungsverfolgung\n- Die Nachricht lässt sich je Bestellung abschalten\n\n## Hinweis\n\n```json\n{ \"type\": \"SHIPPED\", \"orderId\": \"…\" }\n```"
+        },
+        {
+          "iid": 3,
+          "title": "App stürzt beim Drehen des Geräts im Warenkorb ab",
+          "weight": 3,
+          "updatedHoursAgo": 190,
+          "description": "## Fehler\n\nIm Warenkorb beendet sich die App, wenn das Gerät ins Querformat gedreht wird.\n\n## Schritte\n\n1. Zwei Artikel in den Warenkorb legen\n2. Warenkorb öffnen\n3. Gerät drehen\n\n```text\nIllegalStateException: Fragment not attached\n```"
+        },
+        {
+          "iid": 4,
+          "title": "Dunkles Design",
+          "weight": null,
+          "updatedHoursAgo": 900,
+          "description": "## Ziel\n\nAls Nutzer möchte ich die App im dunklen Design nutzen.\n\n## Akzeptanzkriterien\n\n- Die App folgt der Einstellung des Geräts\n- Eine eigene Wahl in den Einstellungen geht vor\n- Produktbilder behalten ihren hellen Hintergrund"
+        },
+        {
+          "iid": 5,
+          "title": "Barcode eines Artikels scannen",
+          "weight": 8,
+          "updatedHoursAgo": 4300,
+          "description": "## Ziel\n\nAls Kundin im Laden möchte ich den Barcode eines Artikels scannen und ihn in der App sehen.\n\n## Akzeptanzkriterien\n\n- Die Kamera fragt einmal nach der Erlaubnis\n- Ein unbekannter Code zeigt die Suche\n- Der Scan geht auch ohne Anmeldung"
+        },
+        {
+          "iid": 6,
+          "title": "Offline-Hinweis statt leerer Liste",
+          "weight": null,
+          "updatedHoursAgo": 10500,
+          "description": "## Ziel\n\nAls Nutzer ohne Netz möchte ich erfahren, dass die Liste wegen der Verbindung leer ist.\n\n## Akzeptanzkriterien\n\n- Der Hinweis nennt die fehlende Verbindung\n- „Erneut versuchen“ lädt die Liste neu\n- Der Warenkorb bleibt lesbar"
+        }
+      ]
+    }
+  ]
+}

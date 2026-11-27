@@ -1,7 +1,7 @@
 ---
 id: "0068"
 title: "Demo-Modus ohne GitLab-Token"
-status: approved
+status: Review
 risk: high
 adrs: ["0018"]
 owner: Morten Möller

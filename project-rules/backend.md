@@ -23,7 +23,7 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
 
 - Base package `planningpoker`, grouped by business capability (A1.1): `session` (session,
   participants, rounds, history, commands, `SessionRegistry`, mapper to `SessionView`), `gitlab`
-  (REST client, configuration, error mapping), `realtime` (WebSocket endpoint, connection
+  (REST client, configuration, error mapping, demo data of the demo mode), `realtime` (WebSocket endpoint, connection
   registry, snapshot delivery), `platform` (code without business terms: health, token check,
   error format, id generation, `ConfigResource`).
 - Dependency direction: `session` and `realtime` use `gitlab` and `platform`; `gitlab` uses
@@ -113,10 +113,12 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
 - Logging: JBoss Logging through `quarkus-logging-json`, JSON lines on the console (`dev` profile
   plain text). Never logged: the GitLab token, participant tokens, invite codes, hidden card values.
 - Configuration: `backend/src/main/resources/application.properties` holds every
-  `planningpoker.*` key with its default. The GitLab token comes from `GITLAB_TOKEN` and has no
-  default; a missing token stops the start with the key name (A6.1): `GitLabConfig`
+  `planningpoker.*` key with its default. The GitLab token comes from `GITLAB_TOKEN` and is
+  optional (`planningpoker.gitlab.token=${GITLAB_TOKEN:}`, `GitLabConfig.token()` is an
+  `Optional<String>`); without a value, or with a value of spaces only, the backend starts in
+  demo mode (ADR 0018, replaces the stop at start of A6.1 for this key). `GitLabConfig`
   (`@ConfigMapping`, prefix `planningpoker.gitlab`) is read by `GitLabClient`, a `@Startup` bean,
-  so the config validation fails at start. `planningpoker.gitlab.timeout` (default `10s`, connect
+  so the validation of the other keys fails at start. `planningpoker.gitlab.timeout` (default `10s`, connect
   and read timeout), `planningpoker.session.max-sessions` and `max-participants` have their
   defaults in the mapping, not in `application.properties`. Profiles
   `test` and `e2e` set placeholder values. No secret in the repository.
@@ -167,6 +169,20 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   characters replaced), status (0 without a response) and reason; never the token, a header or
   the GitLab response body. The resource loads the issue before `SessionRegistry.update` (ADR 0002,
   no GitLab call inside the lock) and hands the finished `Issue` to `Session.selectIssue`.
+- Demo mode (spec 0068, ADR 0018): with `GitLabConfig.demo()` `true`, `GitLabClient` builds no
+  REST client, writes one line on `WARN` at start („Demo mode: …“) and answers every call from
+  `DemoGitLab` (`planningpoker.gitlab`, package-private, no interface and no second bean, A1.2).
+  `DemoGitLab` reads `backend/src/main/resources/demo-gitlab.json` once (projects `101`
+  „Webshop“ and `102` „Mobile App“, per issue `iid`, `title`, `description`, `weight`,
+  `updatedHoursAgo`), sets the time of the last change relative to the `Clock` at start and
+  keeps the issues in memory behind `synchronized` methods. It finds a project by id or path,
+  searches projects by name and issues by title without case, filters `weight` (`None`, `Any`)
+  and `updated_after` (inclusive), sorts by the last change descending, answers pages of
+  `GitLabClient.PAGE_SIZE` with `nextPage` and `total`, and reports an unknown project or issue
+  as `GitLabException` with `NOT_FOUND` (status 404), so `session` maps it like a GitLab answer.
+  `addNote` and `setWeight` change the issue in memory and set its last change to now. The links
+  point to `https://gitlab.example.com/demo/…`. `session` has no code for the demo mode. New
+  demo data goes into the JSON file, never into code.
 - Project choice before a session (ADR 0008): `ProjectResource` (`/api/projects`, open, read only,
   no `@Authenticated`) lists projects through `GitLabProjects` and open issues through
   `GitLabIssues.search`. `GitLabClient` reads projects through `GitLabProjectApi`
@@ -203,10 +219,13 @@ sources: [backend/pom.xml, backend/src/main/**, backend/src/main/resources/appli
   `Session.join`) answer 409 `LIMIT_REACHED`. No rate limit per client IP and no limit for
   WebSocket connections before `auth`; both stay accepted risk.
 - Frontend settings (spec 0039, ADR 0013): `ConfigResource` (`platform`, `GET /api/config`, open,
-  no `@Authenticated`) answers `ConfigResponse { rememberSessions }` from
+  no `@Authenticated`) answers `ConfigResponse { rememberSessions, demo }`. `rememberSessions` comes from
   `planningpoker.session.remember` through `@ConfigProperty` with the default `true`, so
   `platform` does not import `session`; `SessionConfig.remember()` maps the same key. `false`
-  switches the recent sessions of the browser off for an open environment.
+  switches the recent sessions of the browser off for an open environment. `demo` (spec 0068,
+  ADR 0018) is `true` when `planningpoker.gitlab.token` has no value or only spaces, read through
+  `@ConfigProperty` as `Optional<String>` for the same reason; `GitLabConfig.demo()` has the same
+  rule, and `DemoModeTest` and `ConfigResourceTest` check both sides.
 - Commands answer 204, or 201 with the new ids; the new state reaches clients through the
   WebSocket snapshot (ADR 0004).
 

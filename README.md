@@ -22,13 +22,15 @@ Stand der Abgabe trägt den Tag `abgabe`.
 
 ## Schnellstart
 
-Voraussetzungen: JDK 25 (`JAVA_HOME`), Node in der Version aus `.nvmrc`, pnpm 12, Git und ein
-GitLab-Token mit Scope `api` (Abschnitt GitLab, Absatz Token). Aus einem frischen Klon starten
-fünf Befehle die Anwendung; die letzten beiden laufen je in einem eigenen Terminal:
+Voraussetzungen: JDK 25 (`JAVA_HOME`), Node in der Version aus `.nvmrc`, pnpm 12 und Git. Ein
+GitLab-Token mit Scope `api` (Abschnitt GitLab, Absatz Token) ist nur für echte Projekte nötig;
+ohne Token läuft die Anwendung im Demo-Modus mit Beispielprojekten (Abschnitt Demo-Modus). Aus
+einem frischen Klon starten fünf Befehle die Anwendung; die letzten beiden laufen je in einem
+eigenen Terminal:
 
 ```bash
 git clone https://github.com/Morten-Moeller/planning-poker.git && cd planning-poker
-cp .env.example .env    # GITLAB_TOKEN eintragen, write-weight prüfen
+cp .env.example .env    # GITLAB_TOKEN eintragen oder leer lassen (Demo-Modus), write-weight prüfen
 make install            # Abhängigkeiten, Playwright-Browser
 make backend            # Backend auf http://localhost:8080 (BACKEND_PORT)
 make frontend           # Frontend auf http://localhost:4200 (FRONTEND_PORT)
@@ -40,9 +42,9 @@ nur `BACKEND_PORT` und `FRONTEND_PORT`. Die Shell liest `.env` als Skript: Werte
 `$` oder `;` stehen in einfachen Anführungszeichen.
 
 Danach `http://localhost:4200` öffnen; die Startseite zeigt, ob das Backend erreichbar ist
-(`GET /api/health`). Ohne `GITLAB_TOKEN` startet das Backend nicht und nennt den fehlenden
-Schlüssel. `.env.example` nennt jeden Schalter des Backends als Umgebungsvariable (Abschnitt
-GitLab); eine andere GitLab-Instanz setzt zum Beispiel
+(`GET /api/health`). Mit leerem `GITLAB_TOKEN` startet das Backend im Demo-Modus, und die
+Oberfläche zeigt unter der Toolbar einen Hinweis darauf. `.env.example` nennt jeden Schalter des
+Backends als Umgebungsvariable (Abschnitt GitLab); eine andere GitLab-Instanz setzt zum Beispiel
 `PLANNINGPOKER_GITLAB_BASE_URL=https://gitlab.example.com` in `.env`.
 
 Das Frontend erreicht das Backend über den Dev-Proxy (`frontend/proxy.conf.mjs`, Pfade `/api`
@@ -62,6 +64,29 @@ und denselben Vertrag und hat alle Seiten, Rollen und Zustände des Angular-Fron
 `make frontend-react` startet es auf `http://localhost:4300` (`FRONTEND_REACT_PORT`) mit einem
 Proxy auf `BACKEND_PORT`. Dieselbe Playwright-Suite läuft gegen beide Frontends (`make e2e`). Das
 Angular-Frontend bleibt das Frontend der Abgabe.
+
+### Demo-Modus
+
+Ist `GITLAB_TOKEN` nicht gesetzt, leer oder besteht er nur aus Leerzeichen, läuft das Backend im
+Demo-Modus (ADR 0018). Es gibt dafür keinen eigenen Schalter.
+
+- Projekte und Issues kommen aus festen Beispieldaten im Arbeitsspeicher
+  (`backend/src/main/resources/demo-gitlab.json`): die Projekte „Webshop“ und „Mobile App“ mit
+  zusammen 28 offenen Issues. Kein Aufruf geht an GitLab; die Basis-URL wird nicht benutzt.
+- Suche, Gewichtsfilter, Zeitraum-Filter, Sortierung, Seiten von 20 und die Gesamtzahl arbeiten
+  wie mit GitLab.
+- „Ergebnis übernehmen“ schreibt den Kommentar und, mit `write-weight`, das Gewicht in die
+  Beispieldaten. Ein Neustart des Backends stellt den Ausgangszustand wieder her.
+- Die Links der Projekte und Issues zeigen auf `https://gitlab.example.com/demo/…` und führen zu
+  keiner Seite.
+- Das Backend schreibt beim Start eine Zeile auf `WARN`, `GET /api/config` meldet `demo: true`,
+  und beide Frontends zeigen unter der Toolbar: „Demo-Modus: Projekte und Issues sind Beispiele.
+  Ergebnisse gehen nicht an GitLab.“
+- Die Projekt-Allowlist gilt unverändert. Eine Liste mit IDs, die es in den Beispieldaten nicht
+  gibt (dort `101` und `102`), zeigt keine Projekte.
+
+Im Betrieb mit GitLab heißt das: Fehlt der Token, endet der Start nicht mehr mit einem Fehler.
+Der fehlende Token fällt an der Zeile im Log und am Hinweis in der Oberfläche auf.
 
 ## Variante
 
@@ -83,7 +108,7 @@ den Schlüssel so ab: Großbuchstaben, `.` und `-` werden zu `_`. Ausnahme ist d
 | Schlüssel | Umgebungsvariable | Standard | Bedeutung |
 |---|---|---|---|
 | `planningpoker.gitlab.base-url` | `PLANNINGPOKER_GITLAB_BASE_URL` | `https://gitlab.com` | Basis-URL der GitLab-Instanz |
-| `planningpoker.gitlab.token` | `GITLAB_TOKEN` | keiner, Pflicht | GitLab-Token mit Scope `api` (Absatz Token) |
+| `planningpoker.gitlab.token` | `GITLAB_TOKEN` | keiner; ohne Wert Demo-Modus | GitLab-Token mit Scope `api` (Absatz Token). Nicht gesetzt oder leer: Demo-Modus mit Beispieldaten, kein Aufruf an GitLab (Abschnitt Demo-Modus) |
 | `planningpoker.gitlab.write-weight` | `PLANNINGPOKER_GITLAB_WRITE_WEIGHT` | `false` | Zahlenwerte zusätzlich als `weight` setzen (Premium/Ultimate) |
 | `planningpoker.gitlab.timeout` | `PLANNINGPOKER_GITLAB_TIMEOUT` | `10s` | Verbindungs- und Lesezeit je GitLab-Aufruf |
 | `planningpoker.session.ttl` | `PLANNINGPOKER_SESSION_TTL` | `12h` | Verfall inaktiver Sitzungen |
@@ -93,7 +118,7 @@ den Schlüssel so ab: Großbuchstaben, `.` und `-` werden zu `_`. Ausnahme ist d
 | `planningpoker.session.remember` | `PLANNINGPOKER_SESSION_REMEMBER` | `true` | Letzte Sitzungen: Der Browser merkt sich die letzten fünf eigenen Sitzungen samt Token im `localStorage`, die Startseite führt mit derselben Rolle zurück (ADR 0013). In offenem Umfeld auf `false` setzen |
 | `planningpoker.realtime.auth-timeout` | `PLANNINGPOKER_REALTIME_AUTH_TIMEOUT` | `5s` | Zeit bis zur ersten Nachricht `auth` einer WebSocket-Verbindung |
 
-`.env.example` enthält jede Zeile der Tabelle: `GITLAB_TOKEN` leer als Pflichtzeile,
+`.env.example` enthält jede Zeile der Tabelle: `GITLAB_TOKEN` leer (Demo-Modus),
 `PLANNINGPOKER_GITLAB_WRITE_WEIGHT=true` aktiv, alle übrigen auskommentiert mit dem Standardwert,
 dazu `BACKEND_PORT` und `FRONTEND_PORT` für die Ports von `make backend` und `make frontend`.
 
@@ -148,7 +173,8 @@ TypeScript-Typen `frontend/src/app/api/schema.d.ts` und `frontend-react/src/api/
 `make drift` meldet einen veralteten Stand.
 Im Dev-Modus zeigt `http://localhost:8080/q/swagger-ui` den Vertrag. Acht Beispiel-Snapshots je
 Phase und Rolle liegen unter `contracts/api/examples/`; Backend-Test und Frontend-Typen prüfen sie.
-Version des Vertrags: `4.0.0` (ADR 0014: Beitreten nur mit Einladungscode).
+Version des Vertrags: `4.1.0` (ADR 0014: Beitreten nur mit Einladungscode; ADR 0018: Feld `demo`
+in `GET /api/config`).
 
 ### Ablauf
 
@@ -210,7 +236,7 @@ trägt jeder Aufruf `Authorization: Bearer <token>`.
 | Methode und Pfad | Rolle | Request | Erfolg | Fehler |
 |---|---|---|---|---|
 | `GET /api/health` | offen | – | 200 `{ status }` | – |
-| `GET /api/config` | offen | – | 200 `{ rememberSessions }` | – |
+| `GET /api/config` | offen | – | 200 `{ rememberSessions, demo }` | – |
 | `GET /api/projects?search=&page=` | offen | – | 200 `{ items: [{ id, name, pathWithNamespace, webUrl }], nextPage }` | 400, 502 |
 | `GET /api/projects/{projectId}/issues?search=&page=` | offen | – | 200 `{ items, nextPage, total }` (offene Issues mit `weight`) | 400, 403 `PROJECT_NOT_ALLOWED`, 502 |
 | `POST /api/sessions` | offen | `{ name, gitlabProjectId, issueIid? }`; ohne `issueIid` startet die Sitzung ohne Vorauswahl | 201 `{ sessionId, participantId, token }` | 400, 403 `PROJECT_NOT_ALLOWED`, 404 `ISSUE_NOT_FOUND` oder `PROJECT_NOT_FOUND`, 409 `LIMIT_REACHED`, 502 |

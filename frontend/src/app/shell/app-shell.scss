@@ -84,6 +84,16 @@ mat-toolbar {
   white-space: nowrap;
 }
 
+.demo-hint {
+  flex: none;
+  margin: 0;
+  padding: var(--app-space-s) var(--app-space-l);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font: var(--mat-sys-body-medium);
+}
+
 .content {
   flex: 1;
   padding: var(--app-space-m);
@@ -109,6 +119,10 @@ mat-toolbar {
 @media (max-width: 599.98px) {
   mat-toolbar {
     padding: 0 var(--app-space-m);
+  }
+
+  .demo-hint {
+    padding: var(--app-space-s) var(--app-space-m);
   }
 
   .me {

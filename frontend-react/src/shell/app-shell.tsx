@@ -29,9 +29,10 @@ function joinSessionId(pathname: string): string | null {
 }
 
 export function AppShell({ theme }: { theme: ThemeStore }) {
-  const { sessions } = useBackend();
+  const { sessions, demo } = useBackend();
   const dark = useSyncExternalStore(theme.subscribe, theme.dark);
   const session = useSyncExternalStore(sessions.subscribe, sessions.session);
+  const demoMode = useSyncExternalStore(demo.subscribe, demo.active);
   const { pathname } = useLocation();
 
   const sessionId = session?.sessionId ?? joinSessionId(pathname);
@@ -83,6 +84,11 @@ export function AppShell({ theme }: { theme: ThemeStore }) {
           </span>
         </Toggle>
       </header>
+      {demoMode && (
+        <p className={styles.demoHint} role="status" data-testid="demo-hint">
+          {t('shell.demoHint')}
+        </p>
+      )}
       <ErrorBanner />
       <main className={styles.content}>
         <Outlet />

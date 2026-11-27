@@ -1,3 +1,4 @@
+import type { DemoMode } from './demo-mode';
 import type { StorageAccess } from './preferences-store';
 import type { components } from './schema';
 
@@ -57,6 +58,7 @@ function copy(entry: RecentSession): RecentSession {
 export function createRecentSessions(
   storage: StorageAccess,
   startTimeout: StartTimeout,
+  demo: DemoMode,
 ): RecentSessions {
   let enabled: boolean | null = null;
 
@@ -110,8 +112,11 @@ export function createRecentSessions(
         }, CONFIG_TIMEOUT_MS);
         loadConfig(controller.signal).then(
           (config) => {
-            if (!controller.signal.aborted && typeof config.rememberSessions === 'boolean') {
-              enabled = config.rememberSessions;
+            if (!controller.signal.aborted) {
+              if (typeof config.rememberSessions === 'boolean') {
+                enabled = config.rememberSessions;
+              }
+              demo.set(config.demo === true);
             }
             resolve();
           },

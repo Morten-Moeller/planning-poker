@@ -93,7 +93,7 @@ function answer(request: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
     return ok({ status: 'UP' });
   }
   if (path === '/api/config') {
-    const config: ConfigResponse = { rememberSessions: true };
+    const config: ConfigResponse = { rememberSessions: true, demo: false };
     return ok(config);
   }
   if (path === '/api/projects') {

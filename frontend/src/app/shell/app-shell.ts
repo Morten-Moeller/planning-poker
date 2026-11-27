@@ -5,6 +5,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltip } from '@angular/material/tooltip';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { DemoMode } from '../api/demo-mode';
 import { SessionStore } from '../api/session-store';
 import { ErrorBanner } from './error-banner';
 import { ThemeService } from './theme.service';
@@ -30,6 +31,7 @@ function joinSessionId(url: string): string | null {
 export class AppShell {
   private readonly store = inject(SessionStore);
   protected readonly theme = inject(ThemeService);
+  protected readonly demo = inject(DemoMode).active;
   protected readonly themeLabel = computed(() =>
     this.theme.dark()
       ? $localize`:@@shell.theme.light:Helles Design`

@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom, timeout } from 'rxjs';
 import { ApiService } from './api.service';
+import { DemoMode } from './demo-mode';
 import type { components } from './schema';
 
 export type ParticipantRole = components['schemas']['Role'];
@@ -72,8 +73,12 @@ const CONFIG_TIMEOUT_MS = 3000;
 
 export function loadRecentSessionsSetting(): Promise<void> {
   const recent = inject(RecentSessions);
+  const demo = inject(DemoMode);
   return firstValueFrom(inject(ApiService).config().pipe(timeout(CONFIG_TIMEOUT_MS))).then(
-    (config) => recent.enabled.set(config.rememberSessions),
+    (config) => {
+      recent.enabled.set(config.rememberSessions);
+      demo.active.set(config.demo === true);
+    },
     () => undefined,
   );
 }

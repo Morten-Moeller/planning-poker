@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Planning Poker API
-  version: 4.0.0
+  version: 4.1.0
   description: |
     Commands go over REST under /api and answer without state. The state reaches every participant
     over the WebSocket /ws/sessions/{sessionId} as a full snapshot (SessionView), filtered per
@@ -151,6 +151,7 @@ components:
     ConfigResponse:
       required:
       - rememberSessions
+      - demo
       description: Settings of the backend for the frontend.
       type: object
       properties:
@@ -158,6 +159,11 @@ components:
           type: boolean
           description: Whether the browser keeps the last sessions with their token
             in localStorage (planningpoker.session.remember).
+        demo:
+          type: boolean
+          description: "Whether the backend runs in demo mode: no GitLab token is\
+            \ set (planningpoker.gitlab.token), projects and issues are examples in\
+            \ memory."
     ConfirmRequest:
       description: Confirms a card as the final value of the revealed round and writes
         it to GitLab.

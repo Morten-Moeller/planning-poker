@@ -86,6 +86,16 @@
   background-color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 8%, transparent);
 }
 
+.demoHint {
+  flex: none;
+  margin: 0;
+  padding: var(--app-space-s) var(--app-space-l);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font: var(--mat-sys-body-medium);
+}
+
 .content {
   flex: 1;
   padding: var(--app-space-m);
@@ -94,6 +104,10 @@
 @media (max-width: 599.98px) {
   .toolbar {
     padding: 0 var(--app-space-m);
+  }
+
+  .demoHint {
+    padding: var(--app-space-s) var(--app-space-m);
   }
 
   .me {

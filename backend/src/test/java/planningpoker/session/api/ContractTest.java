@@ -223,7 +223,7 @@ class ContractTest {
 
     @Test
     void namesTheErrorCodesOfCreateAndJoinAndTheMajorVersion() {
-        assertEquals("4.0.0", contract.at("/info/version").asText());
+        assertEquals("4.1.0", contract.at("/info/version").asText());
         assertEquals(
                 "PROJECT_NOT_ALLOWED",
                 contract.at("/paths/~1api~1sessions/post/responses/403/description")
@@ -261,8 +261,9 @@ class ContractTest {
         assertEquals(
                 "getConfig", contract.at("/paths/~1api~1config/get/operationId").asText());
         JsonNode config = contract.at("/components/schemas/ConfigResponse");
-        assertEquals(List.of("rememberSessions"), texts(config.get("required")));
+        assertEquals(List.of("rememberSessions", "demo"), texts(config.get("required")));
         assertEquals("boolean", config.at("/properties/rememberSessions/type").asText());
+        assertEquals("boolean", config.at("/properties/demo/type").asText());
     }
 
     @Test
