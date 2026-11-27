@@ -1,14 +1,14 @@
 ---
 id: "0068"
 title: "Demo-Modus ohne GitLab-Token"
-status: Review
+status: done
 risk: high
 adrs: ["0018"]
 owner: Morten Möller
 created: 2026-11-26
 updated: 2026-11-27
-pr: ""
-note: freigegeben in der Session
+pr: "#79"
+note: alle Kriterien erfüllt
 ---
 
 # Demo-Modus ohne GitLab-Token
