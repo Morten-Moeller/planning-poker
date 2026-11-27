@@ -3,7 +3,7 @@
 Status: accepted
 Datum: 2026-11-26
 Spec: docs/specs/0068-demo-modus.md
-Ersetzt Grundregeln: keine; ändert das Verhalten „ohne `GITLAB_TOKEN` startet das Backend nicht“ aus Spec 0003
+Ersetzt Grundregeln: A6.1 für den Schlüssel planningpoker.gitlab.token; ändert das Verhalten „ohne `GITLAB_TOKEN` startet das Backend nicht“ aus Spec 0003
 
 ## Kontext
 

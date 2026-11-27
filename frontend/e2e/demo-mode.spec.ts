@@ -3,6 +3,8 @@ import { BrowserContext, Page, expect, test } from '@playwright/test';
 const DEMO_HINT =
   'Demo-Modus: Projekte und Issues sind Beispiele. Ergebnisse gehen nicht an GitLab.';
 
+test.use({ viewport: { width: 1440, height: 1400 } });
+
 async function answerConfig(context: BrowserContext, demo: boolean): Promise<void> {
   await context.route('**/api/config', (route) =>
     route.fulfill({ json: { rememberSessions: true, demo } }),
@@ -16,6 +18,12 @@ async function createSession(page: Page): Promise<string> {
   await page.getByTestId('create-submit').click();
   await expect(page).toHaveURL(/\/session\/[A-Z2-9]{8}$/);
   return page.url().split('/').pop() ?? '';
+}
+
+async function pageScroll(page: Page): Promise<number> {
+  return page.evaluate(
+    () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+  );
 }
 
 async function bottom(page: Page, testId: string): Promise<number> {
@@ -40,6 +48,7 @@ test('in demo mode the hint stands under the toolbar on the start page, in the r
   await expect(hint).toHaveAttribute('role', 'status');
   expect(await top(page, 'demo-hint')).toBeGreaterThanOrEqual(await bottom(page, 'toolbar'));
   expect(await bottom(page, 'demo-hint')).toBeLessThanOrEqual(await top(page, 'create-name'));
+  expect(await pageScroll(page)).toBe(0);
 
   const sessionId = await createSession(page);
   await expect(page.getByTestId('issue-panel')).toBeVisible();
@@ -61,6 +70,7 @@ test('without demo mode there is no hint on the start page and in the room', asy
   await page.goto('/');
   await expect(page.getByTestId('health-status')).toHaveText('Backend erreichbar');
   await expect(page.getByTestId('demo-hint')).toHaveCount(0);
+  expect(await pageScroll(page)).toBe(0);
 
   await createSession(page);
   await expect(page.getByTestId('issue-panel')).toBeVisible();

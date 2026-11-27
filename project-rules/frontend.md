@@ -49,7 +49,9 @@ sources: [frontend/angular.json, frontend/package.json, frontend/eslint.config.j
   ADR 0018) from `demo`; it stays `false` without the field and when the call fails. With `true`
   the shell shows `demo-hint` (`role="status"`, text `@@shell.demoHint`, colours
   `secondary-container`) between the toolbar and the `ErrorBanner` on every page. There is no
-  second call of `GET /api/config`. Only with `true`, `TokenStore.store` also writes the entry (create: role
+  second call of `GET /api/config`. The start page has no fixed height: `.content` of the shell is
+  a column flex container when it holds `app-start-page`, and the page takes the rest of the
+  window (`flex: 1 0 auto`), so the hint causes no page scroll. Only with `true`, `TokenStore.store` also writes the entry (create: role
   `SCRUM_MASTER`, join: `VIEWER` with `as=viewer`, else `DEVELOPER`; the list shows the role of
   the checked snapshot and falls back to the stored one) and `TokenStore.identity` falls back to the entry when
   `sessionStorage` has none and copies it into `sessionStorage`; `TokenStore.remove` removes both.

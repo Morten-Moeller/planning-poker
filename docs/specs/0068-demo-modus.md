@@ -130,6 +130,8 @@ Dateien:
 - `frontend/src/app/shell/app-shell.html`: ändern, `demo-hint`, Text `@@shell.demoHint`
 - `frontend/src/app/shell/app-shell.scss`: ändern
 - `frontend/src/app/shell/app-shell.spec.ts`: ändern
+- `frontend/src/app/start/start-page.scss`: ändern, Höhe ohne festen Abzug der Toolbar
+- `frontend-react/src/start/start-page.module.css`: ändern, dasselbe
 - `frontend-react/src/api/demo-mode.ts`: neu, Store für den Demo-Modus
 - `frontend-react/src/api/recent-sessions.ts`: ändern, der Aufruf von `config` setzt auch den Demo-Modus
 - `frontend-react/src/api/recent-sessions.spec.ts`: ändern
@@ -184,6 +186,8 @@ Testdaten: keine über die Demo-Daten hinaus. `/verify` startet das Backend mit 
 - [x] Woher kommen die Demo-Daten? → Im Backend, im Arbeitsspeicher (Morten Möller, 2026-11-26)
 - [x] Zeigt die Oberfläche den Demo-Modus? → Ja, in beiden Frontends (Morten Möller, 2026-11-26)
 - [x] Aufnahme für das README? → Angular, GIF, eigener Doku-PR danach (Morten Möller, 2026-11-26)
+- [x] ADR 0018 nennt `Ersetzt Grundregeln: keine`, die Änderung weicht aber von A6.1 ab. Was gilt? → Die Zeile wird `Ersetzt Grundregeln: A6.1 für den Schlüssel planningpoker.gitlab.token`; sonst ändert sich an der ADR nichts (Morten Möller, 2026-11-27)
+- [x] Der Hinweis erzeugt auf der Startseite einen Seiten-Scroll in seiner Höhe. Beheben? → Ja, in dieser Änderung; `frontend/src/app/start/start-page.scss` und `frontend-react/src/start/start-page.module.css` gehören zum Plan, im Browser in beiden Frontends messen (Morten Möller, 2026-11-27)
 
 ## Verifikationsplan
 

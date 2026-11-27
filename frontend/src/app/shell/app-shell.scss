@@ -98,6 +98,11 @@ mat-toolbar {
   flex: 1;
   padding: var(--app-space-m);
 
+  &:has(> app-start-page) {
+    display: flex;
+    flex-direction: column;
+  }
+
   &.room {
     display: flex;
     flex-direction: column;
